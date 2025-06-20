@@ -1,0 +1,144 @@
+.btn-eye {
+  border: none;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-80%);
+}
+
+.btn-eyeChange {
+  border: none;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-120%);
+}
+
+.menuTitle:hover {
+  background-color: #323537;
+  border-right: 3px solid white;
+}
+
+.menuSubtitle {
+  background-color: #3f4143;
+}
+
+.menuSubtitleItem:hover {
+  background-color: #6b6d70;
+  border-right: 3px solid black;
+}
+
+.menuList {
+  background-color: white;
+}
+
+.menuList:hover {
+  background-color: #9ea1a487;
+  border-radius: 8px;
+}
+
+.border-input {
+  border-color: var(--color-ternario);
+  width: 25%;
+  border-radius: 0%;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(100%);
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  border: none;
+  background-color: #9aa1a74e;
+  border-radius: 3px;
+}
+
+.breadLink:hover {
+  text-decoration: underline;
+}
+
+.scrollbar-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0px;
+}
+
+.scrollbar-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-container::-webkit-scrollbar-thumb {
+  background: #cac3c3; /* Color del thumb (la barra que se mueve) */
+}
+
+.scrollbar-container::-webkit-scrollbar-thumb:hover {
+  background: #a7a2a2; /* Color al pasar el mouse */
+}
+
+.scrollbar-container::-webkit-scrollbar-track {
+  background: #eae7e7; /* Color del track (fondo) */
+}
+
+.usuarioNombre:hover {
+  color: var(--color-ternario);
+}
+
+.z-4 {
+  z-index: 4;
+}
+
+.z-7 {
+  z-index: 7;
+}
+
+.input-group {
+  display: flex;
+  align-items: center; /* Alinea verticalmente el contenido */
+  margin-bottom: 1rem; /* Espaciado entre los grupos de input */
+}
+
+.input-group label {
+  flex: 0 0 150px; /* Ancho fijo para las etiquetas */
+  margin-right: 1rem; /* Espaciado entre la etiqueta y el input */
+}
+
+.input-group input,
+.input-group textarea {
+  max-width: 25%; /* Ajusta el ancho máximo según sea necesario */
+}
+
+.input-group .invalid-feedback {
+  display: contents;
+}
+
+.colorPrimario {
+  background-color: var(--color-primario);
+}
+
+.colorSecundario {
+  background-color: var(--color-secundario);
+}
+
+.colorTernario {
+  color: var(--color-ternario);
+  border-color: var(--color-ternario);
+}
+
+.colorTernarioImage {
+  color: var(--color-ternario);
+  border: 2px dashed var(--color-ternario);
+}
+
+.loginBack {
+  background-image: url(/background.png);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
