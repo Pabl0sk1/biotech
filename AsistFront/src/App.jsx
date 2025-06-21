@@ -88,6 +88,7 @@ function App() {
               <Route path={UrlLocal + "/theme"} element={<Tema usuarioUsed={usuarioUsed} />} />
             </>
           )}
+          <Route path={UrlLocal + "/calculations"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
           <Route path={UrlLocal + "/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
           <Route path={UrlLocal + "/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
           <Route path={UrlLocal + '/profile'} element={<Perfil usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />

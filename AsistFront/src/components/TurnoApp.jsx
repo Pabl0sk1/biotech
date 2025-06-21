@@ -9,7 +9,8 @@ export const TurnoApp = ({ usuarioUsed }) => {
 
     const [tipoBuscado, setTipoBuscado] = useState('');
     const [turnos, setTurnos] = useState([]);
-    const [turnosDetalles, setTurnosDetalles] = useState([]);
+    const [turnosDias, setTurnosDias] = useState([]);
+    const [detallesAEliminar, setDetallesAEliminar] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [turnoAGuardar, setTurnoAGuardar] = useState(null);
@@ -24,6 +25,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                 if (detalleNoEliminar) {
                     setDetalleNoEliminar(false);
                 } else {
+                    setDetallesAEliminar([]);
                     setTurnoAEliminar(null);
                     setTurnoAVisualizar(null);
                     setTurnoAGuardar(null);
@@ -89,7 +91,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
         horades: "",
         thoras: 0,
         extporcen: 0,
-        turnodetalle: []
+        turnodia: []
     };
 
     const recuperarTurnos = async (pageNumber = 0, desc = '') => {
@@ -109,7 +111,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
 
     const recuperarTurnosDetalles = async () => {
         const response = await getTurnoDetalle();
-        setTurnosDetalles(response);
+        setTurnosDias(response);
     }
 
     const recuperarNetworkInfo = async () => {
@@ -163,6 +165,15 @@ export const TurnoApp = ({ usuarioUsed }) => {
 
     const guardarFn = async (turnoAGuardar) => {
 
+        // Eliminar los detalles marcados
+        const nuevosDias = turnoAGuardar.turnodia.filter(d => !detallesAEliminar.includes(d.id));
+        for (const id of detallesAEliminar) {
+            await deleteTurnoDetalle(id);
+        }
+
+        // Actualizar el estado de ventaAGuardar con el nuevo total y detalles
+        setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
+
         // Guardar la turno actualizada
         if (turnoAGuardar.id) {
             await updateTurno(turnoAGuardar.id, { ...turnoAGuardar });
@@ -172,6 +183,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
             agregarAcceso('Insertar', nuevaTurno.id);
         }
 
+        setDetallesAEliminar([]);
         setTurnoAGuardar(null);
         actualizarTurnos();
     };
@@ -187,6 +199,13 @@ export const TurnoApp = ({ usuarioUsed }) => {
         event.preventDefault();
         const form = event.currentTarget;
 
+        if (!turnoAGuardar.turnodia.length) {
+            setDetalleNoEliminar(true);
+            event.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+
         if (form.checkValidity()) {
             guardarFn({ ...turnoAGuardar });
             form.classList.remove('was-validated');
@@ -200,7 +219,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
     };
 
     const handleOpenForm = async (turno) => {
-        console.log(turno)
         setTurnoAGuardar(turno);
         actualizarTurnos();
     };
@@ -341,7 +359,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                             />
                                         </div>
                                         <div className='form-group mb-1'>
-                                            <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas</label>
+                                            <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
                                             <input
                                                 type="number"
                                                 id="thoras"
@@ -351,6 +369,28 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 readOnly
                                             />
                                         </div>
+                                    </div>
+                                </div>
+                                <div className="form-group bg-info mb-3 rounded-3 text-center" style={{ width: "682px" }}>
+                                    <label className="form-label m-0 p-3 fw-bold fs-5 text-primary-emphasis">Días del Turno</label>
+                                    <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3">
+                                        {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
+                                            const estaMarcado = turnoAVisualizar.turnodia?.some((d) => d.dia === dia);
+                                            return (
+                                                <div className="form-check" key={dia}>
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id={dia}
+                                                        checked={estaMarcado}
+                                                        readOnly
+                                                    />
+                                                    <label className="form-check-label fw-semibold" htmlFor={dia}>
+                                                        {dia}
+                                                    </label>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                                 <button onClick={() => setTurnoAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
@@ -429,6 +469,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
                                                     value={turnoAGuardar.extporcen || ''}
+                                                    min={0}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
@@ -470,7 +511,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas</label>
+                                                <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
                                                 <input
                                                     type="number"
                                                     id="thoras"
@@ -478,16 +519,60 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
                                                     value={turnoAGuardar.thoras || ''}
+                                                    min={0}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className='mt-3'>
+                                    <div className="form-group bg-info mb-3 rounded-3 text-center" style={{ width: "682px" }}>
+                                        <label className="form-label m-0 p-3 fw-bold fs-5 text-primary-emphasis">Días del Turno</label>
+                                        <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3">
+                                            {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
+                                                const estaMarcado = turnoAGuardar.turnodia?.some((d) => d.dia === dia);
+                                                return (
+                                                    <div className="form-check" key={dia}>
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="checkbox"
+                                                            id={dia}
+                                                            checked={estaMarcado}
+                                                            onChange={(e) => {
+                                                                const estaChequeado = e.target.checked;
+                                                                const turnosActuales = turnoAGuardar.turnodia || [];
+                                                                if (estaChequeado) {
+                                                                    const yaExiste = turnosActuales.some((d) => d.dia == dia);
+                                                                    if (!yaExiste) {
+                                                                        const nuevosDias = [...turnosActuales, { id: null, dia }];
+                                                                        setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
+                                                                    }
+                                                                } else {
+                                                                    const detalleEliminado = turnosActuales.find((d) => d.dia == dia);
+                                                                    const nuevosDias = turnosActuales.filter((d) => d.dia !== dia);
+                                                                    setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
+                                                                    if (detalleEliminado?.id != null) {
+                                                                        setDetallesAEliminar((prev) => [...prev, detalleEliminado.id]);
+                                                                    }
+                                                                }
+                                                            }}
+                                                        />
+                                                        <label className="form-check-label fw-semibold" htmlFor={dia}>
+                                                            {dia}
+                                                        </label>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div className='mt-4'>
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => setTurnoAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => {
+                                            setTurnoAGuardar(null);
+                                            setDetallesAEliminar([]);
+                                        }}
+                                            className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
