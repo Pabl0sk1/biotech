@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { NumericFormat } from 'react-number-format';
 import { Link, useNavigate } from 'react-router-dom';
 import { saveAuditoria, getNetworkInfo } from './services/auditoria.service.js';
 
@@ -257,14 +256,6 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                     Cambiar Contraseña
                                 </Link>
                             </li>
-                            {usuarioUsed.tipousuario.id === 1 && (
-                                <li className='nav-item menuTitle'>
-                                    <Link className="nav-link text-white" onClick={() => agregarAcceso("Tema", 'Modificar', UrlLocal + "/theme")}>
-                                        <i className='bi bi-palette me-2'></i>
-                                        Tema
-                                    </Link>
-                                </li>
-                            )}
                             {usuarioUsed.tipousuario.id === 1 && (
                                 <li className='nav-item menuTitle'>
                                     <Link className="nav-link text-white" onClick={() => agregarAcceso("Configuración", 'Modificar', UrlLocal + "/config")}>

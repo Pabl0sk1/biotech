@@ -72,7 +72,7 @@ export const Configuracion = ({ usuarioUsed }) => {
         const form = event.currentTarget;
 
         // Crear el objeto que se enviará al backend
-        const configImage = {
+        const configData = {
             ...config,
             entidad: config.entidad,
             correo: config.correo,
@@ -85,14 +85,15 @@ export const Configuracion = ({ usuarioUsed }) => {
             tipo: null,
             nombre: null
         };
-        console.log(config)
+
         // Crear un FormData para enviar los datos
         const formData = new FormData();
-        formData.append('configuracion', JSON.stringify(configImage));
+        formData.append('configuracion', JSON.stringify(configData));
 
         // Convertir base64 a File si existe
-        if (config.imagen && config.imagen.startsWith('data:image')) {
-            const arr = config.imagen.split(',');
+        const base64 = `data:${config.tipo};base64,${imagenSeleccionada}`;
+        if (imagenSeleccionada) {
+            const arr = base64.split(',');
             const mime = arr[0].match(/:(.*?);/)[1];
             const bstr = atob(arr[1]);
             let n = bstr.length;
@@ -103,15 +104,10 @@ export const Configuracion = ({ usuarioUsed }) => {
             }
 
             // Usa el nombre original de la imagen si está disponible
-            const originalName = config.nombre || 'imagen';
-            const extension = mime.split('/')[1];
-            const fileName = `${originalName}.${extension}`;
+            const fileName = `${config.nombre}`;
             const file = new File([u8arr], fileName, { type: mime });
             formData.append('imagen', file);
-        }
-
-        // Verificar que la imagen sea un archivo válido
-        if (config.imagen && config.imagen instanceof File) {
+        } else {
             formData.append('imagen', config.imagen);
         }
 
@@ -138,8 +134,10 @@ export const Configuracion = ({ usuarioUsed }) => {
         }
 
         if (form.checkValidity()) {
-            const usuario = await updateConfig(config.id, formData);
-            console.log(usuario)
+            document.documentElement.style.setProperty('--color-primario', config.colorpri);
+            document.documentElement.style.setProperty('--color-secundario', config.colorsec);
+            document.documentElement.style.setProperty('--color-ternario', config.colorter);
+            await updateConfig(config.id, formData);
             setCerrarConfig(true);
             form.classList.remove('was-validated');
         } else {
@@ -297,7 +295,7 @@ export const Configuracion = ({ usuarioUsed }) => {
                                         <i className="bi bi-exclamation-triangle-fill m-2"></i>El correo es obligatorio y no debe sobrepasar los 30 caracteres.
                                     </div>
                                 </div>
-                                <div className="input-group m-0">
+                                <div className="input-group">
                                     <label htmlFor="nrotelefono" className="form-label m-0">Teléfono</label>
                                     <input type="text"
                                         id="nrotelefono"
@@ -307,6 +305,39 @@ export const Configuracion = ({ usuarioUsed }) => {
                                         value={config.nrotelefono}
                                         onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
                                         maxLength={20}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="colorpri" className="form-label m-0">Color Primario</label>
+                                    <input
+                                        type="color"
+                                        id="colorpri"
+                                        name="colorpri"
+                                        className="ms-2 form-control form-control-color rounded-0 colorTernario"
+                                        value={config.colorpri}
+                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="colorsec" className="form-label m-0">Color Secundario</label>
+                                    <input
+                                        type="color"
+                                        id="colorsec"
+                                        name="colorsec"
+                                        className="ms-2 form-control form-control-color rounded-0 colorTernario"
+                                        value={config.colorsec}
+                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                    />
+                                </div>
+                                <div className="input-group mb-0">
+                                    <label htmlFor="colorter" className="form-label m-0">Color Ternario</label>
+                                    <input
+                                        type="color"
+                                        id="colorter"
+                                        name="colorter"
+                                        className="ms-2 form-control form-control-color rounded-0 colorTernario"
+                                        value={config.colorter}
+                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
                                     />
                                 </div>
                             </div>

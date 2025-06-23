@@ -162,7 +162,7 @@ public class ConfiguracionController {
 	                                     @RequestParam(required = false) MultipartFile imagen) {
 	    Map<String, Object> map = new HashMap<>();
 	    map.put("ok", true);
-	    System.out.println(imagen.toString());
+	    
 	    try {
 	        // Obtener el producto existente
 	        Configuracion cfg = serv.buscarPorId(id);

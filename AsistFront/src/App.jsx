@@ -13,7 +13,6 @@ import { TurnoApp } from './components/TurnoApp.jsx';
 import { FuncionarioApp } from './components/FuncionarioApp.jsx';
 import { Error } from './Error.jsx';
 import Configuracion from './Configuracion.jsx';
-import Tema from './Tema.jsx';
 import { getConfig } from "./services/config.service";
 
 function App() {
@@ -85,7 +84,6 @@ function App() {
               <Route path={UrlLocal + "/security/access"} element={<AuditoriaApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/security/roles"} element={<RolApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/config"} element={<Configuracion usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/theme"} element={<Tema usuarioUsed={usuarioUsed} />} />
             </>
           )}
           <Route path={UrlLocal + "/calculations"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
