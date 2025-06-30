@@ -8,9 +8,8 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
 
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
-    const [isInformeMenuOpen, setIsInformeMenuOpen] = useState(false);
-    const [isRegistroMenuOpen, setIsRegistroMenuOpen] = useState(false);
     const [isSeguridadMenuOpen, setIsSeguridadMenuOpen] = useState(false);
+    const [isCalculosMenuOpen, setIsCalculosMenuOpen] = useState(false);
     const navigate = useNavigate();
 
     const obtenerFechaHora = async () => {
@@ -55,9 +54,6 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
         const response = await getNetworkInfo();
         return response;
     }
-
-    useEffect(() => {
-    }, [])
 
     // Menu.jsx - useEffect mejorado
     useEffect(() => {
@@ -142,26 +138,13 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
         };
     }, []);
 
-    const formatearFecha = (fecha) => {
-        if (!fecha) return '';
-        const date = new Date(fecha + 'T00:00:00Z');
-        const day = String(date.getUTCDate()).padStart(2, '0'); // Agrega un cero si es necesario
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Los meses comienzan desde 0
-        const year = date.getUTCFullYear();
-        return `${day}/${month}/${year}`;
-    };
-
-    const toggleInformeMenu = () => {
-        setIsInformeMenuOpen(!isInformeMenuOpen);
-    };
-
-    const toggleRegistroMenu = () => {
-        setIsRegistroMenuOpen(!isRegistroMenuOpen);
-    };
-
+    // Despliegues de submenus
     const toggleSeguridadMenu = () => {
         setIsSeguridadMenuOpen(!isSeguridadMenuOpen);
     };
+    const toggleCalculosMenu = () => {
+        setIsCalculosMenuOpen(!isCalculosMenuOpen);
+    }
 
     return (
         <>
@@ -215,20 +198,25 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                 <i className='bi bi-person me-2'></i>
                                 <p className='m-0 usuarioNombre'>{usuarioUsed.nombreusuario}</p>
                             </li>
-                            <li className='nav-item menuTitle'>
-                                <Link className="nav-link text-white" onClick={() => agregarAcceso("Funcionarios", 'Consultar', UrlLocal + "/employees")}>
-                                    <i className='bi bi-people me-2'></i>
-                                    Funcionarios
-                                </Link>
-                            </li>
-                            <li className='nav-item menuTitle'>
-                                <Link className="nav-link text-white" onClick={() => agregarAcceso("Turnos", 'Consultar', UrlLocal + "/shifts")}>
-                                    <i className="bi bi-fingerprint me-2"></i>
-                                    Turnos
-                                </Link>
-                            </li>
+                            {/*Cálculos lista*/}
+                            {usuarioUsed?.tipousuario?.id && [1, 2].includes(usuarioUsed.tipousuario.id) && (
+                                <li className="nav-item">
+                                    <a role="button" onClick={toggleCalculosMenu} href="#" aria-controls="calculosMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
+                                        <i className='bi bi-table ps-3 pe-2'></i>
+                                        Cálculos
+                                        <span className="ms-auto me-3">
+                                            <i className={`bi ${isCalculosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                                        </span>
+                                    </a>
+                                    <ul className={`nav collapse menuSubtitle fw-normal ${isCalculosMenuOpen ? 'show' : ''}`} id='calculosMenu'>
+                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Cálculos", 'Realizar Informe', UrlLocal + "/calcs/report")} className="nav-link text-white p-1">Informe</Link></li>
+                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Funcionarios", 'Consultar', UrlLocal + "/calcs/employees")} className="nav-link text-white p-1">Funcionarios</Link></li>
+                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Turnos", 'Consultar', UrlLocal + "/calcs/shifts")} className="nav-link text-white p-1">Turnos</Link></li>
+                                    </ul>
+                                </li>
+                            )}
                             {/*Seguridad lista*/}
-                            {usuarioUsed.tipousuario.id === 1 && (
+                            {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
                                 <li className="nav-item">
                                     <a role="button" onClick={toggleSeguridadMenu} href="#" aria-controls="seguridadMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
                                         <i className='bi bi-lock ps-3 pe-2'></i>
@@ -251,12 +239,12 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                 </Link>
                             </li>
                             <li className='nav-item menuTitle'>
-                                <Link className="nav-link text-white" onClick={() => agregarAcceso("Cambiar Contraseña", 'Modificar', UrlLocal + "/changepassword")}>
+                                <Link className="nav-link text-white" onClick={() => agregarAcceso("Contraseña", 'Modificar', UrlLocal + "/changepassword")}>
                                     <i className='bi bi-key me-2'></i>
-                                    Cambiar Contraseña
+                                    Contraseña
                                 </Link>
                             </li>
-                            {usuarioUsed.tipousuario.id === 1 && (
+                            {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
                                 <li className='nav-item menuTitle'>
                                     <Link className="nav-link text-white" onClick={() => agregarAcceso("Configuración", 'Modificar', UrlLocal + "/config")}>
                                         <i className='bi bi-gear me-2'></i>

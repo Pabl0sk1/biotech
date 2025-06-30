@@ -173,7 +173,7 @@ export const Configuracion = ({ usuarioUsed }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-check-circle-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>Empresa editada correctamente</p>
+                                    <p className='fs-5'>Configuración editada correctamente</p>
                                 </div>
                                 <button
                                     onClick={() => confirmarEscape()}
@@ -218,7 +218,7 @@ export const Configuracion = ({ usuarioUsed }) => {
                     </nav>
                     <div className="colorSecundario p-0 m-0 border mt-3">
                         <p className="border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-pencil-square me-2 fs-5"></i>Edición de Empresa
+                            <i className="bi bi-pencil-square me-2 fs-5"></i>Editar Configuración
                         </p>
                         <form
                             action="url.ph"
@@ -240,7 +240,7 @@ export const Configuracion = ({ usuarioUsed }) => {
 
                                                 {/* Botón para eliminar la imagen */}
                                                 <button
-                                                    className="btn btn-danger position-absolute top-0 end-0 m-1 p-1 rounded-circle"
+                                                    className="btn btn-danger position-absolute top-0 end-0 m-1 p-1 rounded-circle z-0"
                                                     style={{ width: '30px', height: '30px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                                                     onClick={(e) => {
                                                         e.stopPropagation(); // Evita que se active el click en la imagen

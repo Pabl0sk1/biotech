@@ -441,7 +441,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     id="horaent"
                                                     name="horaent"
                                                     className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
                                                     value={turnoAGuardar.horaent || ''}
                                                     step={1}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
@@ -454,7 +453,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     id="horades"
                                                     name="horades"
                                                     className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
                                                     value={turnoAGuardar.horades || ''}
                                                     step={1}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
@@ -504,7 +502,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     id="horasal"
                                                     name="horasal"
                                                     className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
                                                     value={turnoAGuardar.horasal || ''}
                                                     step={1}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
@@ -609,7 +606,10 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                 <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-fingerprint me-2 text-black"></i>Turnos
+                                <i className="bi bi-table me-2 text-black"></i>Cálculos
+                            </li>
+                            <li className="breadcrumb-item active" aria-current="page">
+                                Turnos
                             </li>
                         </ol>
                     </nav>
@@ -631,7 +631,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                 />
                             </div>
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-secondary'>
+                                <thead className='table-primary'>
                                     <tr>
                                         <th>#</th>
                                         <th>Descripción</th>

@@ -161,7 +161,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-check-circle-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>Contraseña cambiada correctamente</p>
+                                    <p className='fs-5'>Contraseña modificada correctamente</p>
                                 </div>
                                 <button
                                     onClick={() => confirmarEscape()}
@@ -181,7 +181,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
                             <Link className='p-0 text-black ps-1 pe-1 border-0 menuList d-flex' to={UrlBase + "/home"}>
                                 <i className='bi bi-chevron-double-left fs-3' style={{ textShadow: '1px 0 0 black, 0 1px 0 black, -1px 0 0 black, 0 -1px 0 black' }}></i>
                             </Link>
-                            <p className='container m-0 p-0'>CAMBIAR CONTRASEÑA</p>
+                            <p className='container m-0 p-0'>CONTRASEÑA</p>
                         </div>
                         <div className='d-flex align-items-center ps-3'>
                             <i className='bi bi-person fs-3 me-3'></i>
@@ -200,13 +200,13 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
                                 <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-key-fill me-2 text-black"></i>Cambiar Contraseña
+                                <i className="bi bi-key-fill me-2 text-black"></i>Contraseña
                             </li>
                         </ol>
                     </nav>
                     <div className="colorSecundario p-0 m-0 border mt-3">
                         <p className="border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-pencil-square me-2 fs-5"></i>Cambio de Contraseña del Usuario
+                            <i className="bi bi-pencil-square me-2 fs-5"></i>Modificar Contraseña
                         </p>
                         <form
                             onSubmit={handleSubmit}

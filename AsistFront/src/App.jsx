@@ -14,6 +14,7 @@ import { FuncionarioApp } from './components/FuncionarioApp.jsx';
 import { Error } from './Error.jsx';
 import Configuracion from './Configuracion.jsx';
 import { getConfig } from "./services/config.service";
+import { Calculo } from './tasks/Calculo.jsx'
 
 function App() {
   const UrlBase = '/asist';
@@ -78,7 +79,7 @@ function App() {
         {/* Rutas protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route path={UrlLocal} element={<Menu usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />
-          {usuarioUsed && usuarioUsed.tipousuario && usuarioUsed.tipousuario.id === 1 && (
+          {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
             <>
               <Route path={UrlLocal + "/security/users"} element={<UsuarioApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/security/access"} element={<AuditoriaApp usuarioUsed={usuarioUsed} />} />
@@ -86,9 +87,13 @@ function App() {
               <Route path={UrlLocal + "/config"} element={<Configuracion usuarioUsed={usuarioUsed} />} />
             </>
           )}
-          <Route path={UrlLocal + "/calculations"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
-          <Route path={UrlLocal + "/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
-          <Route path={UrlLocal + "/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
+          {usuarioUsed?.tipousuario?.id && [1, 2].includes(usuarioUsed.tipousuario.id) && (
+            <>
+              <Route path={UrlLocal + "/calcs/report"} element={<Calculo usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/calcs/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/calcs/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
+            </>
+          )}
           <Route path={UrlLocal + '/profile'} element={<Perfil usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />
           <Route path={UrlLocal + '/changepassword'} element={<CambiarContrasena usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />
         </Route>

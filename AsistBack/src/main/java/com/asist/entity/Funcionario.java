@@ -49,6 +49,10 @@ public class Funcionario {
 
 	@Column(name = "salario")
 	private Integer salario;
+	
+	@NotNull
+	@Column(name = "codigo")
+	private Integer codigo;
 
 	public Funcionario(Integer id) {
 		super();

@@ -50,11 +50,13 @@
   border-radius: 0%;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(100%);
 }
 
-input[type="date"]:hover::-webkit-calendar-picker-indicator {
+input[type="date"]:hover::-webkit-calendar-picker-indicator,
+input[type="time"]:hover::-webkit-calendar-picker-indicator {
   border: none;
   background-color: #9aa1a74e;
   border-radius: 3px;

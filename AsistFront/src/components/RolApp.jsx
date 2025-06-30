@@ -387,7 +387,7 @@ export const RolApp = ({ usuarioUsed }) => {
                                 />
                             </div>
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-secondary'>
+                                <thead className='table-primary'>
                                     <tr>
                                         <th>#</th>
                                         <th>Descripción</th>

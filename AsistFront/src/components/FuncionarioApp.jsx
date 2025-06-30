@@ -84,7 +84,8 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         apellido: "",
         nrodoc: "",
         nrotelefono: "",
-        salario: 0
+        salario: 0,
+        codigo: 0
     };
 
     const recuperarFuncionarios = async (pageNumber = 0, nrodoc = '', nombre = '') => {
@@ -322,6 +323,15 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             value={funcionarioAVisualizar.nrodoc}
                                             readOnly
                                         />
+                                        <label htmlFor="codigo" className="form-label m-0 mb-2">Código</label>
+                                        <NumericFormat
+                                            value={funcionarioAVisualizar.codigo || 0}
+                                            displayType="text"
+                                            thousandSeparator="."
+                                            decimalSeparator=","
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            readOnly
+                                        />
                                     </div>
                                 </div>
                                 <button onClick={() => setFuncionarioAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
@@ -436,6 +446,27 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     maxLength={15}
                                                 />
                                             </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="codigo" className="form-label m-0 mb-2">Código</label>
+                                                <NumericFormat
+                                                    type="text"
+                                                    id="codigo"
+                                                    name="codigo"
+                                                    className="form-control border-input w-100"
+                                                    displayType="input"
+                                                    value={funcionarioAGuardar.codigo === 0 ? 0 : funcionarioAGuardar.codigo}
+                                                    placeholder='Escribe...'
+                                                    min={0}
+                                                    onChange={(event) => {
+                                                        const value = event.target.value.replace(/[^0-9]/g, ''); // Eliminar caracteres no numéricos
+                                                        setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: value === '' ? '' : parseFloat(value) || 0 })
+                                                    }}
+                                                    required
+                                                />
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El código no debe estar vacío.
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className='mt-3'>
@@ -479,7 +510,10 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                 <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-people-fill me-2 text-black"></i>Funcionarios
+                                <i className="bi bi-table me-2 text-black"></i>Cálculos
+                            </li>
+                            <li className="breadcrumb-item active" aria-current="page">
+                                Funcionarios
                             </li>
                         </ol>
                     </nav>
@@ -511,7 +545,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                 />
                             </div>
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-secondary'>
+                                <thead className='table-primary'>
                                     <tr>
                                         <th>#</th>
                                         <th>Nombre</th>

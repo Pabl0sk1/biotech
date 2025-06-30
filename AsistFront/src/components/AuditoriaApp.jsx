@@ -321,7 +321,7 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
                                 </select>
                             </div>
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-secondary'>
+                                <thead className='table-primary'>
                                     <tr>
                                         <th>#</th>
                                         <th>Usuario</th>

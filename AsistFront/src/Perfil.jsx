@@ -148,7 +148,7 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-check-circle-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>Usuario editado correctamente</p>
+                                    <p className='fs-5'>Perfil modificado correctamente</p>
                                 </div>
                                 <button
                                     onClick={() => confirmarEscape()}
@@ -193,7 +193,7 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
                     </nav>
                     <div className="colorSecundario p-0 m-0 border mt-3">
                         <p className="border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-pencil-square me-2 fs-5"></i>Edición del Perfil del Usuario
+                            <i className="bi bi-pencil-square me-2 fs-5"></i>Modificar Perfil
                         </p>
                         <form
                             action="url.ph"
