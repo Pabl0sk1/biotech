@@ -210,8 +210,10 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                     </a>
                                     <ul className={`nav collapse menuSubtitle fw-normal ${isCalculosMenuOpen ? 'show' : ''}`} id='calculosMenu'>
                                         <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Cálculos", 'Realizar Informe', UrlLocal + "/calcs/report")} className="nav-link text-white p-1">Informe</Link></li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Funcionarios", 'Consultar', UrlLocal + "/calcs/employees")} className="nav-link text-white p-1">Funcionarios</Link></li>
+                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Modalidades", 'Consultar', UrlLocal + "/calcs/schedules")} className="nav-link text-white p-1">Modalidades</Link></li>
                                         <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Turnos", 'Consultar', UrlLocal + "/calcs/shifts")} className="nav-link text-white p-1">Turnos</Link></li>
+                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Cargos", 'Consultar', UrlLocal + "/calcs/positions")} className="nav-link text-white p-1">Cargos</Link></li>
+                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Funcionarios", 'Consultar', UrlLocal + "/calcs/employees")} className="nav-link text-white p-1">Funcionarios</Link></li>
                                     </ul>
                                 </li>
                             )}

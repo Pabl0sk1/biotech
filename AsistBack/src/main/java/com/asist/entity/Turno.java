@@ -10,6 +10,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -36,16 +38,15 @@ public class Turno {
 	private Integer id;
 	
 	@NotNull
-	@NotBlank
-	@NotEmpty
-	@Size(max = 50)
-	private String descripcion;
+	@ManyToOne
+	@JoinColumn(name = "tipoturno_id")
+	TipoTurno tipoturno;
 	
 	@NotNull
 	@NotBlank
 	@NotEmpty
-	@Size(max = 20)
-	private String tipo;
+	@Size(max = 50)
+	private String descripcion;
 
 	@Column(name = "horaent")
 	private LocalTime horaent;

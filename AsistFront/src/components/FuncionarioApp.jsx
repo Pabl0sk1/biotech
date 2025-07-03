@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getFuncionarioPaginado, saveFuncionario, updateFuncionario, deleteFuncionario, getFuncionarioPorNrodoc, getFuncionarioPorNombre, getFuncionarioPorNrodocYNombre } from '../services/funcionario.service.js';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
+import { getCargo } from '../services/cargo.service.js';
 import { Link } from 'react-router-dom';
 import { NumericFormat } from 'react-number-format';
 
@@ -10,12 +11,17 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
     const [nombreBuscado, setNombreBuscado] = useState('');
     const [nrodocBuscado, setNrodocBuscado] = useState('');
     const [funcionarios, setFuncionarios] = useState([]);
+    const [cargos, setCargos] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [funcionarioAGuardar, setFuncionarioAGuardar] = useState(null);
     const [funcionarioAEliminar, setFuncionarioAEliminar] = useState(null);
     const [funcionarioNoEliminar, setFuncionarioNoEliminar] = useState(null);
     const [funcionarioAVisualizar, setFuncionarioAVisualizar] = useState(null);
+    const [sugerencias, setSugerencias] = useState([]);
+    const [indiceSeleccionado, setIndiceSeleccionado] = useState(-1);
+    const [cargoMsj, setCargoMsj] = useState('');
+    const [cargoError, setCargoError] = useState(false);
 
     //Cancelar eliminación con tecla de escape
     useEffect(() => {
@@ -80,6 +86,9 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
 
     const funcionarioSelected = {
         id: null,
+        cargo: {
+            id: 0
+        },
         nombre: "",
         apellido: "",
         nrodoc: "",
@@ -106,6 +115,11 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         };
     };
 
+    const recuperarCargos = async () => {
+        const response = await getCargo();
+        setCargos(response);
+    }
+
     const recuperarNetworkInfo = async () => {
         const response = await getNetworkInfo();
         return response;
@@ -127,6 +141,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
 
     useEffect(() => {
         recuperarFuncionarios(page, nrodocBuscado, nombreBuscado);
+        recuperarCargos();
     }, []);
 
     const actualizarFuncionarios = async () => {
@@ -198,6 +213,29 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         event.preventDefault();
         const form = event.currentTarget;
 
+        let sw = 0;
+
+        // Verificar si está vacío
+        if (!funcionarioAGuardar.cargo.cargo || funcionarioAGuardar.cargo.cargo.trim() === '') {
+            setCargoMsj('El cargo es obligatorio.');
+            setCargoError(true);
+            sw = 1;
+        } else {
+            // Verificar si el cargo seleccionado es válido
+            const existe = verificarCargo(funcionarioAGuardar.cargo.cargo);
+            if (!existe) {
+                setCargoMsj('El cargo es inválido.');
+                setCargoError(true);
+                sw = 1;
+            }
+        }
+
+        if (sw === 1) {
+            event.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+
         if (form.checkValidity()) {
             guardarFn({ ...funcionarioAGuardar });
             form.classList.remove('was-validated');
@@ -206,10 +244,84 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         }
     };
 
+    const manejarTeclado = (event) => {
+        if (event.key === 'ArrowDown') {
+            setIndiceSeleccionado((prev) => (prev < sugerencias.length - 1 ? prev + 1 : prev));
+        } else if (event.key === 'ArrowUp') {
+            setIndiceSeleccionado((prev) => (prev > 0 ? prev - 1 : prev));
+        } else if (event.key === 'Enter') {
+            event.preventDefault();
+            if (indiceSeleccionado >= 0) {
+                seleccionarTecla(indiceSeleccionado);
+            }
+        }
+    };
+
+    const seleccionarTecla = (index) => {
+        const cargoSeleccionado = sugerencias[index];
+        setFuncionarioAGuardar({
+            ...funcionarioAGuardar,
+            cargo: {
+                id: cargoSeleccionado.id,
+                cargo: cargoSeleccionado.tipoproducto
+            }
+        });
+        handleCargoChange({
+            target: {
+                name: 'cargo',
+                value: cargoSeleccionado.cargo
+            }
+        });
+        setSugerencias([]);
+        setIndiceSeleccionado(-1);
+    }
+
+    const verificarCargo = (desc) => {
+        return cargos.some(p => p.cargo === desc);
+    }
+
+    const handleCargoChange = (e) => {
+        const nuevoDesc = e.target.value;
+        const descEncontrada = cargos.find(p => p.cargo === nuevoDesc);
+
+        setFuncionarioAGuardar({
+            ...funcionarioAGuardar,
+            cargo: descEncontrada
+                ? { id: descEncontrada.id, cargo: descEncontrada.cargo }
+                : { id: null, cargo: nuevoDesc }
+        });
+
+        const existe = verificarCargo(nuevoDesc);
+
+        if (nuevoDesc.trim() === '') {
+            setCargoMsj('El cargo es obligatorio.');
+            setCargoError(true);
+        } else if (!existe) {
+            setCargoMsj('El cargo es inválido.');
+            setCargoError(true);
+        } else {
+            setCargoMsj('');
+            setCargoError(false);
+        }
+
+        const nuevasSugerencias = cargos
+            .filter(p => p.cargo.toLowerCase().includes(nuevoDesc.toLowerCase()))
+            .slice(0, 5);
+        setSugerencias(nuevoDesc.trim() === '' ? [] : nuevasSugerencias);
+    }
+
     const refrescar = () => {
         setNombreBuscado('');
         setNrodocBuscado('');
     };
+
+    const handleOpenForm = (funcionario) => {
+        setFuncionarioAGuardar(funcionario);
+        setSugerencias([]);
+        setIndiceSeleccionado(-1);
+        setCargoMsj('');
+        setCargoError(false);
+    }
 
     return (
         <>
@@ -300,6 +412,15 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             decimalSeparator=","
                                             prefix={'Gs. '}
                                             className="form-control border-input w-100 border-black mb-3"
+                                            readOnly
+                                        />
+                                        <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
+                                        <input
+                                            type="text"
+                                            id="cargo"
+                                            name="cargo"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={funcionarioAVisualizar.cargo.cargo}
                                             readOnly
                                         />
                                     </div>
@@ -411,6 +532,52 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El salario no debe estar vacío.
+                                                </div>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
+                                                <input
+                                                    type="text"
+                                                    id="cargo"
+                                                    name="cargo"
+                                                    className={`form-control border-input w-100 ${cargoError ? 'is-invalid' : ''}`}
+                                                    placeholder='Escribe...'
+                                                    value={funcionarioAGuardar.cargo.cargo || ''}
+                                                    onChange={handleCargoChange}
+                                                    onKeyDown={manejarTeclado}
+                                                    onBlur={() => setTimeout(() => setSugerencias([]), 200)}
+                                                    onFocus={() => {
+                                                        setIndiceSeleccionado(-1);
+                                                        if (cargos.length > 0 && funcionarioAGuardar.cargo?.cargo) {
+                                                            const nuevasSugerencias = cargos
+                                                                .filter(p => p.cargo.toLowerCase().includes(funcionarioAGuardar.cargo.cargo.toLowerCase()))
+                                                                .slice(0, 5);
+                                                            setSugerencias(nuevasSugerencias);
+                                                        }
+                                                    }}
+                                                    required
+                                                />
+                                                {sugerencias.length > 0 && (
+                                                    <ul
+                                                        className="list-group position-absolute"
+                                                        style={{ zIndex: 1000 }}
+                                                        onMouseDown={(e) => e.preventDefault()} // Evitar que el blur cierre la lista durante el clic
+                                                    >
+                                                        {sugerencias.map((sugerencia, index) => (
+                                                            <li
+                                                                key={sugerencia.id}
+                                                                className={`list-group-item list-group-item-action ${indiceSeleccionado === index ? 'active' : ''}`}
+                                                                style={{ cursor: 'pointer' }}
+                                                                onClick={() => seleccionarTecla(index)}
+                                                                onMouseEnter={() => setIndiceSeleccionado(index)}
+                                                            >
+                                                                {sugerencia.cargo}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>{cargoMsj}
                                                 </div>
                                             </div>
                                         </div>
@@ -565,7 +732,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         if (puedeEditar) {
-                                                            setFuncionarioAGuardar(v);
+                                                            handleOpenForm(v);
                                                         }
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
@@ -621,7 +788,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setFuncionarioAGuardar(funcionarioSelected)} className="btn btn-success text-black fw-bold me-3">
+                            <button onClick={() => handleOpenForm(funcionarioSelected)} className="btn btn-success text-black fw-bold me-3">
                                 <i className="bi bi-plus-lg me-2"></i>Registrar
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-primary text-black fw-bold ms-3">

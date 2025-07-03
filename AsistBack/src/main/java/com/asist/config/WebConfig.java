@@ -15,7 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addViewController("/**/{path:[^\\.]*}")
                 .setViewName("forward:/index.html");
 
-        registry.addViewController("/asistpro/login")
+        registry.addViewController("/asist/login")
                 .setViewName("forward:/index.html");
     }
 

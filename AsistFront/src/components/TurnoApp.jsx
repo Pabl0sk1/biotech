@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getTurnoPaginado, getTurnoDetalle, saveTurno, updateTurno, deleteTurno, deleteTurnoDetalle, getTurnoPorTipo } from '../services/turno.service.js';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
+import { getTipoTurno } from '../services/tipoturno.service.js';
 import { Link } from 'react-router-dom';
-import { NumericFormat } from 'react-number-format';
 
 export const TurnoApp = ({ usuarioUsed }) => {
     const UrlBase = '/asist';
@@ -10,6 +10,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
     const [tipoBuscado, setTipoBuscado] = useState('');
     const [turnos, setTurnos] = useState([]);
     const [turnosDias, setTurnosDias] = useState([]);
+    const [tipoturnos, setTipoturnos] = useState([]);
     const [detallesAEliminar, setDetallesAEliminar] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
@@ -84,11 +85,13 @@ export const TurnoApp = ({ usuarioUsed }) => {
 
     const turnoSelected = {
         id: null,
+        tipoturno: {
+            id: 0
+        },
         descripcion: "",
-        tipo: "",
-        horaent: "",
-        horasal: "",
-        horades: "",
+        horaent: "00:00",
+        horasal: "00:00",
+        horades: "00:00",
         thoras: 0,
         extporcen: 0,
         turnodia: []
@@ -97,7 +100,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
     const recuperarTurnos = async (pageNumber = 0, desc = '') => {
         const response = await getTurnoPaginado(pageNumber);
         const turnosFiltrados = response.turnos.filter(turno => {
-            const tipoCoincide = desc.trim() !== '' ? turno.tipo.toLowerCase().includes(desc.toLowerCase()) : true;
+            const tipoCoincide = desc ? turno.tipoturno.id === parseInt(desc) : true;
 
             return tipoCoincide;
         });
@@ -112,6 +115,11 @@ export const TurnoApp = ({ usuarioUsed }) => {
     const recuperarTurnosDetalles = async () => {
         const response = await getTurnoDetalle();
         setTurnosDias(response);
+    }
+
+    const recuperarTipoTurnos = async () => {
+        const response = await getTipoTurno();
+        setTipoturnos(response);
     }
 
     const recuperarNetworkInfo = async () => {
@@ -130,6 +138,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
     useEffect(() => {
         recuperarTurnos(page, tipoBuscado);
         recuperarTurnosDetalles();
+        recuperarTipoTurnos();
     }, []);
 
     const actualizarTurnos = async () => {
@@ -199,8 +208,17 @@ export const TurnoApp = ({ usuarioUsed }) => {
         event.preventDefault();
         const form = event.currentTarget;
 
+        let sw = 0;
+
         if (!turnoAGuardar.turnodia.length) {
+            sw = 1;
             setDetalleNoEliminar(true);
+        }
+        if (!turnoAGuardar.tipoturno) {
+            sw = 1;
+        }
+
+        if (sw == 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
             return;
@@ -217,6 +235,22 @@ export const TurnoApp = ({ usuarioUsed }) => {
     const refrescar = () => {
         setTipoBuscado('');
     };
+
+    function formatearHora(hora) {
+        if (!hora) return "";
+
+        // Si es un objeto Date
+        if (hora instanceof Date) {
+            return hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Si es un string con formato HH:MM:SS
+        if (typeof hora === "string" && hora.includes(":")) {
+            return hora.slice(0, 5); // Devuelve HH:MM
+        }
+
+        return hora; // Si no se puede procesar, lo devuelve como está
+    }
 
     const handleOpenForm = async (turno) => {
         setTurnoAGuardar(turno);
@@ -305,7 +339,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 name="horaent"
                                                 className="form-control border-input w-100 border-black mb-3"
                                                 value={turnoAVisualizar.horaent}
-                                                step={1}
                                                 readOnly
                                             />
                                         </div>
@@ -317,7 +350,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 name="horades"
                                                 className="form-control border-input w-100 border-black mb-3"
                                                 value={turnoAVisualizar.horades}
-                                                step={1}
                                                 readOnly
                                             />
                                         </div>
@@ -336,13 +368,13 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0'>
                                         <div className='form-group mb-1'>
-                                            <label htmlFor="tipo" className="form-label m-0 mb-2">Tipo</label>
+                                            <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
                                             <input
                                                 type="text"
-                                                id="tipo"
-                                                name="tipo"
+                                                id="tipoturno"
+                                                name="tipoturno"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.tipo}
+                                                value={turnoAVisualizar.tipoturno.tipo}
                                                 readOnly
                                             />
                                         </div>
@@ -354,7 +386,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 name="horasal"
                                                 className="form-control border-input w-100 border-black mb-3"
                                                 value={turnoAVisualizar.horasal}
-                                                step={1}
                                                 readOnly
                                             />
                                         </div>
@@ -425,7 +456,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     name="descripcion"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.descripcion || ''}
+                                                    value={turnoAGuardar.descripcion ?? ''}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                     autoFocus
                                                     required
@@ -441,9 +472,9 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     id="horaent"
                                                     name="horaent"
                                                     className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horaent || ''}
-                                                    step={1}
+                                                    value={turnoAGuardar.horaent || '00:00'}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    required
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -453,9 +484,9 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     id="horades"
                                                     name="horades"
                                                     className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horades || ''}
-                                                    step={1}
+                                                    value={turnoAGuardar.horades || '00:00'}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    required
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -466,7 +497,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     name="extporcen"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.extporcen || ''}
+                                                    value={turnoAGuardar.extporcen ?? ''}
                                                     min={0}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -475,24 +506,28 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                         {/*Columna 2 de visualizar*/}
                                         <div className='col ms-5 ps-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="tipo" className="form-label m-0 mb-2">Tipo</label>
+                                                <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
                                                 <select
-                                                    id="tipo"
-                                                    name="tipo"
                                                     className="form-select border-input w-100"
-                                                    value={turnoAGuardar.tipo ? turnoAGuardar.tipo : ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    name="tipoturno"
+                                                    id='tipoturno'
+                                                    value={turnoAGuardar.tipoturno?.id ?? ''}
+                                                    onChange={(event) => {
+                                                        const selectedTipoTurno = tipoturnos.find(r => r.id === parseInt(event.target.value));
+                                                        setTurnoAGuardar({
+                                                            ...turnoAGuardar,
+                                                            tipoturno: selectedTipoTurno // Cambia esto para que se actualice correctamente
+                                                        });
+                                                    }}
                                                     required
                                                 >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un tipo...</option>
-                                                    <option key={1} value={'Diurno'}>Diurno</option>
-                                                    <option key={2} value={'Nocturno'}>Nocturno</option>
-                                                    <option key={3} value={'Mixto'}>Mixto</option>
-                                                    <option key={4} value={'Mixto Diurno'}>Mixto Diurno</option>
-                                                    <option key={5} value={'Mixto Nocturno'}>Mixto Nocturno</option>
+                                                    <option value="" className="bg-secondary-subtle">Seleccione una modalidad...</option>
+                                                    {tipoturnos.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.tipo}</option>
+                                                    ))}
                                                 </select>
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El tipo es obligatorio.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La modalidad es obligatoria.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
@@ -502,9 +537,9 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     id="horasal"
                                                     name="horasal"
                                                     className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horasal || ''}
-                                                    step={1}
+                                                    value={turnoAGuardar.horasal || '00:00'}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    required
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -515,7 +550,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     name="thoras"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.thoras || ''}
+                                                    value={turnoAGuardar.thoras ?? ''}
                                                     min={0}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -619,23 +654,28 @@ export const TurnoApp = ({ usuarioUsed }) => {
                         </p>
                         <div className="p-3">
                             <div className="d-flex align-items-center mb-3 fw-bold">
-                                <label htmlFor="tipoBsc" className="form-label m-0">Tipo</label>
-                                <input
-                                    type="text"
-                                    id="tipoBsc"
-                                    name="tipoBsc"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
+                                <label htmlFor="tipoBcs" className="form-label m-0">Modalidad</label>
+                                <select
+                                    className="form-select me-4 ms-2 border-input"
+                                    name="tipoBcs"
                                     value={tipoBuscado}
-                                    onChange={(e) => setTipoBuscado(e.target.value)} // Actualiza el estado al escribir
-                                />
+                                    onChange={(event) => {
+                                        const selectedTipo = event.target.value;
+                                        setTipoBuscado(selectedTipo);
+                                    }}
+                                >
+                                    <option value="" className="bg-secondary-subtle">Seleccione una modalidad...</option>
+                                    {tipoturnos.map((t) => (
+                                        <option key={t.id} value={t.id}>{t.tipo}</option>
+                                    ))}
+                                </select>
                             </div>
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
                                 <thead className='table-primary'>
                                     <tr>
                                         <th>#</th>
                                         <th>Descripción</th>
-                                        <th>Tipo</th>
+                                        <th>Modalidad</th>
                                         <th>Horarío de Entrada</th>
                                         <th>Horarío de Salida</th>
                                         <th>Opciones</th>
@@ -661,9 +701,9 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                         <>
                                                             <td style={{ width: '60px' }}>{v.id}</td>
                                                             <td className='text-start'>{v.descripcion}</td>
-                                                            <td className='text-start'>{v.tipo}</td>
-                                                            <td>{v.horaent}</td>
-                                                            <td>{v.horasal}</td>
+                                                            <td className='text-start'>{v.tipoturno.tipo}</td>
+                                                            <td>{formatearHora(v.horaent)}</td>
+                                                            <td>{formatearHora(v.horasal)}</td>
                                                             <td style={{ width: '100px' }}>
                                                                 <button
                                                                     onClick={(e) => {

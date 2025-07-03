@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -28,6 +30,11 @@ public class Funcionario {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "funcionario_sec")
 	@SequenceGenerator(name = "funcionario_sec", sequenceName = "funcionarios_id_seq", allocationSize = 1)
 	private Integer id;
+	
+	@NotNull
+	@ManyToOne
+	@JoinColumn(name = "cargo_id")
+	Cargo cargo;
 	
 	@NotNull
 	@NotEmpty

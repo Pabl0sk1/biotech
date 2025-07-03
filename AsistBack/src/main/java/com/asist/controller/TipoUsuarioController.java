@@ -129,7 +129,7 @@ public class TipoUsuarioController {
 	        result.put("totalPages", tipousuarios.getTotalPages());
 	    } catch (Exception e) {
 	        result.put("ok", false);
-	        result.put("message", "Error al buscar materiales: " + e.getMessage());
+	        result.put("message", "Error al buscar tipo de usuario: " + e.getMessage());
 	    }
 
 	    return result;

@@ -69,11 +69,11 @@ export const getTurnoPaginado = async (page = 0, size = 10, sortBy = 'id', sortT
     };
 };
 
-export const getTurnoPorTipo = async (tipo, page = 0, size = 10, sortBy = 'id', sortType = false) => {
+export const getTurnoPorTipo = async (id, page = 0, size = 10, sortBy = 'id', sortType = false) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/buscarPorTipo`, {
+        const response = await axios.get(`${API_BASE_URL}/buscarPorIdTipo`, {
             params: {
-                tipo,
+                id,
                 page,
                 size,
                 sortBy,

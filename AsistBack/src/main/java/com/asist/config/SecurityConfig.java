@@ -26,15 +26,15 @@ public class SecurityConfig extends OncePerRequestFilter {
             Object usuario = request.getSession().getAttribute("usuarioLogueado");
 
             if (usuario != null) {
-                response.sendRedirect("/asistpro/home");
+                response.sendRedirect("/asist/home");
             } else {
-                response.sendRedirect("/asistpro/login");
+                response.sendRedirect("/asist/login");
             }
             return;
         }
 
         // Permitir libremente las rutas del frontend
-        if (uri.startsWith("/asistpro") ||
+        if (uri.startsWith("/asist") ||
             uri.startsWith("/assets") ||
             uri.endsWith(".js") ||
             uri.endsWith(".css") ||

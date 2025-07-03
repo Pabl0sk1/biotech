@@ -10,44 +10,44 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import com.asist.entity.TipoUsuario;
-import com.asist.repository.TipoUsuarioRepository;
+import com.asist.entity.Cargo;
+import com.asist.repository.CargoRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
 @Service
-public class TipoUsuarioService {
+public class CargoService {
 
 	@Autowired
-	TipoUsuarioRepository rep;
+	CargoRepository rep;
 
 	ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 	Validator validator = factory.getValidator();
 
-	public List<TipoUsuario> listar() {
-		List<TipoUsuario> result = new ArrayList<TipoUsuario>();
+	public List<Cargo> listar() {
+		List<Cargo> result = new ArrayList<Cargo>();
 		rep.findAll().forEach(result::add);
 		return result;
 	}
 	
-	public Page<TipoUsuario> listarPaginado(int page, int size, String sortBy, boolean sortType) {
+	public Page<Cargo> listarPaginado(int page, int size, String sortBy, boolean sortType) {
         Sort sort = sortType ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return rep.findAll(pageable);
 	}
 
-	public TipoUsuario guardar(TipoUsuario tipousuario) {
-		Set<ConstraintViolation<TipoUsuario>> violations = validator.validate(tipousuario);
+	public Cargo guardar(Cargo cargo) {
+		Set<ConstraintViolation<Cargo>> violations = validator.validate(cargo);
 		String errorValidation = "";
-		for (ConstraintViolation<TipoUsuario> cv : violations) {
+		for (ConstraintViolation<Cargo> cv : violations) {
 			errorValidation += "Error " + cv.getPropertyPath() + " " + cv.getMessage();
 		}
 		if (!violations.isEmpty()) {
 			throw new RuntimeException(errorValidation);
 		}
-		return rep.save(tipousuario);
+		return rep.save(cargo);
 	}
 
 	public void eliminar(Integer id) {
@@ -56,20 +56,20 @@ public class TipoUsuarioService {
 
 	}
 
-	public TipoUsuario buscarPorId(Integer id) {
+	public Cargo buscarPorId(Integer id) {
 
-		Optional<TipoUsuario> tipousuario = rep.findById(id);
+		Optional<Cargo> cargo = rep.findById(id);
 
-		if (tipousuario.isPresent()) {
-			return tipousuario.get();
+		if (cargo.isPresent()) {
+			return cargo.get();
 		} else {
-			throw new RuntimeException("No se encontro el tipo de usuario con ID: " + id);
+			throw new RuntimeException("No se encontro el cargo con ID: " + id);
 		}
 
 	}
 	
-	public Page<TipoUsuario> BuscarPorTipoUsuario(String tipousuario, Pageable pageable){
-		return rep.findByTipousuarioLikeIgnoreCase(tipousuario, pageable);
+	public Page<Cargo> BuscarPorCargo(String cargo, Pageable pageable){
+		return rep.findByCargoLikeIgnoreCase(cargo, pageable);
 	}
-
+	
 }

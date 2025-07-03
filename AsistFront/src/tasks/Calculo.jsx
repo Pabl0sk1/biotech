@@ -567,18 +567,18 @@ export const Calculo = ({ usuarioUsed }) => {
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
-                                                                value={detalle.horaent}
+                                                                value={detalle.horaent || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value)}
-                                                                step={1}
+                                                                required
                                                             />
                                                         </td>
                                                         <td style={{ width: '300px' }}>
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
-                                                                value={detalle.horasal}
+                                                                value={detalle.horasal || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value)}
-                                                                step={1}
+                                                                required
                                                             />
                                                         </td>
                                                         <td style={{ width: '120px' }}>
@@ -605,7 +605,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                 ))}
                             </div>
                             <div className="border-top border-2 border-black pt-2 pb-2 ps-3 m-0 text-start user-select-none">
-                                <button type='submit' className="btn btn-warning fw-bold ps-3 pe-3">
+                                <button type='submit' className="btn btn-primary fw-bold px-3 text-black">
                                     <i className="bi bi-printer-fill me-2"></i>Generar
                                 </button>
                             </div>

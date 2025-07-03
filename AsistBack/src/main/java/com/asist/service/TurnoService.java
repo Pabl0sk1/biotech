@@ -68,8 +68,8 @@ public class TurnoService {
 
 	}
 	
-	public Page<Turno> BuscarPorTipo(String tipo, Pageable pageable){
-		return rep.findByTipoLikeIgnoreCase(tipo, pageable);
+	public Page<Turno> BuscarPorIdTipo(Integer id, Pageable pageable){
+		return rep.findByIdTipo(id, pageable);
 	}
 	
 }

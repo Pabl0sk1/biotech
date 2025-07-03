@@ -15,6 +15,8 @@ import { Error } from './Error.jsx';
 import Configuracion from './Configuracion.jsx';
 import { getConfig } from "./services/config.service";
 import { Calculo } from './tasks/Calculo.jsx'
+import { CargoApp } from './components/CargoApp.jsx';
+import { TipoTurnoApp } from './components/TipoTurnoApp.jsx';
 
 function App() {
   const UrlBase = '/asist';
@@ -92,6 +94,8 @@ function App() {
               <Route path={UrlLocal + "/calcs/report"} element={<Calculo usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/calcs/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/calcs/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/calcs/positions"} element={<CargoApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/calcs/schedules"} element={<TipoTurnoApp usuarioUsed={usuarioUsed} />} />
             </>
           )}
           <Route path={UrlLocal + '/profile'} element={<Perfil usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />

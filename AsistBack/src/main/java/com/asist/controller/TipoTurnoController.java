@@ -16,20 +16,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.asist.entity.Turno;
-import com.asist.entity.TurnoDia;
-import com.asist.service.TurnoDiaService;
-import com.asist.service.TurnoService;
+import com.asist.entity.TipoTurno;
+import com.asist.service.TipoTurnoService;
 
 @RestController
-@RequestMapping(path = "turno")
-public class TurnoController {
+@RequestMapping(path = "tipoturno")
+public class TipoTurnoController {
 
 	@Autowired
-	TurnoService serv;
-	
-	@Autowired
-	TurnoDiaService servdet;
+	TipoTurnoService serv;
 
 	@GetMapping(path = "listar")
 	public Map<String, Object> listar() {
@@ -55,17 +50,6 @@ public class TurnoController {
 
 		return result;
 	}
-	
-	@GetMapping(path = "listarDetalle")
-	public Map<String, Object> listarDetalle() {
-		Map<String, Object> result = new HashMap<>();
-
-		result.put("ok", true);
-		result.put("size", servdet.listar().size());
-		result.put("list", servdet.listar());
-
-		return result;
-	}
 
 	@GetMapping(path = "buscarPorId/{id}")
 	public Map<String, Object> buscarPorId(@PathVariable Integer id) {
@@ -76,35 +60,25 @@ public class TurnoController {
 
 		return map;
 	}
-	
-	@GetMapping(path = "buscarPorIdDetalle/{id}")
-	public Map<String, Object> buscarPorIdDetalle(@PathVariable Integer id) {
-		Map<String, Object> map = new HashMap<>();
-		
-		map.put("ok", true);
-		map.put("list", servdet.buscarPorId(id));
-
-		return map;
-	}
 
 	@PostMapping(path = "guardar")
-	public Map<String, Object> guardar(@RequestBody Turno turno) {
+	public Map<String, Object> guardar(@RequestBody TipoTurno tipo) {
 		Map<String, Object> map = new HashMap<>();
 		map.put("ok", true);
-		map.put("added", serv.guardar(turno));
+		map.put("added", serv.guardar(tipo));
 		return map;
 	}
 
 	@DeleteMapping(path = "eliminar/{id}")
 	public Map<String, Object> eliminar(@PathVariable Integer id) {
 		Map<String, Object> map = new HashMap<>();
-		Turno turno = new Turno();
+		TipoTurno tipo = new TipoTurno();
 		map.put("ok", true);
 		int sw = 0;
 
-		for (Turno v : serv.listar()) {
+		for (TipoTurno v : serv.listar()) {
 			if (v.getId().equals(id)) {
-				turno = v;
+				tipo = v;
 				sw = 1;
 				break;
 			}
@@ -112,42 +86,23 @@ public class TurnoController {
 
 		if (sw == 1) {
 			serv.eliminar(id);
-			map.put("deleted", turno);
+			map.put("deleted", tipo);
 		} else {
 			map.put("message", "Registro de ID " + id + " no existe.");
 		}
 
 		return map;
-	}
-	
-	@DeleteMapping(path = "eliminarDetalle/{id}")
-	public Map<String, Object> eliminarDetalle(@PathVariable Integer id) {
-	    Map<String, Object> map = new HashMap<>();
-	    try {
-	        TurnoDia detalle = servdet.buscarPorId(id);
-	        Turno turno = detalle.getTurno();
-	        if (turno == null) {
-	            throw new RuntimeException("El turno asociado al detalle no existe");
-	        }
-	        servdet.eliminar(id);
-	        map.put("ok", true);
-	        map.put("deleted", detalle); 
-	    } catch (RuntimeException e) {
-	        map.put("ok", false);
-	        map.put("message", e.getMessage());
-	    }
-	    return map;
 	}
 
 	@PutMapping(path = "modificar/{id}")
-	public Map<String, Object> modificar(@PathVariable Integer id, @RequestBody Turno turno) {
+	public Map<String, Object> modificar(@PathVariable Integer id, @RequestBody TipoTurno tipo) {
 		Map<String, Object> map = new HashMap<>();
 		map.put("ok", true);
-		Turno existingTurno = serv.buscarPorId(id);
+		TipoTurno existingTipoTurno = serv.buscarPorId(id);
 
-		if (existingTurno != null) {
-			turno.setId(id);
-			map.put("modified", serv.guardar(turno));
+		if (existingTipoTurno != null) {
+			tipo.setId(id);
+			map.put("modified", serv.guardar(tipo));
 		} else {
 			map.put("message", "Registro de ID " + id + " no existe.");
 		}
@@ -155,9 +110,9 @@ public class TurnoController {
 		return map;
 	}
 	
-	@GetMapping(path = "buscarPorIdTipo")
-	public Map<String, Object> buscarPorIdTipo(
-	        @RequestParam Integer id,
+	@GetMapping(path = "buscarPorTipoDesc")
+	public Map<String, Object> buscarPorTipoDesc(
+	        @RequestParam String tipo,
 	        @RequestParam(defaultValue = "0") int page,
 	        @RequestParam(defaultValue = "10") int size,
 		    @RequestParam(defaultValue = "id") String sortBy,
@@ -165,16 +120,16 @@ public class TurnoController {
 	    Map<String, Object> result = new HashMap<>();
 	    Sort sort = sortType ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 	    Pageable pageable = PageRequest.of(page, size, sort);
-
+	    
 	    try {
-	        Page<Turno> turnos = serv.BuscarPorIdTipo(id, pageable);
+	        Page<TipoTurno> tipos = serv.BuscarPorTipo("%" + tipo + "%", pageable);
 	        result.put("ok", true);
-	        result.put("size", turnos.getTotalElements());
-	        result.put("list", turnos.getContent());
-	        result.put("totalPages", turnos.getTotalPages());
+	        result.put("size", tipos.getTotalElements());
+	        result.put("list", tipos.getContent());
+	        result.put("totalPages", tipos.getTotalPages());
 	    } catch (Exception e) {
 	        result.put("ok", false);
-	        result.put("message", "Error al buscar turnos: " + e.getMessage());
+	        result.put("message", "Error al buscar tipos de turnos: " + e.getMessage());
 	    }
 
 	    return result;
