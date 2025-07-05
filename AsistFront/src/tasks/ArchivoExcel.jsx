@@ -1,22 +1,26 @@
-import { read, writeFileXLSX, utils } from "xlsx";
+import ExcelJS from 'exceljs';
 import { LogoBase64 } from "../utils/LogoBase64";
+import { getTurno } from '../services/turno.service';
+import { useState } from 'react';
 
 const generarExcel = async (data) => {
-    const { cantdias, fechadesde, fechahasta, listafuncionarios } = data;
+    const { fechadesde, fechahasta, listafuncionarios } = data;
 
-    // Crear workbook
-    const workbook = utils.book_new();
+    // Crear imagen
+    const logo = await LogoBase64();
+
+    // Crear workbook con ExcelJS
+    const workbook = new ExcelJS.Workbook();
 
     const formatearFecha = (fecha) => {
         if (!fecha) return '';
         const date = new Date(fecha + 'T00:00:00Z');
-        const day = String(date.getUTCDate()).padStart(2, '0'); // Agrega un cero si es necesario
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Los meses comienzan desde 0
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
         const year = date.getUTCFullYear();
         return `${day}/${month}/${year}`;
     };
 
-    // Función para obtener el día de la semana
     const obtenerDiaSemana = (fecha) => {
         if (!fecha) return '';
         const date = new Date(fecha + 'T00:00:00Z');
@@ -30,34 +34,30 @@ const generarExcel = async (data) => {
             .split(/[- ]+/)
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
-    }
+    };
 
     const firstChar = (text) => {
         const texts = text.trim().split(/\s+/);
         return capitalize(texts[0]);
-    }
+    };
 
-    // Función para formatear período
     const formatearPeriodo = () => {
         return `${formatearFecha(fechadesde)} AL ${formatearFecha(fechahasta)}`;
     };
 
-    // Función para separador de miles
     const formatearNumero = (valor) => {
         if (!valor || isNaN(Number(valor))) {
-            return valor; // Retorna lo mismo si está vacío o no es número válido
+            return valor;
         }
         return Number(valor).toLocaleString("es-PY");
     };
 
-    // Función para convertir minutos a formato HH:MM
     function minutosAFormatoHora(minutosTotales) {
         const horas = Math.floor(minutosTotales / 60);
         const minutos = minutosTotales % 60;
         return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
-    }
+    };
 
-    // Función para restar dos horas en formato HH:MM
     function restarHoras(horaInicio, horaFin) {
         const [h1, m1] = horaInicio.split(":").map(Number);
         const [h2, m2] = horaFin.split(":").map(Number);
@@ -67,32 +67,171 @@ const generarExcel = async (data) => {
 
         const diferenciaMinutos = minutosFin - minutosInicio;
         return minutosAFormatoHora(diferenciaMinutos);
-    }
+    };
+
+    // Función para aplicar bordes a un rango fusionado
+    const aplicarBordesRangoFusionado = (worksheet, rango) => {
+        const [startCell, endCell] = rango.split(':');
+        const startCol = startCell.match(/[A-Z]+/)[0];
+        const startRow = parseInt(startCell.match(/\d+/)[0]);
+        const endCol = endCell.match(/[A-Z]+/)[0];
+        const endRow = parseInt(endCell.match(/\d+/)[0]);
+
+        // Convertir letras de columna a números
+        const colToNum = (col) => {
+            let result = 0;
+            for (let i = 0; i < col.length; i++) {
+                result = result * 26 + (col.charCodeAt(i) - 64);
+            }
+            return result;
+        };
+
+        const startColNum = colToNum(startCol);
+        const endColNum = colToNum(endCol);
+
+        // Aplicar bordes a todas las celdas del rango
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startColNum; col <= endColNum; col++) {
+                const cell = worksheet.getCell(row, col);
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            }
+        }
+    };
+
+
 
     // Procesar cada funcionario
     listafuncionarios.forEach((funcionario, index) => {
-        // Crear datos para la hoja del funcionario
-        const datosHoja = [];
-
-        // Fila 1: Título principal
-        datosHoja.push(['', '', '', '', '', 'PLANILLA DE CONTROL - HORAS EXTRAS', '', '', '', '', '', '', '', '']);
-
-        // Fila 2: Vacía
-        datosHoja.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '']);
-
-        // Fila 3: Información del funcionario
         const nombreCompleto = (`${funcionario.apellido}, ${funcionario.nombre}`).toUpperCase();
-        datosHoja.push([
-            'FUNCIONARIO:', nombreCompleto, '', '', '', 'CIN°:', formatearNumero(funcionario.nrodoc), '',
-            'CARGO:', '', '', 'PERIODO:', formatearPeriodo(),
-        ]);
+        const cargoLab = funcionario.cargo.cargo.toUpperCase();
 
-        // Fila 4: Encabezados de tabla
-        datosHoja.push([
-            'DÍA', 'FECHA', 'ENTRADA', 'SALIDA', 'H. TOTAL', 'DESCANSO', 'TOTAL', 'H. NORMALES', 'H. NORM. NOCT.',
-            'H. NORM. MD.', 'H. NORM. MN.', 'H. EXTRAS NORM.', 'H. EXTRAS NOCT.', 'H. EXTRAS 100%'
-        ]);
+        // Crear worksheet
+        let nombreHoja = (`${firstChar(funcionario.nombre)} ${firstChar(funcionario.apellido)}`).toUpperCase();
 
+        const worksheet = workbook.addWorksheet(nombreHoja);
+
+        // Configurar anchos de columna
+        worksheet.columns = [
+            { width: 14 },
+            { width: 14 },
+            { width: 12 },
+            { width: 12 },
+            { width: 12 },
+            { width: 12 },
+            { width: 12 },
+            { width: 18 },
+            { width: 18 },
+            { width: 18 },
+            { width: 18 },
+            { width: 18 },
+            { width: 18 },
+            { width: 18 },
+        ];
+
+        // Agregar logo si existe
+        if (logo.tipo) {
+            // Limpiar el base64
+            let base64Clean = logo.base;
+
+            // Convertir base64 a Uint8Array (compatible con navegador)
+            const binaryString = atob(base64Clean);
+            const logoBuffer = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                logoBuffer[i] = binaryString.charCodeAt(i);
+            }
+
+            // Agregar imagen
+            const imageId = workbook.addImage({
+                buffer: logoBuffer,
+                extension: logo.tipo
+            });
+
+            // Posicionar imagen
+            worksheet.addImage(imageId, {
+                tl: { col: 0, row: 0 },
+                br: { col: 1, row: 2 },
+                editAs: 'twoCell'
+            });
+        }
+
+        // Título
+        const titleCell = worksheet.getCell('B1');
+        titleCell.value = 'PLANILLA DE CONTROL - HORAS EXTRAS';
+        titleCell.font = { bold: true, size: 14 };
+        titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.mergeCells('B1:N2');
+
+        // Imagen
+        worksheet.mergeCells('A1:A2');
+
+        // Información del funcionario
+        const funcionarioCell = worksheet.getCell('A3');
+        funcionarioCell.value = {
+            richText: [
+                { text: 'FUNCIONARIO: ', font: { bold: true } },
+                { text: nombreCompleto, font: { bold: false } }
+            ]
+        };
+        worksheet.mergeCells('A3:E3');
+
+        const cinCell = worksheet.getCell('F3');
+        cinCell.value = {
+            richText: [
+                { text: 'CIN°: ', font: { bold: true } },
+                { text: formatearNumero(funcionario.nrodoc), font: { bold: false } }
+            ]
+        };
+        worksheet.mergeCells('F3:H3');
+
+        const cargoCell = worksheet.getCell('I3');
+        cargoCell.value = {
+            richText: [
+                { text: 'CARGO: ', font: { bold: true } },
+                { text: cargoLab, font: { bold: false } }
+            ]
+        };
+        worksheet.mergeCells('I3:K3');
+
+        const periodoCell = worksheet.getCell('L3');
+        periodoCell.value = {
+            richText: [
+                { text: 'PERIODO: ', font: { bold: true } },
+                { text: formatearPeriodo(), font: { bold: false } }
+            ]
+        };
+        worksheet.mergeCells('L3:N3');
+
+        // Encabezados
+        const headers = [
+            'DÍA', 'FECHA', 'ENTRADA', 'SALIDA', 'H. TOTAL', 'DESCANSO', 'TOTAL',
+            'H. NORMALES', 'H. NORM. NOCT.', 'H. NORM. MD.', 'H. NORM. MN.',
+            'H. EXTRAS NORM.', 'H. EXTRAS NOCT.', 'H. EXTRAS 100%'
+        ];
+
+        headers.forEach((header, colIndex) => {
+            const cell = worksheet.getCell(4, colIndex + 1);
+            cell.value = header;
+            cell.font = { bold: true };
+            cell.alignment = { horizontal: 'center' };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFD9D9D9' }
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+
+        // Variables para totales
         let totalt = 0;
         let totalhn = 0;
         let totalhnn = 0;
@@ -101,16 +240,15 @@ const generarExcel = async (data) => {
         let totalhen = 0;
         let totalhent = 0;
         let totalhextras = 0;
-        let ind = 0;
+        let currentRow = 5;
 
-        // Filas de datos diarios
+        // Datos diarios
         funcionario.detalles.forEach((detalle, diaIndex) => {
             const diaSemana = obtenerDiaSemana(detalle.fecha);
             const fechaFormateada = formatearFecha(detalle.fecha);
 
-            // Calcular horas si hay entrada y salida
             let htotal = '00:00';
-            let descanso = '00:00';
+            let descanso = '01:00';
             let total = 0;
             let horasn = 0;
             let horasnn = 0;
@@ -122,23 +260,19 @@ const generarExcel = async (data) => {
 
             if (detalle.horaent && detalle.horasal) {
                 htotal = restarHoras(detalle.horaent, detalle.horasal);
-                total = htotal - descanso;
+                // total = calcularHorasTrabajadasDecimal(detalle.horaent, detalle.horasal, descanso);
+                horasn = 8.0;
+                horasnn = 7.0;
+                horasnmd = 7.5;
+                horasnmn = 7.5;
             }
 
-            totalt += total;
-            totalhn += horasn;
-            totalhnn += horasnn;
-            totalhnmd += horasnmd;
-            totalhnmn += horasnmn;
-            totalhen += horasen;
-            totalhent += horasent;
-            totalhextras += horasextras;
-
-            datosHoja.push([
+            // Agregar datos a la fila
+            const rowData = [
                 diaSemana,
                 fechaFormateada,
-                detalle.horaent || '00:00:00',
-                detalle.horasal || '00:00:00',
+                detalle.feriado ? null : detalle.horaent || '00:00',
+                detalle.feriado ? null : detalle.horasal || '00:00',
                 htotal,
                 descanso,
                 total || '-',
@@ -149,87 +283,95 @@ const generarExcel = async (data) => {
                 horasen || '-',
                 horasent || '-',
                 horasextras || '-'
-            ]);
-            ind += 1;
+            ];
+
+            rowData.forEach((value, colIndex) => {
+                const cell = worksheet.getCell(currentRow, colIndex + 1);
+                cell.value = value;
+                if (diaSemana == 'domingo') {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FF7DC5DB' }
+                    };
+                };
+                if ([0, 1, 2, 3, 4, 5].includes(colIndex)) {
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                }
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+
+            if (detalle.feriado) {
+                worksheet.mergeCells(`C${currentRow}:D${currentRow}`);
+                const feriadoCell = worksheet.getCell(`C${currentRow}`);
+                feriadoCell.value = 'FERIADO';
+                feriadoCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                feriadoCell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF9FE890' }
+                };
+                // Aplicar bordes a la celda fusionada
+                aplicarBordesRangoFusionado(worksheet, `C${currentRow}:D${currentRow}`);
+            }
+
+            // Actualizar totales
+            totalt += total;
+            totalhn += horasn;
+            totalhnn += horasnn;
+            totalhnmd += horasnmd;
+            totalhnmn += horasnmn;
+            totalhen += horasen;
+            totalhent += horasent;
+            totalhextras += horasextras;
+
+            currentRow++;
         });
 
         // Fila de totales
-        datosHoja.push([
-            'TOTAL HORAS', '', '', '', '', '', totalt, totalhn, totalhnn, totalhnmd, totalhnmn,
-            totalhen, totalhent, totalhextras
-        ]);
-
-        // Crear worksheet
-        const worksheet = utils.aoa_to_sheet(datosHoja);
-
-        // Configurar anchos de columna
-        worksheet['!cols'] = [
-            { wch: 14 },
-            { wch: 10 },
-            { wch: 10 },
-            { wch: 10 },
-            { wch: 10 },
-            { wch: 10 },
-            { wch: 10 },
-            { wch: 16 },
-            { wch: 16 },
-            { wch: 16 },
-            { wch: 16 },
-            { wch: 16 },
-            { wch: 16 },
-            { wch: 16 }
-        ];
-
-        // Configurar altura de filas para las fechas con días de semana
-        const rowHeights = [];
-        for (let i = 0; i < datosHoja.length; i++) {
-            if (i >= 4 && i < 4 + cantdias) {
-                rowHeights[i] = { hpt: 30 }; // Altura para acomodar día y fecha
-            } else {
-                rowHeights[i] = { hpt: 15 };
-            }
-        }
-        worksheet['!rows'] = rowHeights;
-
-        // Configurar merge cells para el título
-        worksheet["!merges"] = [
-            { s: { r: 0, c: 0 }, e: { r: 1, c: 13 } }, // Titulo
-            { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } }, // Funcionario
-            { s: { r: 2, c: 9 }, e: { r: 2, c: 10 } }, // Cargo
-            { s: { r: 2, c: 12 }, e: { r: 2, c: 13 } }, // Período
-            { s: { r: ind + 4, c: 0 }, e: { r: ind + 4, c: 5 } } // Período
-        ];
-
-        // Aplicar estilos básicos usando propiedades de celda
-        // Título principal
-        if (!worksheet['F1']) worksheet['F1'] = {};
-        worksheet['F1'].s = {
-            font: { bold: true, sz: 14 },
-            alignment: { horizontal: 'center', vertical: 'center' }
+        const totalRow = currentRow;
+        worksheet.getCell(totalRow, 1).value = 'TOTAL HORAS';
+        worksheet.getCell(totalRow, 1).font = { bold: true };
+        worksheet.getCell(totalRow, 1).alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.getCell(totalRow, 1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD9D9D9' }
         };
+        worksheet.mergeCells(`A${totalRow}:F${totalRow}`);
 
-        // Encabezados de tabla (fila 4)
-        const encabezados = ['A4', 'B4', 'C4', 'D4', 'E4', 'F4', 'G4', 'H4', 'I4', 'J4', 'K4', 'L4', 'M4', 'N4'];
-        encabezados.forEach(celda => {
-            if (!worksheet[celda]) worksheet[celda] = {};
-            worksheet[celda].s = {
-                font: { bold: true },
-                fill: { fgColor: { rgb: "CCCCCC" } },
-                alignment: { horizontal: 'center', vertical: 'center' },
-                border: {
-                    top: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    left: { style: 'thin' },
-                    right: { style: 'thin' }
-                }
+        // Aplicar bordes a la celda fusionada de totales
+        aplicarBordesRangoFusionado(worksheet, `A${totalRow}:F${totalRow}`);
+
+        const totales = [totalt, totalhn, totalhnn, totalhnmd, totalhnmn, totalhen, totalhent, totalhextras];
+        totales.forEach((total, index) => {
+            const cell = worksheet.getCell(totalRow, index + 7);
+            cell.value = total;
+            cell.font = { bold: true };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFD9D9D9' }
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
             };
         });
 
-        // Nombre de la hoja (máximo 31 caracteres)
-        let nombreHoja = (`${firstChar(funcionario.nombre)} ${firstChar(funcionario.apellido)}`).toUpperCase();
-
-        // Agregar hoja al workbook
-        utils.book_append_sheet(workbook, worksheet, nombreHoja);
+        aplicarBordesRangoFusionado(worksheet, 'A1:A2');
+        aplicarBordesRangoFusionado(worksheet, 'B1:N2');
+        aplicarBordesRangoFusionado(worksheet, 'A3:E3');
+        aplicarBordesRangoFusionado(worksheet, 'F3:H3');
+        aplicarBordesRangoFusionado(worksheet, 'I3:K3');
+        aplicarBordesRangoFusionado(worksheet, 'L3:N3');
     });
 
     // Generar nombre del archivo
@@ -239,8 +381,15 @@ const generarExcel = async (data) => {
     fechaHst = fechaHst.slice(8, 10) + '/' + fechaHst.slice(5, 7) + '/' + fechaHst.slice(0, 4);
     const nombreArchivo = `CÁLCULOS_HORAS_EXTRAS-${fechaDsd}-HASTA-${fechaHst}.xlsx`;
 
-    // Descargar el archivo
-    writeFileXLSX(workbook, nombreArchivo);
+    // Generar y descargar el archivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
 export { generarExcel };

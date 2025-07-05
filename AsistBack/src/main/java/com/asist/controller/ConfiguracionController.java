@@ -73,14 +73,13 @@ public class ConfiguracionController {
 
 	     try {
 	         Page<Configuracion> cfg = serv.listarTodos(pageable); // Usa listarTodos en lugar de listarPaginado
-
 	         List<ConfiguracionResponse> configResp = cfg.getContent().stream()
 	                 .map(this::mapToConfigResponse)
 	                 .collect(Collectors.toList());
-
+	         
 	         result.put("ok", true);
 	         result.put("size", cfg.getTotalElements());
-	         result.put("list", configResp); // Incluye la lista de productosResponse
+	         result.put("list", configResp);
 	         result.put("totalPages", cfg.getTotalPages());
 
 	         return ResponseEntity.ok(result);
@@ -123,11 +122,16 @@ public class ConfiguracionController {
 	        
 	        // Convierte la imagen a un arreglo de bytes
 	        if (imagen != null && !imagen.isEmpty()) {
-	        	cfg.setImagen(imagen.getBytes());
-	        	cfg.setNombre(imagen.getOriginalFilename()); 
-	        	cfg.setTipo(imagen.getContentType()); 
+	        	byte[] imageBytes = imagen.getBytes();
+                byte[] compressedImage = ImageUtils.compressImage(imageBytes);
+                
+                cfg.setImagen(compressedImage);
+	        	cfg.setNombre(imagen.getOriginalFilename());
+                cfg.setTipo(imagen.getContentType().substring(6));
 	        } else {
-	        	cfg.setImagen(null); 
+	        	cfg.setImagen(null);
+	        	cfg.setNombre("");
+	        	cfg.setTipo("");
 	        }	        
 	        
 	        // Llama al servicio para guardar el producto
@@ -147,12 +151,10 @@ public class ConfiguracionController {
 	        configResp.setBase64imagen(cfgGuardado.getBase64imagen());
 
 	        // Construye la respuesta
-	        return ResponseEntity.status(HttpStatus.CREATED)
-	                .body(configResp); 
+	        return ResponseEntity.status(HttpStatus.CREATED).body(configResp); 
 	    } catch (Exception e) {
 	        // Manejo de errores
-	        return ResponseEntity.badRequest()
-	                .body("Error al guardar la configuración: " + e.getMessage());
+	        return ResponseEntity.badRequest().body("Error al guardar la configuración: " + e.getMessage());
 	    }
 	}
 	
@@ -181,11 +183,11 @@ public class ConfiguracionController {
 	        if (imagen != null && !imagen.isEmpty()) {
 	            try {
 	                byte[] imageBytes = imagen.getBytes();
-	                // Comprimir la imagen antes de guardarla
 	                byte[] compressedImage = ImageUtils.compressImage(imageBytes);
+	                
 	                config.setImagen(compressedImage);
 	                config.setNombre(imagen.getOriginalFilename());
-	                config.setTipo(imagen.getContentType());
+	                config.setTipo(imagen.getContentType().substring(6));
 	            } catch (IOException e) {
 	                map.put("ok", false);
 	                map.put("message", "Error al procesar la nueva imagen: " + e.getMessage());

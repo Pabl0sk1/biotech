@@ -20,6 +20,9 @@ export const Configuracion = ({ usuarioUsed }) => {
         colorpri: "",
         colorsec: "",
         colorter: "",
+        tipo: "",
+        nombre: "",
+        base64imagen: "",
         imagen: null
     });
 
@@ -80,10 +83,10 @@ export const Configuracion = ({ usuarioUsed }) => {
             colorpri: config.colorpri,
             colorsec: config.colorsec,
             colorter: config.colorter,
-            imagen: null,
-            base64imagen: null,
-            tipo: null,
-            nombre: null
+            tipo: "",
+            nombre: "",
+            base64imagen: "",
+            imagen: null
         };
 
         // Crear un FormData para enviar los datos
@@ -91,9 +94,9 @@ export const Configuracion = ({ usuarioUsed }) => {
         formData.append('configuracion', JSON.stringify(configData));
 
         // Convertir base64 a File si existe
-        const base64 = `data:${config.tipo};base64,${imagenSeleccionada}`;
+        const img = `data:image/${config.tipo};base64,${config.base64imagen}`;
         if (imagenSeleccionada) {
-            const arr = base64.split(',');
+            const arr = img.split(',');
             const mime = arr[0].match(/:(.*?);/)[1];
             const bstr = atob(arr[1]);
             let n = bstr.length;
@@ -104,11 +107,11 @@ export const Configuracion = ({ usuarioUsed }) => {
             }
 
             // Usa el nombre original de la imagen si está disponible
-            const fileName = `${config.nombre}`;
-            const file = new File([u8arr], fileName, { type: mime });
+            const originalName = config.nombre || 'imagen';
+            const extension = mime.split('/')[1];
+            const fileName = `${originalName}`;
+            const file = new File([u8arr], fileName, { type: mime },);
             formData.append('imagen', file);
-        } else {
-            formData.append('imagen', config.imagen);
         }
 
         let sw = 0;
@@ -153,8 +156,10 @@ export const Configuracion = ({ usuarioUsed }) => {
             setImagenSeleccionada(base64String);
             setConfig({
                 ...config,
-                imagen: reader.result,
+                tipo: file.name.split('.').slice(1).join('.'),
+                base64imagen: base64String,
                 nombre: file.name.split('.').slice(0, -1).join('.'),
+                imagen: reader.result
             });
         };
         if (file) {

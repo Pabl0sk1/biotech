@@ -261,7 +261,10 @@ export const Calculo = ({ usuarioUsed }) => {
             ...funcionario,
             detalles: funcionario.detalles ? funcionario.detalles.map(detalle => ({
                 ...detalle,
-                feriado: listaferiados.includes(detalle.fecha)
+                feriado: listaferiados.includes(detalle.fecha),
+                horaent: '00:00',
+                horasal: '00:00',
+                horades: '00:00'
             })) : []
         }));
     };
@@ -555,8 +558,9 @@ export const Calculo = ({ usuarioUsed }) => {
                                                     <th>Fecha</th>
                                                     <th>Hora Entrada</th>
                                                     <th>Hora Salida</th>
+                                                    <th>Hora Descanso</th>
                                                     <th>Feriado</th>
-                                                    <th>Extra Salida</th>
+                                                    <th>Extra Entrada</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -569,7 +573,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 className="form-control border-input w-100"
                                                                 value={detalle.horaent || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value)}
-                                                                required
+                                                                readOnly={detalle.feriado}
                                                             />
                                                         </td>
                                                         <td style={{ width: '300px' }}>
@@ -579,6 +583,17 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 value={detalle.horasal || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value)}
                                                                 required
+                                                                readOnly={detalle.feriado}
+                                                            />
+                                                        </td>
+                                                        <td style={{ width: '300px' }}>
+                                                            <input
+                                                                type="time"
+                                                                className="form-control border-input w-100"
+                                                                value={detalle.horades || '00:00'}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
+                                                                required
+                                                                readOnly={detalle.feriado}
                                                             />
                                                         </td>
                                                         <td style={{ width: '120px' }}>
@@ -586,7 +601,15 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 type="checkbox"
                                                                 className='form-check-input border-black'
                                                                 checked={detalle.feriado}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', e.target.checked)}
+                                                                onChange={(e) => {
+                                                                    const checked = e.target.checked;
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
+                                                                    if (checked) {
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', '00:00');
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', '00:00');
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
+                                                                    }
+                                                                }}
                                                             />
                                                         </td>
                                                         <td style={{ width: '120px' }}>
