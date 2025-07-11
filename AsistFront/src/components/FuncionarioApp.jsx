@@ -184,22 +184,17 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
     };
 
     const guardarFn = async (funcionarioAGuardar) => {
-        try {
 
-            if (funcionarioAGuardar.id) {
-                await updateFuncionario(funcionarioAGuardar.id, funcionarioAGuardar);
-                agregarAcceso('Modificar', funcionarioAGuardar.id);
-            } else {
-                const nuevoFuncionario = await saveFuncionario(funcionarioAGuardar);
-                agregarAcceso('Insertar', nuevoFuncionario.id);
-            }
-
-            setFuncionarioAGuardar(null);
-
-            actualizarFuncionarios();
-        } catch (error) {
-            console.error('Error buscando funcionarios:', error);
+        if (funcionarioAGuardar.id) {
+            await updateFuncionario(funcionarioAGuardar.id, funcionarioAGuardar);
+            agregarAcceso('Modificar', funcionarioAGuardar.id);
+        } else {
+            const nuevoFuncionario = await saveFuncionario(funcionarioAGuardar);
+            agregarAcceso('Insertar', nuevoFuncionario.id);
         }
+
+        setFuncionarioAGuardar(null);
+        actualizarFuncionarios();
     };
 
     // Controla el cambio de página

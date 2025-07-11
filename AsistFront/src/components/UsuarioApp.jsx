@@ -223,23 +223,18 @@ export const UsuarioApp = ({ usuarioUsed }) => {
     };
 
     const guardarFn = async (usuarioAGuardar) => {
-        try {
 
-            if (usuarioAGuardar.id) {
-                await updateUsuario(usuarioAGuardar.id, usuarioAGuardar);
-                agregarAcceso('Modificar', usuarioAGuardar.id);
-            } else {
-                const nuevoUsuario = await saveUsuario(usuarioAGuardar);
-                agregarAcceso('Insertar', nuevoUsuario.id);
-            }
-
-            setUsuarioAGuardar(null);
-            await recuperarUsuariosCompletos();
-
-            actualizarUsuarios();
-        } catch (error) {
-            console.error('Error buscando usuarios:', error);
+        if (usuarioAGuardar.id) {
+            await updateUsuario(usuarioAGuardar.id, usuarioAGuardar);
+            agregarAcceso('Modificar', usuarioAGuardar.id);
+        } else {
+            const nuevoUsuario = await saveUsuario(usuarioAGuardar);
+            agregarAcceso('Insertar', nuevoUsuario.id);
         }
+
+        setUsuarioAGuardar(null);
+        await recuperarUsuariosCompletos();
+        actualizarUsuarios();
     };
 
     // Controla el cambio de página

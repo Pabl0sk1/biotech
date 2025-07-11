@@ -165,22 +165,17 @@ export const RolApp = ({ usuarioUsed }) => {
     };
 
     const guardarFn = async (tipoUsuarioAGuardar) => {
-        try {
 
-            if (tipoUsuarioAGuardar.id) {
-                await updateTipoUsuario(tipoUsuarioAGuardar.id, tipoUsuarioAGuardar);
-                agregarAcceso('Modificar', tipoUsuarioAGuardar.id);
-            } else {
-                const nuevoRol = await saveTipoUsuario(tipoUsuarioAGuardar);
-                agregarAcceso('Insertar', nuevoRol.id);
-            }
-
-            setTipoUsuarioAGuardar(null);
-
-            actualizarRoles();
-        } catch (error) {
-            console.error('Error guardando tipo de usuario:', error);
+        if (tipoUsuarioAGuardar.id) {
+            await updateTipoUsuario(tipoUsuarioAGuardar.id, tipoUsuarioAGuardar);
+            agregarAcceso('Modificar', tipoUsuarioAGuardar.id);
+        } else {
+            const nuevoRol = await saveTipoUsuario(tipoUsuarioAGuardar);
+            agregarAcceso('Insertar', nuevoRol.id);
         }
+
+        setTipoUsuarioAGuardar(null);
+        actualizarRoles();
     };
 
     const handlePageChange = (newPage) => {

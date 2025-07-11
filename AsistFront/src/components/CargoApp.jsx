@@ -165,22 +165,17 @@ export const CargoApp = ({ usuarioUsed }) => {
     };
 
     const guardarFn = async (cargoAGuardar) => {
-        try {
 
-            if (cargoAGuardar.id) {
-                await updateCargo(cargoAGuardar.id, cargoAGuardar);
-                agregarAcceso('Modificar', cargoAGuardar.id);
-            } else {
-                const nuevoCargo = await saveCargo(cargoAGuardar);
-                agregarAcceso('Insertar', nuevoCargo.id);
-            }
-
-            setCargoAGuardar(null);
-
-            actualizarCargos();
-        } catch (error) {
-            console.error('Error guardando cargo:', error);
+        if (cargoAGuardar.id) {
+            await updateCargo(cargoAGuardar.id, cargoAGuardar);
+            agregarAcceso('Modificar', cargoAGuardar.id);
+        } else {
+            const nuevoCargo = await saveCargo(cargoAGuardar);
+            agregarAcceso('Insertar', nuevoCargo.id);
         }
+
+        setCargoAGuardar(null);
+        actualizarCargos();
     };
 
     const handlePageChange = (newPage) => {

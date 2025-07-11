@@ -27,7 +27,6 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
         };
     }, []);
 
-
     //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');

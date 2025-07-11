@@ -165,21 +165,17 @@ export const TipoTurnoApp = ({ usuarioUsed }) => {
     };
 
     const guardarFn = async (tipoturnoAGuardar) => {
-        try {
 
-            if (tipoturnoAGuardar.id) {
-                await updateTipoTurno(tipoturnoAGuardar.id, tipoturnoAGuardar);
-                agregarAcceso('Modificar', tipoturnoAGuardar.id);
-            } else {
-                const nuevoTipoTurno = await saveTipoTurno(tipoturnoAGuardar);
-                agregarAcceso('Insertar', nuevoTipoTurno.id);
-            }
-
-            setTipoTurnoAGuardar(null);
-            actualizarTipoturnos();
-        } catch (error) {
-            console.error('Error guardando modalidad:', error);
+        if (tipoturnoAGuardar.id) {
+            await updateTipoTurno(tipoturnoAGuardar.id, tipoturnoAGuardar);
+            agregarAcceso('Modificar', tipoturnoAGuardar.id);
+        } else {
+            const nuevoTipoTurno = await saveTipoTurno(tipoturnoAGuardar);
+            agregarAcceso('Insertar', nuevoTipoTurno.id);
         }
+
+        setTipoTurnoAGuardar(null);
+        actualizarTipoturnos();
     };
 
     const handlePageChange = (newPage) => {

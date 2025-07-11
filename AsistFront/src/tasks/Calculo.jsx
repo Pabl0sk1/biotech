@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getFuncionario } from '../services/funcionario.service';
 import { generarExcel } from './ArchivoExcel';
+import { getTurno } from '../services/turno.service';
 
 export const Calculo = ({ usuarioUsed }) => {
     const UrlBase = '/asist';
@@ -223,6 +224,7 @@ export const Calculo = ({ usuarioUsed }) => {
     const [isOpen, setIsOpen] = useState({});
     const [nuevaFechaFeriado, setNuevaFechaFeriado] = useState('');
     const [csvStatus, setCsvStatus] = useState('');
+    const [turnos, setTurnos] = useState([]);
 
     // Función para alternar la visibilidad de la barra lateral
     const toggleContent = (ID) => {
@@ -248,7 +250,8 @@ export const Calculo = ({ usuarioUsed }) => {
                 feriado: false,
                 extra: false,
                 horaent: '',
-                horasal: ''
+                horasal: '',
+                horades: ''
             });
         }
 
@@ -359,9 +362,27 @@ export const Calculo = ({ usuarioUsed }) => {
         });
     }
 
+    const recuperarTurnos = async () => {
+        const response = await getTurno();
+        setTurnos(response);
+    }
+
+    const horariosPrueba = [
+        { horaent: '06:00', horasal: '15:30', horades: '01:00' },
+        { horaent: '07:00', horasal: '17:00', horades: '01:00' },
+        { horaent: '06:00', horasal: '14:30', horades: '00:30' },
+        { horaent: '14:00', horasal: '23:30', horades: '00:30' },
+        { horaent: '23:00', horasal: '06:30', horades: '00:30' }
+    ];
     useEffect(() => {
         recuperarFuncionarios();
-    }, []);
+        recuperarTurnos();
+        horariosPrueba.forEach((hora, idx) => {
+            actualizarDetalleFuncionario(3, idx, 'horaent', hora.horaent);
+            actualizarDetalleFuncionario(3, idx, 'horasal', hora.horasal);
+            actualizarDetalleFuncionario(3, idx, 'horades', hora.horades);
+        })
+    }, [horariosPrueba]);
 
     // Función para actualizar un detalle específico de un funcionario
     const actualizarDetalleFuncionario = (funcionarioId, fechaIndex, campo, valor) => {
@@ -406,7 +427,7 @@ export const Calculo = ({ usuarioUsed }) => {
         }
 
         if (form.checkValidity()) {
-            generarExcel(data);
+            generarExcel(data, turnos);
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -573,6 +594,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 className="form-control border-input w-100"
                                                                 value={detalle.horaent || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value)}
+                                                                required
                                                                 readOnly={detalle.feriado}
                                                             />
                                                         </td>
