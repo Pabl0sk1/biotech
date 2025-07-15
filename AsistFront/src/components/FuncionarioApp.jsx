@@ -127,7 +127,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
 
     const recuperarFuncionariosConFiltro = async (page) => {
         if (nombreBuscado.trim() === '' && nrodocBuscado.trim() === '') {
-            return await recuperarFuncionarios(page, nombreBuscado);
+            return await recuperarFuncionarios(page, nombreBuscado, nrodocBuscado);
         } else {
             if (nombreBuscado.trim() !== '' && nrodocBuscado !== '') {
                 return await getFuncionarioPorNrodocYNombre(nrodocBuscado, nombreBuscado, page);

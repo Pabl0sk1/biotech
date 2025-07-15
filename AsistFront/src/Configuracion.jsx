@@ -108,7 +108,6 @@ export const Configuracion = ({ usuarioUsed }) => {
 
             // Usa el nombre original de la imagen si está disponible
             const originalName = config.nombre || 'imagen';
-            const extension = mime.split('/')[1];
             const fileName = `${originalName}`;
             const file = new File([u8arr], fileName, { type: mime },);
             formData.append('imagen', file);

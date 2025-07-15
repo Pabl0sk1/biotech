@@ -7,6 +7,21 @@ import { getTurno } from '../services/turno.service';
 export const Calculo = ({ usuarioUsed }) => {
     const UrlBase = '/asist';
 
+    const initial = {
+        fechadesde: "",
+        fechahasta: "",
+        cantdias: 0,
+        listafuncionarios: [],
+        listaferiados: []
+    };
+
+    const [data, setData] = useState(initial);
+    const [isOpen, setIsOpen] = useState({});
+    const [nuevaFechaFeriado, setNuevaFechaFeriado] = useState('');
+    const [csvStatus, setCsvStatus] = useState('');
+    const [turnos, setTurnos] = useState([]);
+    const [funcionarios, setFuncionarios] = useState([]);
+
     const obtenerFechasDelMes = () => {
         const ahora = new Date();
         const año = ahora.getFullYear();
@@ -50,6 +65,12 @@ export const Calculo = ({ usuarioUsed }) => {
         return `${day}/${month}/${year}`;
     };
 
+    // Convertir a fecha
+    const convertirFecha = (fecha) => {
+        const [dia, mes, anio] = fecha.split('/');
+        return `${anio}-${mes}-${dia}`;
+    }
+
     // Función para parsear fecha del CSV (DD/MM/YYYY HH:MM)
     const parsearFechaCSV = (fechaHoraStr) => {
         if (!fechaHoraStr || fechaHoraStr.trim() === '') return null;
@@ -61,7 +82,8 @@ export const Calculo = ({ usuarioUsed }) => {
 
             return {
                 fecha: `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`,
-                hora: horaPart
+                hora: horaPart,
+                idx: parseInt(dia)
             };
         } catch (error) {
             console.error('Error parseando fecha:', fechaHoraStr, error);
@@ -72,159 +94,121 @@ export const Calculo = ({ usuarioUsed }) => {
     // Función para procesar el archivo CSV
     const procesarCSV = (csvText) => {
         const lineas = csvText.split('\n');
-        const asistencias = [];
         let funcionarioActual = null;
+        let dsd = '';
+        let hst = '';
+        let index = 0;
+        let fechaEntrada = '';
+        let horaEntrada = '';
+        let horaSalida = '';
+        // console.log(lineas);
 
         for (let i = 0; i < lineas.length; i++) {
             const linea = lineas[i].trim();
             if (!linea) continue;
+            // console.log(linea);
+            const campos = linea.split(';').filter(item => item != '');
+            // console.log(campos);
 
-            const campos = linea.split(';');
-            let filtrados = campos.filter(dato => dato !== "");
-            console.log(filtrados)
+            // Detectar fecha desde-hasta
+            if (campos[0] == 'Desde' && campos[2] == 'Hasta') {
+                dsd = convertirFecha(campos[1]);
+                hst = convertirFecha(campos[3]);
+                const funcionariosFechaNueva = actualizarDetallesFuncionarios(dsd, hst, funcionarios);
+
+                // console.log(funcionariosFechaNueva);
+                setData(prevData => ({
+                    ...prevData,
+                    fechadesde: dsd,
+                    fechahasta: hst,
+                    listafuncionarios: funcionariosFechaNueva,
+                    cantdias: calcularDiasEnRango(dsd, hst)
+                }));
+            }
+
             // Detectar línea de funcionario (contiene ID y Nombre)
-            if (campos[1] === 'ID') {
-                const id = parseInt(campos[2]);
-
-                if (!isNaN(id)) {
-                    funcionarioActual = {
-                        id: id,
-                        asistencias: []
-                    };
-                    asistencias.push(funcionarioActual);
-                }
+            if (campos[0] == 'ID') {
+                const idx = parseInt(campos[1]);
+                // console.log(idx);
+                if (idx) funcionarioActual = funcionarios.find(f => idx == f.codigo);
                 continue;
             }
-            console.log(funcionarioActual)
+
             // Procesar líneas de registros de entrada/salida
             if (funcionarioActual) {
-                // Procesar cada par de fecha-hora en la línea
-                for (let j = 1; j < campos.length; j += 4) {
-                    if (j + 2 < campos.length) {
-                        const fechaHora = campos[j];
-                        const tipo = campos[j + 2]; // "Entrada" o "Salida"
+                // console.log(funcionarioActual);
+                for (let j = 0; j < campos.length; j++) {
+                    if (campos[0] != 'Entrada') {
+                        const str = campos[j];
+                        if (str != 'Entrada' && str != 'Salida') {
+                            const fechaHora = campos[j];
+                            const tipo = campos[j + 1];
+                            if (fechaHora && (tipo == 'Entrada' || tipo == 'Salida')) {
+                                const parsedDateTime = parsearFechaCSV(fechaHora);
+                                // console.log(parsedDateTime);
+                                if (parsedDateTime) {
+                                    index = calcularDiasEnRango(dsd, parsedDateTime.fecha) - 1;
+                                    if (tipo == 'Entrada' && fechaEntrada != parsedDateTime.fecha) {
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horaent', parsedDateTime.hora);
+                                        fechaEntrada = parsedDateTime.fecha;
+                                        horaEntrada = parsedDateTime.hora;
+                                        horaSalida = '';
+                                    } else if (tipo == 'Salida') {
+                                        if (fechaEntrada != parsedDateTime.fecha) actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', parsedDateTime.hora);
+                                        else actualizarDetalleFuncionario(funcionarioActual.id, index, 'horasal', parsedDateTime.hora);
+                                        horaSalida = parsedDateTime.hora;
+                                    };
+                                    if (horaEntrada && horaSalida) {
 
-                        if (fechaHora && tipo && (tipo.includes('Entrada') || tipo.includes('Salida'))) {
-                            const parsedDateTime = parsearFechaCSV(fechaHora);
-                            if (parsedDateTime) {
-                                funcionarioActual.asistencias.push({
-                                    fecha: parsedDateTime.fecha,
-                                    hora: parsedDateTime.hora,
-                                    tipo: tipo.includes('Entrada') ? 'entrada' : 'salida'
-                                });
+                                    }
+                                }
                             }
                         }
+                    } else {
+                        funcionarioActual = null;
+                        fechaEntrada = '';
+                        index = 0;
+                        continue;
                     }
                 }
             }
         }
-
-        return asistencias;
     };
 
-    // Función para aplicar asistencias del CSV a los funcionarios
-    const aplicarAsistenciasCSV = (asistenciasCSV) => {
-        setData(prevData => ({
-            ...prevData,
-            listafuncionarios: prevData.listafuncionarios.map(funcionario => {
-                // Buscar funcionario en CSV por ID o nombre
-                const asistenciasFuncionario = asistenciasCSV.find(csvFunc =>
-                    csvFunc.id === funcionario.codigo
-                    // csvFunc.nombre.toLowerCase().includes(funcionario.nombre.toLowerCase()) ||
-                    // funcionario.nombre.toLowerCase().includes(csvFunc.nombre.toLowerCase())
-                );
-
-                if (!asistenciasFuncionario) {
-                    return funcionario; // No hay asistencias para este funcionario
-                }
-
-                // Agrupar asistencias por fecha
-                const asistenciasPorFecha = {};
-                asistenciasFuncionario.asistencias.forEach(asistencia => {
-                    if (!asistenciasPorFecha[asistencia.fecha]) {
-                        asistenciasPorFecha[asistencia.fecha] = {
-                            entradas: [],
-                            salidas: []
-                        };
-                    }
-
-                    if (asistencia.tipo === 'entrada') {
-                        asistenciasPorFecha[asistencia.fecha].entradas.push(asistencia.hora);
-                    } else {
-                        asistenciasPorFecha[asistencia.fecha].salidas.push(asistencia.hora);
-                    }
-                });
-
-                // Actualizar detalles del funcionario
-                const nuevosDetalles = funcionario.detalles.map(detalle => {
-                    const asistenciasDia = asistenciasPorFecha[detalle.fecha];
-                    if (asistenciasDia) {
-                        // Tomar la primera entrada y la última salida del día
-                        const horaent = asistenciasDia.entradas.length > 0 ?
-                            asistenciasDia.entradas[0] : detalle.horaent;
-                        const horasal = asistenciasDia.salidas.length > 0 ?
-                            asistenciasDia.salidas[asistenciasDia.salidas.length - 1] : detalle.horasal;
-
-                        return {
-                            ...detalle,
-                            horaent: horaent,
-                            horasal: horasal
-                        };
-                    }
-                    return detalle;
-                });
-
-                return {
-                    ...funcionario,
-                    detalles: nuevosDetalles
-                };
-            })
-        }));
+    // Función para limpiar el archivo CSV
+    const limpiarCSV = () => {
+        setCsvStatus('');
+        // Limpiar el input file
+        const fileInput = document.getElementById('csvFile');
+        if (fileInput) {
+            fileInput.value = '';
+        }
     };
 
     // Función para manejar la carga del archivo CSV
     const handleCSVUpload = (event) => {
         const file = event.target.files[0];
         if (!file) return;
-
+        // console.log(file);
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const csvText = e.target.result;
-                const asistenciasCSV = procesarCSV(csvText);
-
-                if (asistenciasCSV.length > 0) {
-                    aplicarAsistenciasCSV(asistenciasCSV);
-                    setCsvStatus(`✅ CSV procesado correctamente. ${asistenciasCSV.length} funcionarios encontrados.`);
-                } else {
-                    setCsvStatus('⚠️ No se encontraron datos válidos en el archivo CSV.');
-                }
+                // console.log(csvText);
+                if (csvText) {
+                    setCsvStatus(`✅ CSV procesado correctamente.`);
+                    procesarCSV(csvText);
+                } else setCsvStatus('⚠️ No se encontraron datos válidos en el archivo CSV.');
             } catch (error) {
                 console.error('Error procesando CSV:', error);
                 setCsvStatus('❌ Error al procesar el archivo CSV. Verifique el formato.');
             }
         };
-
         reader.onerror = () => {
             setCsvStatus('❌ Error al leer el archivo.');
         };
-
         reader.readAsText(file, 'UTF-8');
     };
-
-    const initial = {
-        fechadesde: "",
-        fechahasta: "",
-        cantdias: 0,
-        listafuncionarios: [],
-        listaferiados: []
-    };
-
-    const [data, setData] = useState(initial);
-    const [isOpen, setIsOpen] = useState({});
-    const [nuevaFechaFeriado, setNuevaFechaFeriado] = useState('');
-    const [csvStatus, setCsvStatus] = useState('');
-    const [turnos, setTurnos] = useState([]);
 
     // Función para alternar la visibilidad de la barra lateral
     const toggleContent = (ID) => {
@@ -264,10 +248,10 @@ export const Calculo = ({ usuarioUsed }) => {
             ...funcionario,
             detalles: funcionario.detalles ? funcionario.detalles.map(detalle => ({
                 ...detalle,
-                feriado: listaferiados.includes(detalle.fecha),
-                horaent: '00:00',
-                horasal: '00:00',
-                horades: '00:00'
+                feriado: listaferiados.includes(detalle.fecha)
+                // horaent: '00:00',
+                // horasal: '00:00',
+                // horades: '00:00'
             })) : []
         }));
     };
@@ -293,6 +277,7 @@ export const Calculo = ({ usuarioUsed }) => {
         }
 
         setData(nuevoData);
+        limpiarCSV();
     };
 
     // Función para actualizar los detalles de un funcionario
@@ -344,6 +329,7 @@ export const Calculo = ({ usuarioUsed }) => {
 
     const recuperarFuncionarios = async () => {
         const response = await getFuncionario();
+        setFuncionarios(response);
         const fechasDelMes = obtenerFechasDelMes();
 
         // Agregar detalles a cada funcionario
@@ -367,22 +353,10 @@ export const Calculo = ({ usuarioUsed }) => {
         setTurnos(response);
     }
 
-    const horariosPrueba = [
-        { horaent: '06:00', horasal: '15:30', horades: '01:00' },
-        { horaent: '07:00', horasal: '17:00', horades: '01:00' },
-        { horaent: '06:00', horasal: '14:30', horades: '00:30' },
-        { horaent: '14:00', horasal: '23:30', horades: '00:30' },
-        { horaent: '23:00', horasal: '06:30', horades: '00:30' }
-    ];
     useEffect(() => {
         recuperarFuncionarios();
         recuperarTurnos();
-        horariosPrueba.forEach((hora, idx) => {
-            actualizarDetalleFuncionario(3, idx, 'horaent', hora.horaent);
-            actualizarDetalleFuncionario(3, idx, 'horasal', hora.horasal);
-            actualizarDetalleFuncionario(3, idx, 'horades', hora.horades);
-        })
-    }, [horariosPrueba]);
+    }, []);
 
     // Función para actualizar un detalle específico de un funcionario
     const actualizarDetalleFuncionario = (funcionarioId, fechaIndex, campo, valor) => {
@@ -480,7 +454,7 @@ export const Calculo = ({ usuarioUsed }) => {
                             noValidate
                         >
                             <div className="p-3 pt-5 pb-5 fw-semibold text-start">
-                                <div className="input-group mb-5">
+                                <div className="input-group mb-5 z-0">
                                     <label className="form-label m-0">Fecha desde-hasta</label>
                                     <input
                                         type="date"
@@ -507,12 +481,13 @@ export const Calculo = ({ usuarioUsed }) => {
                                     <h6 className="mb-3">
                                         <i className="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Asistencias desde CSV
                                     </h6>
-                                    <div className="input-group mb-3">
+                                    <div className="input-group mb-3 z-0">
                                         <input
                                             type="file"
                                             className="form-control border-input mw-100"
                                             accept=".csv"
                                             onChange={handleCSVUpload}
+                                            onClick={limpiarCSV}
                                             id="csvFile"
                                         />
                                     </div>
@@ -569,7 +544,7 @@ export const Calculo = ({ usuarioUsed }) => {
 
                                 {data.listafuncionarios && data.listafuncionarios.sort((a, b) => a.id - b.id).map((fc) => (
                                     <div key={fc.id} className='w-100 border border-1 border-black'>
-                                        <button onClick={() => toggleContent(fc.id)} className="btn btn-primary z-0 rounded-0 w-100 text-black" type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
+                                        <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-info' : 'btn-primary'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
                                             <p className='float-start text-start m-0 fw-bold'>{fc.nombre} {fc.apellido}</p>
                                             <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill text-dark' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
                                         </button>
@@ -595,7 +570,6 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 value={detalle.horaent || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value)}
                                                                 required
-                                                                readOnly={detalle.feriado}
                                                             />
                                                         </td>
                                                         <td style={{ width: '300px' }}>
@@ -605,7 +579,6 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 value={detalle.horasal || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value)}
                                                                 required
-                                                                readOnly={detalle.feriado}
                                                             />
                                                         </td>
                                                         <td style={{ width: '300px' }}>
@@ -615,7 +588,6 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 value={detalle.horades || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
                                                                 required
-                                                                readOnly={detalle.feriado}
                                                             />
                                                         </td>
                                                         <td style={{ width: '120px' }}>
@@ -626,11 +598,11 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 onChange={(e) => {
                                                                     const checked = e.target.checked;
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
-                                                                    if (checked) {
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', '00:00');
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', '00:00');
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
-                                                                    }
+                                                                    // if (checked) {
+                                                                    //     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', '00:00');
+                                                                    //     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', '00:00');
+                                                                    //     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
+                                                                    // }
                                                                 }}
                                                             />
                                                         </td>

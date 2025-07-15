@@ -290,18 +290,23 @@ const generarExcel = async (data, turnos) => {
             if (detalle.horaent && detalle.horasal) {
                 htotal = restarHoras(detalle.horaent, detalle.horasal);
                 total = calcularHorasTrabajadasDecimal(detalle.horaent, detalle.horasal, descanso);
-                horasn = 8.00;
-                horasnn = 7.00;
-                horasnmd = 7.50;
-                horasnmn = 7.50;
+                if (diaSemana != 'domingo' && !detalle.feriado) {
+                    horasn = 8.00;
+                    horasnn = 7.00;
+                    horasnmd = 7.50;
+                    horasnmn = 7.50;
+                    horasen = total - horasn;
+                    horasent = total - (horasnn + horasnmd + horasnmn);
+                }
+                if ((diaSemana == 'domingo' || detalle.feriado) && total) horasextras = total - horasn;
             }
 
             // Agregar datos a la fila
             const rowData = [
                 diaSemana,
                 fechaFormateada,
-                detalle.feriado ? null : detalle.horaent || '00:00',
-                detalle.feriado ? null : detalle.horasal || '00:00',
+                detalle.horaent || '00:00',
+                detalle.horasal || '00:00',
                 htotal,
                 descanso,
                 total || '-',
@@ -329,13 +334,18 @@ const generarExcel = async (data, turnos) => {
                 cell.border = estilos.borde;
             });
 
-            if (detalle.feriado) {
+            if (detalle.feriado && !total) {
                 worksheet.mergeCells(`C${currentRow}:D${currentRow}`);
                 const feriadoCell = worksheet.getCell(`C${currentRow}`);
                 feriadoCell.value = 'FERIADO';
                 feriadoCell.alignment = estilos.alineacion;
                 feriadoCell.fill = estilos.bgFeriado;
                 aplicarBordesRangoFusionado(worksheet, `C${currentRow}:D${currentRow}`);
+            } else if (detalle.feriado) {
+                const feriadoCell = worksheet.getCell(`C${currentRow}`);
+                feriadoCell.fill = estilos.bgFeriado;
+                const feriadoCell2 = worksheet.getCell(`D${currentRow}`);
+                feriadoCell2.fill = estilos.bgFeriado;
             }
 
             // Actualizar totales
