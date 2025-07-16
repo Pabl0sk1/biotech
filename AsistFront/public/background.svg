@@ -1,0 +1,152 @@
+<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+    <!-- Definición de gradientes y filtros -->
+    <defs>
+        <!-- Gradiente principal de fondo -->
+        <linearGradient id="mainBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+            <stop offset="25%" style="stop-color:#e8f5e8;stop-opacity:1" />
+            <stop offset="75%" style="stop-color:#fff3e0;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#f5f5f5;stop-opacity:1" />
+        </linearGradient>
+
+        <!-- Gradiente para formas orgánicas -->
+        <radialGradient id="organic1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:0.15" />
+            <stop offset="70%" style="stop-color:#2E7D32;stop-opacity:0.08" />
+            <stop offset="100%" style="stop-color:#1B5E20;stop-opacity:0.03" />
+        </radialGradient>
+
+        <radialGradient id="organic2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" style="stop-color:#FF9800;stop-opacity:0.12" />
+            <stop offset="70%" style="stop-color:#E65100;stop-opacity:0.06" />
+            <stop offset="100%" style="stop-color:#BF360C;stop-opacity:0.02" />
+        </radialGradient>
+
+        <radialGradient id="organic3" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" style="stop-color:#6D4C41;stop-opacity:0.08" />
+            <stop offset="70%" style="stop-color:#3E2723;stop-opacity:0.04" />
+            <stop offset="100%" style="stop-color:#1B0000;stop-opacity:0.01" />
+        </radialGradient>
+
+        <!-- Filtro de desenfoque -->
+        <filter id="blur">
+            <feGaussianBlur stdDeviation="2" />
+        </filter>
+
+        <!-- Filtro de sombra suave -->
+        <filter id="softShadow">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#6D4C41" flood-opacity="0.1" />
+        </filter>
+
+        <!-- Patrón de puntos sutiles -->
+        <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+            <circle cx="20" cy="20" r="1" fill="#4CAF50" opacity="0.06" />
+        </pattern>
+
+        <!-- Patrón de hojas dispersas -->
+        <pattern id="leafPattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+            <path d="M 50 50 Q 60 40, 70 50 Q 65 65, 50 60 Q 45 55, 50 50 Z" fill="#4CAF50" opacity="0.03" />
+            <path d="M 150 120 Q 160 110, 170 120 Q 165 135, 150 130 Q 145 125, 150 120 Z" fill="#2E7D32"
+                opacity="0.04" />
+            <path d="M 100 180 Q 110 170, 120 180 Q 115 195, 100 190 Q 95 185, 100 180 Z" fill="#FF9800"
+                opacity="0.02" />
+        </pattern>
+    </defs>
+
+    <!-- Fondo base -->
+    <rect width="1920" height="1080" fill="url(#mainBg)" />
+
+    <!-- Capa de patrón de puntos -->
+    <rect width="1920" height="1080" fill="url(#dots)" />
+
+    <!-- Capa de patrón de hojas -->
+    <rect width="1920" height="1080" fill="url(#leafPattern)" />
+
+    <!-- Formas orgánicas grandes de fondo -->
+    <g opacity="0.6">
+        <!-- Forma orgánica 1 - Verde -->
+        <path d="M -200 200 Q 300 100, 600 300 Q 800 500, 500 700 Q 200 800, -100 600 Q -300 400, -200 200 Z"
+            fill="url(#organic1)" filter="url(#blur)" />
+
+        <!-- Forma orgánica 2 - Naranja -->
+        <path d="M 1200 -100 Q 1600 200, 1500 500 Q 1400 800, 1100 900 Q 800 700, 900 400 Q 1000 100, 1200 -100 Z"
+            fill="url(#organic2)" filter="url(#blur)" />
+
+        <!-- Forma orgánica 3 - Marrón -->
+        <path d="M 1400 800 Q 1800 900, 2000 1200 Q 1900 1400, 1600 1300 Q 1300 1100, 1400 800 Z" fill="url(#organic3)"
+            filter="url(#blur)" />
+    </g>
+
+    <!-- Elementos decorativos - Hojas flotantes -->
+    <g opacity="0.3">
+        <!-- Hojas medianas -->
+        <g transform="translate(200, 150) rotate(15)">
+            <path d="M 0 0 Q 15 -10, 30 0 Q 25 20, 10 15 Q 0 10, 0 0 Z" fill="#4CAF50" />
+            <path d="M 5 5 Q 15 -2, 22 8" stroke="#2E7D32" stroke-width="1" fill="none" />
+        </g>
+
+        <g transform="translate(1600, 300) rotate(-25)">
+            <path d="M 0 0 Q 12 -8, 24 0 Q 20 16, 8 12 Q 0 8, 0 0 Z" fill="#FF9800" />
+            <path d="M 4 4 Q 12 -1, 18 6" stroke="#E65100" stroke-width="1" fill="none" />
+        </g>
+
+        <g transform="translate(300, 800) rotate(45)">
+            <path d="M 0 0 Q 10 -6, 20 0 Q 16 12, 6 9 Q 0 6, 0 0 Z" fill="#6D4C41" />
+            <path d="M 3 3 Q 10 0, 15 5" stroke="#3E2723" stroke-width="1" fill="none" />
+        </g>
+
+        <!-- Hojas pequeñas dispersas -->
+        <g transform="translate(800, 200) rotate(30)">
+            <path d="M 0 0 Q 6 -4, 12 0 Q 10 8, 4 6 Q 0 4, 0 0 Z" fill="#4CAF50" opacity="0.7" />
+        </g>
+
+        <g transform="translate(1200, 600) rotate(-15)">
+            <path d="M 0 0 Q 6 -4, 12 0 Q 10 8, 4 6 Q 0 4, 0 0 Z" fill="#FF9800" opacity="0.7" />
+        </g>
+
+        <g transform="translate(1500, 150) rotate(60)">
+            <path d="M 0 0 Q 6 -4, 12 0 Q 10 8, 4 6 Q 0 4, 0 0 Z" fill="#2E7D32" opacity="0.7" />
+        </g>
+
+        <g transform="translate(100, 600) rotate(-45)">
+            <path d="M 0 0 Q 6 -4, 12 0 Q 10 8, 4 6 Q 0 4, 0 0 Z" fill="#6D4C41" opacity="0.7" />
+        </g>
+    </g>
+
+    <!-- Elementos tecnológicos sutiles -->
+    <g opacity="0.15">
+        <!-- Líneas conectoras -->
+        <g transform="translate(1400, 200)">
+            <line x1="0" y1="0" x2="100" y2="50" stroke="#4CAF50" stroke-width="2" />
+            <line x1="100" y1="50" x2="80" y2="120" stroke="#FF9800" stroke-width="2" />
+            <line x1="80" y1="120" x2="150" y2="140" stroke="#6D4C41" stroke-width="2" />
+            <circle cx="0" cy="0" r="4" fill="#4CAF50" />
+            <circle cx="100" cy="50" r="4" fill="#FF9800" />
+            <circle cx="80" cy="120" r="4" fill="#6D4C41" />
+            <circle cx="150" cy="140" r="4" fill="#2E7D32" />
+        </g>
+
+        <!-- Red de conexiones -->
+        <g transform="translate(200, 400)">
+            <line x1="0" y1="0" x2="60" y2="30" stroke="#4CAF50" stroke-width="1" />
+            <line x1="60" y1="30" x2="120" y2="10" stroke="#FF9800" stroke-width="1" />
+            <line x1="120" y1="10" x2="150" y2="60" stroke="#6D4C41" stroke-width="1" />
+            <circle cx="0" cy="0" r="3" fill="#4CAF50" />
+            <circle cx="60" cy="30" r="3" fill="#FF9800" />
+            <circle cx="120" cy="10" r="3" fill="#6D4C41" />
+            <circle cx="150" cy="60" r="3" fill="#2E7D32" />
+        </g>
+    </g>
+
+    <!-- Efectos de luz sutil -->
+    <g opacity="0.4">
+        <!-- Resplandor superior izquierdo -->
+        <ellipse cx="400" cy="200" rx="300" ry="150" fill="url(#organic1)" filter="url(#blur)" />
+
+        <!-- Resplandor inferior derecho -->
+        <ellipse cx="1500" cy="850" rx="250" ry="120" fill="url(#organic2)" filter="url(#blur)" />
+    </g>
+
+    <!-- Overlay sutil para unificar -->
+    <rect width="1920" height="1080" fill="url(#mainBg)" opacity="0.1" />
+</svg>

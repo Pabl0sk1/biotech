@@ -191,7 +191,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.png" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
@@ -212,8 +212,12 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                     </span>
                                 </a>
                                 <ul className={`nav collapse menuSubtitle fw-normal ${isReportesMenuOpen ? 'show' : ''}`} id='calculosMenu'>
-                                    {usuarioUsed?.tipousuario?.id && [1, 2].includes(usuarioUsed.tipousuario.id) && (
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Horas Extras", 'Realizar Informe', UrlLocal + "/reports/calcext")} className="nav-link text-white p-1">Horas Extras</Link></li>
+                                    {usuarioUsed?.tipousuario?.id && (
+                                        <>
+                                            {[1, 2].includes(usuarioUsed.tipousuario.id) && (
+                                                <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Horas Extras", 'Realizar Informe', UrlLocal + "/reports/calcext")} className="nav-link text-white p-1">Horas Extras</Link></li>
+                                            )}
+                                        </>
                                     )}
                                 </ul>
                             </li>

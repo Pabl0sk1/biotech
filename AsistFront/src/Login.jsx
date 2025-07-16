@@ -119,7 +119,7 @@ export const Login = ({ setUsuarioUsed }) => {
                         autoComplete="off"
                         noValidate
                     >
-                        <img src="/logo.png" className="w-50" alt="Maria Mora Atelier" />
+                        <img src="/logo.svg" className="w-75" alt="Maria Mora Atelier" />
                         <div className="mt-4">
                             {error && <div className="alert alert-danger p-2">{error}</div>}
                             <div className="mt-3 pb-3 d-flex align-items-center">

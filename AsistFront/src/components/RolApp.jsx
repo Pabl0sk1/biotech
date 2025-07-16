@@ -208,7 +208,7 @@ export const RolApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
                                     <p className='fs-5'>¿Estás seguro de que deseas eliminar el rol?</p>
@@ -238,7 +238,7 @@ export const RolApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
                                     <p className='fs-5'>El rol está siendo referenciado en otra tabla</p>
@@ -259,7 +259,7 @@ export const RolApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="row mb-3 fw-semibold text-start">
                                     <div className='col'>
                                         <label htmlFor="tipousuario" className="form-label m-0 mb-2">Descripción</label>
@@ -287,7 +287,7 @@ export const RolApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <form
                                     action="url.ph"
                                     onSubmit={handleSubmit}
@@ -345,7 +345,7 @@ export const RolApp = ({ usuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.png" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
@@ -382,7 +382,7 @@ export const RolApp = ({ usuarioUsed }) => {
                                 />
                             </div>
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-primary'>
+                                <thead className='table-warning'>
                                     <tr>
                                         <th>#</th>
                                         <th>Descripción</th>

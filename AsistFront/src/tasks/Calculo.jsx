@@ -552,7 +552,7 @@ export const Calculo = ({ usuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.png" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
@@ -605,7 +605,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                 </div>
 
                                 {/* Sección de carga de CSV */}
-                                <div className="mb-5 border rounded-3 border-2 border-black p-3 bg-primary text-black">
+                                <div className="mb-5 border rounded-3 border-black p-3 bg-warning text-black">
                                     <h6 className="mb-3">
                                         <i className="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Asistencias desde CSV
                                     </h6>
@@ -620,14 +620,14 @@ export const Calculo = ({ usuarioUsed }) => {
                                         />
                                     </div>
                                     {csvStatus && (
-                                        <div className={`alert ${csvStatus.includes('✅') ? 'alert-success' : csvStatus.includes('⚠️') ? 'alert-warning' : 'alert-danger'} p-2 m-0 text-black`}>
+                                        <div className={`alert ${csvStatus.includes('✅') ? 'alert-success' : 'alert-danger'} p-2 m-0 text-black`}>
                                             <small>{csvStatus}</small>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Sección de gestión de feriados */}
-                                <div className="mb-5 border rounded-3 border-2 border-black p-3 bg-primary text-black">
+                                <div className="mb-5 border rounded-3 border-black p-3 bg-warning text-black">
                                     <h6 className="mb-3">
                                         <i className="bi bi-calendar-event me-2"></i>Gestión de Feriados
                                     </h6>
@@ -672,9 +672,9 @@ export const Calculo = ({ usuarioUsed }) => {
 
                                 {data.listafuncionarios && data.listafuncionarios.sort((a, b) => a.id - b.id).map((fc) => (
                                     <div key={fc.id} className='w-100 border border-1 border-black'>
-                                        <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-info' : 'btn-primary'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
-                                            <p className='float-start text-start m-0 fw-bold'>{fc.nombre} {fc.apellido}</p>
-                                            <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill text-dark' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
+                                        <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-success' : 'btn-warning'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
+                                            <p className={`float-start text-start m-0 fw-bold`}>{fc.nombre} {fc.apellido}</p>
+                                            <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
                                         </button>
                                         <table className="collapse table table-bordered table-striped table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
                                             <thead className='table-dark border-black'>
@@ -696,7 +696,11 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 type="time"
                                                                 className="form-control border-input w-100"
                                                                 value={detalle.horaent || '00:00'}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value)}
+                                                                onChange={(e) => {
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
+                                                                    const trn = determinarTurno(e.target.value, detalle.horasal);
+                                                                    asignarDescanso(fc.id, fechaIndex, trn);
+                                                                }}
                                                                 required
                                                             />
                                                         </td>
@@ -705,7 +709,11 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 type="time"
                                                                 className="form-control border-input w-100"
                                                                 value={detalle.horasal || '00:00'}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value)}
+                                                                onChange={(e) => {
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
+                                                                    const trn = determinarTurno(detalle.horaent, e.target.value);
+                                                                    asignarDescanso(fc.id, fechaIndex, trn);
+                                                                }}
                                                                 required
                                                             />
                                                         </td>

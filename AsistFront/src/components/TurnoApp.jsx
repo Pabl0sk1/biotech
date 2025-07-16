@@ -265,7 +265,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-1 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-2 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
                                     <p className='fs-5'>¿Estás seguro de que deseas eliminar el turno?</p>
@@ -295,7 +295,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-3 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-4 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-clipboard-x-fill" style={{ fontSize: '7rem' }}></i>
                                     <p className='fs-5'>El turno debe tener al menos un día marcado</p>
@@ -316,7 +316,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-1 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-2 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="row mb-3 fw-semibold text-start">
                                     {/*Columna 1 de visualizar*/}
                                     <div className='col me-5 pe-0'>
@@ -438,7 +438,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                     <div className="position-fixed top-0 start-0 z-1 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-2 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-primary alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-warning alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <form
                                     action="url.ph"
                                     onSubmit={handleSubmit}
@@ -557,8 +557,8 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="form-group bg-info mb-3 rounded-3 text-center" style={{ width: "682px" }}>
-                                        <label className="form-label m-0 p-3 fw-bold fs-5 text-primary-emphasis">Días del Turno</label>
+                                    <div className="form-group bg-warning mb-3 rounded-3 text-center" style={{ width: "682px" }}>
+                                        <label className="form-label m-0 p-3 fw-bold fs-5 text-warning-emphasis">Días del Turno</label>
                                         <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3">
                                             {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
                                                 const estaMarcado = turnoAGuardar.turnodia?.some((d) => d.dia === dia);
@@ -629,7 +629,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.png" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
@@ -671,7 +671,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                 </select>
                             </div>
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-primary'>
+                                <thead className='table-warning'>
                                     <tr>
                                         <th>#</th>
                                         <th>Descripción</th>
