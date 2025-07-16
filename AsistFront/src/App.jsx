@@ -87,15 +87,15 @@ function App() {
               <Route path={UrlLocal + "/security/access"} element={<AuditoriaApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/security/roles"} element={<RolApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/config"} element={<Configuracion usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/regs/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/regs/schedules"} element={<TipoTurnoApp usuarioUsed={usuarioUsed} />} />
             </>
           )}
           {usuarioUsed?.tipousuario?.id && [1, 2].includes(usuarioUsed.tipousuario.id) && (
             <>
-              <Route path={UrlLocal + "/calcs/report"} element={<Calculo usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/calcs/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/calcs/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/calcs/positions"} element={<CargoApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/calcs/schedules"} element={<TipoTurnoApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/reports/calcext"} element={<Calculo usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/regs/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/regs/positions"} element={<CargoApp usuarioUsed={usuarioUsed} />} />
             </>
           )}
           <Route path={UrlLocal + '/profile'} element={<Perfil usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />

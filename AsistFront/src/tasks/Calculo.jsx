@@ -101,6 +101,7 @@ export const Calculo = ({ usuarioUsed }) => {
         let fechaEntrada = '';
         let horaEntrada = '';
         let horaSalida = '';
+        let trn = '';
         // console.log(lineas);
 
         for (let i = 0; i < lineas.length; i++) {
@@ -149,31 +150,163 @@ export const Calculo = ({ usuarioUsed }) => {
                                 if (parsedDateTime) {
                                     index = calcularDiasEnRango(dsd, parsedDateTime.fecha) - 1;
                                     if (tipo == 'Entrada' && fechaEntrada != parsedDateTime.fecha) {
-                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horaent', parsedDateTime.hora);
                                         fechaEntrada = parsedDateTime.fecha;
                                         horaEntrada = parsedDateTime.hora;
-                                        horaSalida = '';
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horaent', horaEntrada);
                                     } else if (tipo == 'Salida') {
-                                        if (fechaEntrada != parsedDateTime.fecha) actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', parsedDateTime.hora);
-                                        else actualizarDetalleFuncionario(funcionarioActual.id, index, 'horasal', parsedDateTime.hora);
                                         horaSalida = parsedDateTime.hora;
+                                        trn = determinarTurno(horaEntrada, horaSalida);
+                                        if (fechaEntrada != parsedDateTime.fecha) {
+                                            actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', horaSalida);
+                                            actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'turno', trn);
+                                            asignarDescanso(funcionarioActual.id, index - 1, trn);
+                                        } else {
+                                            actualizarDetalleFuncionario(funcionarioActual.id, index, 'horasal', horaSalida);
+                                            actualizarDetalleFuncionario(funcionarioActual.id, index, 'turno', trn);
+                                            asignarDescanso(funcionarioActual.id, index, trn);
+                                        }
+                                        horaEntrada = '';
+                                        horaSalida = '';
+                                        trn = '';
                                     };
-                                    if (horaEntrada && horaSalida) {
-
-                                    }
                                 }
                             }
                         }
                     } else {
                         funcionarioActual = null;
                         fechaEntrada = '';
-                        index = 0;
+                        horaEntrada = '';
+                        horaSalida = '';
+                        trn = '';
                         continue;
                     }
                 }
             }
         }
     };
+
+    // Función para asignar el descanso según el turno
+    const asignarDescanso = (idFuncionario, idx, trn) => {
+        if (!trn) return;
+
+        // Buscar el turno en la lista para obtener el tiempo de descanso
+        const turnoEncontrado = turnos.find(turno => turno.descripcion.split(' ')[1] === trn);
+        if (turnoEncontrado) {
+            const horaDescanso = turnoEncontrado.horades.substring(0, 5);
+            actualizarDetalleFuncionario(idFuncionario, idx, 'horades', horaDescanso);
+        }
+    }
+
+    // Función para determinar el turno basado en horarios de entrada y salida
+    const determinarTurno = (entrada, salida) => {
+        if (!entrada || !salida || turnos.length == 0) return '';
+
+        // Convertir las horas a minutos para facilitar las comparaciones
+        const convertirAMinutos = (hora) => {
+            // Manejar formato "HH:MM:SS" y "HH:MM"
+            const partes = hora.split(':');
+            const horas = parseInt(partes[0]);
+            const minutos = parseInt(partes[1]);
+            return horas * 60 + minutos;
+        };
+
+        const entradaMinutos = convertirAMinutos(entrada);
+        const salidaMinutos = convertirAMinutos(salida);
+
+        // Tolerancia en minutos para la comparación (30 minutos)
+        const tolerancia = 30;
+
+        // Función auxiliar para verificar si está dentro del rango con tolerancia
+        const estaEnRango = (valor, objetivo, tolerancia) => {
+            return Math.abs(valor - objetivo) <= tolerancia;
+        };
+
+        // Buscar el turno que mejor coincida
+        let mejorCoincidencia = null;
+        let menorDiferencia = Infinity;
+
+        for (const turno of turnos) {
+            const entradaTurnoMinutos = convertirAMinutos(turno.horaent);
+            const salidaTurnoMinutos = convertirAMinutos(turno.horasal);
+
+            let salidaComparar = salidaMinutos;
+            let salidaTurnoComparar = salidaTurnoMinutos;
+
+            // Manejo especial para turnos nocturnos (cuando la salida es menor que la entrada)
+            if (turno.tipoturno.tipo === 'Nocturno' || salidaTurnoMinutos < entradaTurnoMinutos) {
+                // Si es turno nocturno y la salida registrada es menor que la entrada,
+                // significa que la salida es del día siguiente
+                if (salidaMinutos < entradaMinutos) {
+                    salidaComparar = salidaMinutos + 1440; // Agregar 24 horas
+                }
+                salidaTurnoComparar = salidaTurnoMinutos + 1440;
+            }
+
+            // Calcular diferencia total entre horarios
+            const diferenciaEntrada = Math.abs(entradaMinutos - entradaTurnoMinutos);
+            const diferenciaSalida = Math.abs(salidaComparar - salidaTurnoComparar);
+            const diferenciaTotal = diferenciaEntrada + diferenciaSalida;
+
+            // Verificar si está dentro de la tolerancia y es la mejor coincidencia
+            if (estaEnRango(entradaMinutos, entradaTurnoMinutos, tolerancia) &&
+                estaEnRango(salidaComparar, salidaTurnoComparar, tolerancia) &&
+                diferenciaTotal < menorDiferencia) {
+
+                menorDiferencia = diferenciaTotal;
+                mejorCoincidencia = turno;
+            }
+        }
+
+        // Si encontramos una coincidencia, retornar la descripción del turno
+        if (mejorCoincidencia) {
+            // Retornar solo la letra del turno (A, B, C, D)
+            return mejorCoincidencia.descripcion.split(' ')[1]; // "Turno A" -> "A"
+        }
+
+        // Si no se encuentra coincidencia exacta, intentar lógica más flexible
+        for (const turno of turnos) {
+            const entradaTurnoMinutos = convertirAMinutos(turno.horaent);
+            const salidaTurnoMinutos = convertirAMinutos(turno.horasal);
+
+            // Lógica más flexible para turnos diurnos
+            if (turno.tipoturno.tipo === 'Diurno') {
+                if (entradaMinutos >= entradaTurnoMinutos - 60 &&
+                    entradaMinutos <= entradaTurnoMinutos + 60 &&
+                    salidaMinutos >= salidaTurnoMinutos - 60 &&
+                    salidaMinutos <= salidaTurnoMinutos + 60) {
+                    return turno.descripcion.split(' ')[1];
+                }
+            }
+
+            // Lógica para turnos nocturnos
+            if (turno.tipoturno.tipo === 'Nocturno') {
+                let salidaComparar = salidaMinutos;
+                if (salidaMinutos < entradaMinutos) {
+                    salidaComparar = salidaMinutos + 1440;
+                }
+
+                if (entradaMinutos >= entradaTurnoMinutos - 60 &&
+                    entradaMinutos <= entradaTurnoMinutos + 60 &&
+                    salidaComparar >= (salidaTurnoMinutos + 1440) - 60 &&
+                    salidaComparar <= (salidaTurnoMinutos + 1440) + 60) {
+                    return turno.descripcion.split(' ')[1];
+                }
+            }
+
+            // Lógica para turnos mixtos
+            if (turno.tipoturno.tipo === 'Mixto Diurno') {
+                if (entradaMinutos >= entradaTurnoMinutos - 60 &&
+                    entradaMinutos <= entradaTurnoMinutos + 60 &&
+                    salidaMinutos >= salidaTurnoMinutos - 60 &&
+                    salidaMinutos <= salidaTurnoMinutos + 60) {
+                    return turno.descripcion.split(' ')[1];
+                }
+            }
+        }
+
+        // Si no se puede determinar, retornar vacío
+        return '';
+    }
 
     // Función para limpiar el archivo CSV
     const limpiarCSV = () => {
@@ -235,7 +368,8 @@ export const Calculo = ({ usuarioUsed }) => {
                 extra: false,
                 horaent: '',
                 horasal: '',
-                horades: ''
+                horades: '',
+                turno: ''
             });
         }
 
@@ -384,13 +518,7 @@ export const Calculo = ({ usuarioUsed }) => {
         const form = event.currentTarget;
 
         let sw = 0;
-        if (!data.fechadesde) {
-            sw = 1
-        }
-        if (!data.fechahasta) {
-            sw = 1
-        }
-        if (data.fechadesde > data.fechahasta) {
+        if (!data.fechadesde || !data.fechahasta || data.fechadesde > data.fechahasta) {
             sw = 1
         }
 
@@ -401,7 +529,7 @@ export const Calculo = ({ usuarioUsed }) => {
         }
 
         if (form.checkValidity()) {
-            generarExcel(data, turnos);
+            generarExcel(data);
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -417,7 +545,7 @@ export const Calculo = ({ usuarioUsed }) => {
                             <Link className='p-0 text-black ps-1 pe-1 border-0 menuList d-flex' to={UrlBase + "/home"}>
                                 <i className='bi bi-chevron-double-left fs-3' style={{ textShadow: '1px 0 0 black, 0 1px 0 black, -1px 0 0 black, 0 -1px 0 black' }}></i>
                             </Link>
-                            <p className='container m-0 p-0'>CÁLCULOS</p>
+                            <p className='container m-0 p-0'>HORAS EXTRAS</p>
                         </div>
                         <div className='d-flex align-items-center ps-3'>
                             <i className='bi bi-person fs-3 me-3'></i>
@@ -436,10 +564,10 @@ export const Calculo = ({ usuarioUsed }) => {
                                 <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-table me-2 text-black"></i>Cálculos
+                                <i className="bi bi-file-earmark-text-fill me-2 text-black"></i>Reportes
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                Informe
+                                Horas Extras
                             </li>
                         </ol>
                     </nav>

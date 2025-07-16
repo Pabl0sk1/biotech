@@ -641,7 +641,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                 <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-table me-2 text-black"></i>Cálculos
+                                <i className="bi bi-patch-plus-fill me-2 text-black"></i>Registros
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
                                 Turnos

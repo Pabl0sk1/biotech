@@ -1,9 +1,9 @@
 import ExcelJS from 'exceljs';
 import { LogoBase64 } from "../utils/LogoBase64";
 
-const generarExcel = async (data, turnos) => {
+const generarExcel = async (data) => {
     const { cantdias, fechadesde, fechahasta, listafuncionarios } = data;
-
+    console.log(data);
     // Crear imagen
     const logo = await LogoBase64();
 
@@ -291,14 +291,15 @@ const generarExcel = async (data, turnos) => {
                 htotal = restarHoras(detalle.horaent, detalle.horasal);
                 total = calcularHorasTrabajadasDecimal(detalle.horaent, detalle.horasal, descanso);
                 if (diaSemana != 'domingo' && !detalle.feriado) {
-                    horasn = 8.00;
-                    horasnn = 7.00;
-                    horasnmd = 7.50;
-                    horasnmn = 7.50;
-                    horasen = total - horasn;
-                    horasent = total - (horasnn + horasnmd + horasnmn);
+                    if (detalle.turno == 'A' || detalle.turno == 'D') horasn = 8.00;
+                    else if (detalle.turno == 'C') horasnn = 7.00;
+                    else if (detalle.turno == 'B') horasnmd = 7.50;
+                    else if (detalle.turno == 'E') horasnmn = 7.50;
+
+                    if (detalle.turno == 'A' || detalle.turno == 'D' || detalle.turno == 'B') horasen = total - (horasn + horasnmd);
+                    else if (detalle.turno == 'C' || detalle.turno == 'E') horasent = total - (horasnn + horasnmn);
                 }
-                if ((diaSemana == 'domingo' || detalle.feriado) && total) horasextras = total - horasn;
+                if ((diaSemana == 'domingo' || detalle.feriado) && total) horasextras = total;
             }
 
             // Agregar datos a la fila

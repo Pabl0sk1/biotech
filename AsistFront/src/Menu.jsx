@@ -9,7 +9,8 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isSeguridadMenuOpen, setIsSeguridadMenuOpen] = useState(false);
-    const [isCalculosMenuOpen, setIsCalculosMenuOpen] = useState(false);
+    const [isReportesMenuOpen, setIsReportesMenuOpen] = useState(false);
+    const [isRegistrosMenuOpen, setIsRegistrosMenuOpen] = useState(false);
     const navigate = useNavigate();
 
     const obtenerFechaHora = async () => {
@@ -142,8 +143,11 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
     const toggleSeguridadMenu = () => {
         setIsSeguridadMenuOpen(!isSeguridadMenuOpen);
     };
-    const toggleCalculosMenu = () => {
-        setIsCalculosMenuOpen(!isCalculosMenuOpen);
+    const toggleReportesMenu = () => {
+        setIsReportesMenuOpen(!isReportesMenuOpen);
+    }
+    const toggleRegistrosMenu = () => {
+        setIsRegistrosMenuOpen(!isRegistrosMenuOpen);
     }
 
     return (
@@ -198,25 +202,57 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                 <i className='bi bi-person me-2'></i>
                                 <p className='m-0 usuarioNombre'>{usuarioUsed.nombreusuario}</p>
                             </li>
-                            {/*Cálculos lista*/}
-                            {usuarioUsed?.tipousuario?.id && [1, 2].includes(usuarioUsed.tipousuario.id) && (
-                                <li className="nav-item">
-                                    <a role="button" onClick={toggleCalculosMenu} href="#" aria-controls="calculosMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
-                                        <i className='bi bi-table ps-3 pe-2'></i>
-                                        Cálculos
-                                        <span className="ms-auto me-3">
-                                            <i className={`bi ${isCalculosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                                        </span>
-                                    </a>
-                                    <ul className={`nav collapse menuSubtitle fw-normal ${isCalculosMenuOpen ? 'show' : ''}`} id='calculosMenu'>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Cálculos", 'Realizar Informe', UrlLocal + "/calcs/report")} className="nav-link text-white p-1">Informe</Link></li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Modalidades", 'Consultar', UrlLocal + "/calcs/schedules")} className="nav-link text-white p-1">Modalidades</Link></li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Turnos", 'Consultar', UrlLocal + "/calcs/shifts")} className="nav-link text-white p-1">Turnos</Link></li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Cargos", 'Consultar', UrlLocal + "/calcs/positions")} className="nav-link text-white p-1">Cargos</Link></li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Funcionarios", 'Consultar', UrlLocal + "/calcs/employees")} className="nav-link text-white p-1">Funcionarios</Link></li>
-                                    </ul>
-                                </li>
-                            )}
+                            {/*Reportes lista*/}
+                            <li className="nav-item">
+                                <a role="button" onClick={toggleReportesMenu} href="#" aria-controls="calculosMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
+                                    <i className='bi bi-file-earmark-text ps-3 pe-2'></i>
+                                    Reportes
+                                    <span className="ms-auto me-3">
+                                        <i className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                                    </span>
+                                </a>
+                                <ul className={`nav collapse menuSubtitle fw-normal ${isReportesMenuOpen ? 'show' : ''}`} id='calculosMenu'>
+                                    {usuarioUsed?.tipousuario?.id && [1, 2].includes(usuarioUsed.tipousuario.id) && (
+                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Horas Extras", 'Realizar Informe', UrlLocal + "/reports/calcext")} className="nav-link text-white p-1">Horas Extras</Link></li>
+                                    )}
+                                </ul>
+                            </li>
+                            {/*Registros lista*/}
+                            <li className="nav-item">
+                                <a role="button" onClick={toggleRegistrosMenu} href="#" aria-controls="calculosMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
+                                    <i className='bi bi-patch-plus ps-3 pe-2'></i>
+                                    Registros
+                                    <span className="ms-auto me-3">
+                                        <i className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                                    </span>
+                                </a>
+                                <ul className={`nav collapse menuSubtitle fw-normal ${isRegistrosMenuOpen ? 'show' : ''}`} id='calculosMenu'>
+                                    {usuarioUsed?.tipousuario?.id && (
+                                        <>
+                                            {[1, 2].includes(usuarioUsed.tipousuario.id) && (
+                                                <>
+                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
+                                                        <Link onClick={() => agregarAcceso("Cargos", 'Consultar', UrlLocal + "/regs/positions")} className="nav-link text-white p-1">Cargos</Link>
+                                                    </li>
+                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
+                                                        <Link onClick={() => agregarAcceso("Funcionarios", 'Consultar', UrlLocal + "/regs/employees")} className="nav-link text-white p-1">Funcionarios</Link>
+                                                    </li>
+                                                </>
+                                            )}
+                                            {[1].includes(usuarioUsed.tipousuario.id) && (
+                                                <>
+                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
+                                                        <Link onClick={() => agregarAcceso("Modalidades", 'Consultar', UrlLocal + "/regs/schedules")} className="nav-link text-white p-1">Modalidades</Link>
+                                                    </li>
+                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
+                                                        <Link onClick={() => agregarAcceso("Turnos", 'Consultar', UrlLocal + "/regs/shifts")} className="nav-link text-white p-1">Turnos</Link>
+                                                    </li>
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+                                </ul>
+                            </li>
                             {/*Seguridad lista*/}
                             {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
                                 <li className="nav-item">
