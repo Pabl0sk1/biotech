@@ -188,7 +188,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
@@ -297,7 +297,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
                             <div className="border-top border-2 border-black pt-2 pb-2 ps-3 m-0 text-start user-select-none">
                                 <button
                                     type="submit"
-                                    className="btn btn-primary me-4 fw-bold ps-3 pe-3 text-black"
+                                    className="btn btn-success me-4 fw-bold ps-3 pe-3 text-black"
                                     disabled={loading}
                                 >
                                     {loading ? (

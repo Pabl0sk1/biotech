@@ -119,7 +119,7 @@ export const Login = ({ setUsuarioUsed }) => {
                         autoComplete="off"
                         noValidate
                     >
-                        <img src="/logo.svg" className="w-75" alt="Maria Mora Atelier" />
+                        <img src="/logo.svg" className="w-75 my-5" alt="Maria Mora Atelier" />
                         <div className="mt-4">
                             {error && <div className="alert alert-danger p-2">{error}</div>}
                             <div className="mt-3 pb-3 d-flex align-items-center">
@@ -160,7 +160,7 @@ export const Login = ({ setUsuarioUsed }) => {
                         <div className="mt-4">
                             <button
                                 type="submit"
-                                className="btn btn-primary fw-bold px-4 text-black"
+                                className="btn btn-success fw-bold px-4 text-black"
                                 disabled={loading}
                             >
                                 <i className="bi bi-box-arrow-right me-2"></i>{loading ? 'Cargando' : 'Ingresar'}

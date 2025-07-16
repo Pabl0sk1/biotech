@@ -11,7 +11,7 @@ export const Error = () => {
                     <i className="bi bi-moon-fill" style={{ fontSize: '5rem' }}></i>
                 </div>
                 <Link className='btn btn-danger fw-bold px-4 text-black' to={"/asist/home"}>
-                    Volver
+                    <i className="bi bi-escape me-2"></i>Volver
                 </Link>
             </div>
         </div>

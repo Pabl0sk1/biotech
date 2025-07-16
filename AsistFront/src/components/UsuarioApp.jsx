@@ -747,7 +747,7 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
@@ -907,7 +907,7 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                             <button onClick={() => handleOpenForm(usuarioSelected)} className="btn btn-success text-black fw-bold me-3">
                                 <i className="bi bi-plus-lg me-2"></i>Registrar
                             </button>
-                            <button onClick={() => refrescar()} className="btn btn-primary text-black fw-bold ms-3">
+                            <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold ms-3">
                                 <i className="bi bi-arrow-clockwise me-2"></i>Refrescar
                             </button>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
@@ -916,7 +916,7 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                         <button className={`page-link ${page === 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => handlePageChange(page - 1)}>Anterior</button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-primary rounded-0 fw-bold border-black">{page + 1}</button>
+                                        <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
                                     </li>
                                     <li className={`page-item ${(page === totalPages - 1 || usuarios.length === 0) ? 'disabled' : ''}`}>
                                         <button className={`page-link ${(page === totalPages - 1 || usuarios.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
