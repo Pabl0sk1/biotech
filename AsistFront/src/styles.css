@@ -144,3 +144,10 @@ input[type="time"]:hover::-webkit-calendar-picker-indicator {
   background-size: cover;
   background-position: center;
 }
+
+.menuBack {
+  background-image: url(/menuback.svg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}

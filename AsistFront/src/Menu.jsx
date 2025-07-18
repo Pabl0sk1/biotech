@@ -177,7 +177,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                 </>
             )}
 
-            <div className="row w-100 m-0">
+            <div className="menuBack position-fixed top-0 start-0 w-100 vh-100">
                 <nav className="navbar navbar-expand-lg navbar-light bg-white top-0 position-fixed p-0 z-1 w-100 user-select-none border-3 border-black border-bottom">
                     <div className="d-flex w-100">
                         <div className="col-2 d-flex align-items-center m-0 p-1 ps-3 border-end border-dark border-3">

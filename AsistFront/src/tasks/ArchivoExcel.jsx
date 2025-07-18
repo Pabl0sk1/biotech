@@ -3,7 +3,7 @@ import { LogoBase64 } from "../utils/LogoBase64";
 
 const generarExcel = async (data) => {
     const { cantdias, fechadesde, fechahasta, listafuncionarios } = data;
-    console.log(data);
+
     // Crear imagen
     const logo = await LogoBase64();
 
@@ -86,6 +86,7 @@ const generarExcel = async (data) => {
     }
 
     function restarHoras(horaInicio, horaFin) {
+        if (horaInicio == '00:00' || horaFin == '00:00') return '00:00';
         const [h1, m1] = horaInicio.split(":").map(Number);
         const [h2, m2] = horaFin.split(":").map(Number);
 
@@ -103,7 +104,7 @@ const generarExcel = async (data) => {
 
     // Función para calcular horas trabajadas en decimal
     const calcularHorasTrabajadasDecimal = (horaEntrada, horaSalida, descanso) => {
-        if (!horaEntrada || !horaSalida) return 0;
+        if (horaEntrada == '00:00' || horaSalida == '00:00') return 0;
 
         const [h1, m1] = horaEntrada.split(":").map(Number);
         const [h2, m2] = horaSalida.split(":").map(Number);

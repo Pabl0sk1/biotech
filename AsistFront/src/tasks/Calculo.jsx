@@ -71,6 +71,19 @@ export const Calculo = ({ usuarioUsed }) => {
         return `${anio}-${mes}-${dia}`;
     }
 
+    const obtenerDiaSemana = (fecha) => {
+        if (!fecha) return '';
+        const date = new Date(fecha + 'T00:00:00Z');
+        const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+        return days[date.getDay()];
+    };
+
+    const asignarDiaFondo = (fecha) => {
+        const dia = obtenerDiaSemana(fecha);
+        const claseFondo = dia === 'domingo' ? 'bg-danger-subtle' : '';
+        return claseFondo;
+    }
+
     // Función para parsear fecha del CSV (DD/MM/YYYY HH:MM)
     const parsearFechaCSV = (fechaHoraStr) => {
         if (!fechaHoraStr || fechaHoraStr.trim() === '') return null;
@@ -660,9 +673,10 @@ export const Calculo = ({ usuarioUsed }) => {
                                             <p className={`float-start text-start m-0 fw-bold`}>{fc.nombre} {fc.apellido}</p>
                                             <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
                                         </button>
-                                        <table className="collapse table table-bordered table-striped table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
+                                        <table className="collapse table table-striped table-bordered table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
                                             <thead className='table-dark border-black'>
                                                 <tr className='text-center align-middle'>
+                                                    <th>Día</th>
                                                     <th>Fecha</th>
                                                     <th>Hora Entrada</th>
                                                     <th>Hora Salida</th>
@@ -674,9 +688,10 @@ export const Calculo = ({ usuarioUsed }) => {
                                             </thead>
                                             <tbody>
                                                 {fc.detalles && fc.detalles.map((detalle, fechaIndex) => (
-                                                    <tr key={`${fc.id}-${fechaIndex}`} className='text-center align-middle fw-normal'>
-                                                        <td style={{ width: '100px' }}>{formatearFecha(detalle.fecha)}</td>
-                                                        <td style={{ width: '300px' }}>
+                                                    <tr key={`${fc.id}-${fechaIndex}`} className={`text-center align-middle fw-normal`}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '100px' }}>{obtenerDiaSemana(detalle.fecha)}</td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '100px' }}>{formatearFecha(detalle.fecha)}</td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '300px' }}>
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
@@ -690,7 +705,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 required
                                                             />
                                                         </td>
-                                                        <td style={{ width: '300px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '300px' }}>
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
@@ -704,7 +719,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 required
                                                             />
                                                         </td>
-                                                        <td style={{ width: '300px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '300px' }}>
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
@@ -713,7 +728,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 required
                                                             />
                                                         </td>
-                                                        <td style={{ width: '120px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '120px' }}>
                                                             <input
                                                                 type="checkbox"
                                                                 className='form-check-input border-black'
@@ -724,7 +739,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 }}
                                                             />
                                                         </td>
-                                                        <td style={{ width: '120px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '120px' }}>
                                                             <input
                                                                 type="checkbox"
                                                                 className='form-check-input border-black'
@@ -732,7 +747,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', e.target.checked)}
                                                             />
                                                         </td>
-                                                        <td hidden={![1].includes(usuarioUsed.tipousuario.id)} style={{ width: '60px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={![1].includes(usuarioUsed.tipousuario.id)} style={{ width: '60px' }}>
                                                             <input
                                                                 type="text"
                                                                 className='form-control border-black text-center'
@@ -754,8 +769,8 @@ export const Calculo = ({ usuarioUsed }) => {
                             </div>
                         </form>
                     </div>
-                </div>
-            </div>
+                </div >
+            </div >
         </>
     );
 }
