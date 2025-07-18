@@ -102,6 +102,7 @@ export const Calculo = ({ usuarioUsed }) => {
         let horaEntrada = '';
         let horaSalida = '';
         let trn = '';
+        let cmp = [];
         // console.log(lineas);
 
         for (let i = 0; i < lineas.length; i++) {
@@ -135,75 +136,67 @@ export const Calculo = ({ usuarioUsed }) => {
                 continue;
             }
 
-            // Procesar líneas de registros de entrada/salida
-            if (funcionarioActual) {
-                // console.log(funcionarioActual);
-                for (let j = 0; j < campos.length; j++) {
-                    if (campos[0] != 'Entrada') {
-                        const str = campos[j];
-                        if (str != 'Entrada' && str != 'Salida') {
-                            const fechaHora = campos[j];
-                            const tipo = campos[j + 1];
-                            if (fechaHora && (tipo == 'Entrada' || tipo == 'Salida')) {
-                                const parsedDateTime = parsearFechaCSV(fechaHora);
-                                // console.log(parsedDateTime);
-                                if (parsedDateTime) {
-                                    index = calcularDiasEnRango(dsd, parsedDateTime.fecha) - 1;
-                                    if (tipo == 'Entrada' && fechaEntrada != parsedDateTime.fecha) {
-                                        fechaEntrada = parsedDateTime.fecha;
-                                        horaEntrada = parsedDateTime.hora;
-                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horaent', horaEntrada);
-                                    } else if (tipo == 'Salida') {
-                                        horaSalida = parsedDateTime.hora;
-                                        trn = determinarTurno(horaEntrada, horaSalida);
-                                        if (fechaEntrada != parsedDateTime.fecha) {
-                                            actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', horaSalida);
-                                            actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'turno', trn);
-                                            asignarDescanso(funcionarioActual.id, index - 1, trn);
-                                        } else {
-                                            actualizarDetalleFuncionario(funcionarioActual.id, index, 'horasal', horaSalida);
-                                            actualizarDetalleFuncionario(funcionarioActual.id, index, 'turno', trn);
-                                            asignarDescanso(funcionarioActual.id, index, trn);
-                                        }
-                                        horaEntrada = '';
-                                        horaSalida = '';
-                                        trn = '';
-                                    };
-                                }
+            if (funcionarioActual && campos[0] != 'Entrada') {
+                cmp = cmp.concat(campos);
+                continue;
+            } else if (funcionarioActual) {
+                for (let j = 0; j < cmp.length; j++) {
+                    const str = cmp[j];
+                    if (str != 'Entrada' && str != 'Salida') {
+                        const fechaHora = cmp[j];
+                        const tipo = cmp[j + 1];
+                        if (fechaHora && (tipo == 'Entrada' || tipo == 'Salida')) {
+                            const parsedDateTime = parsearFechaCSV(fechaHora);
+                            // console.log(parsedDateTime);
+                            if (parsedDateTime) {
+                                index = calcularDiasEnRango(dsd, parsedDateTime.fecha) - 1;
+                                if (tipo == 'Entrada' && fechaEntrada != parsedDateTime.fecha) {
+                                    fechaEntrada = parsedDateTime.fecha;
+                                    horaEntrada = parsedDateTime.hora;
+                                    actualizarDetalleFuncionario(funcionarioActual.id, index, 'horaent', horaEntrada);
+                                } else if (tipo == 'Salida') {
+                                    horaSalida = parsedDateTime.hora;
+                                    trn = determinarTurno(horaEntrada, horaSalida);
+                                    if (fechaEntrada != parsedDateTime.fecha) {
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', horaSalida);
+                                        asignarDescanso(funcionarioActual.id, index - 1, trn);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'turno', trn);
+                                    } else {
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horasal', horaSalida);
+                                        asignarDescanso(funcionarioActual.id, index, trn);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'turno', trn);
+                                    }
+                                };
                             }
                         }
-                    } else {
-                        funcionarioActual = null;
-                        fechaEntrada = '';
-                        horaEntrada = '';
-                        horaSalida = '';
-                        trn = '';
-                        continue;
                     }
                 }
+                funcionarioActual = null;
+                fechaEntrada = '';
+                horaEntrada = '';
+                horaSalida = '';
+                cmp = [];
+                continue;
             }
         }
-    };
+    }
 
     // Función para asignar el descanso según el turno
     const asignarDescanso = (idFuncionario, idx, trn) => {
         if (!trn) return;
 
         // Buscar el turno en la lista para obtener el tiempo de descanso
-        const turnoEncontrado = turnos.find(turno => turno.descripcion.split(' ')[1] === trn);
-        if (turnoEncontrado) {
-            const horaDescanso = turnoEncontrado.horades.substring(0, 5);
-            actualizarDetalleFuncionario(idFuncionario, idx, 'horades', horaDescanso);
-        }
+        const turnoEncontrado = turnos.find(turno => turno.descripcion.split(' ')[1] == trn);
+        let horaDescanso = '00:00';
+        if (turnoEncontrado) horaDescanso = turnoEncontrado.horades.substring(0, 5);
+        actualizarDetalleFuncionario(idFuncionario, idx, 'horades', horaDescanso);
     }
 
     // Función para determinar el turno basado en horarios de entrada y salida
     const determinarTurno = (entrada, salida) => {
-        if (!entrada || !salida || turnos.length == 0) return '';
 
         // Convertir las horas a minutos para facilitar las comparaciones
         const convertirAMinutos = (hora) => {
-            // Manejar formato "HH:MM:SS" y "HH:MM"
             const partes = hora.split(':');
             const horas = parseInt(partes[0]);
             const minutos = parseInt(partes[1]);
@@ -213,100 +206,94 @@ export const Calculo = ({ usuarioUsed }) => {
         const entradaMinutos = convertirAMinutos(entrada);
         const salidaMinutos = convertirAMinutos(salida);
 
-        // Tolerancia en minutos para la comparación (30 minutos)
-        const tolerancia = 30;
-
-        // Función auxiliar para verificar si está dentro del rango con tolerancia
-        const estaEnRango = (valor, objetivo, tolerancia) => {
-            return Math.abs(valor - objetivo) <= tolerancia;
-        };
-
-        // Buscar el turno que mejor coincida
         let mejorCoincidencia = null;
         let menorDiferencia = Infinity;
 
+        // Tolerancia en minutos para entrada y salida
+        const toleranciaEntrada = 60; // 1 hora
+        const toleranciaSalida = 60;   // 1 hora
+
         for (const turno of turnos) {
             const entradaTurnoMinutos = convertirAMinutos(turno.horaent);
             const salidaTurnoMinutos = convertirAMinutos(turno.horasal);
 
-            let salidaComparar = salidaMinutos;
-            let salidaTurnoComparar = salidaTurnoMinutos;
+            // Calcular diferencias
+            let diferenciaEntrada = Math.abs(entradaMinutos - entradaTurnoMinutos);
+            let diferenciaSalida = Math.abs(salidaMinutos - salidaTurnoMinutos);
 
-            // Manejo especial para turnos nocturnos (cuando la salida es menor que la entrada)
-            if (turno.tipoturno.tipo === 'Nocturno' || salidaTurnoMinutos < entradaTurnoMinutos) {
-                // Si es turno nocturno y la salida registrada es menor que la entrada,
-                // significa que la salida es del día siguiente
-                if (salidaMinutos < entradaMinutos) {
-                    salidaComparar = salidaMinutos + 1440; // Agregar 24 horas
+            // Para turnos nocturnos, considerar el cruce de medianoche
+            if (turno.tipoturno.tipo === 'Nocturno') {
+                // Si el turno nocturno cruza medianoche
+                if (salidaTurnoMinutos < entradaTurnoMinutos) {
+                    // Ajustar la comparación para turnos nocturnos
+                    if (salidaMinutos < entradaMinutos) {
+                        // Ambos cruzan medianoche, comparación directa
+                        diferenciaSalida = Math.abs(salidaMinutos - salidaTurnoMinutos);
+                    } else {
+                        // Solo el turno teórico cruza medianoche
+                        const salidaAjustada = salidaMinutos + 1440;
+                        const salidaTurnoAjustada = salidaTurnoMinutos + 1440;
+                        diferenciaSalida = Math.abs(salidaAjustada - salidaTurnoAjustada);
+                    }
                 }
-                salidaTurnoComparar = salidaTurnoMinutos + 1440;
             }
 
-            // Calcular diferencia total entre horarios
-            const diferenciaEntrada = Math.abs(entradaMinutos - entradaTurnoMinutos);
-            const diferenciaSalida = Math.abs(salidaComparar - salidaTurnoComparar);
+            // Verificar si está dentro de las tolerancias
+            const dentroToleranciaEntrada = diferenciaEntrada <= toleranciaEntrada;
+            const dentroToleranciaSalida = diferenciaSalida <= toleranciaSalida;
+
+            // Calcular diferencia total
             const diferenciaTotal = diferenciaEntrada + diferenciaSalida;
 
-            // Verificar si está dentro de la tolerancia y es la mejor coincidencia
-            if (estaEnRango(entradaMinutos, entradaTurnoMinutos, tolerancia) &&
-                estaEnRango(salidaComparar, salidaTurnoComparar, tolerancia) &&
-                diferenciaTotal < menorDiferencia) {
-
-                menorDiferencia = diferenciaTotal;
-                mejorCoincidencia = turno;
+            // Verificar si es una buena coincidencia
+            if (dentroToleranciaEntrada && dentroToleranciaSalida) {
+                if (diferenciaTotal < menorDiferencia) {
+                    menorDiferencia = diferenciaTotal;
+                    mejorCoincidencia = turno;
+                }
             }
         }
 
-        // Si encontramos una coincidencia, retornar la descripción del turno
+        // Si encontramos una coincidencia, retornar la letra del turno
         if (mejorCoincidencia) {
-            // Retornar solo la letra del turno (A, B, C, D)
-            return mejorCoincidencia.descripcion.split(' ')[1]; // "Turno A" -> "A"
+            return mejorCoincidencia.descripcion.split(' ')[1];
         }
 
-        // Si no se encuentra coincidencia exacta, intentar lógica más flexible
+        // Si no hay coincidencia exacta, intentar con lógica más flexible
+        // Buscar el turno con menor diferencia total (incluso fuera de tolerancia)
+        let turnoMasCercano = null;
+        let menorDiferenciaTotal = Infinity;
+
         for (const turno of turnos) {
             const entradaTurnoMinutos = convertirAMinutos(turno.horaent);
             const salidaTurnoMinutos = convertirAMinutos(turno.horasal);
 
-            // Lógica más flexible para turnos diurnos
-            if (turno.tipoturno.tipo === 'Diurno') {
-                if (entradaMinutos >= entradaTurnoMinutos - 60 &&
-                    entradaMinutos <= entradaTurnoMinutos + 60 &&
-                    salidaMinutos >= salidaTurnoMinutos - 60 &&
-                    salidaMinutos <= salidaTurnoMinutos + 60) {
-                    return turno.descripcion.split(' ')[1];
-                }
-            }
+            let diferenciaEntrada = Math.abs(entradaMinutos - entradaTurnoMinutos);
+            let diferenciaSalida = Math.abs(salidaMinutos - salidaTurnoMinutos);
 
-            // Lógica para turnos nocturnos
-            if (turno.tipoturno.tipo === 'Nocturno') {
-                let salidaComparar = salidaMinutos;
+            // Ajustar para turnos nocturnos
+            if (turno.tipoturno.tipo === 'Nocturno' && salidaTurnoMinutos < entradaTurnoMinutos) {
                 if (salidaMinutos < entradaMinutos) {
-                    salidaComparar = salidaMinutos + 1440;
-                }
-
-                if (entradaMinutos >= entradaTurnoMinutos - 60 &&
-                    entradaMinutos <= entradaTurnoMinutos + 60 &&
-                    salidaComparar >= (salidaTurnoMinutos + 1440) - 60 &&
-                    salidaComparar <= (salidaTurnoMinutos + 1440) + 60) {
-                    return turno.descripcion.split(' ')[1];
+                    diferenciaSalida = Math.abs(salidaMinutos - salidaTurnoMinutos);
+                } else {
+                    const salidaAjustada = salidaMinutos + 1440;
+                    const salidaTurnoAjustada = salidaTurnoMinutos + 1440;
+                    diferenciaSalida = Math.abs(salidaAjustada - salidaTurnoAjustada);
                 }
             }
 
-            // Lógica para turnos mixtos
-            if (turno.tipoturno.tipo === 'Mixto Diurno') {
-                if (entradaMinutos >= entradaTurnoMinutos - 60 &&
-                    entradaMinutos <= entradaTurnoMinutos + 60 &&
-                    salidaMinutos >= salidaTurnoMinutos - 60 &&
-                    salidaMinutos <= salidaTurnoMinutos + 60) {
-                    return turno.descripcion.split(' ')[1];
-                }
+            const diferenciaTotal = diferenciaEntrada + diferenciaSalida;
+
+            if (diferenciaTotal < menorDiferenciaTotal) {
+                menorDiferenciaTotal = diferenciaTotal;
+                turnoMasCercano = turno;
             }
         }
 
-        // Si no se puede determinar, retornar vacío
+        // Retornar el turno más cercano si existe
+        if (turnoMasCercano) return turnoMasCercano.descripcion.split(' ')[1];
         return '';
-    }
+    };
 
     // Función para limpiar el archivo CSV
     const limpiarCSV = () => {
@@ -366,9 +353,9 @@ export const Calculo = ({ usuarioUsed }) => {
                 fecha: fechaStr,
                 feriado: false,
                 extra: false,
-                horaent: '',
-                horasal: '',
-                horades: '',
+                horaent: '00:00',
+                horasal: '00:00',
+                horades: '00:00',
                 turno: ''
             });
         }
@@ -383,9 +370,6 @@ export const Calculo = ({ usuarioUsed }) => {
             detalles: funcionario.detalles ? funcionario.detalles.map(detalle => ({
                 ...detalle,
                 feriado: listaferiados.includes(detalle.fecha)
-                // horaent: '00:00',
-                // horasal: '00:00',
-                // horades: '00:00'
             })) : []
         }));
     };
@@ -497,7 +481,7 @@ export const Calculo = ({ usuarioUsed }) => {
         setData(prevData => ({
             ...prevData,
             listafuncionarios: prevData.listafuncionarios.map(funcionario => {
-                if (funcionario.id === funcionarioId) {
+                if (funcionario.id == funcionarioId) {
                     const nuevosDetalles = [...funcionario.detalles];
                     nuevosDetalles[fechaIndex] = {
                         ...nuevosDetalles[fechaIndex],
@@ -685,12 +669,13 @@ export const Calculo = ({ usuarioUsed }) => {
                                                     <th>Hora Descanso</th>
                                                     <th>Feriado</th>
                                                     <th>Extra Entrada</th>
+                                                    <th hidden={![1].includes(usuarioUsed.tipousuario.id)}>Turno</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {fc.detalles && fc.detalles.map((detalle, fechaIndex) => (
                                                     <tr key={`${fc.id}-${fechaIndex}`} className='text-center align-middle fw-normal'>
-                                                        <td>{formatearFecha(detalle.fecha)}</td>
+                                                        <td style={{ width: '100px' }}>{formatearFecha(detalle.fecha)}</td>
                                                         <td style={{ width: '300px' }}>
                                                             <input
                                                                 type="time"
@@ -699,7 +684,8 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 onChange={(e) => {
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
                                                                     const trn = determinarTurno(e.target.value, detalle.horasal);
-                                                                    asignarDescanso(fc.id, fechaIndex, trn);
+                                                                    if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
+                                                                    else asignarDescanso(fc.id, fechaIndex, trn);
                                                                 }}
                                                                 required
                                                             />
@@ -712,7 +698,8 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 onChange={(e) => {
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
                                                                     const trn = determinarTurno(detalle.horaent, e.target.value);
-                                                                    asignarDescanso(fc.id, fechaIndex, trn);
+                                                                    if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
+                                                                    else asignarDescanso(fc.id, fechaIndex, trn);
                                                                 }}
                                                                 required
                                                             />
@@ -734,11 +721,6 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 onChange={(e) => {
                                                                     const checked = e.target.checked;
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
-                                                                    // if (checked) {
-                                                                    //     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', '00:00');
-                                                                    //     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', '00:00');
-                                                                    //     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
-                                                                    // }
                                                                 }}
                                                             />
                                                         </td>
@@ -748,6 +730,14 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 className='form-check-input border-black'
                                                                 checked={detalle.extra}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', e.target.checked)}
+                                                            />
+                                                        </td>
+                                                        <td hidden={![1].includes(usuarioUsed.tipousuario.id)} style={{ width: '60px' }}>
+                                                            <input
+                                                                type="text"
+                                                                className='form-control border-black text-center'
+                                                                value={detalle.turno}
+                                                                readOnly
                                                             />
                                                         </td>
                                                     </tr>

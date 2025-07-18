@@ -275,6 +275,7 @@ const generarExcel = async (data) => {
         funcionario.detalles.forEach((detalle, diaIndex) => {
             const diaSemana = obtenerDiaSemana(detalle.fecha);
             const fechaFormateada = formatearFecha(detalle.fecha);
+            const turnoSel = detalle.turno.trim();
 
             let htotal = '00:00';
             let descanso = detalle.horades || '00:00';
@@ -291,13 +292,13 @@ const generarExcel = async (data) => {
                 htotal = restarHoras(detalle.horaent, detalle.horasal);
                 total = calcularHorasTrabajadasDecimal(detalle.horaent, detalle.horasal, descanso);
                 if (diaSemana != 'domingo' && !detalle.feriado) {
-                    if (detalle.turno == 'A' || detalle.turno == 'D') horasn = 8.00;
-                    else if (detalle.turno == 'C') horasnn = 7.00;
-                    else if (detalle.turno == 'B') horasnmd = 7.50;
-                    else if (detalle.turno == 'E') horasnmn = 7.50;
+                    if (['A', 'D'].includes(turnoSel)) horasn = 8.00;
+                    else if (turnoSel == 'C') horasnn = 7.00;
+                    else if (turnoSel == 'B') horasnmd = 7.50;
+                    else if (turnoSel == 'E') horasnmn = 7.50;
 
-                    if (detalle.turno == 'A' || detalle.turno == 'D' || detalle.turno == 'B') horasen = total - (horasn + horasnmd);
-                    else if (detalle.turno == 'C' || detalle.turno == 'E') horasent = total - (horasnn + horasnmn);
+                    if (['A', 'D', 'B'].includes(turnoSel)) horasen = total - (horasn + horasnmd);
+                    else if (['C', 'E'].includes(turnoSel)) horasent = total - (horasnn + horasnmn);
                 }
                 if ((diaSemana == 'domingo' || detalle.feriado) && total) horasextras = total;
             }
