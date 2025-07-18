@@ -28,7 +28,7 @@ import com.asist.util.ImageUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
-@RequestMapping(path = "configuracion")
+@RequestMapping(path = "/api/configuracion")
 public class ConfiguracionController {
 
 	@Autowired

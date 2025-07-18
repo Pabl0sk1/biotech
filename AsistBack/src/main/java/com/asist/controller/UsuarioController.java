@@ -20,7 +20,7 @@ import com.asist.entity.Usuario;
 import com.asist.service.UsuarioService;
 
 @RestController
-@RequestMapping(path = "usuario")
+@RequestMapping(path = "/api/usuario")
 public class UsuarioController {
 	
 	@Autowired

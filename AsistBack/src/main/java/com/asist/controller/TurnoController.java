@@ -22,7 +22,7 @@ import com.asist.service.TurnoDiaService;
 import com.asist.service.TurnoService;
 
 @RestController
-@RequestMapping(path = "turno")
+@RequestMapping(path = "/api/turno")
 public class TurnoController {
 
 	@Autowired

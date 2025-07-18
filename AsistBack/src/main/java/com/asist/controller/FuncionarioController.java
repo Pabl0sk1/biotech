@@ -20,7 +20,7 @@ import com.asist.entity.Funcionario;
 import com.asist.service.FuncionarioService;
 
 @RestController
-@RequestMapping(path = "funcionario")
+@RequestMapping(path = "/api/funcionario")
 public class FuncionarioController {
 
 	@Autowired

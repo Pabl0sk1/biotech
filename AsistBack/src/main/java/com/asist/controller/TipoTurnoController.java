@@ -20,7 +20,7 @@ import com.asist.entity.TipoTurno;
 import com.asist.service.TipoTurnoService;
 
 @RestController
-@RequestMapping(path = "tipoturno")
+@RequestMapping(path = "/api/tipoturno")
 public class TipoTurnoController {
 
 	@Autowired

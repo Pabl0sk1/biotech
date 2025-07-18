@@ -22,7 +22,7 @@ import com.asist.entity.Auditoria;
 import com.asist.service.AuditoriaService;
 
 @RestController
-@RequestMapping(path = "auditoria")
+@RequestMapping(path = "/api/auditoria")
 public class AuditoriaController {
 
 	@Autowired

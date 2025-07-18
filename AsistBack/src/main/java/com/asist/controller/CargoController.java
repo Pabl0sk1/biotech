@@ -20,7 +20,7 @@ import com.asist.entity.Cargo;
 import com.asist.service.CargoService;
 
 @RestController
-@RequestMapping(path = "cargo")
+@RequestMapping(path = "/api/cargo")
 public class CargoController {
 	
 	@Autowired
