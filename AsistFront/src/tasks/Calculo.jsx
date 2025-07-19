@@ -682,7 +682,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                     <th>Hora Salida</th>
                                                     <th>Hora Descanso</th>
                                                     <th>Feriado</th>
-                                                    <th>Extra Entrada</th>
+                                                    <th hidden={![1].includes(usuarioUsed.tipousuario.id)}>Extra Entrada</th>
                                                     <th hidden={![1].includes(usuarioUsed.tipousuario.id)}>Turno</th>
                                                 </tr>
                                             </thead>
@@ -739,7 +739,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 }}
                                                             />
                                                         </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '120px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={![1].includes(usuarioUsed.tipousuario.id)} style={{ width: '120px' }}>
                                                             <input
                                                                 type="checkbox"
                                                                 className='form-check-input border-black'
