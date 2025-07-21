@@ -700,7 +700,10 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
                                                                     const trn = determinarTurno(e.target.value, detalle.horasal);
                                                                     if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
-                                                                    else asignarDescanso(fc.id, fechaIndex, trn);
+                                                                    else {
+                                                                        asignarDescanso(fc.id, fechaIndex, trn);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                    }
                                                                 }}
                                                                 lang='es-ES'
                                                                 step={60}
@@ -716,7 +719,10 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
                                                                     const trn = determinarTurno(detalle.horaent, e.target.value);
                                                                     if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
-                                                                    else asignarDescanso(fc.id, fechaIndex, trn);
+                                                                    else {
+                                                                        asignarDescanso(fc.id, fechaIndex, trn);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                    }
                                                                 }}
                                                                 lang='es-ES'
                                                                 step={60}
