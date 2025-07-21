@@ -535,7 +535,7 @@ export const Calculo = ({ usuarioUsed }) => {
 
     return (
         <>
-            <div className="row-cols-auto w-100 m-0">
+            <div className="row-cols-auto w-100 m-0 colorPrimario">
                 <nav className="navbar navbar-expand-lg navbar-light bg-white top-0 position-fixed p-0 z-1 w-100 user-select-none border-3 border-black border-bottom">
                     <div className="d-flex w-100">
                         <div className="col-2 d-flex align-items-center m-0 p-1 ps-3 border-end border-dark border-3">
@@ -702,6 +702,8 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                     if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
                                                                     else asignarDescanso(fc.id, fechaIndex, trn);
                                                                 }}
+                                                                lang='es-ES'
+                                                                step={60}
                                                                 required
                                                             />
                                                         </td>
@@ -716,6 +718,8 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                     if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
                                                                     else asignarDescanso(fc.id, fechaIndex, trn);
                                                                 }}
+                                                                lang='es-ES'
+                                                                step={60}
                                                                 required
                                                             />
                                                         </td>
@@ -725,6 +729,8 @@ export const Calculo = ({ usuarioUsed }) => {
                                                                 className="form-control border-input w-100"
                                                                 value={detalle.horades || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
+                                                                lang='es-ES'
+                                                                step={60}
                                                                 required
                                                             />
                                                         </td>

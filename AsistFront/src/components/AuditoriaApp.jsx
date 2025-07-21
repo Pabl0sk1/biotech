@@ -208,6 +208,8 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
                                             name="fechahora"
                                             className="form-control border-input w-100 border-black mb-3"
                                             value={auditoriaAVisualizar.fechahora}
+                                            lang='es-ES'
+                                            step={60}
                                             readOnly
                                         />
                                     </div>

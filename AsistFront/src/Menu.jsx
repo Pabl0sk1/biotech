@@ -214,7 +214,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                 <ul className={`nav collapse menuSubtitle fw-normal ${isReportesMenuOpen ? 'show' : ''}`} id='calculosMenu'>
                                     {usuarioUsed?.tipousuario?.id && (
                                         <>
-                                            {[1, 2].includes(usuarioUsed.tipousuario.id) && (
+                                            {[1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
                                                 <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Horas Extras", 'Realizar Informe', UrlLocal + "/reports/calcext")} className="nav-link text-white p-1">Horas Extras</Link></li>
                                             )}
                                         </>
@@ -233,7 +233,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                 <ul className={`nav collapse menuSubtitle fw-normal ${isRegistrosMenuOpen ? 'show' : ''}`} id='calculosMenu'>
                                     {usuarioUsed?.tipousuario?.id && (
                                         <>
-                                            {[1, 2].includes(usuarioUsed.tipousuario.id) && (
+                                            {[1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
                                                 <>
                                                     <li className="nav-item menuSubtitleItem ps-4 w-100">
                                                         <Link onClick={() => agregarAcceso("Cargos", 'Consultar', UrlLocal + "/regs/positions")} className="nav-link text-white p-1">Cargos</Link>
@@ -258,7 +258,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                 </ul>
                             </li>
                             {/*Seguridad lista*/}
-                            {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
+                            {usuarioUsed?.tipousuario?.id && [1, 5].includes(usuarioUsed.tipousuario.id) && (
                                 <li className="nav-item">
                                     <a role="button" onClick={toggleSeguridadMenu} href="#" aria-controls="seguridadMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
                                         <i className='bi bi-lock ps-3 pe-2'></i>
@@ -268,9 +268,21 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                                         </span>
                                     </a>
                                     <ul className={`nav collapse menuSubtitle fw-normal ${isSeguridadMenuOpen ? 'show' : ''}`} id='seguridadMenu'>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link to={UrlLocal + "/security/access"} className="nav-link text-white p-1">Accesos</Link></li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Usuarios", 'Consultar', UrlLocal + "/security/users")} className="nav-link text-white p-1">Usuarios</Link></li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Roles", 'Consultar', UrlLocal + "/security/roles")} className="nav-link text-white p-1">Roles</Link></li>
+                                        {usuarioUsed?.tipousuario?.id && (
+                                            <>
+                                                {[1, 5].includes(usuarioUsed.tipousuario.id) && (
+                                                    <>
+                                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link to={UrlLocal + "/security/access"} className="nav-link text-white p-1">Accesos</Link></li>
+                                                    </>
+                                                )}
+                                                {[1].includes(usuarioUsed.tipousuario.id) && (
+                                                    <>
+                                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Usuarios", 'Consultar', UrlLocal + "/security/users")} className="nav-link text-white p-1">Usuarios</Link></li>
+                                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Roles", 'Consultar', UrlLocal + "/security/roles")} className="nav-link text-white p-1">Roles</Link></li>
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
                                     </ul>
                                 </li>
                             )}
