@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getFuncionario } from '../services/funcionario.service';
 import { generarExcel } from './ArchivoExcel';
 import { getTurno } from '../services/turno.service';
@@ -21,6 +21,7 @@ export const Calculo = ({ usuarioUsed }) => {
     const [csvStatus, setCsvStatus] = useState('');
     const [turnos, setTurnos] = useState([]);
     const [funcionarios, setFuncionarios] = useState([]);
+    const sigLinea = useRef({});
 
     const obtenerFechasDelMes = () => {
         const ahora = new Date();
@@ -84,6 +85,58 @@ export const Calculo = ({ usuarioUsed }) => {
         return claseFondo;
     }
 
+    function minutosAFormatoHora(minutosTotales) {
+        const horas = Math.floor(minutosTotales / 60);
+        const minutos = minutosTotales % 60;
+        return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+    }
+
+    function restarHoras(horaInicio, horaFin) {
+        // Validar formato y valores
+        if (!horaInicio || !horaFin || horaInicio.length < 4 || horaFin.length < 4) return '00:00';
+        if ((horaInicio == '00:00' && horaFin == '00:00') || horaInicio == horaFin) return '00:00';
+        const partesInicio = horaInicio.split(":");
+        const partesFin = horaFin.split(":");
+        if (partesInicio.length < 2 || partesFin.length < 2) return '00:00';
+        const h1 = Number(partesInicio[0]);
+        const m1 = Number(partesInicio[1]);
+        const h2 = Number(partesFin[0]);
+        const m2 = Number(partesFin[1]);
+        if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) return '00:00';
+
+        const minutosInicio = h1 * 60 + m1;
+        let minutosFin = h2 * 60 + m2;
+
+        // Si la hora de salida es menor o igual a la de entrada, asumimos que es al día siguiente
+        if (minutosFin <= minutosInicio) {
+            minutosFin += 24 * 60; // sumar 24 horas
+        }
+
+        const diferenciaMinutos = minutosFin - minutosInicio;
+        return minutosAFormatoHora(diferenciaMinutos);
+    }
+
+    // Función para calcular horas trabajadas en decimal
+    const calcularHorasTrabajadasDecimal = (horaEntrada, horaSalida, descanso) => {
+        //if (horaEntrada == '00:00' || horaSalida == '00:00') return 0;
+
+        const [h1, m1] = horaEntrada.split(":").map(Number);
+        const [h2, m2] = horaSalida.split(":").map(Number);
+        const [hd, md] = descanso.split(":").map(Number);
+
+        const minutosEntrada = h1 * 60 + m1;
+        let minutosSalida = h2 * 60 + m2;
+        const minutosDescanso = hd * 60 + md;
+
+        // Manejar turnos nocturnos
+        if (minutosSalida <= minutosEntrada) {
+            minutosSalida += 24 * 60;
+        }
+
+        const minutosTrabajados = minutosSalida - minutosEntrada - minutosDescanso;
+        return Math.max(0, (minutosTrabajados / 60));
+    };
+
     // Función para parsear fecha del CSV (DD/MM/YYYY HH:MM)
     const parsearFechaCSV = (fechaHoraStr) => {
         if (!fechaHoraStr || fechaHoraStr.trim() === '') return null;
@@ -115,6 +168,10 @@ export const Calculo = ({ usuarioUsed }) => {
         let horaEntrada = '';
         let horaSalida = '';
         let trn = '';
+        let htot = '';
+        let des = '';
+        let tot = 0;
+        let diaSemana = '';
         let cmp = [];
         // console.log(lineas);
 
@@ -155,31 +212,57 @@ export const Calculo = ({ usuarioUsed }) => {
             } else if (funcionarioActual) {
                 for (let j = 0; j < cmp.length; j++) {
                     const str = cmp[j];
+                    let tipo = '';
                     if (str != 'Entrada' && str != 'Salida') {
                         const fechaHora = cmp[j];
-                        const tipo = cmp[j + 1];
-                        if (fechaHora && (tipo == 'Entrada' || tipo == 'Salida')) {
+                        tipo = cmp[j + 1];
+                        if (fechaHora) {
                             const parsedDateTime = parsearFechaCSV(fechaHora);
                             // console.log(parsedDateTime);
                             if (parsedDateTime) {
                                 index = calcularDiasEnRango(dsd, parsedDateTime.fecha) - 1;
                                 if (tipo == 'Entrada' && fechaEntrada != parsedDateTime.fecha) {
+                                    if (!horaSalida && fechaEntrada != parsedDateTime.fecha) {
+                                        horaSalida = obtenerHoraSalidaPorDefecto(horaEntrada);
+                                        diaSemana = obtenerDiaSemana(fechaEntrada);
+                                        trn = determinarTurno(horaEntrada, horaSalida);
+                                        des = asignarDescanso(trn, diaSemana);
+                                        htot = restarHoras(horaEntrada, horaSalida);
+                                        tot = Number(calcularHorasTrabajadasDecimal(horaEntrada, horaSalida, des).toFixed(2));
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'turno', trn);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', horaSalida);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'htotal', htot);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horades', des);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'total', tot);
+                                        determinarHoras(trn, funcionarioActual.id, index - 1, tot);
+                                    }
                                     fechaEntrada = parsedDateTime.fecha;
                                     horaEntrada = parsedDateTime.hora;
                                     actualizarDetalleFuncionario(funcionarioActual.id, index, 'horaent', horaEntrada);
-                                } else if (tipo == 'Salida') {
+                                    horaSalida = '';
+                                } else {
                                     horaSalida = parsedDateTime.hora;
+                                    diaSemana = obtenerDiaSemana(fechaEntrada);
                                     trn = determinarTurno(horaEntrada, horaSalida);
+                                    des = asignarDescanso(trn, diaSemana);
+                                    htot = restarHoras(horaEntrada, horaSalida);
+                                    tot = Number(calcularHorasTrabajadasDecimal(horaEntrada, horaSalida, des).toFixed(2));
                                     if (fechaEntrada != parsedDateTime.fecha) {
-                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', horaSalida);
-                                        asignarDescanso(funcionarioActual.id, index - 1, trn);
                                         actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'turno', trn);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horasal', horaSalida);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'htotal', htot);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'horades', des);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index - 1, 'total', tot);
+                                        determinarHoras(trn, funcionarioActual.id, index - 1, tot);
                                     } else {
-                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horasal', horaSalida);
-                                        asignarDescanso(funcionarioActual.id, index, trn);
                                         actualizarDetalleFuncionario(funcionarioActual.id, index, 'turno', trn);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horasal', horaSalida);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'htotal', htot);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'horades', des);
+                                        actualizarDetalleFuncionario(funcionarioActual.id, index, 'total', tot);
+                                        determinarHoras(trn, funcionarioActual.id, index, tot);
                                     }
-                                };
+                                }
                             }
                         }
                     }
@@ -194,19 +277,78 @@ export const Calculo = ({ usuarioUsed }) => {
         }
     }
 
-    // Función para asignar el descanso según el turno
-    const asignarDescanso = (idFuncionario, idx, trn) => {
+    // Función para asignar hora de salida por defecto según hora de entrada
+    const obtenerHoraSalidaPorDefecto = (horaEntrada) => {
+        if (horaEntrada == '00:00') return '00:00';
+        const [h, m] = horaEntrada.split(':').map(Number);
+        const minutos = h * 60 + m;
+        if (minutos >= 330 && minutos < 870) return '14:30'; // 06:00 - 14:30
+        if (minutos >= 420 && minutos < 1020) return '17:00'; // 07:00 - 17:00
+        if (minutos >= 1380 || minutos < 390) return '06:30'; // 23:00 - 06:30
+        if (minutos >= 840 && minutos < 1380) return '23:30'; // 14:00 - 23:30
+        return '00:00';
+    };
+
+    // Función para fijar hora de entrada automáticamente según turno
+    const fijarHoraEntrada = (id, idx, trn, sal, dia) => {
         if (!trn) return;
+        let he = '00:00';
+        if (trn == 'A') he = '06:00';
+        else if (trn == 'B') he = '14:00';
+        else if (trn == 'C') he = '23:00';
+        else if (trn == 'D') he = '07:00';
+
+        actualizarDetalleFuncionario(id, idx, 'horaent', he);
+        const htot = restarHoras(he, sal);
+        const des = asignarDescanso(trn, dia);
+        const tot = Number(calcularHorasTrabajadasDecimal(he, sal, des).toFixed(2));
+        actualizarDetalleFuncionario(id, idx, 'htotal', htot);
+        actualizarDetalleFuncionario(id, idx, 'total', tot);
+        actualizarDetalleFuncionario(id, idx, 'horades', des);
+    }
+
+    const limpiarHoras = (id, idx) => {
+        let regHora = ['hn', 'hnn', 'hnmd', 'hnmn', 'hen', 'hent', 'hextras'];
+        regHora.forEach(campo => actualizarDetalleFuncionario(id, idx, campo, 0));
+    }
+
+    // Función para determinar las horas según el turno
+    const determinarHoras = (trn, id, idx, tot) => {
+        limpiarHoras(id, idx);
+        let horasn = 0, horasnn = 0, horasnmd = 0, horasnmn = 0;
+        actualizarDetalleFuncionario(id, idx, 'hextras', 0);
+        if (['A', 'D'].includes(trn)) {
+            horasn = 8.00;
+            actualizarDetalleFuncionario(id, idx, 'hn', Number(horasn.toFixed(2)));
+        } else if (trn == 'C') {
+            horasnn = 7.00;
+            actualizarDetalleFuncionario(id, idx, 'hnn', Number(horasnn.toFixed(2)));
+        } else if (trn == 'B') {
+            horasnmd = 7.50;
+            actualizarDetalleFuncionario(id, idx, 'hnmd', Number(horasnmd.toFixed(2)));
+        } else if (trn == 'E') {
+            horasnmn = 7.50;
+            actualizarDetalleFuncionario(id, idx, 'hnmn', Number(horasnmn.toFixed(2)));
+        }
+        if (['A', 'D', 'B'].includes(trn)) actualizarDetalleFuncionario(id, idx, 'hen', Number((tot - (horasn + horasnmd)).toFixed(2)));
+        else if (['C', 'E'].includes(trn)) actualizarDetalleFuncionario(id, idx, 'hent', Number((tot - (horasnn + horasnmn)).toFixed(2)));
+    }
+
+    // Función para asignar el descanso según el turno
+    const asignarDescanso = (trn, dia) => {
+        if (!trn || dia == 'sábado') return '00:00';
 
         // Buscar el turno en la lista para obtener el tiempo de descanso
         const turnoEncontrado = turnos.find(turno => turno.descripcion.split(' ')[1] == trn);
         let horaDescanso = '00:00';
         if (turnoEncontrado) horaDescanso = turnoEncontrado.horades.substring(0, 5);
-        actualizarDetalleFuncionario(idFuncionario, idx, 'horades', horaDescanso);
+
+        return horaDescanso;
     }
 
     // Función para determinar el turno basado en horarios de entrada y salida
     const determinarTurno = (entrada, salida) => {
+        if (entrada == '00:00' || salida == '00:00') return '';
 
         // Convertir las horas a minutos para facilitar las comparaciones
         const convertirAMinutos = (hora) => {
@@ -363,12 +505,22 @@ export const Calculo = ({ usuarioUsed }) => {
             const fechaStr = fecha.toISOString().split('T')[0];
 
             fechas.push({
+                dia: obtenerDiaSemana(fechaStr),
                 fecha: fechaStr,
-                feriado: false,
-                extra: false,
                 horaent: '00:00',
                 horasal: '00:00',
+                htotal: '00:00',
                 horades: '00:00',
+                total: 0,
+                hn: 0,
+                hnn: 0,
+                hnmd: 0,
+                hnmn: 0,
+                hen: 0,
+                hent: 0,
+                hextras: 0,
+                feriado: false,
+                extra: false,
                 turno: ''
             });
         }
@@ -433,7 +585,28 @@ export const Calculo = ({ usuarioUsed }) => {
         const nuevaListaFeriados = [...data.listaferiados, nuevaFechaFeriado];
 
         // Actualizar el estado con la nueva lista de feriados
-        const funcionariosActualizados = aplicarFeriados(data.listafuncionarios, nuevaListaFeriados);
+        let funcionariosActualizados = aplicarFeriados(data.listafuncionarios, nuevaListaFeriados);
+
+        // Aplica limpiarHoras y hextras para todos los funcionarios en la fecha feriada
+        funcionariosActualizados = funcionariosActualizados.map(funcionario => ({
+            ...funcionario,
+            detalles: funcionario.detalles.map((detalle, fechaIndex) => {
+                if (detalle.fecha === nuevaFechaFeriado) {
+                    limpiarHoras(funcionario.id, fechaIndex);
+                    return {
+                        ...detalle,
+                        hn: 0,
+                        hnn: 0,
+                        hnmd: 0,
+                        hnmn: 0,
+                        hen: 0,
+                        hent: 0,
+                        hextras: detalle.total
+                    };
+                }
+                return detalle;
+            })
+        }));
 
         setData(prevData => ({
             ...prevData,
@@ -448,8 +621,47 @@ export const Calculo = ({ usuarioUsed }) => {
     const eliminarFeriado = (fechaFeriado) => {
         const nuevaListaFeriados = data.listaferiados.filter(fecha => fecha !== fechaFeriado);
 
-        // Actualizar funcionarios removiendo el feriado
-        const funcionariosActualizados = aplicarFeriados(data.listafuncionarios, nuevaListaFeriados);
+        // Actualizar funcionarios removiendo el feriado y recalculando horas
+        let funcionariosActualizados = aplicarFeriados(data.listafuncionarios, nuevaListaFeriados);
+
+        funcionariosActualizados = funcionariosActualizados.map(funcionario => ({
+            ...funcionario,
+            detalles: funcionario.detalles.map((detalle) => {
+                if (detalle.fecha === fechaFeriado) {
+                    // Replicar la lógica de determinarHoras
+                    let hn = 0, hnn = 0, hnmd = 0, hnmn = 0, hen = 0, hent = 0;
+                    let hextras = 0;
+                    const trn = detalle.turno;
+                    const tot = detalle.total;
+                    if (["A", "D"].includes(trn)) {
+                        hn = 8.00;
+                    } else if (trn === "C") {
+                        hnn = 7.00;
+                    } else if (trn === "B") {
+                        hnmd = 7.50;
+                    } else if (trn === "E") {
+                        hnmn = 7.50;
+                    }
+                    if (["A", "D", "B"].includes(trn)) {
+                        hen = Number((tot - (hn + hnmd)).toFixed(2));
+                    } else if (["C", "E"].includes(trn)) {
+                        hent = Number((tot - (hnn + hnmn)).toFixed(2));
+                    }
+                    // hextras debe quedar en 0
+                    return {
+                        ...detalle,
+                        hn,
+                        hnn,
+                        hnmd,
+                        hnmn,
+                        hen,
+                        hent,
+                        hextras: 0
+                    };
+                }
+                return detalle;
+            })
+        }));
 
         setData(prevData => ({
             ...prevData,
@@ -510,14 +722,27 @@ export const Calculo = ({ usuarioUsed }) => {
         }));
     };
 
+    // Navegación robusta entre filas de la tabla
+    const handleSiguienteReg = (e, funcionarioId, fechaIndex) => {
+        const key = e.key.toLowerCase();
+        if (!sigLinea.current[funcionarioId]) return;
+        if (key === 'z') {
+            e.preventDefault();
+            const nextRef = sigLinea.current[funcionarioId][fechaIndex + 1];
+            if (nextRef) nextRef.focus();
+        } else if (key === 'x') {
+            e.preventDefault();
+            const prevRef = sigLinea.current[funcionarioId][fechaIndex - 1];
+            if (prevRef) prevRef.focus();
+        }
+    };
+
     const handleSubmit = (event) => {
         event.preventDefault();
         const form = event.currentTarget;
 
         let sw = 0;
-        if (!data.fechadesde || !data.fechahasta || data.fechadesde > data.fechahasta) {
-            sw = 1
-        }
+        if (!data.fechadesde || !data.fechahasta || data.fechadesde > data.fechahasta) sw = 1;
 
         if (sw == 1) {
             event.stopPropagation();
@@ -528,9 +753,7 @@ export const Calculo = ({ usuarioUsed }) => {
         if (form.checkValidity()) {
             generarExcel(data);
             form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+        } else form.classList.add('was-validated');
     }
 
     return (
@@ -549,7 +772,7 @@ export const Calculo = ({ usuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Biotech" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
@@ -588,7 +811,6 @@ export const Calculo = ({ usuarioUsed }) => {
                                         className="ms-2 form-control border-input"
                                         value={data.fechadesde}
                                         onChange={handleFechaChange}
-                                        required
                                     />
                                     <input
                                         type="date"
@@ -597,7 +819,6 @@ export const Calculo = ({ usuarioUsed }) => {
                                         className="ms-2 form-control border-input"
                                         value={data.fechahasta}
                                         onChange={handleFechaChange}
-                                        required
                                     />
                                 </div>
 
@@ -676,93 +897,258 @@ export const Calculo = ({ usuarioUsed }) => {
                                         <table className="collapse table table-striped table-bordered table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
                                             <thead className='table-dark border-black'>
                                                 <tr className='text-center align-middle'>
-                                                    <th>Día</th>
-                                                    <th>Fecha</th>
-                                                    <th>Hora Entrada</th>
-                                                    <th>Hora Salida</th>
-                                                    <th>Hora Descanso</th>
-                                                    <th>Feriado</th>
-                                                    <th hidden={![1].includes(usuarioUsed.tipousuario.id)}>Extra Entrada</th>
-                                                    <th hidden={![1].includes(usuarioUsed.tipousuario.id)}>Turno</th>
+                                                    <th rowSpan="2">Día</th>
+                                                    <th rowSpan="2">Fecha</th>
+                                                    <th colSpan="4">Horarios</th>
+                                                    <th colSpan="8">Horas Extras</th>
+                                                    <th colSpan="2">Estado</th>
+                                                    <th rowSpan="2" hidden={![1].includes(usuarioUsed.tipousuario.id)}>Tr.</th>
+                                                </tr>
+                                                <tr className='text-center align-middle'>
+                                                    {/* Subheaders para Horarios */}
+                                                    <th>Ent.</th>
+                                                    <th>Sal.</th>
+                                                    <th>Tot.</th>
+                                                    <th>Des.</th>
+                                                    {/* Subheaders para Horas Extras */}
+                                                    <th>T.</th>
+                                                    <th>1</th>
+                                                    <th>2</th>
+                                                    <th>3</th>
+                                                    <th>4</th>
+                                                    <th>5</th>
+                                                    <th>6</th>
+                                                    <th>7</th>
+                                                    {/* Subheaders para Estado */}
+                                                    <th>Frd.</th>
+                                                    <th>S.Ex.</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {fc.detalles && fc.detalles.map((detalle, fechaIndex) => (
                                                     <tr key={`${fc.id}-${fechaIndex}`} className={`text-center align-middle fw-normal`}>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '100px' }}>{obtenerDiaSemana(detalle.fecha)}</td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '100px' }}>{formatearFecha(detalle.fecha)}</td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '300px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '80px', fontSize: '0.85rem' }}>
+                                                            {detalle.dia}
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '90px', fontSize: '0.85rem' }}>
+                                                            {formatearFecha(detalle.fecha)}
+                                                        </td>
+
+                                                        {/* Sección de Horarios */}
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
                                                                 value={detalle.horaent || '00:00'}
                                                                 onChange={(e) => {
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
                                                                     const trn = determinarTurno(e.target.value, detalle.horasal);
-                                                                    if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
-                                                                    else {
-                                                                        asignarDescanso(fc.id, fechaIndex, trn);
+                                                                    const htot = restarHoras(e.target.value, detalle.horasal);
+                                                                    let des = '00:00';
+                                                                    if (htot == '00:00') {
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
+                                                                        limpiarHoras(fc.id, fechaIndex);
+                                                                    } else {
+                                                                        des = asignarDescanso(trn, detalle.dia);
+                                                                        const tot = Number(calcularHorasTrabajadasDecimal(e.target.value, detalle.horasal, des).toFixed(2));
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
                                                                         actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                        determinarHoras(trn, fc.id, fechaIndex, tot);
                                                                     }
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
                                                                 }}
-                                                                lang='es-ES'
-                                                                step={60}
-                                                                required
+                                                                ref={el => {
+                                                                    if (!sigLinea.current[fc.id]) sigLinea.current[fc.id] = [];
+                                                                    sigLinea.current[fc.id][fechaIndex] = el;
+                                                                }}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
                                                             />
                                                         </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '300px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
                                                                 value={detalle.horasal || '00:00'}
                                                                 onChange={(e) => {
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
                                                                     actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
                                                                     const trn = determinarTurno(detalle.horaent, e.target.value);
-                                                                    if (!trn) actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', '00:00');
-                                                                    else {
-                                                                        asignarDescanso(fc.id, fechaIndex, trn);
+                                                                    const htot = restarHoras(detalle.horaent, e.target.value);
+                                                                    let des = '00:00';
+                                                                    if (htot == '00:00') {
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
+                                                                        limpiarHoras(fc.id, fechaIndex);
+                                                                    } else {
+                                                                        des = asignarDescanso(trn, detalle.dia);
+                                                                        const tot = Number(calcularHorasTrabajadasDecimal(detalle.horaent, e.target.value, des).toFixed(2));
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
                                                                         actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                        determinarHoras(trn, fc.id, fechaIndex, tot);
                                                                     }
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
                                                                 }}
-                                                                lang='es-ES'
-                                                                step={60}
-                                                                required
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
                                                             />
                                                         </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '300px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
                                                             <input
                                                                 type="time"
                                                                 className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.htotal || '00:00'}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            />
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
+                                                            <input
+                                                                type="time"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
                                                                 value={detalle.horades || '00:00'}
                                                                 onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
-                                                                lang='es-ES'
-                                                                step={60}
-                                                                required
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
                                                             />
                                                         </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '120px' }}>
+
+                                                        {/* Sección de Horas Extras */}
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                             <input
-                                                                type="checkbox"
-                                                                className='form-check-input border-black'
-                                                                checked={detalle.feriado}
-                                                                onChange={(e) => {
-                                                                    const checked = e.target.checked;
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
-                                                                }}
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.total || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
                                                             />
                                                         </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={![1].includes(usuarioUsed.tipousuario.id)} style={{ width: '120px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                             <input
-                                                                type="checkbox"
-                                                                className='form-check-input border-black'
-                                                                checked={detalle.extra}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', e.target.checked)}
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.hn || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hn', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
                                                             />
                                                         </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={![1].includes(usuarioUsed.tipousuario.id)} style={{ width: '60px' }}>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                            <input
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.hnn || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnn', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            />
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                            <input
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.hnmd || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmd', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            />
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                            <input
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.hnmn || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmn', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            />
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                            <input
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.hen || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hen', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            />
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                            <input
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.hent || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hent', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            />
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                            <input
+                                                                type="number"
+                                                                className="form-control border-input w-100"
+                                                                style={{ fontSize: '0.8rem' }}
+                                                                value={detalle.hextras || 0}
+                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', e.target.value)}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            />
+                                                        </td>
+
+                                                        {/* Sección de Estado */}
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
+                                                            <div className="d-flex justify-content-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className='form-check-input border-black'
+                                                                    style={{ transform: 'scale(1.2)' }}
+                                                                    checked={detalle.feriado}
+                                                                    onChange={(e) => {
+                                                                        const checked = e.target.checked;
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
+                                                                        if (checked) {
+                                                                            limpiarHoras(fc.id, fechaIndex);
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', detalle.total);
+                                                                        } else determinarHoras(detalle.turno, fc.id, fechaIndex, detalle.total);
+                                                                    }}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
+                                                            <div className="d-flex justify-content-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className='form-check-input border-black'
+                                                                    style={{ transform: 'scale(1.2)' }}
+                                                                    checked={detalle.extra}
+                                                                    onChange={(e) => {
+                                                                        const checked = e.target.checked;
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', checked);
+                                                                        fijarHoraEntrada(fc.id, fechaIndex, detalle.turno, detalle.horasal, detalle.dia);
+                                                                    }}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={detalle.extra}
+                                                                />
+                                                            </div>
+                                                        </td>
+
+                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`}
+                                                            hidden={![1].includes(usuarioUsed.tipousuario.id)}
+                                                            style={{ width: '60px' }}>
                                                             <input
                                                                 type="text"
                                                                 className='form-control border-black text-center'
+                                                                style={{ fontSize: '0.8rem' }}
                                                                 value={detalle.turno}
                                                                 readOnly
                                                             />

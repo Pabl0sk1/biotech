@@ -8,10 +8,10 @@
 		<version>3.3.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.atelier</groupId>
-	<artifactId>mariamora</artifactId>
+	<groupId>com.asist</groupId>
+	<artifactId>Biotech</artifactId>
 	<version>1.0.0</version>
-	<name>AtelierBack</name>
+	<name>AsistBack</name>
 	<description>Proyecto de ropería</description>
 	<url/>
 	<licenses>

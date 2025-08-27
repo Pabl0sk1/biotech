@@ -48,13 +48,6 @@ const generarExcel = async (data) => {
         return `${day}/${month}/${year}`;
     };
 
-    const obtenerDiaSemana = (fecha) => {
-        if (!fecha) return '';
-        const date = new Date(fecha + 'T00:00:00Z');
-        const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
-        return days[date.getDay()];
-    };
-
     const capitalize = (text) => {
         return text
             .toLowerCase()
@@ -77,50 +70,6 @@ const generarExcel = async (data) => {
             return valor;
         }
         return Number(valor).toLocaleString("es-PY");
-    };
-
-    function minutosAFormatoHora(minutosTotales) {
-        const horas = Math.floor(minutosTotales / 60);
-        const minutos = minutosTotales % 60;
-        return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
-    }
-
-    function restarHoras(horaInicio, horaFin) {
-        if (horaInicio == '00:00' || horaFin == '00:00') return '00:00';
-        const [h1, m1] = horaInicio.split(":").map(Number);
-        const [h2, m2] = horaFin.split(":").map(Number);
-
-        const minutosInicio = h1 * 60 + m1;
-        let minutosFin = h2 * 60 + m2;
-
-        // Si la hora de salida es menor o igual a la de entrada, asumimos que es al día siguiente
-        if (minutosFin <= minutosInicio) {
-            minutosFin += 24 * 60; // sumar 24 horas
-        }
-
-        const diferenciaMinutos = minutosFin - minutosInicio;
-        return minutosAFormatoHora(diferenciaMinutos);
-    }
-
-    // Función para calcular horas trabajadas en decimal
-    const calcularHorasTrabajadasDecimal = (horaEntrada, horaSalida, descanso) => {
-        if (horaEntrada == '00:00' || horaSalida == '00:00') return 0;
-
-        const [h1, m1] = horaEntrada.split(":").map(Number);
-        const [h2, m2] = horaSalida.split(":").map(Number);
-        const [hd, md] = descanso.split(":").map(Number);
-
-        const minutosEntrada = h1 * 60 + m1;
-        let minutosSalida = h2 * 60 + m2;
-        const minutosDescanso = hd * 60 + md;
-
-        // Manejar turnos nocturnos
-        if (minutosSalida <= minutosEntrada) {
-            minutosSalida += 24 * 60;
-        }
-
-        const minutosTrabajados = minutosSalida - minutosEntrada - minutosDescanso;
-        return Math.max(0, (minutosTrabajados / 60));
     };
 
     // Función para aplicar bordes a un rango fusionado
@@ -191,8 +140,8 @@ const generarExcel = async (data) => {
             // Posicionar imagen
             worksheet.addImage(imageId, {
                 tl: { col: 0, row: 0 },
-                br: { col: 1, row: 2 },
-                editAs: 'twoCell'
+                ext: { width: 70, height: 40 },
+                editAs: 'oneCell'
             });
         };
 
@@ -274,52 +223,38 @@ const generarExcel = async (data) => {
 
         // Datos diarios
         funcionario.detalles.forEach((detalle, diaIndex) => {
-            const diaSemana = obtenerDiaSemana(detalle.fecha);
+            const diaSemana = detalle.dia;
             const fechaFormateada = formatearFecha(detalle.fecha);
-            const turnoSel = detalle.turno.trim();
 
-            let htotal = '00:00';
+            let ent = detalle.horaent || '00:00';
+            let sal = detalle.horasal || '00:00';
+            let htotal = detalle.htotal || '00:00';
             let descanso = detalle.horades || '00:00';
-            let total = 0;
-            let horasn = 0;
-            let horasnn = 0;
-            let horasnmd = 0;
-            let horasnmn = 0;
-            let horasen = 0;
-            let horasent = 0;
-            let horasextras = 0;
-
-            if (detalle.horaent && detalle.horasal) {
-                htotal = restarHoras(detalle.horaent, detalle.horasal);
-                total = calcularHorasTrabajadasDecimal(detalle.horaent, detalle.horasal, descanso);
-                if (diaSemana != 'domingo' && !detalle.feriado) {
-                    if (['A', 'D'].includes(turnoSel)) horasn = 8.00;
-                    else if (turnoSel == 'C') horasnn = 7.00;
-                    else if (turnoSel == 'B') horasnmd = 7.50;
-                    else if (turnoSel == 'E') horasnmn = 7.50;
-
-                    if (['A', 'D', 'B'].includes(turnoSel)) horasen = total - (horasn + horasnmd);
-                    else if (['C', 'E'].includes(turnoSel)) horasent = total - (horasnn + horasnmn);
-                }
-                if ((diaSemana == 'domingo' || detalle.feriado) && total) horasextras = total;
-            }
+            let total = detalle.total || 0;
+            let horasn = detalle.hn || 0;
+            let horasnn = detalle.hnn || 0;
+            let horasnmd = detalle.hnmd || 0;
+            let horasnmn = detalle.hnmn || 0;
+            let horasen = detalle.hen || 0;
+            let horasent = detalle.hent || 0;
+            let horasextras = detalle.hextras || 0;
 
             // Agregar datos a la fila
             const rowData = [
                 diaSemana,
                 fechaFormateada,
-                detalle.horaent || '00:00',
-                detalle.horasal || '00:00',
+                ent,
+                sal,
                 htotal,
                 descanso,
-                total || '-',
-                horasn || '-',
-                horasnn || '-',
-                horasnmd || '-',
-                horasnmn || '-',
-                horasen || '-',
-                horasent || '-',
-                horasextras || '-'
+                total,
+                horasn,
+                horasnn,
+                horasnmd,
+                horasnmn,
+                horasen,
+                horasent,
+                horasextras
             ];
 
             rowData.forEach((value, colIndex) => {
@@ -331,7 +266,7 @@ const generarExcel = async (data) => {
                 if ([6, 7, 8, 9, 10, 11, 12, 13].includes(colIndex) && value != 0) {
                     cell.numFmt = '0.00';
                 }
-                if ([0, 1, 2, 3, 4, 5].includes(colIndex) || value == '-') {
+                if ([0, 1, 2, 3, 4, 5].includes(colIndex)) {
                     cell.alignment = estilos.alineacion;
                 }
                 cell.border = estilos.borde;
@@ -374,6 +309,7 @@ const generarExcel = async (data) => {
             cell.font = estilos.negrita;
             cell.fill = estilos.bgCabecera;
             cell.border = estilos.borde;
+            if (index) cell.value = { formula: `SUM(${worksheet.getColumn(index + v).letter}5:${worksheet.getColumn(index + v).letter}${currentRow - 1})` };
             if (total != 0 && index) cell.numFmt = '0.00';
             if (!index) {
                 cell.alignment = estilos.alineacion;
@@ -442,6 +378,7 @@ const generarExcel = async (data) => {
         let totalizado = 0;
         rows.forEach((row, idx) => {
             const r = nextRow + idx + 1;
+            const c = idx + 7;
             const cell1 = worksheet.getCell(r, 1);
             const cell2 = worksheet.getCell(r, 2);
             const cell3 = worksheet.getCell(r, 3);

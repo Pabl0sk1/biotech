@@ -151,3 +151,16 @@ input[type="time"]:hover::-webkit-calendar-picker-indicator {
   background-size: cover;
   background-position: center;
 }
+
+/* Para Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Para Firefox */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}

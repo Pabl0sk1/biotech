@@ -83,7 +83,7 @@ export const Login = ({ setUsuarioUsed }) => {
                 agregarAcceso(usuarioEncontrado.id);
 
                 setUsuarioUsed(usuarioEncontrado);
-                navigate('/fashion/home');
+                navigate('/asist/home');
             } else {
                 setError("Nombre de usuario o contraseña incorrectos.");
             }
@@ -112,22 +112,22 @@ export const Login = ({ setUsuarioUsed }) => {
     return (
         <>
             <div className="d-flex justify-content-center align-items-center vh-100 loginBack">
-                <div className="rounded-3 p-5 w-50 m-auto" style={{ boxShadow: '0 0 25px rgba(0, 0, 0, 0.4)' }}>
+                <div className="rounded-3 p-5 w-50 m-auto bg-white" style={{ boxShadow: '0 0 25px rgba(0, 0, 0, 0.4)' }}>
                     <form
                         className="needs-validation"
                         onSubmit={handleSubmit}
                         autoComplete="off"
                         noValidate
                     >
-                        <img src="/logo.svg" className="w-75 my-5" alt="Maria Mora Atelier" />
+                        <img src="/logo.svg" className="w-75 my-5" alt="Biotech" />
                         <div className="mt-4">
                             {error && <div className="alert alert-danger p-2">{error}</div>}
                             <div className="mt-3 pb-3 d-flex align-items-center">
                                 <i className="bi bi-person-fill me-2 fs-4"></i>
                                 <input
                                     type="text"
-                                    className="form-control colorTernario text-black"
-                                    placeholder="Ingrese el usuario..."
+                                    className="form-control text-black colorTernario"
+                                    placeholder="Usuario"
                                     value={nombreusuario}
                                     onChange={(e) => setNombreUsuario(e.target.value.toUpperCase())}
                                     maxLength={20}
@@ -138,8 +138,8 @@ export const Login = ({ setUsuarioUsed }) => {
                                 <i className="bi bi-key-fill me-2 fs-4"></i>
                                 <input
                                     type={showPassword ? "text" : "password"}
-                                    className="form-control colorTernario pe-5 text-black"
-                                    placeholder="Ingrese la contraseña..."
+                                    className="form-control pe-5 text-black colorTernario"
+                                    placeholder="Contraseña"
                                     value={contrasena}
                                     onChange={(e) => setContrasena(e.target.value)}
                                     maxLength={30}

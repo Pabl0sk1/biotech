@@ -339,8 +339,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 name="horaent"
                                                 className="form-control border-input w-100 border-black mb-3"
                                                 value={turnoAVisualizar.horaent}
-                                                lang='es-ES'
-                                                step={60}
                                                 readOnly
                                             />
                                         </div>
@@ -352,8 +350,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 name="horades"
                                                 className="form-control border-input w-100 border-black mb-3"
                                                 value={turnoAVisualizar.horades}
-                                                lang='es-ES'
-                                                step={60}
                                                 readOnly
                                             />
                                         </div>
@@ -390,8 +386,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                 name="horasal"
                                                 className="form-control border-input w-100 border-black mb-3"
                                                 value={turnoAVisualizar.horasal}
-                                                lang='es-ES'
-                                                step={60}
                                                 readOnly
                                             />
                                         </div>
@@ -480,8 +474,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     className="form-control border-input w-100"
                                                     value={turnoAGuardar.horaent || '00:00'}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    lang='es-ES'
-                                                    step={60}
                                                     required
                                                 />
                                             </div>
@@ -494,8 +486,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     className="form-control border-input w-100"
                                                     value={turnoAGuardar.horades || '00:00'}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    lang='es-ES'
-                                                    step={60}
                                                     required
                                                 />
                                             </div>
@@ -549,8 +539,6 @@ export const TurnoApp = ({ usuarioUsed }) => {
                                                     className="form-control border-input w-100"
                                                     value={turnoAGuardar.horasal || '00:00'}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    lang='es-ES'
-                                                    step={60}
                                                     required
                                                 />
                                             </div>
@@ -641,7 +629,7 @@ export const TurnoApp = ({ usuarioUsed }) => {
                             <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
                         </div>
                         <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Maria Mora Atelier" style={{ width: '120px', height: '40px' }} />
+                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Biotech" style={{ width: '120px', height: '40px' }} />
                         </div>
                     </div>
                 </nav>
