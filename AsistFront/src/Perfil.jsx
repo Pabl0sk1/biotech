@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getUsuario, updateUsuario } from "./services/usuario.service";
 import { useNavigate } from "react-router-dom";
+import Header from "./Header";
 
 export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
     const UrlBase = '/asist';
@@ -162,24 +163,7 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
             )}
 
             <div className="row-cols-auto w-100 m-0">
-                <nav className="navbar navbar-expand-lg navbar-light bg-white top-0 position-fixed p-0 z-1 w-100 user-select-none border-3 border-black border-bottom">
-                    <div className="d-flex w-100">
-                        <div className="col-2 d-flex align-items-center m-0 p-1 ps-3 border-end border-dark border-3">
-                            <Link className='p-0 text-black ps-1 pe-1 border-0 menuList d-flex' to={UrlBase + "/home"}>
-                                <i className='bi bi-chevron-double-left fs-3' style={{ textShadow: '1px 0 0 black, 0 1px 0 black, -1px 0 0 black, 0 -1px 0 black' }}></i>
-                            </Link>
-                            <p className='container m-0 p-0'>PERFIL</p>
-                        </div>
-                        <div className='d-flex align-items-center ps-3'>
-                            <i className='bi bi-person fs-3 me-3'></i>
-                            <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
-                        </div>
-                        <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Biotech" style={{ width: '120px', height: '40px' }} />
-                        </div>
-                    </div>
-                </nav>
-
+                <Header usuarioUsed={usuarioUsed} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-0 m-0 mt-3 pt-5 ms-3 me-3">
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb colorSecundario border m-0 user-select-none ps-3 pt-2 pb-2 h6">

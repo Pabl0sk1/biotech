@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { saveAuditoria, getNetworkInfo } from './services/auditoria.service.js';
+import Header from './Header.jsx';
+import Sidebar from './Sidebar.jsx';
 
 export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
     const UrlBase = '/asist';
@@ -178,143 +180,20 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
             )}
 
             <div className="menuBack position-fixed top-0 start-0 w-100 vh-100">
-                <nav className="navbar navbar-expand-lg navbar-light bg-white top-0 position-fixed p-0 z-1 w-100 user-select-none border-3 border-black border-bottom">
-                    <div className="d-flex w-100">
-                        <div className="col-2 d-flex align-items-center m-0 p-1 ps-3 border-end border-dark border-3">
-                            <button className='me-3 p-0 text-black ps-1 pe-1 border-0 menuList' onClick={toggleSidebar}>
-                                <i className='bi bi-list-task fs-3' style={{ textShadow: '1px 0 0 black, 0 1px 0 black, -1px 0 0 black, 0 -1px 0 black' }}></i>
-                            </button>
-                            <p className='m-0'>INICIO</p>
-                        </div>
-                        <div className='d-flex align-items-center ps-3'>
-                            <i className='bi bi-person fs-3 me-3'></i>
-                            <p className='m-0'>{usuarioUsed.tipousuario.tipousuario}</p>
-                        </div>
-                        <div className='d-flex align-items-center ms-auto'>
-                            <img className="navbar-brand p-0 m-0 me-3" src="/logo2.svg" alt="Biotech" style={{ width: '120px', height: '40px' }} />
-                        </div>
-                    </div>
-                </nav>
-                <div className={`col-2 bg-dark p-0 vh-100 pt-5 ${isSidebarVisible ? '' : 'd-none'} user-select-none`} style={{ fontSize: '14px' }}>
-                    <div className="d-flex flex-column text-white">
-                        <ul className="nav flex-column fw-bold text-start">
-                            <li className='d-flex nav-item pb-1 pt-2 ps-3'>
-                                <i className='bi bi-person me-2'></i>
-                                <p className='m-0 usuarioNombre'>{usuarioUsed.nombreusuario}</p>
-                            </li>
-                            {/*Reportes lista*/}
-                            <li className="nav-item">
-                                <a role="button" onClick={toggleReportesMenu} href="#" aria-controls="calculosMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
-                                    <i className='bi bi-file-earmark-text ps-3 pe-2'></i>
-                                    Reportes
-                                    <span className="ms-auto me-3">
-                                        <i className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                                    </span>
-                                </a>
-                                <ul className={`nav collapse menuSubtitle fw-normal ${isReportesMenuOpen ? 'show' : ''}`} id='calculosMenu'>
-                                    {usuarioUsed?.tipousuario?.id && (
-                                        <>
-                                            {[1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
-                                                <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Horas Extras", 'Realizar Informe', UrlLocal + "/reports/calcext")} className="nav-link text-white p-1">Horas Extras</Link></li>
-                                            )}
-                                        </>
-                                    )}
-                                </ul>
-                            </li>
-                            {/*Registros lista*/}
-                            <li className="nav-item">
-                                <a role="button" onClick={toggleRegistrosMenu} href="#" aria-controls="calculosMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
-                                    <i className='bi bi-patch-plus ps-3 pe-2'></i>
-                                    Registros
-                                    <span className="ms-auto me-3">
-                                        <i className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                                    </span>
-                                </a>
-                                <ul className={`nav collapse menuSubtitle fw-normal ${isRegistrosMenuOpen ? 'show' : ''}`} id='calculosMenu'>
-                                    {usuarioUsed?.tipousuario?.id && (
-                                        <>
-                                            {[1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
-                                                <>
-                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                                        <Link onClick={() => agregarAcceso("Cargos", 'Consultar', UrlLocal + "/regs/positions")} className="nav-link text-white p-1">Cargos</Link>
-                                                    </li>
-                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                                        <Link onClick={() => agregarAcceso("Funcionarios", 'Consultar', UrlLocal + "/regs/employees")} className="nav-link text-white p-1">Funcionarios</Link>
-                                                    </li>
-                                                </>
-                                            )}
-                                            {[1].includes(usuarioUsed.tipousuario.id) && (
-                                                <>
-                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                                        <Link onClick={() => agregarAcceso("Modalidades", 'Consultar', UrlLocal + "/regs/schedules")} className="nav-link text-white p-1">Modalidades</Link>
-                                                    </li>
-                                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                                        <Link onClick={() => agregarAcceso("Turnos", 'Consultar', UrlLocal + "/regs/shifts")} className="nav-link text-white p-1">Turnos</Link>
-                                                    </li>
-                                                </>
-                                            )}
-                                        </>
-                                    )}
-                                </ul>
-                            </li>
-                            {/*Seguridad lista*/}
-                            {usuarioUsed?.tipousuario?.id && [1, 5].includes(usuarioUsed.tipousuario.id) && (
-                                <li className="nav-item">
-                                    <a role="button" onClick={toggleSeguridadMenu} href="#" aria-controls="seguridadMenu" className='d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle'>
-                                        <i className='bi bi-lock ps-3 pe-2'></i>
-                                        Seguridad
-                                        <span className="ms-auto me-3">
-                                            <i className={`bi ${isSeguridadMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                                        </span>
-                                    </a>
-                                    <ul className={`nav collapse menuSubtitle fw-normal ${isSeguridadMenuOpen ? 'show' : ''}`} id='seguridadMenu'>
-                                        {usuarioUsed?.tipousuario?.id && (
-                                            <>
-                                                {[1, 5].includes(usuarioUsed.tipousuario.id) && (
-                                                    <>
-                                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link to={UrlLocal + "/security/access"} className="nav-link text-white p-1">Accesos</Link></li>
-                                                    </>
-                                                )}
-                                                {[1].includes(usuarioUsed.tipousuario.id) && (
-                                                    <>
-                                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Usuarios", 'Consultar', UrlLocal + "/security/users")} className="nav-link text-white p-1">Usuarios</Link></li>
-                                                        <li className="nav-item menuSubtitleItem ps-4 w-100"><Link onClick={() => agregarAcceso("Roles", 'Consultar', UrlLocal + "/security/roles")} className="nav-link text-white p-1">Roles</Link></li>
-                                                    </>
-                                                )}
-                                            </>
-                                        )}
-                                    </ul>
-                                </li>
-                            )}
-                            <li className='nav-item menuTitle'>
-                                <Link className="nav-link text-white" onClick={() => agregarAcceso("Perfil", 'Modificar', UrlLocal + "/profile")}>
-                                    <i className='bi bi-person-circle me-2'></i>
-                                    Perfil
-                                </Link>
-                            </li>
-                            <li className='nav-item menuTitle'>
-                                <Link className="nav-link text-white" onClick={() => agregarAcceso("Contraseña", 'Modificar', UrlLocal + "/changepassword")}>
-                                    <i className='bi bi-key me-2'></i>
-                                    Contraseña
-                                </Link>
-                            </li>
-                            {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
-                                <li className='nav-item menuTitle'>
-                                    <Link className="nav-link text-white" onClick={() => agregarAcceso("Configuración", 'Modificar', UrlLocal + "/config")}>
-                                        <i className='bi bi-gear me-2'></i>
-                                        Configuración
-                                    </Link>
-                                </li>
-                            )}
-                            <li className='nav-item menuTitle'>
-                                <Link className="nav-link text-white" onClick={handleLogoutClick}>
-                                    <i className='bi bi-chevron-double-left me-2'></i>
-                                    Salir
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <Header usuarioUsed={usuarioUsed} title={'INICIO'} onToggleSidebar={toggleSidebar} on={1} icon={'list-task'} />
+                <Sidebar
+                    usuarioUsed={usuarioUsed}
+                    isSidebarVisible={isSidebarVisible}
+                    toggleSeguridadMenu={toggleSeguridadMenu}
+                    toggleReportesMenu={toggleReportesMenu}
+                    toggleRegistrosMenu={toggleRegistrosMenu}
+                    isSeguridadMenuOpen={isSeguridadMenuOpen}
+                    isReportesMenuOpen={isReportesMenuOpen}
+                    isRegistrosMenuOpen={isRegistrosMenuOpen}
+                    agregarAcceso={agregarAcceso}
+                    handleLogoutClick={handleLogoutClick}
+                    UrlLocal={UrlLocal}
+                />
             </div>
         </>
     )
