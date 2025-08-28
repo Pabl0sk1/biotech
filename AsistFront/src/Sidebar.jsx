@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const Sidebar = ({
     usuarioUsed,
@@ -13,270 +14,537 @@ const Sidebar = ({
     handleLogoutClick,
     UrlLocal
 }) => {
+    const [hoveredItem, setHoveredItem] = useState(null);
+
+    const menuItemStyle = (isHovered) => ({
+        transition: 'all 0.3s ease',
+        backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+        borderLeft: isHovered ? '4px solid #007bff' : '4px solid transparent'
+    });
+
+    const subMenuItemStyle = (isHovered) => ({
+        transition: 'all 0.3s ease',
+        backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+        borderRadius: isHovered ? '6px' : '0',
+        marginLeft: '8px',
+        marginRight: '8px',
+    });
+
     return (
         <div
-            className={`col-2 bg-dark p-0 vh-100 pt-5 overflow-x-auto mt-2 ${isSidebarVisible ? '' : 'd-none'
-                } user-select-none`}
-            style={{ fontSize: '14px' }}
+            className={`sidebar-modern z-0 ${isSidebarVisible ? 'sidebar-visible' : 'sidebar-hidden'}`}
+            style={{
+                width: '280px',
+                minHeight: '100vh',
+                background: 'linear-gradient(180deg, #1a1d29 0%, #2d3748 100%)',
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                zIndex: 1000,
+                transition: 'transform 0.3s ease',
+                transform: isSidebarVisible ? 'translateX(0)' : 'translateX(-100%)',
+                boxShadow: '4px 0 20px rgba(0, 0, 0, 0.3)',
+                fontSize: '14px',
+            }}
         >
-            <div className="d-flex flex-column text-white">
-                <ul className="nav flex-column fw-bold text-start">
-                    {/* Usuario */}
-                    <li className="d-flex nav-item pb-1 pt-2 ps-3">
-                        <i className="bi bi-person me-2"></i>
-                        <p className="m-0 usuarioNombre">{usuarioUsed.nombreusuario}</p>
-                    </li>
+            {/* Header del Sidebar */}
+            <div
+                style={{
+                    padding: '65px 20px 10px 20px',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                        style={{
+                            width: '44px',
+                            height: '44px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: '18px',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        {usuarioUsed.nombreusuario?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>
+                            {usuarioUsed.nombreusuario}
+                        </div>
+                        <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>
+                            En línea
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            {/* Contenido del menú */}
+            <div style={{ padding: '16px 0', overflowY: 'auto', height: 'calc(100vh - 120px)' }}>
+                <nav>
                     {/* Reportes */}
-                    <li className="nav-item">
-                        <a
-                            role="button"
+                    <div style={{ marginBottom: '8px' }}>
+                        <button
                             onClick={toggleReportesMenu}
-                            className="d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle"
+                            onMouseEnter={() => setHoveredItem('reportes')}
+                            onMouseLeave={() => setHoveredItem(null)}
+                            style={{
+                                ...menuItemStyle(hoveredItem === 'reportes'),
+                                width: '100%',
+                                background: 'none',
+                                border: 'none',
+                                color: 'white',
+                                padding: '12px 20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                            }}
                         >
-                            <i className="bi bi-file-earmark-text ps-3 pe-2"></i>
-                            Reportes
-                            <span className="ms-auto me-3">
-                                <i
-                                    className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'
-                                        }`}
-                                ></i>
-                            </span>
-                        </a>
-                        <ul
-                            className={`nav collapse menuSubtitle fw-normal ${isReportesMenuOpen ? 'show' : ''
-                                }`}
-                        >
-                            {usuarioUsed?.tipousuario?.id &&
-                                [1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
-                                    <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                        <Link
-                                            onClick={() =>
-                                                agregarAcceso(
-                                                    'Horas Extras',
-                                                    'Realizar Informe',
-                                                    UrlLocal + '/reports/calcext'
-                                                )
-                                            }
-                                            className="nav-link text-white p-1"
-                                        >
-                                            Horas Extras
-                                        </Link>
-                                    </li>
-                                )}
-                        </ul>
-                    </li>
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'rgba(34, 197, 94, 0.2)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <i className="bi bi-file-earmark-bar-graph" style={{ color: '#22c55e' }}></i>
+                            </div>
+                            <span style={{ flex: 1, textAlign: 'left' }}>Reportes</span>
+                            <i className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
+                                style={{
+                                    transition: 'transform 0.3s ease',
+                                    transform: isReportesMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                                }}
+                            ></i>
+                        </button>
+
+                        <div style={{
+                            maxHeight: isReportesMenuOpen ? '200px' : '0',
+                            overflow: 'hidden',
+                            transition: 'max-height 0.3s ease',
+                        }}>
+                            {usuarioUsed?.tipousuario?.id && [1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
+                                <Link
+                                    to="#"
+                                    onClick={() => agregarAcceso('Horas Extras', 'Realizar Informe', UrlLocal + '/reports/calcext')}
+                                    onMouseEnter={() => setHoveredItem('horas-extras')}
+                                    onMouseLeave={() => setHoveredItem(null)}
+                                    style={{
+                                        ...subMenuItemStyle(hoveredItem === 'horas-extras'),
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 20px 10px 52px',
+                                        color: 'rgba(255, 255, 255, 0.8)',
+                                        textDecoration: 'none',
+                                        fontSize: '13px',
+                                    }}
+                                >
+                                    <i className="bi bi-clock-history" style={{ color: '#f59e0b' }}></i>
+                                    Horas Extras
+                                </Link>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Registros */}
-                    <li className="nav-item">
-                        <a
-                            role="button"
+                    <div style={{ marginBottom: '8px' }}>
+                        <button
                             onClick={toggleRegistrosMenu}
-                            className="d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle"
+                            onMouseEnter={() => setHoveredItem('registros')}
+                            onMouseLeave={() => setHoveredItem(null)}
+                            style={{
+                                ...menuItemStyle(hoveredItem === 'registros'),
+                                width: '100%',
+                                background: 'none',
+                                border: 'none',
+                                color: 'white',
+                                padding: '12px 20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                            }}
                         >
-                            <i className="bi bi-patch-plus ps-3 pe-2"></i>
-                            Registros
-                            <span className="ms-auto me-3">
-                                <i
-                                    className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'
-                                        }`}
-                                ></i>
-                            </span>
-                        </a>
-                        <ul
-                            className={`nav collapse menuSubtitle fw-normal ${isRegistrosMenuOpen ? 'show' : ''
-                                }`}
-                        >
-                            {usuarioUsed?.tipousuario?.id &&
-                                [1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
-                                    <>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                            <Link
-                                                onClick={() =>
-                                                    agregarAcceso(
-                                                        'Cargos',
-                                                        'Consultar',
-                                                        UrlLocal + '/regs/positions'
-                                                    )
-                                                }
-                                                className="nav-link text-white p-1"
-                                            >
-                                                Cargos
-                                            </Link>
-                                        </li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                            <Link
-                                                onClick={() =>
-                                                    agregarAcceso(
-                                                        'Funcionarios',
-                                                        'Consultar',
-                                                        UrlLocal + '/regs/employees'
-                                                    )
-                                                }
-                                                className="nav-link text-white p-1"
-                                            >
-                                                Funcionarios
-                                            </Link>
-                                        </li>
-                                    </>
-                                )}
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'rgba(59, 130, 246, 0.2)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <i className="bi bi-database" style={{ color: '#3b82f6' }}></i>
+                            </div>
+                            <span style={{ flex: 1, textAlign: 'left' }}>Registros</span>
+                            <i className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
+                                style={{
+                                    transition: 'transform 0.3s ease',
+                                    transform: isRegistrosMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                                }}
+                            ></i>
+                        </button>
 
-                            {usuarioUsed?.tipousuario?.id &&
-                                [1].includes(usuarioUsed.tipousuario.id) && (
-                                    <>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                            <Link
-                                                onClick={() =>
-                                                    agregarAcceso(
-                                                        'Modalidades',
-                                                        'Consultar',
-                                                        UrlLocal + '/regs/schedules'
-                                                    )
-                                                }
-                                                className="nav-link text-white p-1"
-                                            >
-                                                Modalidades
-                                            </Link>
-                                        </li>
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                            <Link
-                                                onClick={() =>
-                                                    agregarAcceso(
-                                                        'Turnos',
-                                                        'Consultar',
-                                                        UrlLocal + '/regs/shifts'
-                                                    )
-                                                }
-                                                className="nav-link text-white p-1"
-                                            >
-                                                Turnos
-                                            </Link>
-                                        </li>
-                                    </>
-                                )}
-                        </ul>
-                    </li>
+                        <div style={{
+                            maxHeight: isRegistrosMenuOpen ? '300px' : '0',
+                            overflow: 'hidden',
+                            transition: 'max-height 0.3s ease',
+                        }}>
+                            {usuarioUsed?.tipousuario?.id && [1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
+                                <>
+                                    <Link
+                                        to="#"
+                                        onClick={() => agregarAcceso('Cargos', 'Consultar', UrlLocal + '/regs/positions')}
+                                        onMouseEnter={() => setHoveredItem('cargos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'cargos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-briefcase" style={{ color: '#8b5cf6' }}></i>
+                                        Cargos
+                                    </Link>
+                                    <Link
+                                        to="#"
+                                        onClick={() => agregarAcceso('Funcionarios', 'Consultar', UrlLocal + '/regs/employees')}
+                                        onMouseEnter={() => setHoveredItem('funcionarios')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'funcionarios'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-people" style={{ color: '#06b6d4' }}></i>
+                                        Funcionarios
+                                    </Link>
+                                </>
+                            )}
+
+                            {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
+                                <>
+                                    <Link
+                                        to="#"
+                                        onClick={() => agregarAcceso('Modalidades', 'Consultar', UrlLocal + '/regs/schedules')}
+                                        onMouseEnter={() => setHoveredItem('modalidades')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'modalidades'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-calendar-check" style={{ color: '#10b981' }}></i>
+                                        Modalidades
+                                    </Link>
+                                    <Link
+                                        to="#"
+                                        onClick={() => agregarAcceso('Turnos', 'Consultar', UrlLocal + '/regs/shifts')}
+                                        onMouseEnter={() => setHoveredItem('turnos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'turnos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-arrow-repeat" style={{ color: '#f97316' }}></i>
+                                        Turnos
+                                    </Link>
+                                </>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Seguridad */}
-                    {usuarioUsed?.tipousuario?.id &&
-                        [1, 5].includes(usuarioUsed.tipousuario.id) && (
-                            <li className="nav-item">
-                                <a
-                                    role="button"
-                                    onClick={toggleSeguridadMenu}
-                                    className="d-flex w-100 align-items-center ps-0 pt-2 pb-2 link-light menuTitle"
-                                >
-                                    <i className="bi bi-lock ps-3 pe-2"></i>
-                                    Seguridad
-                                    <span className="ms-auto me-3">
-                                        <i
-                                            className={`bi ${isSeguridadMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'
-                                                }`}
-                                        ></i>
-                                    </span>
-                                </a>
-                                <ul
-                                    className={`nav collapse menuSubtitle fw-normal ${isSeguridadMenuOpen ? 'show' : ''
-                                        }`}
-                                >
-                                    {[1, 5].includes(usuarioUsed.tipousuario.id) && (
-                                        <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                            <Link
-                                                to={UrlLocal + '/security/access'}
-                                                className="nav-link text-white p-1"
-                                            >
-                                                Accesos
-                                            </Link>
-                                        </li>
-                                    )}
-                                    {[1].includes(usuarioUsed.tipousuario.id) && (
-                                        <>
-                                            <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                                <Link
-                                                    onClick={() =>
-                                                        agregarAcceso(
-                                                            'Usuarios',
-                                                            'Consultar',
-                                                            UrlLocal + '/security/users'
-                                                        )
-                                                    }
-                                                    className="nav-link text-white p-1"
-                                                >
-                                                    Usuarios
-                                                </Link>
-                                            </li>
-                                            <li className="nav-item menuSubtitleItem ps-4 w-100">
-                                                <Link
-                                                    onClick={() =>
-                                                        agregarAcceso(
-                                                            'Roles',
-                                                            'Consultar',
-                                                            UrlLocal + '/security/roles'
-                                                        )
-                                                    }
-                                                    className="nav-link text-white p-1"
-                                                >
-                                                    Roles
-                                                </Link>
-                                            </li>
-                                        </>
-                                    )}
-                                </ul>
-                            </li>
-                        )}
+                    {usuarioUsed?.tipousuario?.id && [1, 5].includes(usuarioUsed.tipousuario.id) && (
+                        <div style={{ marginBottom: '8px' }}>
+                            <button
+                                onClick={toggleSeguridadMenu}
+                                onMouseEnter={() => setHoveredItem('seguridad')}
+                                onMouseLeave={() => setHoveredItem(null)}
+                                style={{
+                                    ...menuItemStyle(hoveredItem === 'seguridad'),
+                                    width: '100%',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'white',
+                                    padding: '12px 20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <div style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    background: 'rgba(239, 68, 68, 0.2)',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}>
+                                    <i className="bi bi-shield-lock" style={{ color: '#ef4444' }}></i>
+                                </div>
+                                <span style={{ flex: 1, textAlign: 'left' }}>Seguridad</span>
+                                <i className={`bi ${isSeguridadMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
+                                    style={{
+                                        transition: 'transform 0.3s ease',
+                                        transform: isSeguridadMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                                    }}
+                                ></i>
+                            </button>
 
-                    {/* Otros */}
-                    <li className="nav-item menuTitle">
+                            <div style={{
+                                maxHeight: isSeguridadMenuOpen ? '200px' : '0',
+                                overflow: 'hidden',
+                                transition: 'max-height 0.3s ease',
+                            }}>
+                                {[1, 5].includes(usuarioUsed.tipousuario.id) && (
+                                    <Link
+                                        to={UrlLocal + '/security/access'}
+                                        onMouseEnter={() => setHoveredItem('accesos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'accesos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-key" style={{ color: '#f59e0b' }}></i>
+                                        Accesos
+                                    </Link>
+                                )}
+                                {[1].includes(usuarioUsed.tipousuario.id) && (
+                                    <>
+                                        <Link
+                                            to="#"
+                                            onClick={() => agregarAcceso('Usuarios', 'Consultar', UrlLocal + '/security/users')}
+                                            onMouseEnter={() => setHoveredItem('usuarios')}
+                                            onMouseLeave={() => setHoveredItem(null)}
+                                            style={{
+                                                ...subMenuItemStyle(hoveredItem === 'usuarios'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                padding: '10px 20px 10px 52px',
+                                                color: 'rgba(255, 255, 255, 0.8)',
+                                                textDecoration: 'none',
+                                                fontSize: '13px',
+                                            }}
+                                        >
+                                            <i className="bi bi-person-gear" style={{ color: '#3b82f6' }}></i>
+                                            Usuarios
+                                        </Link>
+                                        <Link
+                                            to="#"
+                                            onClick={() => agregarAcceso('Roles', 'Consultar', UrlLocal + '/security/roles')}
+                                            onMouseEnter={() => setHoveredItem('roles')}
+                                            onMouseLeave={() => setHoveredItem(null)}
+                                            style={{
+                                                ...subMenuItemStyle(hoveredItem === 'roles'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                padding: '10px 20px 10px 52px',
+                                                color: 'rgba(255, 255, 255, 0.8)',
+                                                textDecoration: 'none',
+                                                fontSize: '13px',
+                                            }}
+                                        >
+                                            <i className="bi bi-diagram-3" style={{ color: '#8b5cf6' }}></i>
+                                            Roles
+                                        </Link>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Separador */}
+                    <div style={{
+                        height: '1px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        margin: '16px 20px',
+                    }}></div>
+
+                    {/* Opciones de usuario */}
+                    <Link
+                        to="#"
+                        onClick={() => agregarAcceso('Perfil', 'Modificar', UrlLocal + '/profile')}
+                        onMouseEnter={() => setHoveredItem('perfil')}
+                        onMouseLeave={() => setHoveredItem(null)}
+                        style={{
+                            ...menuItemStyle(hoveredItem === 'perfil'),
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px 20px',
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            textDecoration: 'none',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            marginBottom: '4px',
+                        }}
+                    >
+                        <div style={{
+                            width: '32px',
+                            height: '32px',
+                            background: 'rgba(168, 85, 247, 0.2)',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <i className="bi bi-person-circle" style={{ color: '#a855f7' }}></i>
+                        </div>
+                        <span>Perfil</span>
+                    </Link>
+
+                    <Link
+                        to="#"
+                        onClick={() => agregarAcceso('Contraseña', 'Modificar', UrlLocal + '/changepassword')}
+                        onMouseEnter={() => setHoveredItem('password')}
+                        onMouseLeave={() => setHoveredItem(null)}
+                        style={{
+                            ...menuItemStyle(hoveredItem === 'password'),
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px 20px',
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            textDecoration: 'none',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            marginBottom: '4px',
+                        }}
+                    >
+                        <div style={{
+                            width: '32px',
+                            height: '32px',
+                            background: 'rgba(245, 158, 11, 0.2)',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <i className="bi bi-key" style={{ color: '#f59e0b' }}></i>
+                        </div>
+                        <span>Contraseña</span>
+                    </Link>
+
+                    {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
                         <Link
-                            className="nav-link text-white"
-                            onClick={() =>
-                                agregarAcceso('Perfil', 'Modificar', UrlLocal + '/profile')
-                            }
+                            to="#"
+                            onClick={() => agregarAcceso('Configuración', 'Modificar', UrlLocal + '/config')}
+                            onMouseEnter={() => setHoveredItem('config')}
+                            onMouseLeave={() => setHoveredItem(null)}
+                            style={{
+                                ...menuItemStyle(hoveredItem === 'config'),
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '12px 20px',
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                textDecoration: 'none',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                marginBottom: '4px',
+                            }}
                         >
-                            <i className="bi bi-person-circle me-2"></i>
-                            Perfil
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'rgba(107, 114, 128, 0.2)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <i className="bi bi-gear" style={{ color: '#6b7280' }}></i>
+                            </div>
+                            <span>Configuración</span>
                         </Link>
-                    </li>
-                    <li className="nav-item menuTitle">
-                        <Link
-                            className="nav-link text-white"
-                            onClick={() =>
-                                agregarAcceso(
-                                    'Contraseña',
-                                    'Modificar',
-                                    UrlLocal + '/changepassword'
-                                )
-                            }
-                        >
-                            <i className="bi bi-key me-2"></i>
-                            Contraseña
-                        </Link>
-                    </li>
-                    {usuarioUsed?.tipousuario?.id &&
-                        [1].includes(usuarioUsed.tipousuario.id) && (
-                            <li className="nav-item menuTitle">
-                                <Link
-                                    className="nav-link text-white"
-                                    onClick={() =>
-                                        agregarAcceso(
-                                            'Configuración',
-                                            'Modificar',
-                                            UrlLocal + '/config'
-                                        )
-                                    }
-                                >
-                                    <i className="bi bi-gear me-2"></i>
-                                    Configuración
-                                </Link>
-                            </li>
-                        )}
-                    <li className="nav-item menuTitle">
-                        <Link className="nav-link text-white" onClick={handleLogoutClick}>
-                            <i className="bi bi-chevron-double-left me-2"></i>
-                            Salir
-                        </Link>
-                    </li>
-                </ul>
+                    )}
+                </nav>
+            </div>
+
+            {/* Footer del sidebar */}
+            <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '12px 16px',
+                background: 'rgba(0, 0, 0)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+                <button
+                    onClick={handleLogoutClick}
+                    onMouseEnter={() => setHoveredItem('logout')}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    style={{
+                        width: '100%',
+                        background: hoveredItem === 'logout' ? 'rgba(239, 68, 68, 0.2)' : 'none',
+                        border: hoveredItem === 'logout' ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        color: hoveredItem === 'logout' ? '#ef4444' : 'rgba(255, 255, 255, 0.8)',
+                        padding: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                    }}
+                >
+                    <i className="bi bi-box-arrow-left"></i>
+                    <span>Salir</span>
+                </button>
             </div>
         </div>
     );
