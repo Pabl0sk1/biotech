@@ -9,11 +9,11 @@ export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSid
             <div className="d-flex align-items-center">
                 {showSidebarButton && (
                     <button
-                        className="btn btn-light me-3 d-flex align-items-center justify-content-center"
-                        style={{ width: '40px', height: '40px', padding: 0 }}
+                        className="btn btn-light me-1 d-flex align-items-center justify-content-center"
+                        style={{ width: '30px', height: '30px', padding: 0 }}
                         onClick={onToggleSidebar ? onToggleSidebar : () => navigate('/asist/home')}
                     >
-                        <i className={`bi bi-${icon} fs-4`}></i>
+                        <i className={`bi bi-${icon} fs-5`}></i>
                     </button>
                 )}
                 <h5 className="m-0 fw-bold">{title}</h5>
@@ -21,14 +21,14 @@ export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSid
 
             {/* Sección derecha: info usuario y logo */}
             <div className="d-flex align-items-center ms-auto">
-                <div className="d-flex align-items-center me-3">
+                <div className="d-flex align-items-center text-success me-3">
                     <i className="bi bi-person fs-4 me-2"></i>
-                    <span className="fw-semibold">{usuarioUsed?.tipousuario?.tipousuario || "Invitado"}</span>
+                    <span>{usuarioUsed?.tipousuario?.tipousuario || "Invitado"}</span>
                 </div>
                 <img
+                    className='logo-img-bar'
                     src="/logo2.svg"
                     alt="Biotech"
-                    style={{ width: '120px', height: '40px', objectFit: 'contain' }}
                 />
             </div>
         </nav>

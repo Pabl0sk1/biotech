@@ -14,13 +14,14 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
     const [nombreError, setNombreError] = useState(false);
     const [correoError, setCorreoError] = useState(false);
     const [cerrarPerfil, setCerrarPerfil] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                if (cerrarPerfil) { // Verifica si la ventana de confirmación está abierta
+                if (cerrarPerfil) {
                     confirmarEscape();
                 }
             }
@@ -66,7 +67,6 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
             if (usuarioActualizado) {
                 setUsuarioUsed(usuarioActualizado);
 
-                // Actualizar también la sesión
                 const sessionData = JSON.parse(localStorage.getItem('session') || '{}');
                 if (sessionData.user) {
                     sessionData.user = usuarioActualizado;
@@ -81,25 +81,24 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setIsLoading(true);
         const form = event.currentTarget;
 
         let sw = 0;
 
-        // Verifica si el campo está vacío
         if (!data.nombreusuario) {
             setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 20 caracteres.');
-            setNombreUsuarioError(true); // Establece el error si está vacío
+            setNombreUsuarioError(true);
             sw = 1;
         } else {
-            // Verifica si el nombre de usuario ya existe
             const existeNombreUsuario = verificarNombreUsuarioExistente(data.nombreusuario, data.id);
             if (existeNombreUsuario) {
                 setNombreUsuarioMsj('El nombre de usuario ya existe.');
-                setNombreUsuarioError(true); // Establece el error si ya existe
+                setNombreUsuarioError(true);
                 sw = 1;
             } else {
                 setNombreUsuarioMsj('');
-                setNombreUsuarioError(false); // Resetea el error si no existe
+                setNombreUsuarioError(false);
             }
         }
 
@@ -120,6 +119,7 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
         if (sw == 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
+            setIsLoading(false);
             return;
         }
 
@@ -131,9 +131,9 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
         } else {
             form.classList.add('was-validated');
         }
+        setIsLoading(false);
     };
 
-    //Verifica un nombre de usuario ya usado
     const verificarNombreUsuarioExistente = (nombreUsuario, id) => {
         return usuarios.some(usuario => usuario.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && usuario.id !== id);
     };
@@ -142,146 +142,228 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
         <>
 
             {cerrarPerfil && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-4 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-7 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-check-circle-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>Perfil modificado correctamente</p>
-                                </div>
-                                <button
-                                    onClick={() => confirmarEscape()}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
+                <div className="success-modal">
+                    <div className="success-content">
+                        <div className="success-icon">
+                            <i className="bi bi-check-circle-fill"></i>
                         </div>
+                        <h3 style={{ color: '#1f2937', marginBottom: '8px' }}>¡Perfil Actualizado!</h3>
+                        <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                            Tus datos se han guardado correctamente
+                        </p>
+                        <button
+                            onClick={confirmarEscape}
+                            className="modern-button btn-primary"
+                        >
+                            <i className="bi bi-check-lg"></i>
+                            Continuar
+                        </button>
                     </div>
-                </>
+                </div>
             )}
 
-            <div className="row-cols-auto w-100 m-0">
+            <div className="modern-container colorPrimario">
                 <Header usuarioUsed={usuarioUsed} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-                <div className="container-fluid p-0 m-0 mt-3 pt-5 ms-3 me-3">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb colorSecundario border m-0 user-select-none ps-3 pt-2 pb-2 h6">
-                            <li className="breadcrumb-item">
-                                <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-person-circle me-2 text-black"></i>Perfil
-                            </li>
-                        </ol>
-                    </nav>
-                    <div className="colorSecundario p-0 m-0 border mt-3">
-                        <p className="border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-pencil-square me-2 fs-5"></i>Modificar Perfil
-                        </p>
-                        <form
-                            action="url.ph"
-                            onSubmit={handleSubmit}
-                            className="needs-validation"
-                            noValidate
-                        >
-                            <div className="p-3 pt-5 pb-5 fw-semibold text-start">
-                                <div className="input-group">
-                                    <label htmlFor="nombreusuario" className="form-label m-0">Nombre de Usuario</label>
-                                    <input
-                                        type="text"
-                                        id="nombreusuario"
-                                        name="nombreusuario"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        value={data.nombreusuario}
-                                        onChange={(event) => setData({ ...data, [event.target.name]: event.target.value.toUpperCase() })}
-                                        maxLength={20}
-                                    />
-                                    <div className={`invalid-feedback text-danger text-start ${nombreUsuarioError ? 'contents' : 'd-none'}`}>
-                                        <i className="bi bi-exclamation-triangle-fill m-2"></i>{nombreUsuarioMsj}
+
+                <div className="container-fluid p-4 mt-2" style={{ paddingTop: '100px' }}>
+                    <div className="form-card mt-5">
+                        {/* Header del perfil */}
+                        <div className="extend-header">
+                            <div className="profile-avatar">
+                                <i className="bi bi-person-fill"></i>
+                            </div>
+                            <h2 className="profile-name">
+                                {data.nombre || 'Usuario'}
+                            </h2>
+                            <p className="profile-role">
+                                @{data.nombreusuario || 'username'}
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+                            <div className="form-body">
+                                {/* Sección de Información de Cuenta */}
+                                <div className="form-section">
+                                    <h3 className="section-title">
+                                        <i className="bi bi-shield-check input-icon"></i>
+                                        Información de Cuenta
+                                    </h3>
+
+                                    <div className="modern-input-group">
+                                        <label htmlFor="nombreusuario" className="modern-label">
+                                            <i className="bi bi-person-badge me-2"></i>Nombre de Usuario <span className="required-field">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="nombreusuario"
+                                            name="nombreusuario"
+                                            placeholder="Ingresa tu nombre de usuario"
+                                            className={`modern-input ${nombreUsuarioError ? 'error' : ''}`}
+                                            value={data.nombreusuario}
+                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value.toUpperCase() })}
+                                            maxLength={20}
+                                        />
+                                        {nombreUsuarioError && (
+                                            <div className="error-message">
+                                                <i className="bi bi-exclamation-triangle-fill"></i>
+                                                {nombreUsuarioMsj}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="input-group">
-                                    <label htmlFor="nombre" className="form-label m-0">Nombre/Apellido</label>
-                                    <input
-                                        type="text"
-                                        id="nombre"
-                                        name="nombre"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        value={data.nombre}
-                                        onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                        maxLength={50}
-                                    />
-                                    <div className={`invalid-feedback text-danger text-start ${nombreError ? 'contents' : 'd-none'}`}>
-                                        <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 50 caracteres.
+
+                                {/* Sección de Información Personal */}
+                                <div className="form-section">
+                                    <h3 className="section-title">
+                                        <i className="bi bi-person input-icon"></i>
+                                        Información Personal
+                                    </h3>
+
+                                    <div className="row">
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="nombre" className="modern-label">
+                                                    <i className="bi bi-card-text me-2"></i>Nombre Completo <span className="required-field">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="nombre"
+                                                    name="nombre"
+                                                    placeholder="Ingresa tu nombre completo"
+                                                    className={`modern-input ${nombreError ? 'error' : ''}`}
+                                                    value={data.nombre}
+                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                                    maxLength={50}
+                                                />
+                                                {nombreError && (
+                                                    <div className="error-message">
+                                                        <i className="bi bi-exclamation-triangle-fill"></i>
+                                                        El nombre es obligatorio (máx. 50 caracteres)
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="nrodoc" className="modern-label">
+                                                    <i className="bi bi-credit-card me-2"></i>Número de Documento
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="nrodoc"
+                                                    name="nrodoc"
+                                                    placeholder="Ej: 12345678"
+                                                    className="modern-input"
+                                                    value={data.nrodoc}
+                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                                    maxLength={15}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="input-group">
-                                    <label htmlFor="nrodoc" className="form-label m-0">Nro. de Documento</label>
-                                    <input
-                                        type="text"
-                                        id="nrodoc"
-                                        name="nrodoc"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        value={data.nrodoc}
-                                        onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                        maxLength={15}
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <label htmlFor="nrotelefono" className="form-label m-0">Nro. de Teléfono</label>
-                                    <input
-                                        type="text"
-                                        id="nrotelefono"
-                                        name="nrotelefono"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        value={data.nrotelefono}
-                                        onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                        maxLength={15}
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <label htmlFor="correo" className="form-label m-0">Correo</label>
-                                    <input
-                                        type="text"
-                                        id="correo"
-                                        name="correo"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        value={data.correo}
-                                        onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                        maxLength={30}
-                                    />
-                                    <div className={`invalid-feedback text-danger text-start ${correoError ? 'contents' : 'd-none'}`}>
-                                        <i className="bi bi-exclamation-triangle-fill m-2"></i>El correo es obligatorio y no debe sobrepasar los 30 caracteres.
+
+                                {/* Sección de Contacto */}
+                                <div className="form-section">
+                                    <h3 className="section-title">
+                                        <i className="bi bi-telephone input-icon"></i>
+                                        Información de Contacto
+                                    </h3>
+
+                                    <div className="row">
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="correo" className="modern-label">
+                                                    <i className="bi bi-envelope me-2"></i>Correo Electrónico <span className="required-field">*</span>
+                                                </label>
+                                                <input
+                                                    type="email"
+                                                    id="correo"
+                                                    name="correo"
+                                                    placeholder="usuario@ejemplo.com"
+                                                    className={`modern-input ${correoError ? 'error' : ''}`}
+                                                    value={data.correo}
+                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                                    maxLength={30}
+                                                />
+                                                {correoError && (
+                                                    <div className="error-message">
+                                                        <i className="bi bi-exclamation-triangle-fill"></i>
+                                                        El correo es obligatorio (máx. 30 caracteres)
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="nrotelefono" className="modern-label">
+                                                    <i className="bi bi-phone me-2"></i>Número de Teléfono
+                                                </label>
+                                                <input
+                                                    type="tel"
+                                                    id="nrotelefono"
+                                                    name="nrotelefono"
+                                                    placeholder="+595 21 123 456"
+                                                    className="modern-input"
+                                                    value={data.nrotelefono}
+                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                                    maxLength={15}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="input-group mb-0">
-                                    <label htmlFor="direccion" className="form-label m-0">Dirección</label>
-                                    <textarea
-                                        type="text"
-                                        id="direccion"
-                                        name="direccion"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        style={{ height: '90px', resize: 'none' }}
-                                        value={data.direccion}
-                                        onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                        maxLength={100}>
-                                    </textarea>
+
+                                    <div className="modern-input-group">
+                                        <label htmlFor="direccion" className="modern-label">
+                                            <i className="bi bi-geo-alt me-2"></i>Dirección
+                                        </label>
+                                        <textarea
+                                            id="direccion"
+                                            name="direccion"
+                                            placeholder="Ingresa tu dirección completa..."
+                                            className="modern-textarea text-black"
+                                            style={{ height: '90px' }}
+                                            value={data.direccion}
+                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                            maxLength={100}
+                                        />
+                                        <div style={{ fontSize: '12px', color: '#6b7280', textAlign: 'right', marginTop: '4px' }}>
+                                            {data.direccion?.length || 0}/100 caracteres
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="border-top border-2 border-black pt-2 pb-2 ps-3 m-0 text-start user-select-none">
-                                <button className="btn btn-success me-4 fw-bold ps-3 pe-3 text-black">
-                                    <i className="bi bi-floppy-fill me-2"></i>Guardar
-                                </button>
-                                <Link className="btn btn-danger fw-bold text-black" to={UrlBase + '/home'}>
-                                    <i className="bi bi-x-lg me-2"></i>Cancelar
+
+                            {/* Botones de acción */}
+                            <div style={{
+                                background: '#f9fafb',
+                                padding: '24px 32px',
+                                borderTop: '1px solid #e5e7eb',
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                gap: '12px'
+                            }}>
+                                <Link
+                                    className="modern-button btn-secondary"
+                                    to={UrlBase + '/home'}
+                                >
+                                    <i className="bi bi-x-lg"></i>
+                                    Cancelar
                                 </Link>
+                                <button
+                                    type="submit"
+                                    className="modern-button btn-primary"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <div className="spinner"></div>
+                                    ) : (
+                                        <i className="bi bi-check-lg"></i>
+                                    )}
+                                    {isLoading ? 'Guardando...' : 'Guardar'}
+                                </button>
                             </div>
                         </form>
                     </div>

@@ -11,6 +11,7 @@ export const Configuracion = ({ usuarioUsed }) => {
     const [correoError, setCorreoError] = useState(false);
     const [cerrarConfig, setCerrarConfig] = useState(false);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const [config, setConfig] = useState({
@@ -31,7 +32,7 @@ export const Configuracion = ({ usuarioUsed }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                if (cerrarConfig) { // Verifica si la ventana de confirmación está abierta
+                if (cerrarConfig) {
                     confirmarEscape();
                 }
             }
@@ -73,6 +74,7 @@ export const Configuracion = ({ usuarioUsed }) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setIsLoading(true);
         const form = event.currentTarget;
 
         // Crear el objeto que se enviará al backend
@@ -107,7 +109,6 @@ export const Configuracion = ({ usuarioUsed }) => {
                 u8arr[n] = bstr.charCodeAt(n);
             }
 
-            // Usa el nombre original de la imagen si está disponible
             const originalName = config.nombre || 'imagen';
             const fileName = `${originalName}`;
             const file = new File([u8arr], fileName, { type: mime },);
@@ -133,6 +134,7 @@ export const Configuracion = ({ usuarioUsed }) => {
         if (sw == 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
+            setIsLoading(false);
             return;
         }
 
@@ -146,6 +148,7 @@ export const Configuracion = ({ usuarioUsed }) => {
         } else {
             form.classList.add('was-validated');
         }
+        setIsLoading(false);
     };
 
     const handleImageChange = (event) => {
@@ -171,76 +174,82 @@ export const Configuracion = ({ usuarioUsed }) => {
         <>
 
             {cerrarConfig && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-4 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-7 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-check-circle-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>Configuración editada correctamente</p>
-                                </div>
-                                <button
-                                    onClick={() => confirmarEscape()}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
+                <div className="success-modal">
+                    <div className="success-content">
+                        <div className="success-icon">
+                            <i className="bi bi-check-circle-fill"></i>
                         </div>
+                        <h3 style={{ color: '#1f2937', marginBottom: '8px' }}>¡Configuración Guardada!</h3>
+                        <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                            Los cambios se han aplicado correctamente
+                        </p>
+                        <button
+                            onClick={confirmarEscape}
+                            className="modern-button btn-primary"
+                        >
+                            <i className="bi bi-check-lg"></i>
+                            Continuar
+                        </button>
                     </div>
-                </>
+                </div>
             )}
 
-            <div className="row-cols-auto w-100 m-0">
+            <div className="modern-container colorPrimario">
                 <Header usuarioUsed={usuarioUsed} title={'CONFIGURACIÓN'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
-                <div className="container-fluid p-0 m-0 mt-3 pt-5 ms-3 me-3">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb colorSecundario border m-0 user-select-none ps-3 pt-2 pb-2 h6">
-                            <li className="breadcrumb-item">
-                                <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-gear-fill me-2 text-black"></i>Configuración
-                            </li>
-                        </ol>
-                    </nav>
-                    <div className="colorSecundario p-0 m-0 border mt-3">
-                        <p className="border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-pencil-square me-2 fs-5"></i>Editar Configuración
-                        </p>
-                        <form
-                            action="url.ph"
-                            onSubmit={handleSubmit}
-                            className="needs-validation"
-                            noValidate
-                        >
-                            <div className="p-3 pt-5 pb-5 fw-semibold text-start">
-                                <div className="input-group">
-                                    <label htmlFor="logo" className="form-label me-2">Logotipo</label>
+                <div className="container-fluid p-4 mt-2" style={{ paddingTop: '100px' }}>
+                    <div className="form-card mt-5">
+                        {/* Header del perfil */}
+                        <div className="extend-header">
+                            <div className="security-icon">
+                                <i className="bi bi-gear-fill"></i>
+                            </div>
+                            <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
+                                Configuración
+                            </h2>
+                            <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
+                                Ajusta tu cuenta a tu manera
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+                            <div className="form-body">
+                                {/* Logo Section */}
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
+                                        <i className="bi bi-image me-2"></i>Logotipo
+                                    </label>
                                     <div
-                                        className="colorTernarioImage bg-secondary-subtle text-center d-flex justify-content-center align-items-center position-relative"
-                                        style={{ cursor: 'pointer', height: '170px', width: '25%' }}
+                                        className={`image-upload ${imagenSeleccionada ? 'has-image' : ''}`}
                                         onClick={() => document.getElementById('fileInput').click()}
                                     >
                                         {imagenSeleccionada ? (
-                                            <div className='w-100 h-100 position-relative'>
-                                                <img src={`data:image/*;base64, ${imagenSeleccionada}`} alt="Vista previa" className='w-100 h-100' />
-
-                                                {/* Botón para eliminar la imagen */}
+                                            <>
+                                                <img
+                                                    src={`data:image/*;base64, ${imagenSeleccionada}`}
+                                                    alt="Vista previa"
+                                                    className="image-preview"
+                                                />
                                                 <button
-                                                    className="btn btn-danger position-absolute top-0 end-0 m-1 p-1 rounded-circle z-0"
-                                                    style={{ width: '30px', height: '30px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                    type="button"
+                                                    className="remove-image"
                                                     onClick={(e) => {
-                                                        e.stopPropagation(); // Evita que se active el click en la imagen
+                                                        e.stopPropagation();
                                                         setImagenSeleccionada(null);
                                                     }}
                                                 >
-                                                    <i className="bi bi-x-lg text-white"></i>
+                                                    <i className="bi bi-x-lg"></i>
                                                 </button>
-                                            </div>
+                                            </>
                                         ) : (
-                                            <p className="m-0"><i className='bi bi-card-image' style={{ fontSize: '5rem' }}></i></p>
+                                            <div>
+                                                <div className="upload-icon">
+                                                    <i className="bi bi-cloud-upload"></i>
+                                                </div>
+                                                <div className="upload-text">
+                                                    <strong>Hacer clic para subir</strong>
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
                                     <input
@@ -248,95 +257,198 @@ export const Configuracion = ({ usuarioUsed }) => {
                                         id="fileInput"
                                         name="imagen"
                                         accept="image/*"
-                                        className='d-none'
+                                        className="d-none"
                                         onChange={handleImageChange}
                                     />
                                 </div>
-                                <div className="input-group">
-                                    <label htmlFor="entidad" className="form-label m-0">Entidad</label>
-                                    <input
-                                        type="text"
-                                        id="entidad"
-                                        name="entidad"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        value={config.entidad}
-                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                        maxLength={30}
-                                    />
-                                    <div className={`invalid-feedback text-danger text-start ${entidadError ? 'contents' : 'd-none'}`}>
-                                        <i className="bi bi-exclamation-triangle-fill m-2"></i>La entidad es obligatoria y no debe sobrepasar los 30 caracteres.
+
+                                {/* Form Fields */}
+                                <div className="row">
+                                    <div className="col-md-6">
+                                        <div className="modern-input-group">
+                                            <label htmlFor="entidad" className="modern-label">
+                                                <i className="bi bi-building me-2"></i>Entidad *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="entidad"
+                                                name="entidad"
+                                                placeholder="Nombre de la entidad"
+                                                className={`modern-input ${entidadError ? 'error' : ''}`}
+                                                value={config.entidad}
+                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                                maxLength={30}
+                                            />
+                                            {entidadError && (
+                                                <div className="error-message">
+                                                    <i className="bi bi-exclamation-triangle-fill"></i>
+                                                    La entidad es obligatoria (máx. 30 caracteres)
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="col-md-6">
+                                        <div className="modern-input-group">
+                                            <label htmlFor="correo" className="modern-label">
+                                                <i className="bi bi-envelope me-2"></i>Correo Electrónico *
+                                            </label>
+                                            <input
+                                                type="email"
+                                                id="correo"
+                                                name="correo"
+                                                placeholder="correo@empresa.com"
+                                                className={`modern-input ${correoError ? 'error' : ''}`}
+                                                value={config.correo}
+                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                                maxLength={30}
+                                            />
+                                            {correoError && (
+                                                <div className="error-message">
+                                                    <i className="bi bi-exclamation-triangle-fill"></i>
+                                                    El correo es obligatorio (máx. 30 caracteres)
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="input-group">
-                                    <label htmlFor="correo" className="form-label m-0">Correo</label>
+
+                                <div className="modern-input-group">
+                                    <label htmlFor="nrotelefono" className="modern-label">
+                                        <i className="bi bi-telephone me-2"></i>Teléfono
+                                    </label>
                                     <input
-                                        type="text"
-                                        id="correo"
-                                        name="correo"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
-                                        value={config.correo}
-                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                        maxLength={30}
-                                    />
-                                    <div className={`invalid-feedback text-danger text-start ${correoError ? 'contents' : 'd-none'}`}>
-                                        <i className="bi bi-exclamation-triangle-fill m-2"></i>El correo es obligatorio y no debe sobrepasar los 30 caracteres.
-                                    </div>
-                                </div>
-                                <div className="input-group">
-                                    <label htmlFor="nrotelefono" className="form-label m-0">Teléfono</label>
-                                    <input type="text"
+                                        type="tel"
                                         id="nrotelefono"
                                         name="nrotelefono"
-                                        placeholder="Escribe..."
-                                        className="ms-2 form-control border-input"
+                                        placeholder="+595 21 123 456"
+                                        className="modern-input"
                                         value={config.nrotelefono}
                                         onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
                                         maxLength={20}
                                     />
                                 </div>
-                                <div className="input-group">
-                                    <label htmlFor="colorpri" className="form-label m-0">Color Primario</label>
-                                    <input
-                                        type="color"
-                                        id="colorpri"
-                                        name="colorpri"
-                                        className="ms-2 form-control form-control-color rounded-0 colorTernario"
-                                        value={config.colorpri}
-                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <label htmlFor="colorsec" className="form-label m-0">Color Secundario</label>
-                                    <input
-                                        type="color"
-                                        id="colorsec"
-                                        name="colorsec"
-                                        className="ms-2 form-control form-control-color rounded-0 colorTernario"
-                                        value={config.colorsec}
-                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                    />
-                                </div>
-                                <div className="input-group mb-0">
-                                    <label htmlFor="colorter" className="form-label m-0">Color Ternario</label>
-                                    <input
-                                        type="color"
-                                        id="colorter"
-                                        name="colorter"
-                                        className="ms-2 form-control form-control-color rounded-0 colorTernario"
-                                        value={config.colorter}
-                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                    />
+
+                                {/* Color Section */}
+                                <h4 className="mt-4 mb-3" style={{ color: '#374151', fontWeight: '600' }}>
+                                    <i className="bi bi-palette me-2"></i>Colores del Sistema
+                                </h4>
+
+                                <div className="row">
+                                    <div className="col-md-4">
+                                        <div className="modern-input-group">
+                                            <label htmlFor="colorpri" className="modern-label">Color Primario</label>
+                                            <div className="color-input-group">
+                                                <div
+                                                    className="color-preview"
+                                                    style={{ backgroundColor: config.colorpri }}
+                                                    onClick={() => document.getElementById('colorpri').click()}
+                                                ></div>
+                                                <input
+                                                    type="color"
+                                                    id="colorpri"
+                                                    name="colorpri"
+                                                    className="d-none"
+                                                    value={config.colorpri}
+                                                    onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="modern-input"
+                                                    value={config.colorpri}
+                                                    onChange={(event) => setConfig({ ...config, colorpri: event.target.value })}
+                                                    placeholder="#ffffff"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="col-md-4">
+                                        <div className="modern-input-group">
+                                            <label htmlFor="colorsec" className="modern-label">Color Secundario</label>
+                                            <div className="color-input-group">
+                                                <div
+                                                    className="color-preview"
+                                                    style={{ backgroundColor: config.colorsec }}
+                                                    onClick={() => document.getElementById('colorsec').click()}
+                                                ></div>
+                                                <input
+                                                    type="color"
+                                                    id="colorsec"
+                                                    name="colorsec"
+                                                    className="d-none"
+                                                    value={config.colorsec}
+                                                    onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="modern-input"
+                                                    value={config.colorsec}
+                                                    onChange={(event) => setConfig({ ...config, colorsec: event.target.value })}
+                                                    placeholder="#ffffff"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="col-md-4">
+                                        <div className="modern-input-group">
+                                            <label htmlFor="colorter" className="modern-label">Color Terciario</label>
+                                            <div className="color-input-group">
+                                                <div
+                                                    className="color-preview"
+                                                    style={{ backgroundColor: config.colorter }}
+                                                    onClick={() => document.getElementById('colorter').click()}
+                                                ></div>
+                                                <input
+                                                    type="color"
+                                                    id="colorter"
+                                                    name="colorter"
+                                                    className="d-none"
+                                                    value={config.colorter}
+                                                    onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="modern-input"
+                                                    value={config.colorter}
+                                                    onChange={(event) => setConfig({ ...config, colorter: event.target.value })}
+                                                    placeholder="#ffffff"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="border-top border-2 border-black pt-2 pb-2 ps-3 m-0 text-start user-select-none">
-                                <button className="btn btn-success me-4 fw-bold ps-3 pe-3 text-black">
-                                    <i className="bi bi-floppy-fill me-2"></i>Guardar
-                                </button>
-                                <Link className="btn btn-danger fw-bold text-black" to={UrlBase + '/home'}>
-                                    <i className="bi bi-x-lg me-2"></i>Cancelar
+
+                            {/* Form Actions */}
+                            <div style={{
+                                background: '#f9fafb',
+                                padding: '24px 32px',
+                                borderTop: '1px solid #e5e7eb',
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                gap: '12px'
+                            }}>
+                                <Link
+                                    className="modern-button btn-secondary"
+                                    to={UrlBase + '/home'}
+                                >
+                                    <i className="bi bi-x-lg"></i>
+                                    Cancelar
                                 </Link>
+                                <button
+                                    type="submit"
+                                    className="modern-button btn-primary"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <div className="spinner"></div>
+                                    ) : (
+                                        <i className="bi bi-check-lg"></i>
+                                    )}
+                                    {isLoading ? 'Guardando...' : 'Guardar'}
+                                </button>
                             </div>
                         </form>
                     </div>

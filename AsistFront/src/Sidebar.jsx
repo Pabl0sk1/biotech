@@ -18,8 +18,10 @@ const Sidebar = ({
 
     const menuItemStyle = (isHovered) => ({
         transition: 'all 0.3s ease',
-        backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-        borderLeft: isHovered ? '4px solid #007bff' : '4px solid transparent'
+        background: isHovered ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+        border: isHovered ? '0 solid transparent' : '0 solid transparent',
+        borderLeftWidth: '4px',
+        borderLeftColor: isHovered ? '#15ff00ff' : 'transparent',
     });
 
     const subMenuItemStyle = (isHovered) => ({
@@ -60,19 +62,19 @@ const Sidebar = ({
                         style={{
                             width: '44px',
                             height: '44px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, var(--color-secundario) 0%, var(--color-ternario) 100%)',
                             borderRadius: '12px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'white',
                             fontSize: '18px',
-                            fontWeight: 'bold',
+                            fontWeight: 'bold'
                         }}
                     >
                         {usuarioUsed.nombreusuario?.charAt(0).toUpperCase()}
                     </div>
-                    <div>
+                    <div className='text-start'>
                         <div style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>
                             {usuarioUsed.nombreusuario}
                         </div>
@@ -96,7 +98,6 @@ const Sidebar = ({
                                 ...menuItemStyle(hoveredItem === 'reportes'),
                                 width: '100%',
                                 background: 'none',
-                                border: 'none',
                                 color: 'white',
                                 padding: '12px 20px',
                                 display: 'flex',
@@ -166,7 +167,6 @@ const Sidebar = ({
                                 ...menuItemStyle(hoveredItem === 'registros'),
                                 width: '100%',
                                 background: 'none',
-                                border: 'none',
                                 color: 'white',
                                 padding: '12px 20px',
                                 display: 'flex',
@@ -301,7 +301,6 @@ const Sidebar = ({
                                     ...menuItemStyle(hoveredItem === 'seguridad'),
                                     width: '100%',
                                     background: 'none',
-                                    border: 'none',
                                     color: 'white',
                                     padding: '12px 20px',
                                     display: 'flex',
@@ -512,13 +511,12 @@ const Sidebar = ({
             </div>
 
             {/* Footer del sidebar */}
-            <div style={{
+            <div className='bg-dark' style={{
                 position: 'absolute',
                 bottom: 0,
                 left: 0,
                 right: 0,
                 padding: '12px 16px',
-                background: 'rgba(0, 0, 0)',
                 borderTop: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
                 <button
