@@ -1,3 +1,84 @@
+/* Modern Table Styles for Calculo.jsx */
+.modern-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  font-size: 0.95rem;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.modern-table-header th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  padding: 10px 6px;
+  font-size: 0.95rem;
+}
+
+.modern-table-row {
+  transition: background 0.2s;
+}
+.modern-table-row:hover {
+  background: #f0f4ff;
+}
+.modern-row-feriado {
+  background: #ffe4e1 !important;
+}
+.modern-row-domingo {
+  background: #e0e7ff !important;
+}
+
+.modern-table-cell {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 6px 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.modern-table-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #f9fafb;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.modern-table-input:focus {
+  border-color: var(--color-ternario);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.12);
+  outline: none;
+}
+.modern-table-checkbox {
+  transform: scale(1.2);
+  accent-color: var(--color-ternario);
+  margin: 0 2px;
+}
+
+@media (max-width: 768px) {
+  .modern-table-header th,
+  .modern-table-cell {
+    font-size: 0.85rem;
+    padding: 6px 2px;
+  }
+  .modern-table-input {
+    font-size: 0.8rem;
+    padding: 2px 4px;
+  }
+}
 .btn-eye {
   border: none;
   width: 25px;
@@ -338,6 +419,7 @@ input[type="number"] {
 
 .btn-primary:hover {
   transform: translateY(-2px);
+  color: black;
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
 }
 
@@ -350,6 +432,7 @@ input[type="number"] {
 .btn-secondary:hover {
   background: #4b5563;
   transform: translateY(-2px);
+  color: black;
   box-shadow: 0 6px 20px rgba(107, 114, 128, 0.5);
 }
 

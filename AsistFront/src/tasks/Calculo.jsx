@@ -759,41 +759,39 @@ export const Calculo = ({ usuarioUsed }) => {
 
     return (
         <>
-            <div className="row-cols-auto w-100 m-0 colorPrimario">
+            <div className="modern-container colorPrimario">
                 <Header usuarioUsed={usuarioUsed} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
-                <div className="container-fluid p-0 m-0 mt-3 pt-5 ms-3 me-3">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb colorSecundario border m-0 user-select-none ps-3 pt-2 pb-2 h6">
-                            <li className="breadcrumb-item">
-                                <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-file-earmark-text-fill me-2 text-black"></i>Reportes
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                Horas Extras
-                            </li>
-                        </ol>
-                    </nav>
-                    <div className="colorSecundario p-0 m-0 border mt-3">
-                        <p className="border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-clipboard-data me-2 fs-5"></i>Realizar Informe de Horas Extras
-                        </p>
+                <div className="container-fluid p-4 mt-2">
+                    <div className="form-card mt-5">
+                        {/* Header del perfil */}
+                        <div className="extend-header">
+                            <div className="security-icon">
+                                <i className="bi bi-clipboard-data"></i>
+                            </div>
+                            <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
+                                Reportes
+                            </h2>
+                            <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
+                                Realizar reporte de horas extras
+                            </p>
+                        </div>
                         <form
                             action="url.ph"
                             onSubmit={handleSubmit}
                             className="needs-validation"
                             noValidate
                         >
-                            <div className="p-3 pt-5 pb-5 fw-semibold text-start">
-                                <div className="input-group mb-5 z-0">
-                                    <label className="form-label m-0">Fecha desde-hasta</label>
+                            <div className="form-body">
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
+                                        <i className="bi bi-calendar me-2"></i>Fecha desde-hasta
+                                    </label>
                                     <input
                                         type="date"
                                         id="fechadesde"
                                         name="fechadesde"
-                                        className="ms-2 form-control border-input"
+                                        className="modern-input mb-3"
                                         value={data.fechadesde}
                                         onChange={handleFechaChange}
                                     />
@@ -801,21 +799,21 @@ export const Calculo = ({ usuarioUsed }) => {
                                         type="date"
                                         id="fechahasta"
                                         name="fechahasta"
-                                        className="ms-2 form-control border-input"
+                                        className="modern-input"
                                         value={data.fechahasta}
                                         onChange={handleFechaChange}
                                     />
                                 </div>
 
                                 {/* Sección de carga de CSV */}
-                                <div className="mb-5 border rounded-3 border-black p-3 bg-warning text-black">
-                                    <h6 className="mb-3">
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
                                         <i className="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Asistencias desde CSV
-                                    </h6>
+                                    </label>
                                     <div className="input-group mb-3 z-0">
                                         <input
                                             type="file"
-                                            className="form-control border-input mw-100"
+                                            className="modern-input form-control mw-100"
                                             accept=".csv"
                                             onChange={handleCSVUpload}
                                             onClick={limpiarCSV}
@@ -830,26 +828,26 @@ export const Calculo = ({ usuarioUsed }) => {
                                 </div>
 
                                 {/* Sección de gestión de feriados */}
-                                <div className="mb-5 border rounded-3 border-black p-3 bg-warning text-black">
-                                    <h6 className="mb-3">
-                                        <i className="bi bi-calendar-event me-2"></i>Gestión de Feriados
-                                    </h6>
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
+                                        <i className="bi bi-calendar-day me-2"></i>Gestión de Feriados
+                                    </label>
                                     {/* Campo para agregar nuevos feriados */}
                                     <div className="input-group mb-3 z-0">
                                         <input
                                             type="date"
-                                            className="form-control border-input"
+                                            className="modern-input form-control mw-100"
                                             value={nuevaFechaFeriado}
                                             onChange={(e) => setNuevaFechaFeriado(e.target.value)}
                                             style={{ maxWidth: '200px' }}
                                         />
                                         <button
                                             type="button"
-                                            className="btn btn-success m-0"
+                                            className="modern-button btn-primary"
                                             onClick={agregarFeriado}
                                             disabled={!nuevaFechaFeriado}
                                         >
-                                            <i className="bi bi-plus-circle me-2"></i>Agregar
+                                            <i className="bi bi-plus-circle me-2"></i>
                                         </button>
                                     </div>
                                     {/* Lista de feriados */}
@@ -1145,8 +1143,15 @@ export const Calculo = ({ usuarioUsed }) => {
                                     </div>
                                 ))}
                             </div>
-                            <div className="border-top border-2 border-black pt-2 pb-2 ps-3 m-0 text-start user-select-none">
-                                <button type='submit' className="btn btn-success fw-bold px-3 text-black">
+                            <div style={{
+                                background: '#f9fafb',
+                                padding: '24px 32px',
+                                borderTop: '1px solid #e5e7eb',
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                gap: '12px'
+                            }}>
+                                <button type='submit' className="modern-button btn-primary">
                                     <i className="bi bi-printer-fill me-2"></i>Generar
                                 </button>
                             </div>

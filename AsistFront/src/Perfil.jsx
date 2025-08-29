@@ -165,7 +165,7 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
             <div className="modern-container colorPrimario">
                 <Header usuarioUsed={usuarioUsed} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
-                <div className="container-fluid p-4 mt-2" style={{ paddingTop: '100px' }}>
+                <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}
                         <div className="extend-header">

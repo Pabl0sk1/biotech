@@ -336,19 +336,6 @@ export const RolApp = ({ usuarioUsed }) => {
                 <Header usuarioUsed={usuarioUsed} title={'ROLES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
                 <div className="container-fluid p-0 m-0 mt-3 pt-5 ms-3 me-3">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb colorSecundario border m-0 user-select-none ps-3 pt-2 pb-2 h6">
-                            <li className="breadcrumb-item">
-                                <i className="bi bi-house-fill me-2 text-black"></i><Link className="text-black breadLink" to={UrlBase + "/home"}>Inicio</Link>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                <i className="bi bi-lock-fill me-2 text-black"></i>Seguridad
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                Roles
-                            </li>
-                        </ol>
-                    </nav>
                     <div className="colorSecundario p-0 m-0 border mt-3">
                         <p className="border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
                             <i className="bi bi-search me-2 fs-5"></i>Listado de Roles

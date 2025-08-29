@@ -175,7 +175,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
             <div className="modern-container colorPrimario">
                 <Header usuarioUsed={usuarioUsed} title={'CONTRASEÑA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
-                <div className="container-fluid p-4 mt-2" style={{ paddingTop: '100px' }}>
+                <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header de seguridad */}
                         <div className="extend-header">
@@ -183,7 +183,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
                                 <i className="bi bi-key-fill"></i>
                             </div>
                             <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Cambiar Contraseña
+                                Contraseña
                             </h2>
                             <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
                                 Mantén tu cuenta segura con una contraseña fuerte
