@@ -227,10 +227,15 @@ input[type="time"]:hover::-webkit-calendar-picker-indicator {
 }
 
 .menuBack {
-  background-image: url(/menuback.svg);
-  background-repeat: no-repeat;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 1s ease-in-out;
 }
 
 /* Para Chrome, Safari, Edge, Opera */

@@ -152,6 +152,18 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
         setIsRegistrosMenuOpen(!isRegistrosMenuOpen);
     }
 
+    // Carrusel de imagenes del menú
+    const [imagenActual, setImagenActual] = useState('c1');
+    useEffect(() => {
+        const imagenes = ['c1', 'c2', 'c3', 'c4'];
+        let index = 0;
+        const intervalo = setInterval(() => {
+            index = (index + 1) % imagenes.length;
+            setImagenActual(imagenes[index]);
+        }, 10000);
+        return () => clearInterval(intervalo);
+    }, []);
+
     return (
         <>
 
@@ -179,7 +191,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                 </>
             )}
 
-            <div className="menuBack position-fixed top-0 start-0 w-100 vh-100">
+            <div className="menuBack position-fixed top-0 start-0 w-100 vh-100" style={{ backgroundImage: `url(/carrusel/${imagenActual}.jpg)` }}>
                 <Header usuarioUsed={usuarioUsed} title={'INICIO'} onToggleSidebar={toggleSidebar} on={1} icon={'list-task'} />
                 <Sidebar
                     usuarioUsed={usuarioUsed}
