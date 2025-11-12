@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import Header from '../Header';
 
 export const AuditoriaApp = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [operacionBuscado, setOperacionBuscado] = useState('');
     const [usuarioBuscado, setUsuarioBuscado] = useState('');

@@ -19,7 +19,7 @@ import { CargoApp } from './components/CargoApp.jsx';
 import { TipoTurnoApp } from './components/TipoTurnoApp.jsx';
 
 function App() {
-  const UrlBase = '/asist';
+  const UrlBase = '/biotech';
   const UrlLocal = UrlBase + '/home';
 
   // App.js - Modificar getUsuarioFromSession
@@ -53,7 +53,7 @@ function App() {
   useEffect(() => {
     const applyThemeColors = async () => {
       const response = await getConfig();
-      const config = response[0];
+      const config = response.list[0];
 
       // Aplicar como variables CSS globales
       document.documentElement.style.setProperty('--color-primario', config.colorpri);

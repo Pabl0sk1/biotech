@@ -20,21 +20,18 @@ public class SecurityConfig extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String acceptHeader = request.getHeader("Accept");
         
-        // Redirigir si es acceso directo a "/"
         if (uri.equals("/") || uri.equals("")) {
-            // Verificar si hay sesión activa (puedes adaptar esto según tu lógica)
             Object usuario = request.getSession().getAttribute("usuarioLogueado");
 
             if (usuario != null) {
-                response.sendRedirect("/asist/home");
+                response.sendRedirect("/biotech/home");
             } else {
-                response.sendRedirect("/asist/login");
+                response.sendRedirect("/biotech/login");
             }
             return;
         }
 
-        // Permitir libremente las rutas del frontend
-        if (uri.startsWith("/asist") ||
+        if (uri.startsWith("/biotech") ||
             uri.startsWith("/assets") ||
             uri.endsWith(".js") ||
             uri.endsWith(".css") ||
@@ -43,7 +40,6 @@ public class SecurityConfig extends OncePerRequestFilter {
             return;
         }
 
-        // Solo bloquear peticiones desde navegador
         boolean isBrowserGet = acceptHeader != null && acceptHeader.contains("text/html");
 
         if (isBrowserGet) {

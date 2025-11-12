@@ -62,9 +62,11 @@ export const getTurnoPaginado = async (page = 0, size = 10, sortBy = 'id', sortT
     const response = await axios.get(`${API_BASE_URL}/listarPaginado`, {
         params: { page, size, sortBy, sortType }
     });
+    const result = response.data;
     return {
-        turnos: response.data.list.content,
-        totalPages: response.data.list.totalPages,
+        turnos: result.list,
+        size: result.size,
+        totalPages: result.totalPages,
         currentPage: page
     };
 };
@@ -72,13 +74,7 @@ export const getTurnoPaginado = async (page = 0, size = 10, sortBy = 'id', sortT
 export const getTurnoPorTipo = async (id, page = 0, size = 10, sortBy = 'id', sortType = false) => {
     try {
         const response = await axios.get(`${API_BASE_URL}/buscarPorIdTipo`, {
-            params: {
-                id,
-                page,
-                size,
-                sortBy,
-                sortType,
-            },
+            params: { id, page, size, sortBy, sortType },
         });
 
         const result = response.data;
@@ -86,7 +82,7 @@ export const getTurnoPorTipo = async (id, page = 0, size = 10, sortBy = 'id', so
             turnos: result.list,
             size: result.size,
             totalPages: result.totalPages,
-            currentPage: page,
+            currentPage: page
         };
     } catch (error) {
         console.error('Error al buscar turnos por tipo:', error);

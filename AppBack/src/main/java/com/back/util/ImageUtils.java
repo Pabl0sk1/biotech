@@ -27,8 +27,6 @@ public class ImageUtils {
             return outputStream.toByteArray();
 
         } catch (Exception e) {
-            // throw new RuntimeException("Error al comprimir la imagen", e);  // Eliminar o comentar esta línea
-            // O, si prefieres retornar un valor por defecto:
             return new byte[0];
         }
     }

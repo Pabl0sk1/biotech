@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import Header from '../Header.jsx';
 
 export const TurnoApp = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [tipoBuscado, setTipoBuscado] = useState('');
     const [turnos, setTurnos] = useState([]);
@@ -100,7 +100,8 @@ export const TurnoApp = ({ usuarioUsed }) => {
 
     const recuperarTurnos = async (pageNumber = 0, desc = '') => {
         const response = await getTurnoPaginado(pageNumber);
-        const turnosFiltrados = response.turnos.filter(turno => {
+
+        const turnosFiltrados = response.turnos.content.filter(turno => {
             const tipoCoincide = desc ? turno.tipoturno.id === parseInt(desc) : true;
 
             return tipoCoincide;

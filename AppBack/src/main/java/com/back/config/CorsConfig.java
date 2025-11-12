@@ -19,11 +19,11 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // todas las rutas
-                        .allowedOrigins(allowedOrigins) // origen del frontend
+                registry.addMapping("/**")
+                        .allowedOrigins(allowedOrigins)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true); // si usás cookies/sesiones
+                        .allowCredentials(true);
             }
         };
     }

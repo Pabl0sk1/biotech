@@ -83,7 +83,7 @@ export const Login = ({ setUsuarioUsed }) => {
                 agregarAcceso(usuarioEncontrado.id);
 
                 setUsuarioUsed(usuarioEncontrado);
-                navigate('/asist/home');
+                navigate('/biotech/home');
             } else {
                 setError("Nombre de usuario o contraseña incorrectos.");
             }

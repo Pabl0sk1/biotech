@@ -6,7 +6,7 @@ import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js'
 import Header from "../Header.jsx";
 
 export const CargoApp = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [cargoBuscado, setCargoBuscado] = useState('');
     const [cargos, setCargos] = useState([]);

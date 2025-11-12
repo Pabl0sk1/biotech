@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { getTipoUsuarioPaginado, saveTipoUsuario, updateTipoUsuario, deleteTipoUsuario, getTipoUsuarioPorDesc } from '../services/tipousuario.service.js';
 import { getUsuario } from "../services/usuario.service.js";
-import { Link } from 'react-router-dom';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
 import Header from '../Header';
 
 export const RolApp = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [tipoUsuarioBuscado, setTipoUsuarioBuscado] = useState('');
     const [tipousuarios, setTipoUsuarios] = useState([]);
@@ -85,7 +84,8 @@ export const RolApp = ({ usuarioUsed }) => {
 
     const recuperarTipoUsuarios = async (pageNumber = 0, desc = '') => {
         const response = await getTipoUsuarioPaginado(pageNumber);
-        const tipousuariosFiltrados = response.tipousuarios.filter(tipousuario => {
+
+        const tipousuariosFiltrados = response.tipousuarios.content.filter(tipousuario => {
             const tipousuarioCoincide = desc.trim() !== '' ? tipousuario.tipousuario.toLowerCase().includes(desc.toLowerCase()) : true;
 
             return tipousuarioCoincide;

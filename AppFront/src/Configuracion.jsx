@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 
 export const Configuracion = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [entidadError, setEntidadError] = useState(false);
     const [correoError, setCorreoError] = useState(false);
@@ -59,13 +59,14 @@ export const Configuracion = ({ usuarioUsed }) => {
 
     const confirmarEscape = () => {
         setCerrarConfig(false);
-        navigate('/asist/home');
+        navigate('/biotech/home');
     };
 
     const recuperarConfig = async () => {
         const response = await getConfigPaginado(0);
-        setConfig(response.list[0]);
-        setImagenSeleccionada(response.list[0].base64imagen);
+
+        setConfig(response.configuraciones[0]);
+        setImagenSeleccionada(response.configuraciones[0].base64imagen);
     }
 
     useEffect(() => {

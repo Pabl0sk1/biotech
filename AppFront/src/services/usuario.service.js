@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = `http://${window.location.hostname}:8000/api/usuario`;
+const API_BASE_URL = `http://${window.location.hostname}:8082/api/usuario`;
 
 // CRUD Básico
 export const getUsuario = async () => {

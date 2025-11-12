@@ -5,7 +5,7 @@ import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 
 export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
     const UrlLocal = UrlBase + '/home';
 
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -85,7 +85,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
         const logoutByInactivity = () => {
             localStorage.removeItem('session');
             sessionStorage.removeItem('usuario');
-            window.location.href = '/asist/login';
+            window.location.href = '/biotech/login';
         };
 
         // Eventos más completos
@@ -125,7 +125,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
         // Limpiar estado y forzar recarga completa
         agregarAcceso('Login', 'Cerrar Sesión', '');
         setUsuarioUsed(null);
-        window.location.href = '/asist/login';
+        window.location.href = '/biotech/login';
     };
 
     //Cancelar eliminación con tecla de escape

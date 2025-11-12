@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = `http://${window.location.hostname}:8000/api/configuracion`;
+const API_BASE_URL = `http://${window.location.hostname}:8082/api/configuracion`;
 
 // Listado completo
 export const getConfig = async () => {
@@ -48,8 +48,8 @@ export const getConfigPaginado = async (page = 0, size = 10, sortBy = 'id', sort
         });
         const result = response.data;
         return {
-            configuraciones: result.list, // lista de objetos
-            totalElements: result.size,    // total de elementos
+            configuraciones: result.list,
+            totalElements: result.size,
             currentPage: page,
         };
     } catch (error) {

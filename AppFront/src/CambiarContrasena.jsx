@@ -5,7 +5,7 @@ import { getUsuario, cambiarContrasena } from "./services/usuario.service";
 import Header from "./Header";
 
 export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [showPasswordActual, setShowPasswordActual] = useState(false);
     const [showPasswordNueva, setShowPasswordNueva] = useState(false);
@@ -53,7 +53,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
 
     const confirmarEscape = () => {
         setCerrarPass(false);
-        navigate('/asist/home');
+        navigate('/biotech/home');
     };
 
     const actualizarUsuarioUsed = async () => {

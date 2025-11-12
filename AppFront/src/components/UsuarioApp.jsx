@@ -9,7 +9,7 @@ import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js'
 import Header from '../Header.jsx';
 
 export const UsuarioApp = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [nombreUsuarioBuscado, setNombreUsuarioBuscado] = useState('');
     const [estadoBuscado, setEstadoBuscado] = useState('');
@@ -112,7 +112,6 @@ export const UsuarioApp = ({ usuarioUsed }) => {
     const recuperarUsuarios = async (pageNumber = 0, rol = '', nombre = '', estado = '') => {
         const response = await getUsuarioPaginado(pageNumber);
 
-        // Filtrar usuarios por rol, nombre y estado en un solo paso
         const usuariosFiltrados = response.usuarios.filter(usuario => {
             const rolCoincide = rol ? usuario.tipousuario.id === parseInt(rol) : true;
             const nombreCoincide = nombre.trim() !== '' ? usuario.nombreusuario.toLowerCase().includes(nombre.toLowerCase()) : true;

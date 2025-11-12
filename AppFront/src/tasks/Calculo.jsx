@@ -6,7 +6,7 @@ import { getTurno } from '../services/turno.service';
 import Header from '../Header';
 
 export const Calculo = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const initial = {
         fechadesde: "",

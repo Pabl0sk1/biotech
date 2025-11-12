@@ -7,7 +7,7 @@ import { NumericFormat } from 'react-number-format';
 import Header from '../Header.jsx';
 
 export const FuncionarioApp = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [nombreBuscado, setNombreBuscado] = useState('');
     const [nrodocBuscado, setNrodocBuscado] = useState('');

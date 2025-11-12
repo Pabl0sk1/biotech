@@ -11,7 +11,7 @@ export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSid
                     <button
                         className="btn btn-light me-1 d-flex align-items-center justify-content-center"
                         style={{ width: '30px', height: '30px', padding: 0 }}
-                        onClick={onToggleSidebar ? onToggleSidebar : () => navigate('/asist/home')}
+                        onClick={onToggleSidebar ? onToggleSidebar : () => navigate('/biotech/home')}
                     >
                         <i className={`bi bi-${icon} fs-5`}></i>
                     </button>

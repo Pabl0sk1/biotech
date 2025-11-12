@@ -30,7 +30,7 @@ const ProtectedRoute = () => {
 
   // Si no está autenticado, redirige al login y guarda la ubicación intentada
   if (!isAuthenticated()) {
-    return <Navigate to="/asist/login" state={{ from: location }} replace />;
+    return <Navigate to="/biotech/login" state={{ from: location }} replace />;
   }
 
   // Si está autenticado, permite acceso a las rutas hijas

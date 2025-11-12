@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.back.entity.Usuario;
 import com.back.service.UsuarioService;
 
@@ -302,10 +301,7 @@ public class UsuarioController {
 	    String contrasena = credentials.get("contrasena");
 	    
 	    if (serv.verificarContrasena(nombreusuario, contrasena)) {
-	        // Buscar el usuario para retornar sus datos (excepto la contraseña)
 	        Usuario usuario = serv.BuscarPorNombreUsuario(nombreusuario);
-	        // Opcional: No enviar la contraseña al cliente
-	        //usuario.setContrasena(null);
 	        
 	        result.put("ok", true);
 	        result.put("message", "Inicio de sesión exitoso");
@@ -327,7 +323,7 @@ public class UsuarioController {
 	        String contrasenaNueva = datos.get("contrasenaNueva");
 	        
 	        // Verificar que la contraseña actual sea correcta
-	        if (serv.verificarContrasena(id, contrasenaActual)) {
+	        if (serv.verificarContrasenaID(id, contrasenaActual)) {
 	            // Actualizar contraseña
 	            serv.actualizarContrasena(id, contrasenaNueva);
 	            

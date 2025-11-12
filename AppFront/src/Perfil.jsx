@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 
 export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [usuarios, setUsuarios] = useState([]);
     const [data, setData] = useState(usuarioUsed);
@@ -48,7 +48,7 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
 
     const confirmarEscape = () => {
         setCerrarPerfil(false);
-        navigate('/asist/home');
+        navigate('/biotech/home');
     };
 
     const recuperarUsuarios = async () => {

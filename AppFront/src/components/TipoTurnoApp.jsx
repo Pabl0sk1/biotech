@@ -6,7 +6,7 @@ import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js'
 import Header from "../Header.jsx";
 
 export const TipoTurnoApp = ({ usuarioUsed }) => {
-    const UrlBase = '/asist';
+    const UrlBase = '/biotech';
 
     const [tipoturnoBuscado, setTipoTurnoBuscado] = useState('');
     const [tipoturnos, setTipoturnos] = useState([]);

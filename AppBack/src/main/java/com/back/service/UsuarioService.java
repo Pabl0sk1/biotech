@@ -11,10 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
 import com.back.entity.Usuario;
 import com.back.repository.UsuarioRepository;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -54,9 +52,7 @@ public class UsuarioService {
 	        throw new RuntimeException(errorValidation);
 	    }
 	    
-	    // Si es un nuevo usuario o se está actualizando la contraseña
 	    if (usuario.getId() == null || !usuario.getContrasena().startsWith("$2a$")) {
-	        // Encriptar la contraseña usando pgcrypto
 	        String hashedPassword = jdbcTemplate.queryForObject(
 	            "SELECT crypt(?, gen_salt('bf'))", 
 	            String.class, 
@@ -66,12 +62,6 @@ public class UsuarioService {
 	    }
 	    
 	    return rep.save(usuario);
-	}
-	
-	public boolean verificarContrasena(String nombreusuario, String contrasena) {
-	    String sql = "SELECT COUNT(*) FROM usuarios WHERE nombreusuario = ? AND contrasena = crypt(?, contrasena)";
-	    int count = jdbcTemplate.queryForObject(sql, Integer.class, nombreusuario, contrasena);
-	    return count > 0;
 	}
 
 	public void eliminar(Integer id) {
@@ -124,7 +114,13 @@ public class UsuarioService {
 	    return rep.findByNombreusuarioLikeIgnoreCaseAndIdRolAndEstado(nombreusuario, id, estado, pageable);
 	}
 	
-	public boolean verificarContrasena(Integer userId, String contrasena) {
+	public boolean verificarContrasena(String nombreusuario, String contrasena) {
+	    String sql = "SELECT COUNT(*) FROM usuarios WHERE nombreusuario = ? AND contrasena = crypt(?, contrasena)";
+	    int count = jdbcTemplate.queryForObject(sql, Integer.class, nombreusuario, contrasena);
+	    return count > 0;
+	}
+	
+	public boolean verificarContrasenaID(Integer userId, String contrasena) {
 	    String sql = "SELECT COUNT(*) FROM usuarios WHERE id = ? AND contrasena = crypt(?, contrasena)";
 	    int count = jdbcTemplate.queryForObject(sql, Integer.class, userId, contrasena);
 	    return count > 0;

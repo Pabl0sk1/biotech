@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = `http://${window.location.hostname}:8000/api/tipousuario`;
+const API_BASE_URL = `http://${window.location.hostname}:8082/api/tipousuario`;
 
 export const getTipoUsuario = async () => {
     const result = await axios.get(`${API_BASE_URL}/listar`);
@@ -33,7 +33,7 @@ export const getTipoUsuarioPaginado = async (page = 0, size = 10, sortBy = 'id',
     });
     const result = response.data;
     return {
-        tipousuarios: result.list,       // FastAPI devuelve list directo
+        tipousuarios: result.list,
         totalElements: result.size,
         currentPage: page,
     };
