@@ -17,6 +17,7 @@ import { getConfig } from "./services/config.service";
 import { Calculo } from './tasks/Calculo.jsx'
 import { CargoApp } from './components/CargoApp.jsx';
 import { TipoTurnoApp } from './components/TipoTurnoApp.jsx';
+import { TokenApp } from './components/TokenApp.jsx';
 
 function App() {
   const UrlBase = '/biotech';
@@ -85,6 +86,7 @@ function App() {
             <>
               <Route path={UrlLocal + "/security/users"} element={<UsuarioApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/security/roles"} element={<RolApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/security/tokens"} element={<TokenApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/config"} element={<Configuracion usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/regs/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/regs/schedules"} element={<TipoTurnoApp usuarioUsed={usuarioUsed} />} />

@@ -1,6 +1,7 @@
 package com.back.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import java.time.LocalDateTime;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,24 +24,35 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "turnodias")
-public class TurnoDia {
+@Table(name = "tokens")
+public class Token {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "turnodia_sec")
-	@SequenceGenerator(name = "turnodia_sec", sequenceName = "turnodias_id_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "token_sec")
+	@SequenceGenerator(name = "token_sec", sequenceName = "tokens_id_seq", allocationSize = 1)
 	private Integer id;
 	
 	@NotNull
 	@ManyToOne
-	@JoinColumn(name = "turno_id")
-	@JsonBackReference
-	private Turno turno;
+	@JoinColumn(name = "usuario_id")
+	private Usuario usuario;
 	
 	@NotNull
-	@NotBlank
 	@NotEmpty
-	@Size(max = 20)
-	private String dia;
+	@NotBlank
+	@Size(max = 255)
+	@Column(nullable = false, unique = true)
+	private String token;
 	
+	private LocalDateTime fecha_creacion;
+	
+	private LocalDateTime fecha_expiracion;
+	
+	private Boolean activo;
+	
+	public Token(Integer id) {
+		super();
+		this.id = id;
+	}
+
 }

@@ -40,7 +40,7 @@ public class Turno {
 	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "tipoturno_id")
-	TipoTurno tipoturno;
+	private TipoTurno tipoturno;
 	
 	@NotNull
 	@NotBlank

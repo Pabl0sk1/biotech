@@ -396,6 +396,25 @@ const Sidebar = ({
                                             <i className="bi bi-diagram-3" style={{ color: '#8b5cf6' }}></i>
                                             Roles
                                         </Link>
+                                        <Link
+                                            to="#"
+                                            onClick={() => agregarAcceso('Tokens', 'Consultar', UrlLocal + '/security/tokens')}
+                                            onMouseEnter={() => setHoveredItem('tokens')}
+                                            onMouseLeave={() => setHoveredItem(null)}
+                                            style={{
+                                                ...subMenuItemStyle(hoveredItem === 'tokens'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                padding: '10px 20px 10px 52px',
+                                                color: 'rgba(255, 255, 255, 0.8)',
+                                                textDecoration: 'none',
+                                                fontSize: '13px',
+                                            }}
+                                        >
+                                            <i className="bi bi-asterisk" style={{ color: '#88e6ceff' }}></i>
+                                            Tokens
+                                        </Link>
                                     </>
                                 )}
                             </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { saveAuditoria, getNetworkInfo } from './services/auditoria.service.js';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';

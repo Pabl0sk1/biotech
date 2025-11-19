@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getAuditoriaPaginado, deleteAuditoria, getAuditoriaPorUsuario, getAuditoriaPorOperacion, getAuditoriaPorUsuarioYOperacion } from '../services/auditoria.service.js';
-import { Link } from 'react-router-dom';
 import Header from '../Header';
 
 export const AuditoriaApp = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
 
     const [operacionBuscado, setOperacionBuscado] = useState('');
     const [usuarioBuscado, setUsuarioBuscado] = useState('');

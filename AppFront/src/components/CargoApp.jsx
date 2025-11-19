@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { getCargoPaginado, saveCargo, updateCargo, deleteCargo, getCargoPorDesc } from '../services/cargo.service.js';
 import { getFuncionario } from '../services/funcionario.service.js';
-import { Link } from 'react-router-dom';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
 import Header from "../Header.jsx";
 
 export const CargoApp = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
 
     const [cargoBuscado, setCargoBuscado] = useState('');
     const [cargos, setCargos] = useState([]);

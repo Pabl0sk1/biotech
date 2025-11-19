@@ -34,7 +34,7 @@ public class Funcionario {
 	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "cargo_id")
-	Cargo cargo;
+	private Cargo cargo;
 	
 	@NotNull
 	@NotEmpty

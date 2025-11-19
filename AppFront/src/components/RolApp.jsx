@@ -5,7 +5,6 @@ import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js'
 import Header from '../Header';
 
 export const RolApp = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
 
     const [tipoUsuarioBuscado, setTipoUsuarioBuscado] = useState('');
     const [tipousuarios, setTipoUsuarios] = useState([]);

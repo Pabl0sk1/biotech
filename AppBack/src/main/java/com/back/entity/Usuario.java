@@ -33,7 +33,7 @@ public class Usuario {
 	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "tipousuario_id")
-	TipoUsuario tipousuario;
+	private TipoUsuario tipousuario;
 
 	@NotNull
 	@NotEmpty

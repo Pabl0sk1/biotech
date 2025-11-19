@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import { getTurnoPaginado, getTurnoDetalle, saveTurno, updateTurno, deleteTurno, deleteTurnoDetalle, getTurnoPorTipo } from '../services/turno.service.js';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
 import { getTipoTurno } from '../services/tipoturno.service.js';
-import { Link } from 'react-router-dom';
 import Header from '../Header.jsx';
 
 export const TurnoApp = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
 
     const [tipoBuscado, setTipoBuscado] = useState('');
     const [turnos, setTurnos] = useState([]);

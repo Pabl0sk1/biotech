@@ -3,13 +3,11 @@ import {
     getUsuario, getUsuarioPaginado, saveUsuario, updateUsuario, deleteUsuario, getUsuarioPorNombre, getUsuarioPorEstado,
     getUsuarioPorNombreYEstado, getUsuarioPorIdRol, getUsuarioPorNombreYEstadoYIdRol, getUsuarioPorNombreYIdRol, getUsuarioPorIdRolYEstado
 } from '../services/usuario.service.js';
-import { getTipoUsuario } from '../services/tipousuario.service.js'
-import { Link } from 'react-router-dom';
+import { getTipoUsuario } from '../services/tipousuario.service.js';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
 import Header from '../Header.jsx';
 
 export const UsuarioApp = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
 
     const [nombreUsuarioBuscado, setNombreUsuarioBuscado] = useState('');
     const [estadoBuscado, setEstadoBuscado] = useState('');
@@ -215,11 +213,7 @@ export const UsuarioApp = ({ usuarioUsed }) => {
 
     const handleEliminarUsuario = (usuario) => {
 
-        // if () {
-        //     setUsuarioNoEliminar(usuario);
-        // } else {
         setUsuarioAEliminar(usuario);
-        //}
     };
 
     const guardarFn = async (usuarioAGuardar) => {

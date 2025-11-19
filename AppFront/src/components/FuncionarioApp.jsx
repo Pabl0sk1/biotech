@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { getFuncionarioPaginado, saveFuncionario, updateFuncionario, deleteFuncionario, getFuncionarioPorNrodoc, getFuncionarioPorNombre, getFuncionarioPorNrodocYNombre } from '../services/funcionario.service.js';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
 import { getCargo } from '../services/cargo.service.js';
-import { Link } from 'react-router-dom';
 import { NumericFormat } from 'react-number-format';
 import Header from '../Header.jsx';
 
 export const FuncionarioApp = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
 
     const [nombreBuscado, setNombreBuscado] = useState('');
     const [nrodocBuscado, setNrodocBuscado] = useState('');
