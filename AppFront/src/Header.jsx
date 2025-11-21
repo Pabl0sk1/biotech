@@ -4,7 +4,7 @@ export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSid
     const navigate = useNavigate();
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm position-fixed top-0 w-100 px-3 py-2 z-3 border-bottom border-dark">
+        <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm position-fixed top-0 w-100 px-3 py-1 z-3 border-bottom border-success border-4">
             {/* Sección izquierda: botón y título */}
             <div className="d-flex align-items-center">
                 {showSidebarButton && (
@@ -21,9 +21,13 @@ export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSid
 
             {/* Sección derecha: info usuario y logo */}
             <div className="d-flex align-items-center ms-auto">
-                <div className="d-flex align-items-center text-success me-3">
-                    <i className="bi bi-person fs-4 me-2"></i>
-                    <span>{usuarioUsed?.tipousuario?.tipousuario || "Invitado"}</span>
+                <div className="d-flex flex-column text-end me-3">
+                    <span className="fw-semibold text-success">
+                        <i className="bi bi-person-circle me-1"></i>
+                        {usuarioUsed.tipousuario.tipousuario}
+                    </span>
+
+                    <small className="text-muted">{usuarioUsed.nombreusuario}</small>
                 </div>
                 <img
                     className='logo-img-bar'
