@@ -4,7 +4,6 @@ export const HostLocation = () => {
     let init = "";
     let port = "";
     let hostname = window.location.hostname;
-    console.log(hostname);
 
     if (hostname == "localhost") {
         init = "http"
