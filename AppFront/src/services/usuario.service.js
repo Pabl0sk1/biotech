@@ -5,7 +5,7 @@ import { HostLocation } from '../utils/HostLocation';
 const dir = HostLocation();
 
 // Ruta base
-const API_BASE_URL = `http://${dir}/api/usuario`;
+const API_BASE_URL = `${dir}/usuario`;
 
 // CRUD Básico
 export const getUsuario = async () => {

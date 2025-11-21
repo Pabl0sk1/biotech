@@ -5,7 +5,7 @@ import { HostLocation } from '../utils/HostLocation';
 const dir = HostLocation();
 
 // Ruta base
-const API_BASE_URL = `http://${dir}/api/configuracion`;
+const API_BASE_URL = `${dir}/configuracion`;
 
 // Listado completo
 export const getConfig = async () => {

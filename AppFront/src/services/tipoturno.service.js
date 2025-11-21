@@ -5,7 +5,7 @@ import { HostLocation } from '../utils/HostLocation';
 const dir = HostLocation();
 
 // Ruta base
-const API_BASE_URL = `http://${dir}/api/tipoturno`;
+const API_BASE_URL = `${dir}/tipoturno`;
 
 export const getTipoTurno = async () => {
     const result = await axios.get(`${API_BASE_URL}/listar`);

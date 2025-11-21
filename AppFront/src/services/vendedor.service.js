@@ -5,7 +5,7 @@ import { HostLocation } from '../utils/HostLocation';
 const dir = HostLocation();
 
 // Ruta base
-const API_BASE_URL = `http://${dir}/api/vendedor`;
+const API_BASE_URL = `${dir}/vendedor`;
 
 export const getVendedor = async () => {
     const result = await axios.get(`${API_BASE_URL}/listar`);
