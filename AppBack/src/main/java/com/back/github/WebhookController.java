@@ -38,7 +38,7 @@ public class WebhookController {
 
         // Ejecutar script de deploy
         try {
-            ProcessBuilder pb = new ProcessBuilder("/home/bioadmin/biotech/deploy_biotech.sh");
+            ProcessBuilder pb = new ProcessBuilder("/home/bioadmin/deploy_biotech.sh");
             pb.inheritIO();
             Process p = pb.start();
             p.waitFor();
