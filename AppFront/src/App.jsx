@@ -18,6 +18,7 @@ import { Calculo } from './tasks/Calculo.jsx'
 import { CargoApp } from './components/CargoApp.jsx';
 import { TipoTurnoApp } from './components/TipoTurnoApp.jsx';
 import { TokenApp } from './components/TokenApp.jsx';
+import { VendedorApp } from './components/VendedorApp.jsx';
 
 function App() {
   const UrlBase = '/biotech';
@@ -102,6 +103,11 @@ function App() {
               <Route path={UrlLocal + "/reports/calcext"} element={<Calculo usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/regs/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
               <Route path={UrlLocal + "/regs/positions"} element={<CargoApp usuarioUsed={usuarioUsed} />} />
+            </>
+          )}
+          {usuarioUsed?.tipousuario?.id && [1, 9].includes(usuarioUsed.tipousuario.id) && (
+            <>
+              <Route path={UrlLocal + "/regs/sellers"} element={<VendedorApp usuarioUsed={usuarioUsed} />} />
             </>
           )}
           <Route path={UrlLocal + '/profile'} element={<Perfil usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />

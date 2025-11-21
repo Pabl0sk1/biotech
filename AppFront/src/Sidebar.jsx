@@ -245,6 +245,30 @@ const Sidebar = ({
                                 </>
                             )}
 
+                            {usuarioUsed?.tipousuario?.id && [1, 9].includes(usuarioUsed.tipousuario.id) && (
+                                <>
+                                    <Link
+                                        to="#"
+                                        onClick={() => agregarAcceso('Vendedores', 'Consultar', UrlLocal + '/regs/sellers')}
+                                        onMouseEnter={() => setHoveredItem('vendedores')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'vendedores'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-person-check" style={{ color: '#7ee963ff' }}></i>
+                                        Vendedores
+                                    </Link>
+                                </>
+                            )}
+
                             {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
                                 <>
                                     <Link

@@ -1,6 +1,11 @@
 import axios from 'axios'
+import { HostLocation } from '../utils/HostLocation';
 
-const API_BASE_URL = `http://${window.location.hostname}:8082/api/cargo`;
+// Obtener dirección del host
+const dir = await HostLocation();
+
+// Ruta base
+const API_BASE_URL = `http://${dir}/api/cargo`;
 
 export const getCargo = async () => {
     const result = await axios.get(`${API_BASE_URL}/listar`);

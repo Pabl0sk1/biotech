@@ -1,13 +1,10 @@
 package com.back.entity;
 
 import java.time.LocalDate;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
@@ -26,18 +23,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "funcionarios")
-public class Funcionario {
+@Table(name = "vendedores")
+public class Vendedor {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "funcionario_sec")
-	@SequenceGenerator(name = "funcionario_sec", sequenceName = "funcionarios_id_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "vendedor_sec")
+	@SequenceGenerator(name = "vendedor_sec", sequenceName = "vendedores_id_seq", allocationSize = 1)
 	private Integer id;
-	
-	@NotNull
-	@ManyToOne
-	@JoinColumn(name = "cargo_id")
-	private Cargo cargo;
 	
 	@Size(max = 100) 
 	private String nomape;
@@ -63,16 +55,4 @@ public class Funcionario {
 	@Temporal(TemporalType.DATE)
 	private LocalDate fecha_nacimiento;
 
-	@Column(name = "salario")
-	private Integer salario;
-	
-	@NotNull
-	@Column(name = "codigo")
-	private Integer codigo;
-
-	public Funcionario(Integer id) {
-		super();
-		this.id = id;
-	}
-	
 }

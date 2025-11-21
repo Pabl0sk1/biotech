@@ -1,6 +1,11 @@
 import axios from 'axios'
+import { HostLocation } from '../utils/HostLocation';
 
-const API_BASE_URL = `http://${window.location.hostname}:8082/api/token`;
+// Obtener dirección del host
+const dir = await HostLocation();
+
+// Ruta base
+const API_BASE_URL = `http://${dir}/api/token`;
 
 export const getToken = async () => {
     const result = await axios.get(`${API_BASE_URL}/listar`);
@@ -40,7 +45,7 @@ export const getTokenPaginado = async (page = 0, size = 10, sortBy = 'id', sortT
     return {
         tokens: result.list,
         size: result.size,
-        totalPages: result.totalPages,
+        totalPages: result.list.totalPages,
         currentPage: page
     };
 };

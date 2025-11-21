@@ -1,6 +1,11 @@
 import axios from 'axios';
+import { HostLocation } from '../utils/HostLocation';
 
-const API_BASE_URL = `http://${window.location.hostname}:8082/api/tipousuario`;
+// Obtener dirección del host
+const dir = await HostLocation();
+
+// Ruta base
+const API_BASE_URL = `http://${dir}/api/tipousuario`;
 
 export const getTipoUsuario = async () => {
     const result = await axios.get(`${API_BASE_URL}/listar`);
@@ -34,7 +39,8 @@ export const getTipoUsuarioPaginado = async (page = 0, size = 10, sortBy = 'id',
     const result = response.data;
     return {
         tipousuarios: result.list,
-        totalElements: result.size,
+        totalPages: result.list.totalPages,
+        size: result.size,
         currentPage: page,
     };
 };
@@ -46,7 +52,7 @@ export const getTipoUsuarioPorDesc = async (tipousuario, page = 0, size = 10, so
     const result = response.data;
     return {
         tipousuarios: result.list,
-        totalElements: result.size,
+        size: result.size,
         totalPages: result.totalPages,
         currentPage: page,
     };

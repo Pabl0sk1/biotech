@@ -1,35 +1,29 @@
 import { useState, useEffect } from 'react';
-import { getFuncionarioPaginado, saveFuncionario, updateFuncionario, deleteFuncionario, getFuncionarioPorNrodoc, getFuncionarioPorNombre, getFuncionarioPorNrodocYNombre } from '../services/funcionario.service.js';
+import { getVendedorPaginado, saveVendedor, updateVendedor, deleteVendedor, getVendedorPorNrodoc, getVendedorPorNombre, getVendedorPorNrodocYNombre } from '../services/vendedor.service.js';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
-import { getCargo } from '../services/cargo.service.js';
 import { NumericFormat } from 'react-number-format';
 import Header from '../Header.jsx';
 
-export const FuncionarioApp = ({ usuarioUsed }) => {
+export const VendedorApp = ({ usuarioUsed }) => {
 
     const [nombreBuscado, setNombreBuscado] = useState('');
     const [nrodocBuscado, setNrodocBuscado] = useState('');
-    const [funcionarios, setFuncionarios] = useState([]);
-    const [cargos, setCargos] = useState([]);
+    const [vendedores, setVendedores] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const [funcionarioAGuardar, setFuncionarioAGuardar] = useState(null);
-    const [funcionarioAEliminar, setFuncionarioAEliminar] = useState(null);
-    const [funcionarioNoEliminar, setFuncionarioNoEliminar] = useState(null);
-    const [funcionarioAVisualizar, setFuncionarioAVisualizar] = useState(null);
-    const [sugerencias, setSugerencias] = useState([]);
-    const [indiceSeleccionado, setIndiceSeleccionado] = useState(-1);
-    const [cargoMsj, setCargoMsj] = useState('');
-    const [cargoError, setCargoError] = useState(false);
+    const [vendedorAGuardar, setVendedorAGuardar] = useState(null);
+    const [vendedorAEliminar, setVendedorAEliminar] = useState(null);
+    const [vendedorNoEliminar, setVendedorNoEliminar] = useState(null);
+    const [vendedorAVisualizar, setVendedorAVisualizar] = useState(null);
 
     //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setFuncionarioAEliminar(null);
-                setFuncionarioNoEliminar(null);
-                setFuncionarioAVisualizar(null);
-                setFuncionarioAGuardar(null);
+                setVendedorAEliminar(null);
+                setVendedorNoEliminar(null);
+                setVendedorAVisualizar(null);
+                setVendedorAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -56,11 +50,11 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
     const obtenerFechaHora = async () => {
         const localDate = new Date();
 
-        const dia = String(localDate.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(localDate.getMonth()).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
+        const dia = String(localDate.getDate()).padStart(2, '0');
+        const mes = String(localDate.getMonth()).padStart(2, '0');
         const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(localDate.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
+        const hora = String(localDate.getHours() - 3).padStart(2, '0');
+        const minuto = String(localDate.getMinutes()).padStart(2, '0');
 
         return new Date(anio, mes, dia, hora, minuto);
     };
@@ -74,7 +68,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                 id: usuarioUsed.id
             },
             fechahora: fechahora,
-            programa: "Funcionarios",
+            programa: "Vendedores",
             operacion: op,
             codregistro: cod,
             ip: network.ip,
@@ -83,18 +77,13 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         await saveAuditoria(auditoria);
     }
 
-    const funcionarioSelected = {
+    const vendedorSelected = {
         id: null,
-        cargo: {
-            id: 0
-        },
         nomape: "",
         nombre: "",
         apellido: "",
         nrodoc: "",
         nrotelefono: "",
-        salario: 0,
-        codigo: 0,
         fecha_nacimiento: ""
     };
 
@@ -107,109 +96,103 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         return `${day}/${month}/${year}`;
     };
 
-    const recuperarFuncionarios = async (pageNumber = 0, nrodoc = '', nombre = '') => {
-        const response = await getFuncionarioPaginado(pageNumber);
+    const recuperarVendedores = async (pageNumber = 0, nrodoc = '', nombre = '') => {
+        const response = await getVendedorPaginado(pageNumber);
 
-        // Filtrar funcionarios
-        const funcionariosFiltrados = response.funcionarios.filter(funcionario => {
-            const nombreCoincide = nombre.trim() !== '' ? funcionario.nombre.toLowerCase().includes(nombre.toLowerCase()) : true;
-            const nrodocCoincide = nrodoc.trim() !== '' ? funcionario.nrodoc.toLowerCase().includes(nrodoc.toLowerCase()) : true;
+        // Filtrar vendedores
+        const vendedoresFiltrados = response.vendedores.filter(vendedor => {
+            const nombreCoincide = nombre.trim() !== '' ? vendedor.nombre.toLowerCase().includes(nombre.toLowerCase()) : true;
+            const nrodocCoincide = nrodoc.trim() !== '' ? vendedor.nrodoc.toLowerCase().includes(nrodoc.toLowerCase()) : true;
 
             return nombreCoincide && nrodocCoincide;
         });
 
         return {
-            funcionarios: funcionariosFiltrados,
+            vendedores: vendedoresFiltrados,
             totalPages: response.totalPages,
             currentPage: response.currentPage,
         };
     };
-
-    const recuperarCargos = async () => {
-        const response = await getCargo();
-        setCargos(response);
-    }
 
     const recuperarNetworkInfo = async () => {
         const response = await getNetworkInfo();
         return response;
     }
 
-    const recuperarFuncionariosConFiltro = async (page) => {
+    const recuperarVendedoresConFiltro = async (page) => {
         if (nombreBuscado.trim() === '' && nrodocBuscado.trim() === '') {
-            return await recuperarFuncionarios(page, nombreBuscado, nrodocBuscado);
+            return await recuperarVendedores(page, nombreBuscado, nrodocBuscado);
         } else {
             if (nombreBuscado.trim() !== '' && nrodocBuscado !== '') {
-                return await getFuncionarioPorNrodocYNombre(nrodocBuscado, nombreBuscado, page);
+                return await getVendedorPorNrodocYNombre(nrodocBuscado, nombreBuscado, page);
             } else if (nombreBuscado.trim() !== '') {
-                return await getFuncionarioPorNombre(nombreBuscado, page);
+                return await getVendedorPorNombre(nombreBuscado, page);
             } else if (nrodocBuscado.trim() !== '') {
-                return await getFuncionarioPorNrodoc(nrodocBuscado, page);
+                return await getVendedorPorNrodoc(nrodocBuscado, page);
             }
         }
     }
 
     useEffect(() => {
-        recuperarFuncionarios(page, nrodocBuscado, nombreBuscado);
-        recuperarCargos();
+        recuperarVendedores(page, nrodocBuscado, nombreBuscado);
     }, []);
 
-    const actualizarFuncionarios = async () => {
-        const resultado = await recuperarFuncionariosConFiltro(page);
-        setFuncionarios(resultado.funcionarios);
+    const actualizarVendedores = async () => {
+        const resultado = await recuperarVendedoresConFiltro(page);
+        setVendedores(resultado.vendedores);
         setTotalPages(resultado.totalPages);
         if (page >= resultado.totalPages) setPage(0);
     }
 
     useEffect(() => {
-        const buscarFuncionarios = async () => {
+        const buscarVendedores = async () => {
             try {
-                actualizarFuncionarios();
+                actualizarVendedores();
             } catch (error) {
-                console.error('Error buscando funcionarios:', error);
+                console.error('Error buscando vendedores:', error);
             }
         };
 
-        buscarFuncionarios();
+        buscarVendedores();
     }, [page, nrodocBuscado, nombreBuscado]);
 
-    const eliminarFuncionarioFn = async (id) => {
+    const eliminarVendedorFn = async (id) => {
         try {
-            await deleteFuncionario(id);
+            await deleteVendedor(id);
             agregarAcceso('Eliminar', id);
-            actualizarFuncionarios();
+            actualizarVendedores();
         } catch (error) {
-            console.error('Error buscando funcionarios:', error);
+            console.error('Error buscando vendedores:', error);
         }
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarFuncionarioFn(id);
-        setFuncionarioAEliminar(null);
+        eliminarVendedorFn(id);
+        setVendedorAEliminar(null);
     }
 
-    const handleEliminarFuncionario = (funcionario) => {
+    const handleEliminarVendedor = (vendedor) => {
 
-        setFuncionarioAEliminar(funcionario);
+        setVendedorAEliminar(vendedor);
     };
 
-    const guardarFn = async (funcionarioAGuardar) => {
+    const guardarFn = async (vendedorAGuardar) => {
 
-        const funcionarioActualizado = {
-            ...funcionarioAGuardar,
-            nomape: funcionarioAGuardar.nombre + ", " + funcionarioAGuardar.apellido,
+        const vendedorActualizado = {
+            ...vendedorAGuardar,
+            nomape: vendedorAGuardar.nombre + ", " + vendedorAGuardar.apellido,
         };
 
-        if (funcionarioActualizado.id) {
-            await updateFuncionario(funcionarioActualizado.id, funcionarioActualizado);
-            agregarAcceso('Modificar', funcionarioActualizado.id);
+        if (vendedorActualizado.id) {
+            await updateVendedor(vendedorActualizado.id, vendedorActualizado);
+            agregarAcceso('Modificar', vendedorActualizado.id);
         } else {
-            const nuevoFuncionario = await saveFuncionario(funcionarioActualizado);
-            agregarAcceso('Insertar', nuevoFuncionario.id);
+            const nuevoVendedor = await saveVendedor(vendedorActualizado);
+            agregarAcceso('Insertar', nuevoVendedor.id);
         }
 
-        setFuncionarioAGuardar(null);
-        actualizarFuncionarios();
+        setVendedorAGuardar(null);
+        actualizarVendedores();
     };
 
     // Controla el cambio de página
@@ -223,120 +206,27 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         event.preventDefault();
         const form = event.currentTarget;
 
-        let sw = 0;
-
-        // Verificar si está vacío
-        if (!funcionarioAGuardar.cargo.cargo || funcionarioAGuardar.cargo.cargo.trim() === '') {
-            setCargoMsj('El cargo es obligatorio.');
-            setCargoError(true);
-            sw = 1;
-        } else {
-            // Verificar si el cargo seleccionado es válido
-            const existe = verificarCargo(funcionarioAGuardar.cargo.cargo);
-            if (!existe) {
-                setCargoMsj('El cargo es inválido.');
-                setCargoError(true);
-                sw = 1;
-            }
-        }
-
-        if (sw === 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
         if (form.checkValidity()) {
-            guardarFn({ ...funcionarioAGuardar });
+            guardarFn({ ...vendedorAGuardar });
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
         }
     };
 
-    const manejarTeclado = (event) => {
-        if (event.key === 'ArrowDown') {
-            setIndiceSeleccionado((prev) => (prev < sugerencias.length - 1 ? prev + 1 : prev));
-        } else if (event.key === 'ArrowUp') {
-            setIndiceSeleccionado((prev) => (prev > 0 ? prev - 1 : prev));
-        } else if (event.key === 'Enter') {
-            event.preventDefault();
-            if (indiceSeleccionado >= 0) {
-                seleccionarTecla(indiceSeleccionado);
-            }
-        }
-    };
-
-    const seleccionarTecla = (index) => {
-        const cargoSeleccionado = sugerencias[index];
-        setFuncionarioAGuardar({
-            ...funcionarioAGuardar,
-            cargo: {
-                id: cargoSeleccionado.id,
-                cargo: cargoSeleccionado.tipoproducto
-            }
-        });
-        handleCargoChange({
-            target: {
-                name: 'cargo',
-                value: cargoSeleccionado.cargo
-            }
-        });
-        setSugerencias([]);
-        setIndiceSeleccionado(-1);
-    }
-
-    const verificarCargo = (desc) => {
-        return cargos.some(p => p.cargo === desc);
-    }
-
-    const handleCargoChange = (e) => {
-        const nuevoDesc = e.target.value;
-        const descEncontrada = cargos.find(p => p.cargo === nuevoDesc);
-
-        setFuncionarioAGuardar({
-            ...funcionarioAGuardar,
-            cargo: descEncontrada
-                ? { id: descEncontrada.id, cargo: descEncontrada.cargo }
-                : { id: null, cargo: nuevoDesc }
-        });
-
-        const existe = verificarCargo(nuevoDesc);
-
-        if (nuevoDesc.trim() === '') {
-            setCargoMsj('El cargo es obligatorio.');
-            setCargoError(true);
-        } else if (!existe) {
-            setCargoMsj('El cargo es inválido.');
-            setCargoError(true);
-        } else {
-            setCargoMsj('');
-            setCargoError(false);
-        }
-
-        const nuevasSugerencias = cargos
-            .filter(p => p.cargo.toLowerCase().includes(nuevoDesc.toLowerCase()))
-            .slice(0, 5);
-        setSugerencias(nuevoDesc.trim() === '' ? [] : nuevasSugerencias);
-    }
-
     const refrescar = () => {
         setNombreBuscado('');
         setNrodocBuscado('');
     };
 
-    const handleOpenForm = (funcionario) => {
-        setFuncionarioAGuardar(funcionario);
-        setSugerencias([]);
-        setIndiceSeleccionado(-1);
-        setCargoMsj('');
-        setCargoError(false);
+    const handleOpenForm = (vendedor) => {
+        setVendedorAGuardar(vendedor);
     }
 
     return (
         <>
 
-            {funcionarioAEliminar && (
+            {vendedorAEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -344,17 +234,17 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el funcionario?</p>
+                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el vendedor?</p>
                                 </div>
                                 <div className="mt-3">
                                     <button
-                                        onClick={() => confirmarEliminacion(funcionarioAEliminar.id)}
+                                        onClick={() => confirmarEliminacion(vendedorAEliminar.id)}
                                         className="btn btn-success text-black me-4 fw-bold"
                                     >
                                         <i className="bi bi-trash-fill me-2"></i>Eliminar
                                     </button>
                                     <button
-                                        onClick={() => setFuncionarioAEliminar(null)}
+                                        onClick={() => setVendedorAEliminar(null)}
                                         className="btn btn-danger text-black ms-4 fw-bold"
                                     >
                                         <i className="bi bi-x-lg me-2"></i>Cancelar
@@ -366,7 +256,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                 </>
             )}
 
-            {funcionarioNoEliminar && (
+            {vendedorNoEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -374,10 +264,10 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El funcionario está siendo referenciado en otra tabla</p>
+                                    <p className='fs-5'>El vendedor está siendo referenciado en otra tabla</p>
                                 </div>
                                 <button
-                                    onClick={() => setFuncionarioNoEliminar(null)}
+                                    onClick={() => setVendedorNoEliminar(null)}
                                     className="btn btn-danger mt-3 fw-bold text-black">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
@@ -387,7 +277,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                 </>
             )}
 
-            {funcionarioAVisualizar && (
+            {vendedorAVisualizar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -402,7 +292,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             id="nombre"
                                             name="nombre"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={funcionarioAVisualizar.nomape}
+                                            value={vendedorAVisualizar.nomape}
                                             readOnly
                                         />
                                         <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
@@ -411,26 +301,16 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             id="nrotelefono"
                                             name="nrotelefono"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={funcionarioAVisualizar.nrotelefono}
+                                            value={vendedorAVisualizar.nrotelefono}
                                             readOnly
                                         />
-                                        <label htmlFor="salario" className="form-label m-0 mb-2">Salario</label>
-                                        <NumericFormat
-                                            value={funcionarioAVisualizar.salario || 0}
-                                            displayType="text"
-                                            thousandSeparator="."
-                                            decimalSeparator=","
-                                            prefix={'Gs. '}
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            readOnly
-                                        />
-                                        <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
+                                        <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
                                         <input
                                             type="text"
-                                            id="cargo"
-                                            name="cargo"
+                                            id="nrodoc"
+                                            name="nrodoc"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={funcionarioAVisualizar.cargo.cargo}
+                                            value={vendedorAVisualizar.nrodoc}
                                             readOnly
                                         />
                                     </div>
@@ -442,25 +322,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             id="apellido"
                                             name="apellido"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={funcionarioAVisualizar.apellido}
-                                            readOnly
-                                        />
-                                        <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                        <input
-                                            type="text"
-                                            id="nrodoc"
-                                            name="nrodoc"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={funcionarioAVisualizar.nrodoc}
-                                            readOnly
-                                        />
-                                        <label htmlFor="codigo" className="form-label m-0 mb-2">Código</label>
-                                        <NumericFormat
-                                            value={funcionarioAVisualizar.codigo || 0}
-                                            displayType="text"
-                                            thousandSeparator="."
-                                            decimalSeparator=","
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={vendedorAVisualizar.apellido}
                                             readOnly
                                         />
                                         <label htmlFor="fecha_nacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
@@ -469,12 +331,12 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             id="fecha_nacimiento"
                                             name="fecha_nacimiento"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={funcionarioAVisualizar.fecha_nacimiento || ''}
+                                            value={vendedorAVisualizar.fecha_nacimiento || ''}
                                             readOnly
                                         />
                                     </div>
                                 </div>
-                                <button onClick={() => setFuncionarioAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
+                                <button onClick={() => setVendedorAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -483,7 +345,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                 </>
             )}
 
-            {funcionarioAGuardar && (
+            {vendedorAGuardar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -506,8 +368,8 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     name="nombre"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={funcionarioAGuardar.nombre}
-                                                    onChange={(event) => setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: event.target.value })}
+                                                    value={vendedorAGuardar.nombre}
+                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
                                                     maxLength={50}
@@ -524,80 +386,23 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     name="nrotelefono"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={funcionarioAGuardar.nrotelefono}
-                                                    onChange={(event) => setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: event.target.value })}
+                                                    value={vendedorAGuardar.nrotelefono}
+                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={15}
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="salario" className="form-label m-0 mb-2">Salario</label>
-                                                <NumericFormat
-                                                    type="text"
-                                                    id="salario"
-                                                    name="salario"
-                                                    className="form-control border-input w-100"
-                                                    displayType="input"
-                                                    thousandSeparator="."
-                                                    decimalSeparator=","
-                                                    prefix={'Gs. '}
-                                                    value={funcionarioAGuardar.salario === 0 ? 0 : funcionarioAGuardar.salario}
-                                                    placeholder='Escribe...'
-                                                    min={0}
-                                                    onChange={(event) => {
-                                                        const value = event.target.value.replace(/[^0-9]/g, ''); // Eliminar caracteres no numéricos
-                                                        setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: value === '' ? '' : parseFloat(value) || 0 })
-                                                    }}
-                                                    required
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El salario no debe estar vacío.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
+                                                <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
                                                 <input
                                                     type="text"
-                                                    id="cargo"
-                                                    name="cargo"
-                                                    className={`form-control border-input w-100 ${cargoError ? 'is-invalid' : ''}`}
-                                                    placeholder='Escribe...'
-                                                    value={funcionarioAGuardar.cargo.cargo || ''}
-                                                    onChange={handleCargoChange}
-                                                    onKeyDown={manejarTeclado}
-                                                    onBlur={() => setTimeout(() => setSugerencias([]), 200)}
-                                                    onFocus={() => {
-                                                        setIndiceSeleccionado(-1);
-                                                        if (cargos.length > 0 && funcionarioAGuardar.cargo?.cargo) {
-                                                            const nuevasSugerencias = cargos
-                                                                .filter(p => p.cargo.toLowerCase().includes(funcionarioAGuardar.cargo.cargo.toLowerCase()))
-                                                                .slice(0, 5);
-                                                            setSugerencias(nuevasSugerencias);
-                                                        }
-                                                    }}
-                                                    required
+                                                    id="nrodoc"
+                                                    name="nrodoc"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={vendedorAGuardar.nrodoc}
+                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={15}
                                                 />
-                                                {sugerencias.length > 0 && (
-                                                    <ul
-                                                        className="list-group position-absolute"
-                                                        style={{ zIndex: 1000 }}
-                                                        onMouseDown={(e) => e.preventDefault()} // Evitar que el blur cierre la lista durante el clic
-                                                    >
-                                                        {sugerencias.map((sugerencia, index) => (
-                                                            <li
-                                                                key={sugerencia.id}
-                                                                className={`list-group-item list-group-item-action ${indiceSeleccionado === index ? 'active' : ''}`}
-                                                                style={{ cursor: 'pointer' }}
-                                                                onClick={() => seleccionarTecla(index)}
-                                                                onMouseEnter={() => setIndiceSeleccionado(index)}
-                                                            >
-                                                                {sugerencia.cargo}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                )}
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>{cargoMsj}
-                                                </div>
                                             </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}
@@ -610,47 +415,13 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     name="apellido"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={funcionarioAGuardar.apellido}
-                                                    onChange={(event) => setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: event.target.value })}
+                                                    value={vendedorAGuardar.apellido}
+                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El apellido es obligatorio y no debe sobrepasar los 50 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrodoc"
-                                                    name="nrodoc"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={funcionarioAGuardar.nrodoc}
-                                                    onChange={(event) => setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="codigo" className="form-label m-0 mb-2">Código</label>
-                                                <NumericFormat
-                                                    type="text"
-                                                    id="codigo"
-                                                    name="codigo"
-                                                    className="form-control border-input w-100"
-                                                    displayType="input"
-                                                    value={funcionarioAGuardar.codigo === 0 ? 0 : funcionarioAGuardar.codigo}
-                                                    placeholder='Escribe...'
-                                                    min={0}
-                                                    onChange={(event) => {
-                                                        const value = event.target.value.replace(/[^0-9]/g, ''); // Eliminar caracteres no numéricos
-                                                        setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: value === '' ? '' : parseFloat(value) || 0 })
-                                                    }}
-                                                    required
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El código no debe estar vacío.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
@@ -660,8 +431,8 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     id="fecha_nacimiento"
                                                     name="fecha_nacimiento"
                                                     className="form-control border-input w-100"
-                                                    value={funcionarioAGuardar.fecha_nacimiento || ''}
-                                                    onChange={(event) => setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: event.target.value })}
+                                                    value={vendedorAGuardar.fecha_nacimiento || ''}
+                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
@@ -670,7 +441,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => setFuncionarioAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => setVendedorAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
@@ -682,12 +453,12 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'FUNCIONARIOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header usuarioUsed={usuarioUsed} title={'VENDEDORES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Funcionarios
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Vendedores
                         </p>
                         <div className="p-3">
                             <div className="d-flex align-items-center mb-3 fw-bold">
@@ -723,8 +494,8 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {funcionarios.length > 0 ? (
-                                        [...funcionarios.slice(0, 10), ...Array(Math.max(0, 10 - funcionarios.length)).fill(null)].map((v, index) => {
+                                    {vendedores.length > 0 ? (
+                                        [...vendedores.slice(0, 10), ...Array(Math.max(0, 10 - vendedores.length)).fill(null)].map((v, index) => {
                                             const puedeEditar = v && v.id;
                                             return (
                                                 <tr
@@ -732,9 +503,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) {
-                                                            handleOpenForm(v);
-                                                        }
+                                                        if (puedeEditar) handleOpenForm(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
@@ -748,7 +517,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        handleEliminarFuncionario(v);
+                                                                        handleEliminarVendedor(v);
                                                                     }}
                                                                     className="btn border-0 me-2 p-0"
                                                                 >
@@ -758,7 +527,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         agregarAcceso('Visualizar', v.id);
-                                                                        setFuncionarioAVisualizar(v);
+                                                                        setVendedorAVisualizar(v);
                                                                     }}
                                                                     className="btn border-0 ms-2 p-0"
                                                                 >
@@ -781,7 +550,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                     ) : (
                                         <tr className="text-center align-middle">
                                             <td colSpan="5" className="text-center" style={{ height: '325px' }}>
-                                                <div className='fw-bolder fs-1'>No hay funcionarios disponibles</div>
+                                                <div className='fw-bolder fs-1'>No hay vendedores disponibles</div>
                                             </td>
                                         </tr>
                                     )}
@@ -789,7 +558,7 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => handleOpenForm(funcionarioSelected)} className="btn btn-success text-black fw-bold me-3">
+                            <button onClick={() => handleOpenForm(vendedorSelected)} className="btn btn-success text-black fw-bold me-3">
                                 <i className="bi bi-plus-lg me-2"></i>Registrar
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold ms-3">
@@ -803,8 +572,8 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                     <li className="page-item disabled">
                                         <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
                                     </li>
-                                    <li className={`page-item ${(page === totalPages - 1 || funcionarios.length === 0) ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${(page === totalPages - 1 || funcionarios.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
+                                    <li className={`page-item ${(page === totalPages - 1 || vendedores.length === 0) ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${(page === totalPages - 1 || vendedores.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
                                     </li>
                                 </ul>
                             </nav>

@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { getFuncionario } from '../services/funcionario.service';
 import { generarExcel } from './ArchivoExcel';

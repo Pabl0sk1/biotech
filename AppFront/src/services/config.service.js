@@ -1,6 +1,11 @@
 import axios from 'axios';
+import { HostLocation } from '../utils/HostLocation';
 
-const API_BASE_URL = `http://${window.location.hostname}:8082/api/configuracion`;
+// Obtener dirección del host
+const dir = await HostLocation();
+
+// Ruta base
+const API_BASE_URL = `http://${dir}/api/configuracion`;
 
 // Listado completo
 export const getConfig = async () => {
