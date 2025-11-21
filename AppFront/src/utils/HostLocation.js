@@ -3,11 +3,14 @@ export const HostLocation = () => {
 
     let init = "";
     let port = "";
-    if (window.location.hostname == "localhost") {
+    let hostname = window.location.hostname;
+    console.log(hostname);
+
+    if (hostname == "localhost") {
         init = "http"
         port = ":8082"
     } else init = "https";
 
-    return `${init}://${window.location.hostname}${port}/api`;
+    return `${init}://${hostname}${port}/api`;
 
 }
