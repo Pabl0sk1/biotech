@@ -163,7 +163,7 @@ export const Login = ({ setUsuarioUsed }) => {
                                 className="btn btn-success fw-bold px-4 text-black"
                                 disabled={loading}
                             >
-                                <i className="bi bi-box-arrow-right me-2"></i>{loading ? 'Cargando' : 'Iniciar Sesión'}
+                                <i className="bi bi-box-arrow-right me-2"></i>{loading ? 'Cargando' : 'Ingresar'}
                             </button>
                         </div>
                     </form>
