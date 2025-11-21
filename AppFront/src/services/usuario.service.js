@@ -2,7 +2,7 @@ import axios from 'axios';
 import { HostLocation } from '../utils/HostLocation';
 
 // Obtener dirección del host
-const dir = await HostLocation();
+const dir = HostLocation();
 
 // Ruta base
 const API_BASE_URL = `http://${dir}/api/usuario`;

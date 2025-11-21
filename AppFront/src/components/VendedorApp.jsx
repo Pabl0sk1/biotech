@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getVendedorPaginado, saveVendedor, updateVendedor, deleteVendedor, getVendedorPorNrodoc, getVendedorPorNombre, getVendedorPorNrodocYNombre } from '../services/vendedor.service.js';
 import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
-import { NumericFormat } from 'react-number-format';
 import Header from '../Header.jsx';
 
 export const VendedorApp = ({ usuarioUsed }) => {
