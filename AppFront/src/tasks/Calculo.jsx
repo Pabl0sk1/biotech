@@ -5,7 +5,6 @@ import { getTurno } from '../services/turno.service';
 import Header from '../Header';
 
 export const Calculo = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
 
     const initial = {
         fechadesde: "",
@@ -22,6 +21,7 @@ export const Calculo = ({ usuarioUsed }) => {
     const [turnos, setTurnos] = useState([]);
     const [funcionarios, setFuncionarios] = useState([]);
     const sigLinea = useRef({});
+    const [selectedFuncionarios, setSelectedFuncionarios] = useState([]);
 
     const obtenerFechasDelMes = () => {
         const ahora = new Date();
@@ -741,6 +741,12 @@ export const Calculo = ({ usuarioUsed }) => {
         event.preventDefault();
         const form = event.currentTarget;
 
+        const funcionariosFiltrados = data.listafuncionarios.filter(f =>
+            selectedFuncionarios.includes(f.id)
+        );
+
+        const dataFiltrada = { ...data, listafuncionarios: funcionariosFiltrados };
+
         let sw = 0;
         if (!data.fechadesde || !data.fechahasta || data.fechadesde > data.fechahasta) sw = 1;
 
@@ -751,10 +757,17 @@ export const Calculo = ({ usuarioUsed }) => {
         }
 
         if (form.checkValidity()) {
-            generarExcel(data);
+            generarExcel(dataFiltrada);
             form.classList.remove('was-validated');
         } else form.classList.add('was-validated');
     }
+
+    const handleSelectFuncionario = (id) => {
+        setSelectedFuncionarios(prev => {
+            if (prev.includes(id)) return prev.filter(f => f !== id);
+            return [...prev, id];
+        });
+    };
 
     return (
         <>
@@ -870,277 +883,339 @@ export const Calculo = ({ usuarioUsed }) => {
                                     )}
                                 </div>
 
-                                {data.listafuncionarios && data.listafuncionarios.sort((a, b) => a.id - b.id).map((fc) => (
-                                    <div key={fc.id} className='w-100 border border-1 border-black'>
-                                        <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-success' : 'btn-warning'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
-                                            <p className={`float-start text-start m-0 fw-bold`}>{fc.nombre} {fc.apellido}</p>
-                                            <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
+                                {/* Sección de selección de funcionarios */}
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
+                                        <i className="bi bi-people me-2"></i>Seleccionar Funcionarios
+                                    </label>
+                                    <div className="dropdown mb-3">
+                                        <button
+                                            className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
+                                        >
+                                            {selectedFuncionarios.length > 0
+                                                ? `${selectedFuncionarios.length} Seleccionados`
+                                                : "Lista de Funcionarios"}
                                         </button>
-                                        <table className="collapse table table-striped table-bordered table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
-                                            <thead className='table-dark border-black'>
-                                                <tr className='text-center align-middle'>
-                                                    <th rowSpan="2">Día</th>
-                                                    <th rowSpan="2">Fecha</th>
-                                                    <th colSpan="4">Horarios</th>
-                                                    <th colSpan="8">Horas Extras</th>
-                                                    <th colSpan="2">Estado</th>
-                                                    <th rowSpan="2" hidden={![1].includes(usuarioUsed.tipousuario.id)}>Tr.</th>
-                                                </tr>
-                                                <tr className='text-center align-middle'>
-                                                    {/* Subheaders para Horarios */}
-                                                    <th>Ent.</th>
-                                                    <th>Sal.</th>
-                                                    <th>Tot.</th>
-                                                    <th>Des.</th>
-                                                    {/* Subheaders para Horas Extras */}
-                                                    <th>T.</th>
-                                                    <th>1</th>
-                                                    <th>2</th>
-                                                    <th>3</th>
-                                                    <th>4</th>
-                                                    <th>5</th>
-                                                    <th>6</th>
-                                                    <th>7</th>
-                                                    {/* Subheaders para Estado */}
-                                                    <th>Frd.</th>
-                                                    <th>S.Ex.</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {fc.detalles && fc.detalles.map((detalle, fechaIndex) => (
-                                                    <tr key={`${fc.id}-${fechaIndex}`} className={`text-center align-middle fw-normal`}>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '80px', fontSize: '0.85rem' }}>
-                                                            {detalle.dia}
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '90px', fontSize: '0.85rem' }}>
-                                                            {formatearFecha(detalle.fecha)}
-                                                        </td>
+                                        <ul className="dropdown-menu p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                            {/* Botón de seleccionar todo */}
+                                            <li className="pb-2 border-bottom mb-2">
+                                                <button
+                                                    className="btn btn-success w-100 py-1"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        if (selectedFuncionarios.length === funcionarios.length) {
+                                                            // desmarcar todo
+                                                            setSelectedFuncionarios([]);
+                                                        } else {
+                                                            // seleccionar todos
+                                                            setSelectedFuncionarios(funcionarios.map(f => f.id));
+                                                        }
+                                                    }}
+                                                >
+                                                    {selectedFuncionarios.length === funcionarios.length
+                                                        ? "Desmarcar todos"
+                                                        : "Seleccionar todos"}
+                                                </button>
+                                            </li>
 
-                                                        {/* Sección de Horarios */}
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                            <input
-                                                                type="time"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.horaent || '00:00'}
-                                                                onChange={(e) => {
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
-                                                                    const trn = determinarTurno(e.target.value, detalle.horasal);
-                                                                    const htot = restarHoras(e.target.value, detalle.horasal);
-                                                                    let des = '00:00';
-                                                                    if (htot == '00:00') {
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
-                                                                        limpiarHoras(fc.id, fechaIndex);
-                                                                    } else {
-                                                                        des = asignarDescanso(trn, detalle.dia);
-                                                                        const tot = Number(calcularHorasTrabajadasDecimal(e.target.value, detalle.horasal, des).toFixed(2));
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
-                                                                        determinarHoras(trn, fc.id, fechaIndex, tot);
-                                                                    }
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
-                                                                }}
-                                                                ref={el => {
-                                                                    if (!sigLinea.current[fc.id]) sigLinea.current[fc.id] = [];
-                                                                    sigLinea.current[fc.id][fechaIndex] = el;
-                                                                }}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                            <input
-                                                                type="time"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.horasal || '00:00'}
-                                                                onChange={(e) => {
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
-                                                                    const trn = determinarTurno(detalle.horaent, e.target.value);
-                                                                    const htot = restarHoras(detalle.horaent, e.target.value);
-                                                                    let des = '00:00';
-                                                                    if (htot == '00:00') {
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
-                                                                        limpiarHoras(fc.id, fechaIndex);
-                                                                    } else {
-                                                                        des = asignarDescanso(trn, detalle.dia);
-                                                                        const tot = Number(calcularHorasTrabajadasDecimal(detalle.horaent, e.target.value, des).toFixed(2));
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
-                                                                        determinarHoras(trn, fc.id, fechaIndex, tot);
-                                                                    }
-                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
-                                                                }}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                            <input
-                                                                type="time"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.htotal || '00:00'}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                            <input
-                                                                type="time"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.horades || '00:00'}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-
-                                                        {/* Sección de Horas Extras */}
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.total || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.hn || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hn', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.hnn || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnn', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.hnmd || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmd', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.hnmn || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmn', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.hen || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hen', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.hent || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hent', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control border-input w-100"
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.hextras || 0}
-                                                                onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', e.target.value)}
-                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                            />
-                                                        </td>
-
-                                                        {/* Sección de Estado */}
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
-                                                            <div className="d-flex justify-content-center">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className='form-check-input border-black'
-                                                                    style={{ transform: 'scale(1.2)' }}
-                                                                    checked={detalle.feriado}
-                                                                    onChange={(e) => {
-                                                                        const checked = e.target.checked;
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
-                                                                        if (checked) {
-                                                                            limpiarHoras(fc.id, fechaIndex);
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', detalle.total);
-                                                                        } else determinarHoras(detalle.turno, fc.id, fechaIndex, detalle.total);
-                                                                    }}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
-                                                            <div className="d-flex justify-content-center">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className='form-check-input border-black'
-                                                                    style={{ transform: 'scale(1.2)' }}
-                                                                    checked={detalle.extra}
-                                                                    onChange={(e) => {
-                                                                        const checked = e.target.checked;
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', checked);
-                                                                        fijarHoraEntrada(fc.id, fechaIndex, detalle.turno, detalle.horasal, detalle.dia);
-                                                                    }}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={detalle.extra}
-                                                                />
-                                                            </div>
-                                                        </td>
-
-                                                        <td className={`${asignarDiaFondo(detalle.fecha)}`}
-                                                            hidden={![1].includes(usuarioUsed.tipousuario.id)}
-                                                            style={{ width: '60px' }}>
-                                                            <input
-                                                                type="text"
-                                                                className='form-control border-black text-center'
-                                                                style={{ fontSize: '0.8rem' }}
-                                                                value={detalle.turno}
-                                                                readOnly
-                                                            />
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                            {/* Lista de funcionarios */}
+                                            {funcionarios.map(f => (
+                                                <li key={f.id}>
+                                                    <div className="form-check">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="checkbox"
+                                                            value={f.id}
+                                                            id={`func-${f.id}`}
+                                                            checked={selectedFuncionarios.includes(f.id)}
+                                                            onChange={() => handleSelectFuncionario(f.id)}
+                                                        />
+                                                        <label className="form-check-label" htmlFor={`func-${f.id}`}>
+                                                            {f.nomape}
+                                                        </label>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                ))}
+                                </div>
+
+                                {selectedFuncionarios.length > 0 && data.listafuncionarios
+                                    .filter(fc => selectedFuncionarios.includes(fc.id))
+                                    .sort((a, b) => a.id - b.id)
+                                    .map((fc) => (
+                                        <div key={fc.id} className='w-100 border border-1 border-black'>
+                                            <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-success' : 'btn-warning'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
+                                                <p className={`float-start text-start m-0 fw-bold`}>{fc.nombre} {fc.apellido}</p>
+                                                <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
+                                            </button>
+                                            <table className="collapse table table-striped table-bordered table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
+                                                <thead className='table-dark border-black'>
+                                                    <tr className='text-center align-middle'>
+                                                        <th rowSpan="2">Día</th>
+                                                        <th rowSpan="2">Fecha</th>
+                                                        <th colSpan="4">Horarios</th>
+                                                        <th colSpan="8">Horas Extras</th>
+                                                        <th colSpan="2">Estado</th>
+                                                        <th rowSpan="2" hidden={![1].includes(usuarioUsed.tipousuario.id)}>Tr.</th>
+                                                    </tr>
+                                                    <tr className='text-center align-middle'>
+                                                        {/* Subheaders para Horarios */}
+                                                        <th>Ent.</th>
+                                                        <th>Sal.</th>
+                                                        <th>Tot.</th>
+                                                        <th>Des.</th>
+                                                        {/* Subheaders para Horas Extras */}
+                                                        <th>T.</th>
+                                                        <th>1</th>
+                                                        <th>2</th>
+                                                        <th>3</th>
+                                                        <th>4</th>
+                                                        <th>5</th>
+                                                        <th>6</th>
+                                                        <th>7</th>
+                                                        {/* Subheaders para Estado */}
+                                                        <th>Frd.</th>
+                                                        <th>S.Ex.</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {fc.detalles && fc.detalles.map((detalle, fechaIndex) => (
+                                                        <tr key={`${fc.id}-${fechaIndex}`} className={`text-center align-middle fw-normal`}>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '80px', fontSize: '0.85rem' }}>
+                                                                {detalle.dia}
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '90px', fontSize: '0.85rem' }}>
+                                                                {formatearFecha(detalle.fecha)}
+                                                            </td>
+
+                                                            {/* Sección de Horarios */}
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
+                                                                <input
+                                                                    type="time"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.horaent || '00:00'}
+                                                                    onChange={(e) => {
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
+                                                                        const trn = determinarTurno(e.target.value, detalle.horasal);
+                                                                        const htot = restarHoras(e.target.value, detalle.horasal);
+                                                                        let des = '00:00';
+                                                                        if (htot == '00:00') {
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
+                                                                            limpiarHoras(fc.id, fechaIndex);
+                                                                        } else {
+                                                                            des = asignarDescanso(trn, detalle.dia);
+                                                                            const tot = Number(calcularHorasTrabajadasDecimal(e.target.value, detalle.horasal, des).toFixed(2));
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                            determinarHoras(trn, fc.id, fechaIndex, tot);
+                                                                        }
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
+                                                                    }}
+                                                                    ref={el => {
+                                                                        if (!sigLinea.current[fc.id]) sigLinea.current[fc.id] = [];
+                                                                        sigLinea.current[fc.id][fechaIndex] = el;
+                                                                    }}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
+                                                                <input
+                                                                    type="time"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.horasal || '00:00'}
+                                                                    onChange={(e) => {
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
+                                                                        const trn = determinarTurno(detalle.horaent, e.target.value);
+                                                                        const htot = restarHoras(detalle.horaent, e.target.value);
+                                                                        let des = '00:00';
+                                                                        if (htot == '00:00') {
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
+                                                                            limpiarHoras(fc.id, fechaIndex);
+                                                                        } else {
+                                                                            des = asignarDescanso(trn, detalle.dia);
+                                                                            const tot = Number(calcularHorasTrabajadasDecimal(detalle.horaent, e.target.value, des).toFixed(2));
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                            determinarHoras(trn, fc.id, fechaIndex, tot);
+                                                                        }
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
+                                                                    }}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
+                                                                <input
+                                                                    type="time"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.htotal || '00:00'}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
+                                                                <input
+                                                                    type="time"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.horades || '00:00'}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+
+                                                            {/* Sección de Horas Extras */}
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.total || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.hn || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hn', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.hnn || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnn', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.hnmd || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmd', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.hnmn || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmn', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.hen || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hen', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.hent || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hent', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    className="form-control border-input w-100"
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.hextras || 0}
+                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', e.target.value)}
+                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                />
+                                                            </td>
+
+                                                            {/* Sección de Estado */}
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
+                                                                <div className="d-flex justify-content-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className='form-check-input border-black'
+                                                                        style={{ transform: 'scale(1.2)' }}
+                                                                        checked={detalle.feriado}
+                                                                        onChange={(e) => {
+                                                                            const checked = e.target.checked;
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
+                                                                            if (checked) {
+                                                                                limpiarHoras(fc.id, fechaIndex);
+                                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', detalle.total);
+                                                                            } else determinarHoras(detalle.turno, fc.id, fechaIndex, detalle.total);
+                                                                        }}
+                                                                        onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    />
+                                                                </div>
+                                                            </td>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
+                                                                <div className="d-flex justify-content-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className='form-check-input border-black'
+                                                                        style={{ transform: 'scale(1.2)' }}
+                                                                        checked={detalle.extra}
+                                                                        onChange={(e) => {
+                                                                            const checked = e.target.checked;
+                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', checked);
+                                                                            fijarHoraEntrada(fc.id, fechaIndex, detalle.turno, detalle.horasal, detalle.dia);
+                                                                        }}
+                                                                        onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                        disabled={detalle.extra}
+                                                                    />
+                                                                </div>
+                                                            </td>
+
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`}
+                                                                hidden={![1].includes(usuarioUsed.tipousuario.id)}
+                                                                style={{ width: '60px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    className='form-control border-black text-center'
+                                                                    style={{ fontSize: '0.8rem' }}
+                                                                    value={detalle.turno}
+                                                                    readOnly
+                                                                />
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ))}
                             </div>
                             <div style={{
                                 background: '#f9fafb',

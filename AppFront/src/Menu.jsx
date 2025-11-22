@@ -18,11 +18,11 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
     const obtenerFechaHora = async () => {
         const localDate = new Date();
 
-        const dia = String(localDate.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(localDate.getMonth()).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
+        const dia = String(localDate.getDate()).padStart(2, '0');
+        const mes = String(localDate.getMonth()).padStart(2, '0');
         const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(localDate.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
+        const hora = String(localDate.getHours() - 3).padStart(2, '0');
+        const minuto = String(localDate.getMinutes()).padStart(2, '0');
 
         return new Date(anio, mes, dia, hora, minuto);
     };
