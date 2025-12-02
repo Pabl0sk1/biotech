@@ -10,7 +10,7 @@ export const Error = () => {
                     <p>Ruta no encontrada</p>
                     <i className="bi bi-exclamation-triangle-fill text-danger" style={{ fontSize: '5rem' }}></i>
                 </div>
-                <Link className='btn btn-danger fw-bold px-4 text-black' to={"/biotech/home"}>
+                <Link className='btn btn-danger fw-bold px-4 text-black' to={-1}>
                     <i className="bi bi-escape me-2"></i>Volver
                 </Link>
             </div>

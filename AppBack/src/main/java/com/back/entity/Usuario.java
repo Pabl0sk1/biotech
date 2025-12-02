@@ -1,5 +1,6 @@
 package com.back.entity;
 
+import java.time.LocalDate;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,6 +9,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -34,6 +37,10 @@ public class Usuario {
 	@ManyToOne
 	@JoinColumn(name = "tipousuario_id")
 	private TipoUsuario tipousuario;
+	
+	@ManyToOne
+	@JoinColumn(name = "sucursal_id")
+	private Sucursal sucursal;
 
 	@NotNull
 	@NotEmpty
@@ -46,12 +53,18 @@ public class Usuario {
 	@NotBlank
 	@Size(max = 255)
 	private String contrasena;
+	
+	@Size(max = 100)
+	private String nomape;
 
 	@NotNull
 	@NotEmpty
 	@NotBlank
 	@Size(max = 50)
 	private String nombre;
+	
+	@Size(max = 50)
+	private String apellido;
 
 	@Size(max = 15)
 	private String nrodoc;
@@ -69,7 +82,15 @@ public class Usuario {
 	private String direccion;
 
 	@NotNull
-	private Character estado;
+	@NotEmpty
+	@NotBlank
+	@Size(max = 15)
+	private String estado;
+	
+	private Boolean activo;
+	
+	@Temporal(TemporalType.DATE)
+	private LocalDate fechanacimiento;
 	
 	public Usuario(Integer id) {
 		super();

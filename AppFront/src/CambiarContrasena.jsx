@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUsuario, cambiarContrasena } from "./services/usuario.service";
+import { getUser, changePassword } from "./services/usuario.service";
 import Header from "./Header";
 
-export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
-    const UrlBase = '/biotech';
+export const CambiarContrasena = ({ userLog, setUserLog }) => {
 
     const [showPasswordActual, setShowPasswordActual] = useState(false);
     const [showPasswordNueva, setShowPasswordNueva] = useState(false);
@@ -53,24 +52,21 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
 
     const confirmarEscape = () => {
         setCerrarPass(false);
-        navigate('/biotech/home');
+        navigate(-1);
     };
 
-    const actualizarUsuarioUsed = async () => {
-        try {
-            const response = await getUsuario();
-            const usuarioActualizado = response.find(u => u.id === usuarioUsed.id);
-            if (usuarioActualizado) {
-                setUsuarioUsed(usuarioActualizado);
-                const sessionData = JSON.parse(localStorage.getItem('session') || '{}');
-                if (sessionData.user) {
-                    sessionData.user = usuarioActualizado;
-                    localStorage.setItem('session', JSON.stringify(sessionData));
-                }
-                sessionStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+    const actualizaruserLog = async () => {
+        const response = await getUser();
+        const usuarioActualizado = response.items.find(u => u.id === userLog.id);
+
+        if (usuarioActualizado) {
+            setUserLog(usuarioActualizado);
+            const sessionData = JSON.parse(localStorage.getItem('session') || '{}');
+            if (sessionData.user) {
+                sessionData.user = usuarioActualizado;
+                localStorage.setItem('session', JSON.stringify(sessionData));
             }
-        } catch (error) {
-            console.error("Error al actualizar datos del usuario:", error);
+            sessionStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
         }
     };
 
@@ -120,13 +116,13 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
             try {
                 setLoading(true);
 
-                const response = await cambiarContrasena(usuarioUsed.id, {
+                const response = await changePassword(userLog.id, {
                     contrasenaActual: formData.contrasenaActual,
                     contrasenaNueva: formData.contrasenaNueva
                 });
 
                 if (response.ok) {
-                    await actualizarUsuarioUsed();
+                    await actualizaruserLog();
                     setCerrarPass(true);
                     form.reset();
                     setFormData({
@@ -173,7 +169,7 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'CONTRASEÑA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'CONTRASEÑA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
@@ -314,12 +310,12 @@ export const CambiarContrasena = ({ usuarioUsed, setUsuarioUsed }) => {
                                 padding: '24px 32px',
                                 borderTop: '1px solid #e5e7eb',
                                 display: 'flex',
-                                justifyContent: 'flex-end',
+                                justifyContent: 'center',
                                 gap: '12px'
                             }}>
                                 <Link
                                     className="modern-button btn-secondary"
-                                    to={UrlBase + '/home'}
+                                    to={-1}
                                 >
                                     <i className="bi bi-x-lg"></i>
                                     Cancelar

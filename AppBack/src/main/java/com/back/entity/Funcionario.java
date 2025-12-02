@@ -39,6 +39,10 @@ public class Funcionario {
 	@JoinColumn(name = "cargo_id")
 	private Cargo cargo;
 	
+	@ManyToOne
+	@JoinColumn(name = "sucursal_id")
+	private Sucursal sucursal;
+	
 	@Size(max = 100) 
 	private String nomape;
 	
@@ -48,9 +52,6 @@ public class Funcionario {
 	@Size(max = 50)
 	private String nombre;
 	
-	@NotNull
-	@NotEmpty
-	@NotBlank
 	@Size(max = 50)
 	private String apellido;
 	
@@ -60,8 +61,11 @@ public class Funcionario {
 	@Size(max = 15)
 	private String nrotelefono;
 	
+	@Size(max = 30)
+	private String correo;
+	
 	@Temporal(TemporalType.DATE)
-	private LocalDate fecha_nacimiento;
+	private LocalDate fechanacimiento;
 
 	@Column(name = "salario")
 	private Integer salario;

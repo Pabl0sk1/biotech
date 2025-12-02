@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react';
-import {
-    getUsuario, getUsuarioPaginado, saveUsuario, updateUsuario, deleteUsuario, getUsuarioPorNombre, getUsuarioPorEstado,
-    getUsuarioPorNombreYEstado, getUsuarioPorIdRol, getUsuarioPorNombreYEstadoYIdRol, getUsuarioPorNombreYIdRol, getUsuarioPorIdRolYEstado
-} from '../services/usuario.service.js';
-import { getTipoUsuario } from '../services/tipousuario.service.js';
-import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
+import { getUser, saveUser, updateUser, deleteUser } from '../services/usuario.service.js';
+import { getBranch } from '../services/sucursal.service.js';
+import { getRole } from '../services/tipousuario.service.js';
 import Header from '../Header.jsx';
+import { AddAccess } from "../utils/AddAccess.js";
+import { FiltroModal } from '../FiltroModal.jsx';
 
-export const UsuarioApp = ({ usuarioUsed }) => {
+export const UsuarioApp = ({ userLog }) => {
 
-    const [nombreUsuarioBuscado, setNombreUsuarioBuscado] = useState('');
-    const [estadoBuscado, setEstadoBuscado] = useState('');
-    const [rolBuscado, setRolBuscado] = useState('');
     const [nombreUsuarioMsj, setNombreUsuarioMsj] = useState('');
     const [nombreUsuarioError, setNombreUsuarioError] = useState(false);
     const [newPassMsj, setNewPassMsj] = useState('');
@@ -21,8 +17,8 @@ export const UsuarioApp = ({ usuarioUsed }) => {
     const [repeatPassword, setRepeatPassword] = useState('');
     const [usuariosCompleto, setUsuariosCompleto] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
-    const [tipoUsuarios, setTipoUsuarios] = useState([]);
-    const [page, setPage] = useState(0);
+    const [roles, setRoles] = useState([]);
+    const [sucursales, setSucursales] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [usuarioAGuardar, setUsuarioAGuardar] = useState(null);
     const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
@@ -30,8 +26,15 @@ export const UsuarioApp = ({ usuarioUsed }) => {
     const [usuarioAVisualizar, setUsuarioAVisualizar] = useState(null);
     const [showPasswordNueva, setShowPasswordNueva] = useState(false);
     const [showPasswordRepetir, setShowPasswordRepetir] = useState(false);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -47,8 +50,6 @@ export const UsuarioApp = ({ usuarioUsed }) => {
         };
     }, []);
 
-
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {
@@ -62,148 +63,64 @@ export const UsuarioApp = ({ usuarioUsed }) => {
         });
     }, []);
 
-    const obtenerFechaHora = async () => {
-        const localDate = new Date();
-
-        const dia = String(localDate.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(localDate.getMonth()).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
-        const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(localDate.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
-
-        return new Date(anio, mes, dia, hora, minuto);
-    };
-
-    const agregarAcceso = async (op, cod) => {
-        const network = await recuperarNetworkInfo();
-        const fechahora = await obtenerFechaHora();
-        const auditoria = {
-            id: null,
-            usuario: {
-                id: usuarioUsed.id
-            },
-            fechahora: fechahora,
-            programa: "Usuarios",
-            operacion: op,
-            codregistro: cod,
-            ip: network.ip,
-            equipo: network.equipo
-        }
-        await saveAuditoria(auditoria);
-    }
-
-    const usuarioSelected = {
+    const selected = {
         id: null,
         tipousuario: {
             id: 0
         },
+        sucursal: {
+            id: 0
+        },
         nombreusuario: "",
         contrasena: "",
+        nomape: "",
         nombre: "",
+        apellido: "",
         nrodoc: "",
         nrotelefono: "",
         correo: "",
         direccion: "",
-        estado: "A"
+        estado: "Activo",
+        activo: true,
+        fechanacimiento: ""
     };
 
-    const recuperarUsuarios = async (pageNumber = 0, rol = '', nombre = '', estado = '') => {
-        const response = await getUsuarioPaginado(pageNumber);
-
-        const usuariosFiltrados = response.usuarios.filter(usuario => {
-            const rolCoincide = rol ? usuario.tipousuario.id === parseInt(rol) : true;
-            const nombreCoincide = nombre.trim() !== '' ? usuario.nombreusuario.toLowerCase().includes(nombre.toLowerCase()) : true;
-            const estadoCoincide = estado !== '' ? usuario.estado === estado : true;
-
-            return rolCoincide && nombreCoincide && estadoCoincide;
-        });
-
-        return {
-            usuarios: usuariosFiltrados,
-            totalPages: response.totalPages,
-            currentPage: response.currentPage,
-        };
+    const recuperarUsuarios = () => {
+        setQuery(q => ({ ...q }));
     };
 
     const recuperarUsuariosCompletos = async () => {
-        const response = await getUsuario();
-        setUsuariosCompleto(response);
+        const response = await getUser();
+        setUsuariosCompleto(response.items);
     };
 
-    const recuperarTipoUsuarios = async () => {
-        const response = await getTipoUsuario();
-        setTipoUsuarios(response);
+    const recuperarRoles = async () => {
+        const response = await getRole();
+        setRoles(response.items);
     }
 
-    const recuperarNetworkInfo = async () => {
-        const response = await getNetworkInfo();
-        return response;
-    }
-
-    const recuperarUsuariosConFiltro = async (page) => {
-        if (nombreUsuarioBuscado.trim() === '' && estadoBuscado === '' && rolBuscado === '') {
-            // Si no hay búsqueda, recuperar todos los usuarios
-            return await recuperarUsuarios(page, rolBuscado, nombreUsuarioBuscado, estadoBuscado);
-        } else {
-            // Si hay búsqueda por nombre, estado y rol
-            if (nombreUsuarioBuscado.trim() !== '' && estadoBuscado !== '' && rolBuscado !== '') {
-                return await getUsuarioPorNombreYEstadoYIdRol(nombreUsuarioBuscado, estadoBuscado, rolBuscado, page);
-            } else if (nombreUsuarioBuscado.trim() !== '' && estadoBuscado !== '') {
-                // Búsqueda por nombre y estado
-                return await getUsuarioPorNombreYEstado(nombreUsuarioBuscado, estadoBuscado, page);
-            } else if (nombreUsuarioBuscado.trim() !== '' && rolBuscado !== '') {
-                // Búsqueda por nombre y rol
-                return await getUsuarioPorNombreYIdRol(nombreUsuarioBuscado, rolBuscado, page);
-            } else if (estadoBuscado !== '' && rolBuscado !== '') {
-                // Búsqueda por estado y rol
-                return await getUsuarioPorIdRolYEstado(rolBuscado, estadoBuscado, page);
-            } else if (nombreUsuarioBuscado.trim() !== '') {
-                // Solo buscar por nombre
-                return await getUsuarioPorNombre(nombreUsuarioBuscado, page);
-            } else if (estadoBuscado !== '') {
-                // Solo buscar por estado
-                return await getUsuarioPorEstado(estadoBuscado, page);
-            } else if (rolBuscado !== '') {
-                // Solo buscar por rol
-                return await getUsuarioPorIdRol(rolBuscado, page);
-            }
-        }
+    const recuperarSucursales = async () => {
+        const response = await getBranch();
+        setSucursales(response.items);
     }
 
     useEffect(() => {
-        recuperarUsuarios(page, rolBuscado, nombreUsuarioBuscado, estadoBuscado);
-        recuperarUsuariosCompletos();
-        recuperarTipoUsuarios();
-    }, []);
-
-    const actualizarUsuarios = async () => {
-        const resultado = await recuperarUsuariosConFiltro(page);
-        setUsuarios(resultado.usuarios);
-        setTotalPages(resultado.totalPages);
-        if (page >= resultado.totalPages) setPage(0);
-    }
-
-    useEffect(() => {
-        const buscarUsuarios = async () => {
-            try {
-                actualizarUsuarios();
-            } catch (error) {
-                console.error('Error buscando usuarios:', error);
-            }
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getUser(query.page, query.size, query.order, filtrosFinal);
+            setUsuarios(response.items);
+            setTotalPages(response.totalPages);
+            recuperarUsuariosCompletos();
+            recuperarRoles();
+            recuperarSucursales();
         };
-
-        buscarUsuarios();
-    }, [page, rolBuscado, nombreUsuarioBuscado, estadoBuscado]);
+        load();
+    }, [query]);
 
     const eliminarUsuarioFn = async (id) => {
-        try {
-            await deleteUsuario(id);
-            agregarAcceso('Eliminar', id);
-            await recuperarUsuariosCompletos();
-            actualizarUsuarios();
-        } catch (error) {
-            console.error('Error buscando usuarios:', error);
-        }
+        await deleteUser(id);
+        await AddAccess('Eliminar', id, userLog, "Usuarios");
+        recuperarUsuarios();
     };
 
     const confirmarEliminacion = (id) => {
@@ -212,30 +129,75 @@ export const UsuarioApp = ({ usuarioUsed }) => {
     }
 
     const handleEliminarUsuario = (usuario) => {
-
         setUsuarioAEliminar(usuario);
     };
 
     const guardarFn = async (usuarioAGuardar) => {
 
-        if (usuarioAGuardar.id) {
-            await updateUsuario(usuarioAGuardar.id, usuarioAGuardar);
-            agregarAcceso('Modificar', usuarioAGuardar.id);
-        } else {
-            const nuevoUsuario = await saveUsuario(usuarioAGuardar);
-            agregarAcceso('Insertar', nuevoUsuario.id);
-        }
+        let activo = true;
+        if (usuarioAGuardar.estado == 'Inactivo') activo = false;
 
+        const usuarioActualizado = {
+            ...usuarioAGuardar,
+            nomape: usuarioAGuardar.nombre + ", " + usuarioAGuardar.apellido,
+            activo: activo
+        };
+
+        if (usuarioActualizado.id) {
+            await updateUser(usuarioActualizado.id, usuarioActualizado);
+            await AddAccess('Modificar', usuarioActualizado.id, userLog, "Usuarios");
+        } else {
+            const nuevoUsuario = await saveUser(usuarioActualizado);
+            await AddAccess('Insertar', nuevoUsuario.saved.id, userLog, "Usuarios");
+        }
         setUsuarioAGuardar(null);
-        await recuperarUsuariosCompletos();
-        actualizarUsuarios();
+        recuperarUsuarios();
     };
 
-    // Controla el cambio de página
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
+    };
+
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
         }
+
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
     };
 
     const handleSubmit = (event) => {
@@ -244,25 +206,21 @@ export const UsuarioApp = ({ usuarioUsed }) => {
 
         let sw = 0;
 
-        // Verifica si el campo está vacío
-        if (!usuarioAGuardar.nombreusuario || usuarioAGuardar.nombreusuario.trim() === '') {
+        if (!usuarioAGuardar.tipousuario) sw = 1;
+        if (!usuarioAGuardar.nombreusuario) {
             setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 20 caracteres.');
-            setNombreUsuarioError(true); // Establece el error si está vacío
+            setNombreUsuarioError(true);
             sw = 1;
         } else {
-            // Verifica si el nombre de usuario ya existe
             const existe = verificarNombreUsuarioExistente(usuarioAGuardar.nombreusuario, usuarioAGuardar.id);
             if (existe) {
                 setNombreUsuarioMsj('El nombre de usuario ya existe.');
-                setNombreUsuarioError(true); // Establece el error si ya existe
+                setNombreUsuarioError(true);
                 sw = 1;
             } else {
                 setNombreUsuarioMsj('');
                 setNombreUsuarioError(false);
             }
-        }
-        if (!usuarioAGuardar.tipousuario || usuarioAGuardar.tipousuario.id === '') {
-            sw = 1;
         }
         if (!usuarioAGuardar.id) {
             if (!usuarioAGuardar.contrasena) {
@@ -305,23 +263,17 @@ export const UsuarioApp = ({ usuarioUsed }) => {
         }
     };
 
-    // Funciones de estado y estilo
-    const obtenerEstadoCompleto = (estado) => {
-        return estado === 'A' ? 'Activo' : estado === 'I' ? 'Inactivo' : 'Desconocido';
-    };
-    const obtenerClaseEstado = (estado) => {
-        return estado === 'A' ? 'text-bg-success' : estado === 'I' ? 'text-bg-danger' : '';
+    const obtenerClaseEstado = (activo) => {
+        return activo ? 'text-bg-success' : 'text-bg-danger';
     };
 
-    //Verifica un nombre de usuario ya usado
     const verificarNombreUsuarioExistente = (nombreUsuario, id) => {
         return usuariosCompleto.some(usuario => usuario.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && usuario.id !== id);
     };
 
     const refrescar = () => {
-        setRolBuscado('');
-        setNombreUsuarioBuscado('');
-        setEstadoBuscado('');
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
     };
 
     const handleOpenForm = (usuario) => {
@@ -332,10 +284,13 @@ export const UsuarioApp = ({ usuarioUsed }) => {
         setRepeatPassMsj('');
         setNewPassError(false);
         setRepeatPassError(false);
+        setNombreUsuarioMsj('');
+        setNombreUsuarioError(false);
         setUsuarioAGuardar(usuario);
-        setNombreUsuarioMsj(''); // Resetea el mensaje de error
-        setNombreUsuarioError(false); // Resetea el estado de error
     };
+
+    const rows = [...usuarios];
+    while (rows.length < query.size) rows.push(null);
 
     return (
         <>
@@ -409,22 +364,13 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                             value={usuarioAVisualizar.nombreusuario}
                                             readOnly
                                         />
-                                        <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre/Apellido</label>
+                                        <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
                                         <input
                                             type="text"
                                             id="nombre"
                                             name="nombre"
                                             className="form-control border-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.nombre}
-                                            readOnly
-                                        />
-                                        <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
-                                        <input
-                                            type="text"
-                                            id="tipousuario"
-                                            name="tipousuario"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.tipousuario.tipousuario}
                                             readOnly
                                         />
                                         <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
@@ -436,18 +382,6 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                             value={usuarioAVisualizar.nrodoc}
                                             readOnly
                                         />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 me-5 p-0'>
-                                        <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
-                                        <input
-                                            type="text"
-                                            id="nrotelefono"
-                                            name="nrotelefono"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nrotelefono}
-                                            readOnly
-                                        />
                                         <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
                                         <input
                                             type="email"
@@ -457,13 +391,43 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                             value={usuarioAVisualizar.correo}
                                             readOnly
                                         />
-                                        <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
+                                    </div>
+                                    {/*Columna 2 de visualizar*/}
+                                    <div className='col ms-5 me-5 p-0'>
+                                        <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
                                         <input
                                             type="text"
-                                            id="estado"
-                                            name="estado"
+                                            id="tipousuario"
+                                            name="tipousuario"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={obtenerEstadoCompleto(usuarioAVisualizar.estado)}
+                                            value={usuarioAVisualizar.tipousuario.tipousuario}
+                                            readOnly
+                                        />
+                                        <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
+                                        <input
+                                            type="text"
+                                            id="apellido"
+                                            name="apellido"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={usuarioAVisualizar.apellido || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
+                                        <input
+                                            type="text"
+                                            id="nrotelefono"
+                                            name="nrotelefono"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={usuarioAVisualizar.nrotelefono}
+                                            readOnly
+                                        />
+                                        <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
+                                        <input
+                                            type="date"
+                                            id="fechanacimiento"
+                                            name="fechanacimiento"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={usuarioAVisualizar.fechanacimiento || ''}
                                             readOnly
                                         />
                                     </div>
@@ -475,13 +439,31 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                             id="direccion"
                                             name="direccion"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            style={{ resize: 'none', height: '208px' }}
+                                            style={{ resize: 'none', height: '123px' }}
                                             value={usuarioAVisualizar.direccion}
                                             readOnly>
                                         </textarea>
+                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                        <input
+                                            type="text"
+                                            id="sucursal"
+                                            name="sucursal"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={usuarioAVisualizar.sucursal.sucursal || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
+                                        <input
+                                            type="text"
+                                            id="estado"
+                                            name="estado"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={usuarioAVisualizar.estado}
+                                            readOnly
+                                        />
                                     </div>
                                 </div>
-                                <button onClick={() => setUsuarioAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
+                                <button onClick={() => setUsuarioAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -503,7 +485,7 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                     noValidate
                                 >
                                     <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
+                                        {/*Columna 1 de guardar*/}
                                         <div className='col pe-0'>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="nombreusuario" className="form-label m-0 mb-2">Nombre de Usuario</label>
@@ -524,7 +506,7 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre/Apellido</label>
+                                                <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
                                                 <input
                                                     type="text"
                                                     id="nombre"
@@ -541,31 +523,6 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="tipousuario"
-                                                    id='tipousuario'
-                                                    value={usuarioAGuardar.tipousuario ? usuarioAGuardar.tipousuario.id : ''}
-                                                    onChange={(event) => {
-                                                        const selectedTipoUsuario = tipoUsuarios.find(r => r.id === parseInt(event.target.value));
-                                                        setUsuarioAGuardar({
-                                                            ...usuarioAGuardar,
-                                                            tipousuario: selectedTipoUsuario // Cambia esto para que se actualice correctamente
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un rol...</option>
-                                                    {tipoUsuarios.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.tipousuario}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El rol es obligatorio.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
                                                 <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
                                                 <input
                                                     type="text"
@@ -574,22 +531,6 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.nrodoc}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 me-5 p-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrotelefono"
-                                                    name="nrotelefono"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nrotelefono}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={15}
                                                 />
@@ -609,25 +550,6 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El correo es obligatorio y no debe sobrepasar los 30 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="estado"
-                                                    id='estado'
-                                                    value={usuarioAGuardar.estado ? usuarioAGuardar.estado : ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    disabled={!usuarioAGuardar.id} // Solo permite edición si el usuario ya tiene ID
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
-                                                    <option key={1} value={'A'}>Activo</option>
-                                                    <option key={2} value={'I'}>Inactivo</option>
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
                                                 </div>
                                             </div>
                                             {usuarioAGuardar.id === null && (
@@ -663,21 +585,74 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                                 </div>
                                             )}
                                         </div>
-                                        {/*Columna 3 de visualizar*/}
-                                        <div className='col ps-0'>
+                                        {/*Columna 2 de guardar*/}
+                                        <div className='col ms-5 me-5 p-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="direccion" className="form-label m-0 mb-2">Dirección</label>
-                                                <textarea
+                                                <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="tipousuario"
+                                                    id='tipousuario'
+                                                    value={usuarioAGuardar.tipousuario ? usuarioAGuardar.tipousuario.id : ''}
+                                                    onChange={(event) => {
+                                                        const selectedTipoUsuario = roles.find(r => r.id === parseInt(event.target.value));
+                                                        setUsuarioAGuardar({
+                                                            ...usuarioAGuardar,
+                                                            tipousuario: selectedTipoUsuario
+                                                        });
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione un rol...</option>
+                                                    {roles.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.tipousuario}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El rol es obligatorio.
+                                                </div>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
+                                                <input
                                                     type="text"
-                                                    id="direccion"
-                                                    name="direccion"
+                                                    id="apellido"
+                                                    name="apellido"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    style={{ resize: 'none', height: '185px' }}
-                                                    value={usuarioAGuardar.direccion}
+                                                    value={usuarioAGuardar.apellido || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={100}>
-                                                </textarea>
+                                                    required
+                                                    maxLength={50}
+                                                />
+                                                <div className="invalid-feedback text-dangertext-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El apellido es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                </div>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
+                                                <input
+                                                    type="text"
+                                                    id="nrotelefono"
+                                                    name="nrotelefono"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={usuarioAGuardar.nrotelefono}
+                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={15}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
+                                                <input
+                                                    type="date"
+                                                    id="fechanacimiento"
+                                                    name="fechanacimiento"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={usuarioAGuardar.fechanacimiento || ''}
+                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
+                                                />
                                             </div>
                                             {usuarioAGuardar.id === null && (
                                                 <div className='form-group mb-1'>
@@ -711,6 +686,67 @@ export const UsuarioApp = ({ usuarioUsed }) => {
                                                 </div>
                                             )}
                                         </div>
+                                        {/*Columna 3 de visualizar*/}
+                                        <div className='col ps-0'>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="direccion" className="form-label m-0 mb-2">Dirección</label>
+                                                <textarea
+                                                    type="text"
+                                                    id="direccion"
+                                                    name="direccion"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    style={{ resize: 'none', height: '112px' }}
+                                                    value={usuarioAGuardar.direccion}
+                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={100}>
+                                                </textarea>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="sucursal"
+                                                    id='sucursal'
+                                                    value={usuarioAGuardar.sucursal ? usuarioAGuardar.sucursal.id : ''}
+                                                    onChange={(event) => {
+                                                        const selectedSucursal = sucursales.find(r => r.id === parseInt(event.target.value));
+                                                        setUsuarioAGuardar({
+                                                            ...usuarioAGuardar,
+                                                            sucursal: selectedSucursal
+                                                        });
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
+                                                    {sucursales.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La sucursal es obligatorio.
+                                                </div>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="estado"
+                                                    id='estado'
+                                                    value={usuarioAGuardar.estado ? usuarioAGuardar.estado : ''}
+                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
+                                                    disabled={!usuarioAGuardar.id}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
+                                                    <option key={1} value={'Activo'}>Activo</option>
+                                                    <option key={2} value={'Inactivo'}>Inactivo</option>
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className='mt-3'>
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
@@ -728,163 +764,283 @@ export const UsuarioApp = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'USUARIOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
+                <Header userLog={userLog} title={'USUARIOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
                             <i className="bi bi-search me-2 fs-5"></i>Listado de Usuarios
                         </p>
                         <div className="p-3">
-                            <div className="d-flex align-items-center mb-3 fw-bold">
-                                <label htmlFor="usuario" className="form-label m-0">Usuario</label>
-                                <input
-                                    type="text"
-                                    id="usuario"
-                                    name="usuario"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
-                                    value={nombreUsuarioBuscado}
-                                    onChange={(e) => setNombreUsuarioBuscado(e.target.value)} // Actualiza el estado al escribir
-                                />
-                                <label htmlFor="roles" className="form-label m-0">Rol</label>
-                                <select
-                                    className="form-select me-4 ms-2 border-input"
-                                    name="roles"
-                                    value={rolBuscado}
-                                    onChange={(event) => {
-                                        const selectedRole = event.target.value;
-                                        setRolBuscado(selectedRole);
-                                        // Aquí puedes llamar a la función de búsqueda si deseas que se ejecute inmediatamente al seleccionar un rol
-                                    }}
-                                >
-                                    <option value="" className="bg-secondary-subtle">Seleccione un rol...</option>
-                                    {tipoUsuarios.map((role) => (
-                                        <option key={role.id} value={role.id}>{role.tipousuario}</option>
-                                    ))}
-                                </select>
-                                <label htmlFor="estado" className="form-label m-0">Estado</label>
-                                <select
-                                    id="estado"
-                                    name="estado"
-                                    className="me-4 ms-2 form-select border-input"
-                                    value={estadoBuscado}
-                                    onChange={(e) => setEstadoBuscado(e.target.value)} // Actualiza el estado al seleccionar
-                                >
-                                    <option value="">Seleccione un estado...</option>
-                                    <option value="A">Activo</option>
-                                    <option value="I">Inactivo</option>
-                                </select>
-                            </div>
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
                                 <thead className='table-success'>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Nombre de usuario</th>
-                                        <th>Rol</th>
-                                        <th>Nombre/Apellido</th>
-                                        <th>Estado</th>
-                                        <th>Nro. de documento</th>
-                                        <th>Nro. de teléfono</th>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("nombreusuario")} className="sortable-header">
+                                            Usuario
+                                            <i className={`bi ${getSortIcon("nombreusuario")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["nombreusuario"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "nombreusuario",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("nomape")} className="sortable-header">
+                                            Nombre/Apellido
+                                            <i className={`bi ${getSortIcon("nomape")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["nomape"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "nomape",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("tipousuario.tipousuario")} className="sortable-header">
+                                            Rol
+                                            <i className={`bi ${getSortIcon("tipousuario.tipousuario")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["tipousuario.tipousuario"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "tipousuario.tipousuario",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("sucursal.sucursal")} className="sortable-header">
+                                            Sucursal
+                                            <i className={`bi ${getSortIcon("sucursal.sucursal")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["sucursal.sucursal"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "sucursal.sucursal",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("estado")} className="sortable-header">
+                                            Estado
+                                            <i className={`bi ${getSortIcon("estado")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["estado"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "estado",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {usuarios.length > 0 ? (
-                                        [...usuarios.slice(0, 10), ...Array(Math.max(0, 10 - usuarios.length)).fill(null)].map((v, index) => {
-                                            const puedeEditar = v && v.id && usuarioUsed.id == 1 && usuarioUsed.id != v.id;
+                                    {usuarios.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="7" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
+                                            const puedeEditar = v && v.id && userLog.id == 1 && userLog.id != v.id;
                                             return (
                                                 <tr
                                                     className="text-center align-middle"
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) {
-                                                            handleOpenForm(v);
-                                                        }
+                                                        if (puedeEditar) handleOpenForm(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
-                                                    {v ? (
-                                                        <>
-                                                            <td style={{ width: '60px' }}>{v.id}</td>
-                                                            <td className='text-start'>{v.nombreusuario}</td>
-                                                            <td>{v.tipousuario.tipousuario}</td>
-                                                            <td className='text-start'>{v.nombre}</td>
-                                                            <td style={{ width: '110px' }}>
-                                                                <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.estado)} m-0 rounded-2 border border-black`}>
-                                                                    {obtenerEstadoCompleto(v.estado)}
-                                                                </p>
-                                                            </td>
-                                                            <td className='text-end'>{v.nrodoc}</td>
-                                                            <td>{v.nrotelefono}</td>
-                                                            <td style={{ width: '100px' }}>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        if (v.id != usuarioUsed.id && v.id != 1) {
-                                                                            handleEliminarUsuario(v)
-                                                                        }
-                                                                    }}
-                                                                    className="btn border-0 me-2 p-0"
-                                                                    style={{ cursor: v.id == usuarioUsed.id || v.id == 1 ? 'default' : 'pointer' }}
-                                                                >
-                                                                    <i className={`bi bi-trash-fill ${v.id == usuarioUsed.id || v.id == 1 ? 'text-danger-emphasis' : 'text-danger'}`}></i>
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        agregarAcceso('Visualizar', v.id);
-                                                                        setUsuarioAVisualizar(v)
-                                                                    }}
-                                                                    className="btn border-0 ms-2 p-0"
-                                                                >
-                                                                    <i className="bi bi-eye-fill text-primary p-0"></i>
-                                                                </button>
-                                                            </td>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                        </>
-                                                    )}
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{v.nombreusuario}</td>
+                                                    <td className='text-start'>{v.nomape}</td>
+                                                    <td>{v.tipousuario.tipousuario}</td>
+                                                    <td>{v.sucursal.sucursal}</td>
+                                                    <td style={{ width: '140px' }}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
+                                                            {v.estado}
+                                                        </p>
+                                                    </td>
+                                                    <td style={{ width: '100px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (v.id != userLog.id && v.id != 1) handleEliminarUsuario(v);
+                                                            }}
+                                                            className="btn border-0 me-2 p-0"
+                                                            style={{ cursor: v.id == userLog.id || v.id == 1 ? 'default' : 'pointer' }}
+                                                        >
+                                                            <i className={`bi bi-trash-fill ${v.id == userLog.id || v.id == 1 ? 'text-danger-emphasis' : 'text-danger'}`}></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await AddAccess('Visualizar', v.id, userLog, "Usuarios");
+                                                                setUsuarioAVisualizar(v);
+                                                            }}
+                                                            className="btn border-0 ms-2 p-0"
+                                                        >
+                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
-                                            )
+                                            );
                                         })
-                                    ) : (
-                                        <tr className="text-center align-middle">
-                                            <td colSpan="8" className="text-center" style={{ height: '325px' }}>
-                                                <div className='fw-bolder fs-1'>No hay usuarios disponibles</div>
-                                            </td>
-                                        </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => handleOpenForm(usuarioSelected)} className="btn btn-success text-black fw-bold me-3">
-                                <i className="bi bi-plus-lg me-2"></i>Registrar
+                            <button onClick={() => handleOpenForm(selected)} className="btn btn-secondary fw-bold me-2">
+                                <i className="bi bi-plus-circle"></i>
                             </button>
-                            <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold ms-3">
-                                <i className="bi bi-arrow-clockwise me-2"></i>Refrescar
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
                             </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
-                                    <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${page === 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => handlePageChange(page - 1)}>Anterior</button>
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
                                     </li>
-                                    <li className={`page-item ${(page === totalPages - 1 || usuarios.length === 0) ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${(page === totalPages - 1 || usuarios.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
                                     </li>
                                 </ul>
                             </nav>

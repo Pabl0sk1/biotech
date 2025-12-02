@@ -1,21 +1,20 @@
 package com.back.service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import com.back.config.SpecificationBuilder;
 import com.back.entity.Funcionario;
 import com.back.repository.FuncionarioRepository;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class FuncionarioService {
@@ -23,37 +22,74 @@ public class FuncionarioService {
 	@Autowired
 	FuncionarioRepository rep;
 
-	ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-	Validator validator = factory.getValidator();
-
-	public List<Funcionario> listar() {
-		List<Funcionario> result = new ArrayList<Funcionario>();
-		rep.findAll().forEach(result::add);
-		return result;
-	}
+	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
-	public Page<Funcionario> listarPaginado(int page, int size, String sortBy, boolean sortType) {
-        Sort sort = sortType ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-        return rep.findAll(pageable);
+	@PostConstruct
+    public void init() {
+		//detailRegistry.put("campoDetalle", repositorioDetalle);
+    }
+	
+	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
+		Pageable pageable = getPageable(page, size, orderClause);
+		
+        if (detail != null && !detail.isBlank()) {
+            return this.queryDetalle(detail, filterClause, pageable);
+        }
+
+        JpaSpecificationExecutor<?> repo = getRepo(entity);
+        Specification spec = SpecificationBuilder.build(filterClause);
+        
+        return repo.findAll(spec, pageable);
+    }
+
+	private Pageable getPageable(Integer page, Integer size, String order) {
+	    Sort sort;
+
+	    if (order != null && !order.isBlank()) {
+	        String[] orders = order.split(";");
+	        sort = Sort.unsorted();
+	        for (String o : orders) {
+	            String[] p = o.split(",");
+	            sort = sort.and(Sort.by(
+	                    p[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+	                    p[0]
+	            ));
+	        }
+	    } else {
+	        sort = Sort.by(Sort.Direction.DESC, "id");
+	    }
+
+	    if (page == null || size == null) {
+	        return PageRequest.of(0, Integer.MAX_VALUE, sort);
+	    }
+
+	    return PageRequest.of(page, size, sort);
 	}
+    
+	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
+	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
+	    
+	    if (repo == null) {
+	        throw new RuntimeException("Detalle no existente: " + detail);
+	    }
+	    
+	    Specification spec = SpecificationBuilder.build(filterClause);
+	    return repo.findAll(spec, pageable);
+	}
+    
+    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+        if (entity.equals(Funcionario.class)) {
+            return (JpaSpecificationExecutor<T>) rep;
+        }
+        throw new RuntimeException("Entidad no soportada");
+    }
 
 	public Funcionario guardar(Funcionario funcionario) {
-		Set<ConstraintViolation<Funcionario>> violations = validator.validate(funcionario);
-		String errorValidation = "";
-		for (ConstraintViolation<Funcionario> cv : violations) {
-			errorValidation += "Error " + cv.getPropertyPath() + " " + cv.getMessage();
-		}
-		if (!violations.isEmpty()) {
-			throw new RuntimeException(errorValidation);
-		}
 		return rep.save(funcionario);
 	}
 
 	public void eliminar(Integer id) {
-
 		rep.deleteById(id);
-
 	}
 
 	public Funcionario buscarPorId(Integer id) {
@@ -66,22 +102,6 @@ public class FuncionarioService {
 			throw new RuntimeException("No se encontro el funcionario con ID: " + id);
 		}
 
-	}
-	
-	public Page<Funcionario> BuscarPorNrodoc(String nrodoc, Pageable pageable){
-		return rep.findByNrodocLikeIgnoreCase(nrodoc, pageable);
-	}
-	
-	public Page<Funcionario> BuscarPorNombre(String nombre, Pageable pageable){
-		return rep.findByNomapeLikeIgnoreCase(nombre.replace(",", ""), pageable);
-	}
-	
-	public Page<Funcionario> BuscarPorNrodocYNombre(String nrodoc, String nombre, Pageable pageable){
-		return rep.findByNrodocLikeIgnoreCaseAndNomapeLikeIgnoreCase(nrodoc, nombre.replace(",", ""), pageable);
-	}
-	
-	public List<Funcionario> BuscarPorNombreONrodoc(String nombre, String nrodoc){
-		return rep.findByNomapeLikeIgnoreCaseOrNrodocLike(nombre.replace(",", ""), nrodoc);
 	}
 
 }

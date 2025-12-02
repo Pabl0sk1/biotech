@@ -1,22 +1,21 @@
 package com.back.service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import com.back.config.SpecificationBuilder;
 import com.back.entity.Usuario;
 import com.back.repository.UsuarioRepository;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class UsuarioService {
@@ -26,31 +25,70 @@ public class UsuarioService {
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-
-	ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-	Validator validator = factory.getValidator();
-
-	public List<Usuario> listar() {
-		List<Usuario> result = new ArrayList<Usuario>();
-		rep.findAll().forEach(result::add);
-		return result;
-	}
 	
-	public Page<Usuario> listarPaginado(int page, int size, String sortBy, boolean sortType) {
-        Sort sort = sortType ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-        return rep.findAll(pageable);
+	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
+	
+	@PostConstruct
+    public void init() {
+		//detailRegistry.put("campoDetalle", repositorioDetalle);
+    }
+	
+	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
+		Pageable pageable = getPageable(page, size, orderClause);
+		
+        if (detail != null && !detail.isBlank()) {
+            return this.queryDetalle(detail, filterClause, pageable);
+        }
+
+        JpaSpecificationExecutor<?> repo = getRepo(entity);
+        Specification spec = SpecificationBuilder.build(filterClause);
+        
+        return repo.findAll(spec, pageable);
+    }
+
+	private Pageable getPageable(Integer page, Integer size, String order) {
+	    Sort sort;
+
+	    if (order != null && !order.isBlank()) {
+	        String[] orders = order.split(";");
+	        sort = Sort.unsorted();
+	        for (String o : orders) {
+	            String[] p = o.split(",");
+	            sort = sort.and(Sort.by(
+	                    p[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+	                    p[0]
+	            ));
+	        }
+	    } else {
+	        sort = Sort.by(Sort.Direction.DESC, "id");
+	    }
+
+	    if (page == null || size == null) {
+	        return PageRequest.of(0, Integer.MAX_VALUE, sort);
+	    }
+
+	    return PageRequest.of(page, size, sort);
 	}
+    
+	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
+	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
+	    
+	    if (repo == null) {
+	        throw new RuntimeException("Detalle no existente: " + detail);
+	    }
+	    
+	    Specification spec = SpecificationBuilder.build(filterClause);
+	    return repo.findAll(spec, pageable);
+	}
+    
+    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+        if (entity.equals(Usuario.class)) {
+            return (JpaSpecificationExecutor<T>) rep;
+        }
+        throw new RuntimeException("Entidad no soportada");
+    }
 
 	public Usuario guardar(Usuario usuario) {
-	    Set<ConstraintViolation<Usuario>> violations = validator.validate(usuario);
-	    String errorValidation = "";
-	    for (ConstraintViolation<Usuario> cv : violations) {
-	        errorValidation += "Error " + cv.getPropertyPath() + " " + cv.getMessage();
-	    }
-	    if (!violations.isEmpty()) {
-	        throw new RuntimeException(errorValidation);
-	    }
 	    
 	    if (usuario.getId() == null || !usuario.getContrasena().startsWith("$2a$")) {
 	        String hashedPassword = jdbcTemplate.queryForObject(
@@ -65,9 +103,7 @@ public class UsuarioService {
 	}
 
 	public void eliminar(Integer id) {
-
 		rep.deleteById(id);
-
 	}
 
 	public Usuario buscarPorId(Integer id) {
@@ -82,36 +118,8 @@ public class UsuarioService {
 
 	}
 	
-	public Page <Usuario> BuscarPorNombre(String nombreusuario, Pageable pageable) {
-		return rep.findByNombreusuarioLikeIgnoreCase(nombreusuario, pageable);
-	}
-	
-	public Usuario BuscarPorNombreUsuario(String nombreusuario) {
+	public Usuario buscarPorNombreUsuario(String nombreusuario) {
 	    return rep.findByNombreusuario(nombreusuario).orElse(null);
-	}
-
-	public Page <Usuario> BuscarPorEstado(Character estado, Pageable pageable) {
-		return rep.findByEstado(estado, pageable);
-	}
-	
-	public Page<Usuario> BuscarPorIdRol(Integer id, Pageable pageable){
-		return rep.findByIdRol(id, pageable);
-	}
-	
-	public Page<Usuario> BuscarPorNombreYEstado(String nombreusuario, Character estado, Pageable pageable) {
-	    return rep.findByNombreusuarioLikeIgnoreCaseAndEstado(nombreusuario, estado, pageable);
-	}
-	
-	public Page<Usuario> BuscarPorIdRolYEstado(Integer id, Character estado, Pageable pageable) {
-	    return rep.findByEstadoLikeIgnoreCaseAndIdRol(id, estado, pageable);
-	}
-	
-	public Page<Usuario> BuscarPorNombreYIdRol(String nombreusuario, Integer id, Pageable pageable) {
-	    return rep.findByNombreusuarioLikeIgnoreCaseAndIdRol(nombreusuario, id, pageable);
-	}
-	
-	public Page<Usuario> BuscarPorNombreYIdRolYEstado(String nombreusuario, Integer id, Character estado, Pageable pageable) {
-	    return rep.findByNombreusuarioLikeIgnoreCaseAndIdRolAndEstado(nombreusuario, id, estado, pageable);
 	}
 	
 	public boolean verificarContrasena(String nombreusuario, String contrasena) {

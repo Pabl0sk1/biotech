@@ -5,142 +5,26 @@ import { HostLocation } from '../utils/HostLocation';
 const dir = HostLocation();
 
 // Ruta base
-const API_BASE_URL = `${dir}/vendedor`;
+const API_BASE_URL = `${dir}/seller`;
 
-export const getVendedor = async () => {
-    const result = await axios.get(`${API_BASE_URL}/listar`);
-    const vendedorListado = result.data.list;
-    return vendedorListado;
-}
-
-export const getVendedorPorNombreONrodoc = async (q) => {
-    const result = await axios.get(`${API_BASE_URL}/listarPorNombreONrodoc`, {
-        params: { q },
+export const getSeller = async (page, size, order, filter, detail) => {
+    const response = await axios.get(`${API_BASE_URL}/list`, {
+        params: { page, size, order, filter, detail },
     });
-    const vendedorListado = result.data.list;
-    return vendedorListado;
-};
-
-export const getVendedorPorId = async (id) => {
-    const result = await axios.get(`${API_BASE_URL}/buscarPorId/${id}`);
-    const vendedor = result.data.list;
-    return vendedor;
+    return response.data;
 }
 
-export const saveVendedor = async (vendedor) => {
-    const response = await axios.post(`${API_BASE_URL}/guardar`, vendedor);
-    const vendedorGuardado = response.data.added;
-    return vendedorGuardado;
+export const saveSeller = async (seller) => {
+    const response = await axios.post(`${API_BASE_URL}/save`, seller);
+    return response.data;
 }
 
-export const updateVendedor = async (id, vendedor) => {
-    const response = await axios.put(`${API_BASE_URL}/modificar/${id}`, vendedor);
-    const vendedorActualizado = response.data.list;
-    return vendedorActualizado;
+export const updateSeller = async (id, seller) => {
+    const response = await axios.put(`${API_BASE_URL}/update/${id}`, seller);
+    return response.data;
 }
 
-export const deleteVendedor = async (id) => {
-    const response = await axios.delete(`${API_BASE_URL}/eliminar/${id}`);
-    const vendedorEliminado = response.data.list;
-    return vendedorEliminado;
+export const deleteSeller = async (id) => {
+    const response = await axios.delete(`${API_BASE_URL}/delete/${id}`);
+    return response.data;
 }
-
-export const getVendedorPaginado = async (page = 0, size = 10, sortBy = 'id', sortType = false) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/listarPaginado`, {
-            params: {
-                page,
-                size,
-                sortBy,
-                sortType,
-            },
-        });
-        const result = response.data;
-        return {
-            vendedores: result.list.content,
-            totalPages: result.list.totalPages,
-            totalElements: result.list.totalElements,
-            size: result.size,
-            currentPage: page,
-        };
-    } catch (error) {
-        console.error('Error al obtener vendedores paginados:', error);
-        throw error;
-    }
-};
-
-export const getVendedorPorNrodoc = async (nrodoc, page = 0, size = 10, sortBy = 'id', sortType = false) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/buscarPorNrodoc`, {
-            params: {
-                nrodoc,
-                page,
-                size,
-                sortBy,
-                sortType,
-            },
-        });
-
-        const result = response.data;
-        return {
-            vendedores: result.list,
-            size: result.size,
-            totalPages: result.totalPages,
-            currentPage: page,
-        };
-    } catch (error) {
-        console.error('Error al buscar vendedores por número de documento:', error);
-        throw error;
-    }
-};
-
-export const getVendedorPorNombre = async (nombre, page = 0, size = 10, sortBy = 'id', sortType = false) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/buscarPorNombre`, {
-            params: {
-                nombre,
-                page,
-                size,
-                sortBy,
-                sortType,
-            },
-        });
-
-        const result = response.data;
-        return {
-            vendedores: result.list,
-            size: result.size,
-            totalPages: result.totalPages,
-            currentPage: page,
-        };
-    } catch (error) {
-        console.error('Error al buscar vendedores por nombre:', error);
-        throw error;
-    }
-};
-
-export const getVendedorPorNrodocYNombre = async (nrodoc, nombre, page = 0, size = 10, sortBy = 'id', sortType = false) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/buscarPorNrodocYNombre`, {
-            params: {
-                nrodoc,
-                nombre,
-                page,
-                size,
-                sortBy,
-                sortType,
-            },
-        });
-
-        const result = response.data;
-        return {
-            vendedores: result.list,
-            size: result.size,
-            totalPages: result.totalPages,
-            currentPage: page,
-        };
-    } catch (error) {
-        console.error('Error al buscar vendedores por número de documento y nombre:', error);
-        throw error;
-    }
-};

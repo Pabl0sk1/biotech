@@ -6,31 +6,28 @@ import Menu from './Menu';
 import ProtectedRoute from '../src/utils/ProtectedRoute.jsx';
 import CambiarContrasena from './CambiarContrasena.jsx';
 import Perfil from './Perfil.jsx';
+import Configuracion from './Configuracion.jsx';
 import { UsuarioApp } from './components/UsuarioApp.jsx';
 import { AuditoriaApp } from './components/AuditoriaApp.jsx';
 import { RolApp } from './components/RolApp.jsx';
 import { TurnoApp } from './components/TurnoApp.jsx';
 import { FuncionarioApp } from './components/FuncionarioApp.jsx';
 import { Error } from './Error.jsx';
-import Configuracion from './Configuracion.jsx';
-import { getConfig } from "./services/config.service";
 import { Calculo } from './tasks/Calculo.jsx'
 import { CargoApp } from './components/CargoApp.jsx';
-import { TipoTurnoApp } from './components/TipoTurnoApp.jsx';
+import { ModalidadApp } from './components/ModalidadApp.jsx';
 import { TokenApp } from './components/TokenApp.jsx';
 import { VendedorApp } from './components/VendedorApp.jsx';
+import { SucursalApp } from './components/SucursalesApp.jsx';
+import { getConfig } from "./services/config.service";
 
 function App() {
   const UrlBase = '/biotech';
   const UrlLocal = UrlBase + '/home';
 
-  // App.js - Modificar getUsuarioFromSession
-  const getUsuarioFromSession = () => {
-    // Priorizar sessionStorage
+  const getUserFromSession = () => {
     const sessionUser = sessionStorage.getItem('usuario');
     if (sessionUser) return JSON.parse(sessionUser);
-
-    // Si no hay en sessionStorage, verificar localStorage
     const persistentSession = localStorage.getItem('session');
 
     if (persistentSession) {
@@ -50,14 +47,13 @@ function App() {
     return null;
   };
 
-  const [usuarioUsed, setUsuarioUsed] = useState(getUsuarioFromSession());
+  const [userLog, setUserLog] = useState(getUserFromSession());
 
   useEffect(() => {
     const applyThemeColors = async () => {
       const response = await getConfig();
-      const config = response.list[0];
+      const config = response.items[0];
 
-      // Aplicar como variables CSS globales
       document.documentElement.style.setProperty('--color-primario', config.colorpri);
       document.documentElement.style.setProperty('--color-secundario', config.colorsec);
       document.documentElement.style.setProperty('--color-ternario', config.colorter);
@@ -72,46 +68,47 @@ function App() {
       <Routes>
         {/* Ruta pública de login */}
         <Route path={UrlBase + "/login"} element={
-          usuarioUsed ? <Navigate to={UrlLocal} /> : <Login setUsuarioUsed={setUsuarioUsed} />
+          userLog ? <Navigate to={UrlLocal} /> : <Login setUserLog={setUserLog} />
         } />
 
         {/* Ruta por defecto - redirige al login o inicio dependiendo de la autenticación */}
         <Route path="/" element={
-          usuarioUsed ? <Navigate to={UrlLocal} /> : <Navigate to={UrlBase + "/login"} />
+          userLog ? <Navigate to={UrlLocal} /> : <Navigate to={UrlBase + "/login"} />
         } />
 
         {/* Rutas protegidas */}
         <Route element={<ProtectedRoute />}>
-          <Route path={UrlLocal} element={<Menu usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />
-          {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
+          <Route path={UrlLocal} element={<Menu userLog={userLog} setUserLog={setUserLog} />} />
+          {userLog?.tipousuario?.id && [1].includes(userLog.tipousuario.id) && (
             <>
-              <Route path={UrlLocal + "/security/users"} element={<UsuarioApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/security/roles"} element={<RolApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/security/tokens"} element={<TokenApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/config"} element={<Configuracion usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/regs/shifts"} element={<TurnoApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/regs/schedules"} element={<TipoTurnoApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/security/users"} element={<UsuarioApp userLog={userLog} />} />
+              <Route path={UrlLocal + "/security/roles"} element={<RolApp userLog={userLog} />} />
+              <Route path={UrlLocal + "/security/tokens"} element={<TokenApp userLog={userLog} />} />
+              <Route path={UrlLocal + "/config"} element={<Configuracion userLog={userLog} />} />
+              <Route path={UrlLocal + "/regs/shifts"} element={<TurnoApp userLog={userLog} />} />
+              <Route path={UrlLocal + "/regs/schedules"} element={<ModalidadApp userLog={userLog} />} />
             </>
           )}
-          {usuarioUsed?.tipousuario?.id && [1, 5].includes(usuarioUsed.tipousuario.id) && (
+          {userLog?.tipousuario?.id && [1, 5].includes(userLog.tipousuario.id) && (
             <>
-              <Route path={UrlLocal + "/security/access"} element={<AuditoriaApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/security/access"} element={<AuditoriaApp userLog={userLog} />} />
             </>
           )}
-          {usuarioUsed?.tipousuario?.id && [1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
+          {userLog?.tipousuario?.id && [1, 2, 5].includes(userLog.tipousuario.id) && (
             <>
-              <Route path={UrlLocal + "/reports/calcext"} element={<Calculo usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/regs/employees"} element={<FuncionarioApp usuarioUsed={usuarioUsed} />} />
-              <Route path={UrlLocal + "/regs/positions"} element={<CargoApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/reports/calcext"} element={<Calculo userLog={userLog} />} />
+              <Route path={UrlLocal + "/regs/employees"} element={<FuncionarioApp userLog={userLog} />} />
+              <Route path={UrlLocal + "/regs/positions"} element={<CargoApp userLog={userLog} />} />
             </>
           )}
-          {usuarioUsed?.tipousuario?.id && [1, 9].includes(usuarioUsed.tipousuario.id) && (
+          {userLog?.tipousuario?.id && [1, 9].includes(userLog.tipousuario.id) && (
             <>
-              <Route path={UrlLocal + "/regs/sellers"} element={<VendedorApp usuarioUsed={usuarioUsed} />} />
+              <Route path={UrlLocal + "/regs/sellers"} element={<VendedorApp userLog={userLog} />} />
             </>
           )}
-          <Route path={UrlLocal + '/profile'} element={<Perfil usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />
-          <Route path={UrlLocal + '/changepassword'} element={<CambiarContrasena usuarioUsed={usuarioUsed} setUsuarioUsed={setUsuarioUsed} />} />
+          <Route path={UrlLocal + "/regs/branchs"} element={<SucursalApp userLog={userLog} />} />
+          <Route path={UrlLocal + '/profile'} element={<Perfil userLog={userLog} setUserLog={setUserLog} />} />
+          <Route path={UrlLocal + '/changepassword'} element={<CambiarContrasena userLog={userLog} setUserLog={setUserLog} />} />
         </Route>
 
         {/* Ruta de error para rutas no definidas */}

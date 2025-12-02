@@ -1,17 +1,19 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getConfigPaginado, updateConfig } from "./services/config.service";
+import { getConfig, updateConfig, deleteImage } from "./services/config.service";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
+import { HostLocation } from './utils/HostLocation';
 
-export const Configuracion = ({ usuarioUsed }) => {
-    const UrlBase = '/biotech';
+export const Configuracion = ({ userLog }) => {
 
     const [entidadError, setEntidadError] = useState(false);
     const [correoError, setCorreoError] = useState(false);
     const [cerrarConfig, setCerrarConfig] = useState(false);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
+    const [imagenFile, setImagenFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [eliminarImagen, setEliminarImagen] = useState(false);
     const navigate = useNavigate();
 
     const [config, setConfig] = useState({
@@ -22,10 +24,9 @@ export const Configuracion = ({ usuarioUsed }) => {
         colorpri: "",
         colorsec: "",
         colorter: "",
-        tipo: "",
         nombre: "",
-        base64imagen: "",
-        imagen: null
+        tipo: "",
+        imagenurl: ""
     });
 
     //Cancelar eliminación con tecla de escape
@@ -59,14 +60,14 @@ export const Configuracion = ({ usuarioUsed }) => {
 
     const confirmarEscape = () => {
         setCerrarConfig(false);
-        navigate('/biotech/home');
+        navigate(-1);
     };
 
     const recuperarConfig = async () => {
-        const response = await getConfigPaginado(0);
-
-        setConfig(response.configuraciones[0]);
-        setImagenSeleccionada(response.configuraciones[0].base64imagen);
+        const response = await getConfig();
+        const BACKEND_URL = HostLocation(1);
+        setConfig(response.items[0]);
+        if (response.items[0].imagenurl) setImagenSeleccionada(BACKEND_URL + response.items[0].imagenurl);
     }
 
     useEffect(() => {
@@ -76,55 +77,15 @@ export const Configuracion = ({ usuarioUsed }) => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         setIsLoading(true);
-        const form = event.currentTarget;
-
-        // Crear el objeto que se enviará al backend
-        const configData = {
-            ...config,
-            entidad: config.entidad,
-            correo: config.correo,
-            nrotelefono: config.nrotelefono,
-            colorpri: config.colorpri,
-            colorsec: config.colorsec,
-            colorter: config.colorter,
-            tipo: "",
-            nombre: "",
-            base64imagen: "",
-            imagen: null
-        };
-
-        // Crear un FormData para enviar los datos
-        const formData = new FormData();
-        formData.append('configuracion', JSON.stringify(configData));
-
-        // Convertir base64 a File si existe
-        const img = `data:image/${config.tipo};base64,${config.base64imagen}`;
-        if (imagenSeleccionada) {
-            const arr = img.split(',');
-            const mime = arr[0].match(/:(.*?);/)[1];
-            const bstr = atob(arr[1]);
-            let n = bstr.length;
-            const u8arr = new Uint8Array(n);
-
-            while (n--) {
-                u8arr[n] = bstr.charCodeAt(n);
-            }
-
-            const originalName = config.nombre || 'imagen';
-            const fileName = `${originalName}`;
-            const file = new File([u8arr], fileName, { type: mime },);
-            formData.append('imagen', file);
-        }
+        const form = event.target;
 
         let sw = 0;
-
         if (!config.entidad) {
             setEntidadError(true);
             sw = 1;
         } else {
             setEntidadError(false);
         }
-
         if (!config.correo) {
             setCorreoError(true);
             sw = 1;
@@ -139,11 +100,27 @@ export const Configuracion = ({ usuarioUsed }) => {
             return;
         }
 
+        const formData = new FormData();
+        formData.append("configuracion", JSON.stringify(config));
+
+        if (imagenFile) {
+            formData.append("imagen", imagenFile);
+
+            if (config.imagenurl) {
+                formData.append("imagenAnterior", config.imagenurl);
+            }
+        }
+
+        if (eliminarImagen && !imagenFile) {
+            await deleteImage(config.id);
+            setEliminarImagen(false);
+        }
+
         if (form.checkValidity()) {
+            await updateConfig(config.id, formData);
             document.documentElement.style.setProperty('--color-primario', config.colorpri);
             document.documentElement.style.setProperty('--color-secundario', config.colorsec);
             document.documentElement.style.setProperty('--color-ternario', config.colorter);
-            await updateConfig(config.id, formData);
             setCerrarConfig(true);
             form.classList.remove('was-validated');
         } else {
@@ -154,21 +131,20 @@ export const Configuracion = ({ usuarioUsed }) => {
 
     const handleImageChange = (event) => {
         const file = event.target.files[0];
+        if (!file) return;
+        setImagenFile(file);
+        setEliminarImagen(false);
+        setConfig(prev => ({
+            ...prev,
+            nombre: file.name,
+            tipo: file.type
+        }));
         const reader = new FileReader();
+
         reader.onloadend = () => {
-            const base64String = reader.result.split(',')[1];
-            setImagenSeleccionada(base64String);
-            setConfig({
-                ...config,
-                tipo: file.name.split('.').slice(1).join('.'),
-                base64imagen: base64String,
-                nombre: file.name.split('.').slice(0, -1).join('.'),
-                imagen: reader.result
-            });
+            setImagenSeleccionada(reader.result);
         };
-        if (file) {
-            reader.readAsDataURL(file);
-        }
+        reader.readAsDataURL(file);
     };
 
     return (
@@ -196,7 +172,7 @@ export const Configuracion = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'CONFIGURACIÓN'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'CONFIGURACIÓN'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
@@ -227,7 +203,7 @@ export const Configuracion = ({ usuarioUsed }) => {
                                         {imagenSeleccionada ? (
                                             <>
                                                 <img
-                                                    src={`data:image/*;base64, ${imagenSeleccionada}`}
+                                                    src={imagenSeleccionada}
                                                     alt="Vista previa"
                                                     className="image-preview"
                                                 />
@@ -236,7 +212,10 @@ export const Configuracion = ({ usuarioUsed }) => {
                                                     className="remove-image"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
+                                                        setImagenFile(null);
                                                         setImagenSeleccionada(null);
+                                                        setEliminarImagen(true);
+                                                        setConfig({ ...config, nombre: "", tipo: "", imagenurl: "" });
                                                     }}
                                                 >
                                                     <i className="bi bi-x-lg"></i>
@@ -428,12 +407,12 @@ export const Configuracion = ({ usuarioUsed }) => {
                                 padding: '24px 32px',
                                 borderTop: '1px solid #e5e7eb',
                                 display: 'flex',
-                                justifyContent: 'flex-end',
+                                justifyContent: 'center',
                                 gap: '12px'
                             }}>
                                 <Link
                                     className="modern-button btn-secondary"
-                                    to={UrlBase + '/home'}
+                                    to={-1}
                                 >
                                     <i className="bi bi-x-lg"></i>
                                     Cancelar

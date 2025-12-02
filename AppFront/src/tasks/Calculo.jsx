@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { getFuncionario } from '../services/funcionario.service';
+import { getEmployee } from '../services/funcionario.service';
+import { getShift } from '../services/turno.service';
 import { generarExcel } from './ArchivoExcel';
-import { getTurno } from '../services/turno.service';
 import Header from '../Header';
 
-export const Calculo = ({ usuarioUsed }) => {
+export const Calculo = ({ userLog }) => {
 
     const initial = {
         fechadesde: "",
@@ -671,15 +671,15 @@ export const Calculo = ({ usuarioUsed }) => {
     };
 
     const recuperarFuncionarios = async () => {
-        const response = await getFuncionario();
-        setFuncionarios(response);
+        const response = await getEmployee();
+        setFuncionarios(response.items);
         const fechasDelMes = obtenerFechasDelMes();
 
         // Agregar detalles a cada funcionario
         const funcionariosConDetalles = actualizarDetallesFuncionarios(
             fechasDelMes.fechadesde,
             fechasDelMes.fechahasta,
-            response
+            response.items
         );
 
         setData({
@@ -692,8 +692,8 @@ export const Calculo = ({ usuarioUsed }) => {
     }
 
     const recuperarTurnos = async () => {
-        const response = await getTurno();
-        setTurnos(response);
+        const response = await getShift();
+        setTurnos(response.items);
     }
 
     useEffect(() => {
@@ -757,7 +757,7 @@ export const Calculo = ({ usuarioUsed }) => {
         }
 
         if (form.checkValidity()) {
-            generarExcel(dataFiltrada);
+            if (dataFiltrada.listafuncionarios.length) generarExcel(dataFiltrada);
             form.classList.remove('was-validated');
         } else form.classList.add('was-validated');
     }
@@ -772,7 +772,7 @@ export const Calculo = ({ usuarioUsed }) => {
     return (
         <>
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
@@ -959,7 +959,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                         <th colSpan="4">Horarios</th>
                                                         <th colSpan="8">Horas Extras</th>
                                                         <th colSpan="2">Estado</th>
-                                                        <th rowSpan="2" hidden={![1].includes(usuarioUsed.tipousuario.id)}>Tr.</th>
+                                                        <th rowSpan="2" hidden={![1].includes(userLog.tipousuario.id)}>Tr.</th>
                                                     </tr>
                                                     <tr className='text-center align-middle'>
                                                         {/* Subheaders para Horarios */}
@@ -1200,7 +1200,7 @@ export const Calculo = ({ usuarioUsed }) => {
                                                             </td>
 
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`}
-                                                                hidden={![1].includes(usuarioUsed.tipousuario.id)}
+                                                                hidden={![1].includes(userLog.tipousuario.id)}
                                                                 style={{ width: '60px' }}>
                                                                 <input
                                                                     type="text"

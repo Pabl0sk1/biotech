@@ -52,7 +52,10 @@ public class Vendedor {
 	@Size(max = 15)
 	private String nrotelefono;
 	
+	@Size(max = 30)
+	private String correo;
+	
 	@Temporal(TemporalType.DATE)
-	private LocalDate fecha_nacimiento;
+	private LocalDate fechanacimiento;
 
 }

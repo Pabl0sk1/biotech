@@ -5,83 +5,26 @@ import { HostLocation } from '../utils/HostLocation';
 const dir = HostLocation();
 
 // Ruta base
-const API_BASE_URL = `${dir}/cargo`;
+const API_BASE_URL = `${dir}/position`;
 
-export const getCargo = async () => {
-    const result = await axios.get(`${API_BASE_URL}/listar`);
-    const cargoListado = result.data.list;
-    return cargoListado;
+export const getPosition = async (page, size, order, filter, detail) => {
+    const response = await axios.get(`${API_BASE_URL}/list`, {
+        params: { page, size, order, filter, detail },
+    });
+    return response.data;
 }
 
-export const getCargoPorId = async (id) => {
-    const result = await axios.get(`${API_BASE_URL}/buscarPorId/${id}`);
-    const cargo = result.data.list;
-    return cargo;
+export const savePosition = async (position) => {
+    const response = await axios.post(`${API_BASE_URL}/save`, position);
+    return response.data;
 }
 
-export const saveCargo = async (cargo) => {
-    const response = await axios.post(`${API_BASE_URL}/guardar`, cargo);
-    const cargoGuardado = response.data.added;
-    return cargoGuardado;
+export const updatePosition = async (id, position) => {
+    const response = await axios.put(`${API_BASE_URL}/update/${id}`, position);
+    return response.data;
 }
 
-export const updateCargo = async (id, cargo) => {
-    const response = await axios.put(`${API_BASE_URL}/modificar/${id}`, cargo);
-    const cargoActualizado = response.data.list;
-    return cargoActualizado;
+export const deletePosition = async (id) => {
+    const response = await axios.delete(`${API_BASE_URL}/delete/${id}`);
+    return response.data;
 }
-
-export const deleteCargo = async (id) => {
-    const response = await axios.delete(`${API_BASE_URL}/eliminar/${id}`);
-    const cargoEliminado = response.data.list;
-    return cargoEliminado;
-}
-
-export const getCargoPaginado = async (page = 0, size = 10, sortBy = 'id', sortType = false) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/listarPaginado`, {
-            params: {
-                page,
-                size,
-                sortBy,
-                sortType,
-            },
-        });
-        const result = response.data;
-        return {
-            cargos: result.list.content,
-            totalPages: result.list.totalPages,
-            totalElements: result.list.totalElements,
-            size: result.size,
-            currentPage: page,
-        };
-    } catch (error) {
-        console.error('Error al obtener cargos paginados:', error);
-        throw error;
-    }
-};
-
-export const getCargoPorDesc = async (cargo, page = 0, size = 10, sortBy = 'id', sortType = false) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/buscarPorCargoDesc`, {
-            params: {
-                cargo,
-                page,
-                size,
-                sortBy,
-                sortType,
-            },
-        });
-
-        const result = response.data;
-        return {
-            cargos: result.list,
-            size: result.size,
-            totalPages: result.totalPages,
-            currentPage: page,
-        };
-    } catch (error) {
-        console.error('Error al buscar cargos por descripción:', error);
-        throw error;
-    }
-};

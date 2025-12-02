@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import { AddAccess } from './utils/AddAccess.js';
 
 const Sidebar = ({
-    usuarioUsed,
+    userLog,
     isSidebarVisible,
     toggleSeguridadMenu,
     toggleReportesMenu,
@@ -10,10 +11,9 @@ const Sidebar = ({
     isSeguridadMenuOpen,
     isReportesMenuOpen,
     isRegistrosMenuOpen,
-    agregarAcceso,
-    handleLogoutClick,
-    UrlLocal
+    handleLogoutClick
 }) => {
+    const UrlLocal = '/biotech/home';
     const [hoveredItem, setHoveredItem] = useState(null);
 
     const menuItemStyle = (isHovered) => ({
@@ -72,11 +72,11 @@ const Sidebar = ({
                             fontWeight: 'bold'
                         }}
                     >
-                        {usuarioUsed.nombreusuario?.charAt(0).toUpperCase()}
+                        {userLog.nombreusuario?.charAt(0).toUpperCase()}
                     </div>
                     <div className='text-start'>
                         <div style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>
-                            {usuarioUsed.nombreusuario}
+                            {userLog.nombreusuario}
                         </div>
                         <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>
                             En línea
@@ -133,10 +133,10 @@ const Sidebar = ({
                             overflow: 'hidden',
                             transition: 'max-height 0.3s ease',
                         }}>
-                            {usuarioUsed?.tipousuario?.id && [1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
+                            {userLog?.tipousuario?.id && [1, 2, 5].includes(userLog.tipousuario.id) && (
                                 <Link
-                                    to="#"
-                                    onClick={() => agregarAcceso('Horas Extras', 'Realizar Informe', UrlLocal + '/reports/calcext')}
+                                    to={UrlLocal + '/reports/calcext'}
+                                    onClick={async () => await AddAccess('Realizar Informe', 0, userLog, 'Horas Extras')}
                                     onMouseEnter={() => setHoveredItem('horas-extras')}
                                     onMouseLeave={() => setHoveredItem(null)}
                                     style={{
@@ -202,11 +202,30 @@ const Sidebar = ({
                             overflow: 'hidden',
                             transition: 'max-height 0.3s ease',
                         }}>
-                            {usuarioUsed?.tipousuario?.id && [1, 2, 5].includes(usuarioUsed.tipousuario.id) && (
+                            <Link
+                                to={UrlLocal + '/regs/branchs'}
+                                onClick={async () => await AddAccess('Consultar', 0, userLog, 'Sucursales')}
+                                onMouseEnter={() => setHoveredItem('sucursales')}
+                                onMouseLeave={() => setHoveredItem(null)}
+                                style={{
+                                    ...subMenuItemStyle(hoveredItem === 'sucursales'),
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '10px 20px 10px 52px',
+                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    textDecoration: 'none',
+                                    fontSize: '13px',
+                                }}
+                            >
+                                <i className="bi bi-building" style={{ color: '#f6cd5cff' }}></i>
+                                Sucursales
+                            </Link>
+                            {userLog?.tipousuario?.id && [1, 2, 5].includes(userLog.tipousuario.id) && (
                                 <>
                                     <Link
-                                        to="#"
-                                        onClick={() => agregarAcceso('Cargos', 'Consultar', UrlLocal + '/regs/positions')}
+                                        to={UrlLocal + '/regs/positions'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Cargos')}
                                         onMouseEnter={() => setHoveredItem('cargos')}
                                         onMouseLeave={() => setHoveredItem(null)}
                                         style={{
@@ -224,8 +243,8 @@ const Sidebar = ({
                                         Cargos
                                     </Link>
                                     <Link
-                                        to="#"
-                                        onClick={() => agregarAcceso('Funcionarios', 'Consultar', UrlLocal + '/regs/employees')}
+                                        to={UrlLocal + '/regs/employees'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Funcionarios')}
                                         onMouseEnter={() => setHoveredItem('funcionarios')}
                                         onMouseLeave={() => setHoveredItem(null)}
                                         style={{
@@ -245,11 +264,11 @@ const Sidebar = ({
                                 </>
                             )}
 
-                            {usuarioUsed?.tipousuario?.id && [1, 9].includes(usuarioUsed.tipousuario.id) && (
+                            {userLog?.tipousuario?.id && [1, 9].includes(userLog.tipousuario.id) && (
                                 <>
                                     <Link
-                                        to="#"
-                                        onClick={() => agregarAcceso('Vendedores', 'Consultar', UrlLocal + '/regs/sellers')}
+                                        to={UrlLocal + '/regs/sellers'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Vendedores')}
                                         onMouseEnter={() => setHoveredItem('vendedores')}
                                         onMouseLeave={() => setHoveredItem(null)}
                                         style={{
@@ -269,11 +288,11 @@ const Sidebar = ({
                                 </>
                             )}
 
-                            {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
+                            {userLog?.tipousuario?.id && [1].includes(userLog.tipousuario.id) && (
                                 <>
                                     <Link
-                                        to="#"
-                                        onClick={() => agregarAcceso('Modalidades', 'Consultar', UrlLocal + '/regs/schedules')}
+                                        to={UrlLocal + '/regs/schedules'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Modalidades')}
                                         onMouseEnter={() => setHoveredItem('modalidades')}
                                         onMouseLeave={() => setHoveredItem(null)}
                                         style={{
@@ -291,8 +310,8 @@ const Sidebar = ({
                                         Modalidades
                                     </Link>
                                     <Link
-                                        to="#"
-                                        onClick={() => agregarAcceso('Turnos', 'Consultar', UrlLocal + '/regs/shifts')}
+                                        to={UrlLocal + '/regs/shifts'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Turnos')}
                                         onMouseEnter={() => setHoveredItem('turnos')}
                                         onMouseLeave={() => setHoveredItem(null)}
                                         style={{
@@ -315,7 +334,7 @@ const Sidebar = ({
                     </div>
 
                     {/* Seguridad */}
-                    {usuarioUsed?.tipousuario?.id && [1, 5].includes(usuarioUsed.tipousuario.id) && (
+                    {userLog?.tipousuario?.id && [1, 5].includes(userLog.tipousuario.id) && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
                                 onClick={toggleSeguridadMenu}
@@ -360,7 +379,7 @@ const Sidebar = ({
                                 overflow: 'hidden',
                                 transition: 'max-height 0.3s ease',
                             }}>
-                                {[1, 5].includes(usuarioUsed.tipousuario.id) && (
+                                {[1, 5].includes(userLog.tipousuario.id) && (
                                     <Link
                                         to={UrlLocal + '/security/access'}
                                         onMouseEnter={() => setHoveredItem('accesos')}
@@ -380,11 +399,11 @@ const Sidebar = ({
                                         Accesos
                                     </Link>
                                 )}
-                                {[1].includes(usuarioUsed.tipousuario.id) && (
+                                {[1].includes(userLog.tipousuario.id) && (
                                     <>
                                         <Link
-                                            to="#"
-                                            onClick={() => agregarAcceso('Usuarios', 'Consultar', UrlLocal + '/security/users')}
+                                            to={UrlLocal + '/security/users'}
+                                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Usuarios')}
                                             onMouseEnter={() => setHoveredItem('usuarios')}
                                             onMouseLeave={() => setHoveredItem(null)}
                                             style={{
@@ -402,8 +421,8 @@ const Sidebar = ({
                                             Usuarios
                                         </Link>
                                         <Link
-                                            to="#"
-                                            onClick={() => agregarAcceso('Roles', 'Consultar', UrlLocal + '/security/roles')}
+                                            to={UrlLocal + '/security/roles'}
+                                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Roles')}
                                             onMouseEnter={() => setHoveredItem('roles')}
                                             onMouseLeave={() => setHoveredItem(null)}
                                             style={{
@@ -421,8 +440,8 @@ const Sidebar = ({
                                             Roles
                                         </Link>
                                         <Link
-                                            to="#"
-                                            onClick={() => agregarAcceso('Tokens', 'Consultar', UrlLocal + '/security/tokens')}
+                                            to={UrlLocal + '/security/tokens'}
+                                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Tokens')}
                                             onMouseEnter={() => setHoveredItem('tokens')}
                                             onMouseLeave={() => setHoveredItem(null)}
                                             style={{
@@ -454,8 +473,8 @@ const Sidebar = ({
 
                     {/* Opciones de usuario */}
                     <Link
-                        to="#"
-                        onClick={() => agregarAcceso('Perfil', 'Modificar', UrlLocal + '/profile')}
+                        to={UrlLocal + '/profile'}
+                        onClick={async () => await AddAccess('Modificar', 0, userLog, 'Perfil')}
                         onMouseEnter={() => setHoveredItem('perfil')}
                         onMouseLeave={() => setHoveredItem(null)}
                         style={{
@@ -486,8 +505,8 @@ const Sidebar = ({
                     </Link>
 
                     <Link
-                        to="#"
-                        onClick={() => agregarAcceso('Contraseña', 'Modificar', UrlLocal + '/changepassword')}
+                        to={UrlLocal + '/changepassword'}
+                        onClick={async () => await AddAccess('Modificar', 0, userLog, 'Contraseña')}
                         onMouseEnter={() => setHoveredItem('password')}
                         onMouseLeave={() => setHoveredItem(null)}
                         style={{
@@ -517,10 +536,10 @@ const Sidebar = ({
                         <span>Contraseña</span>
                     </Link>
 
-                    {usuarioUsed?.tipousuario?.id && [1].includes(usuarioUsed.tipousuario.id) && (
+                    {userLog?.tipousuario?.id && [1].includes(userLog.tipousuario.id) && (
                         <Link
-                            to="#"
-                            onClick={() => agregarAcceso('Configuración', 'Modificar', UrlLocal + '/config')}
+                            to={UrlLocal + '/config'}
+                            onClick={async () => await AddAccess('Modificar', 0, userLog, 'Configuración')}
                             onMouseEnter={() => setHoveredItem('config')}
                             onMouseLeave={() => setHoveredItem(null)}
                             style={{

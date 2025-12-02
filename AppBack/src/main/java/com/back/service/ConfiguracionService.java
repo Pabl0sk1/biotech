@@ -1,109 +1,127 @@
 package com.back.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.zip.DataFormatException;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.multipart.MultipartFile;
+import com.back.config.SpecificationBuilder;
 import com.back.entity.Configuracion;
 import com.back.repository.ConfiguracionRepository;
-import com.back.util.ImageUtils;
-
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 
 @Service
-@RequiredArgsConstructor
 public class ConfiguracionService {
 
 	@Autowired
 	ConfiguracionRepository rep;
 	
-	ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-	Validator validator = factory.getValidator();
+	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
-	public List<Configuracion> listar() {
-		List<Configuracion> result = new ArrayList<Configuracion>();
-		rep.findAll().forEach(result::add);
-		return result;
+	@PostConstruct
+    public void init() {
+		//detailRegistry.put("campoDetalle", repositorioDetalle);
+    }
+	
+	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
+		Pageable pageable = getPageable(page, size, orderClause);
+		
+        if (detail != null && !detail.isBlank()) {
+            return this.queryDetalle(detail, filterClause, pageable);
+        }
+
+        JpaSpecificationExecutor<?> repo = getRepo(entity);
+        Specification spec = SpecificationBuilder.build(filterClause);
+        
+        return repo.findAll(spec, pageable);
+    }
+
+	private Pageable getPageable(Integer page, Integer size, String order) {
+	    Sort sort;
+
+	    if (order != null && !order.isBlank()) {
+	        String[] orders = order.split(";");
+	        sort = Sort.unsorted();
+	        for (String o : orders) {
+	            String[] p = o.split(",");
+	            sort = sort.and(Sort.by(
+	                    p[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+	                    p[0]
+	            ));
+	        }
+	    } else {
+	        sort = Sort.by(Sort.Direction.DESC, "id");
+	    }
+
+	    if (page == null || size == null) {
+	        return PageRequest.of(0, Integer.MAX_VALUE, sort);
+	    }
+
+	    return PageRequest.of(page, size, sort);
 	}
+    
+	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
+	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
+	    
+	    if (repo == null) {
+	        throw new RuntimeException("Detalle no existente: " + detail);
+	    }
+	    
+	    Specification spec = SpecificationBuilder.build(filterClause);
+	    return repo.findAll(spec, pageable);
+	}
+    
+    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+        if (entity.equals(Configuracion.class)) {
+            return (JpaSpecificationExecutor<T>) rep;
+        }
+        throw new RuntimeException("Entidad no soportada");
+    }
 	
 	public Configuracion guardar(Configuracion config) {
-		Set<ConstraintViolation<Configuracion>> violations = validator.validate(config);
-		String errorValidation = "";
-		for (ConstraintViolation<Configuracion> cv : violations) {
-			errorValidation += "Error " + cv.getPropertyPath() + " " + cv.getMessage();
-		}
-		if (!violations.isEmpty()) {
-			throw new RuntimeException(errorValidation);
-		}
 		return rep.save(config);
 	}
 
 	public Configuracion buscarPorId(Integer id) {
-		Optional<Configuracion> cfg = rep.findById(id);
-		if (cfg.isPresent()) {
-			Configuracion config = cfg.get();
-	        try {
-	            if (config.getImagen() != null) {
-	                // Descomprime la imagen solo si existe
-	                try {
-	                    byte[] decompressedData = ImageUtils.decompressImage(config.getImagen());
-	                    // Convierte a Base64
-	                    String base64Image = Base64.getEncoder().encodeToString(decompressedData);
-	                    config.setBase64imagen(base64Image);
-	                } catch (IOException | DataFormatException e) {
-	                    // Si hay error al descomprimir, intentar usar la imagen tal cual
-	                    String base64Image = Base64.getEncoder().encodeToString(config.getImagen());
-	                    config.setBase64imagen(base64Image);
-	                }
-	            }
-	            return config;
-	        } catch (Exception e) {
-	            // Si ocurre cualquier otro error, devolver el producto sin la imagen en base64
-	        	config.setBase64imagen(null);
-	            return config;
-	        }
-	    } else {
-	        throw new RuntimeException("No se encontró la configuración");
-	    }
+		
+		Optional<Configuracion> config = rep.findById(id);
+
+		if (config.isPresent()) {
+			return config.get();
+		} else {
+			throw new RuntimeException("No se encontro la configuración con ID: " + id);
+		}
+		
 	}
 	
-	public Page<Configuracion> listarTodos(Pageable pageable) {
-	    Page<Configuracion> cfg = rep.findAll(pageable);
-	    for (Configuracion config : cfg) {
-	        if (config.getImagen() != null) { 
-	            try {
-	                byte[] decompressedData = ImageUtils.decompressImage(config.getImagen());
-	                String base64Image = Base64.getEncoder().encodeToString(decompressedData);
-	                config.setBase64imagen(base64Image);
-	            } catch (DataFormatException e) { 
-	                // Captura la DataFormatException específicamente
-	                try {
-	                    byte[] originalData = config.getImagen();
-	                    String base64Image = Base64.getEncoder().encodeToString(originalData);
-	                    config.setBase64imagen(base64Image);
-	                } catch (Exception ex) {
-	                    // Maneja la excepción de codificación de la imagen original
-	                    throw new RuntimeException("Error al codificar la imagen original: " + ex.getMessage(), ex);
-	                }
-	            } catch (IOException e) {
-	                // Maneja otras excepciones de E/S
-	                throw new RuntimeException("Error de E/S al procesar la imagen: " + e.getMessage(), e);
-	            }
-	        }
-	    }
-	    return cfg;
+	public String guardarImagen(MultipartFile archivo) throws Exception {
+	    String folder = "src/main/resources/logo/";
+	    File dir = new File(folder);
+	    if (!dir.exists()) dir.mkdirs();
+
+	    String filename = UUID.randomUUID() + "_" + archivo.getOriginalFilename();
+	    Path path = Paths.get(folder + filename);
+
+	    Files.write(path, archivo.getBytes());
+
+	    return "/logo/" + filename;
+	}
+	
+	public void eliminarImagen(String ruta) throws Exception {
+	    Path path = Paths.get("src/main/resources" + ruta);
+	    Files.deleteIfExists(path);
 	}
 	
 }

@@ -1,11 +1,12 @@
 import ExcelJS from 'exceljs';
-import { LogoBase64 } from "../utils/LogoBase64";
+import { LogoImg } from "../utils/LogoImg";
+import { HostLocation } from '../utils/HostLocation';
 
 const generarExcel = async (data) => {
     const { cantdias, fechadesde, fechahasta, listafuncionarios } = data;
 
     // Crear imagen
-    const logo = await LogoBase64();
+    const logo = await LogoImg();
 
     // Crear workbook con ExcelJS
     const workbook = new ExcelJS.Workbook();
@@ -101,8 +102,16 @@ const generarExcel = async (data) => {
         }
     };
 
+    async function getImageBuffer(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Error cargando la imagen: ${res.status}`);
+        const blob = await res.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        return new Uint8Array(arrayBuffer);
+    }
+
     // Procesar cada funcionario
-    listafuncionarios.forEach((funcionario, index) => {
+    listafuncionarios.forEach((funcionario) => {
         const nombreCompleto = (`${funcionario.apellido}, ${funcionario.nombre}`).toUpperCase();
         const cargoLab = funcionario.cargo.cargo.toUpperCase();
 
@@ -121,23 +130,13 @@ const generarExcel = async (data) => {
 
         // Agregar logo si existe
         if (logo.tipo) {
-            // Limpiar el base64
-            let base64Clean = logo.base;
+            const imgUrl = HostLocation(1) + logo.imagen;
 
-            // Convertir base64 a Uint8Array (compatible con navegador)
-            const binaryString = atob(base64Clean);
-            const logoBuffer = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                logoBuffer[i] = binaryString.charCodeAt(i);
-            }
-
-            // Agregar imagen
+            const logoBuffer = getImageBuffer(imgUrl);
             const imageId = workbook.addImage({
                 buffer: logoBuffer,
                 extension: logo.tipo
             });
-
-            // Posicionar imagen
             worksheet.addImage(imageId, {
                 tl: { col: 0, row: 0 },
                 ext: { width: 70, height: 40 },

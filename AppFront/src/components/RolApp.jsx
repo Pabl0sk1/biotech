@@ -1,29 +1,35 @@
 import { useEffect, useState } from "react";
-import { getTipoUsuarioPaginado, saveTipoUsuario, updateTipoUsuario, deleteTipoUsuario, getTipoUsuarioPorDesc } from '../services/tipousuario.service.js';
-import { getUsuario } from "../services/usuario.service.js";
-import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
+import { getRole, saveRole, updateRole, deleteRole } from '../services/tipousuario.service.js';
+import { getUser } from "../services/usuario.service.js";
 import Header from '../Header';
+import { AddAccess } from "../utils/AddAccess.js";
+import { FiltroModal } from "../FiltroModal.jsx";
 
-export const RolApp = ({ usuarioUsed }) => {
+export const RolApp = ({ userLog }) => {
 
-    const [tipoUsuarioBuscado, setTipoUsuarioBuscado] = useState('');
-    const [tipousuarios, setTipoUsuarios] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
-    const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const [tipoUsuarioAGuardar, setTipoUsuarioAGuardar] = useState(null);
-    const [tipoUsuarioAEliminar, setTipoUsuarioAEliminar] = useState(null);
-    const [tipoUsuarioNoEliminar, setTipoUsuarioNoEliminar] = useState(null);
-    const [tipoUsuarioAVisualizar, setTipoUsuarioAVisualizar] = useState(null);
+    const [rolAGuardar, setRolAGuardar] = useState(null);
+    const [rolAEliminar, setRolAEliminar] = useState(null);
+    const [rolNoEliminar, setRolNoEliminar] = useState(null);
+    const [rolAVisualizar, setRolAVisualizar] = useState(null);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setTipoUsuarioAEliminar(null);
-                setTipoUsuarioNoEliminar(null);
-                setTipoUsuarioAVisualizar(null);
-                setTipoUsuarioAGuardar(null);
+                setRolAEliminar(null);
+                setRolNoEliminar(null);
+                setRolAVisualizar(null);
+                setRolAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -32,7 +38,6 @@ export const RolApp = ({ usuarioUsed }) => {
         };
     }, []);
 
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {
@@ -46,142 +51,105 @@ export const RolApp = ({ usuarioUsed }) => {
         });
     }, []);
 
-    const obtenerFechaHora = async () => {
-        const localDate = new Date();
-
-        const dia = String(localDate.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(localDate.getMonth()).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
-        const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(localDate.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
-
-        return new Date(anio, mes, dia, hora, minuto);
-    };
-
-    const agregarAcceso = async (op, cod) => {
-        const network = await recuperarNetworkInfo();
-        const fechahora = await obtenerFechaHora();
-        const auditoria = {
-            id: null,
-            usuario: {
-                id: usuarioUsed.id
-            },
-            fechahora: fechahora,
-            programa: "Roles",
-            operacion: op,
-            codregistro: cod,
-            ip: network.ip,
-            equipo: network.equipo
-        }
-        await saveAuditoria(auditoria);
-    }
-
-    const tipousuarioSelected = {
+    const selected = {
         id: null,
         tipousuario: ""
     };
 
-    const recuperarTipoUsuarios = async (pageNumber = 0, desc = '') => {
-        const response = await getTipoUsuarioPaginado(pageNumber);
-
-        const tipousuariosFiltrados = response.tipousuarios.content.filter(tipousuario => {
-            const tipousuarioCoincide = desc.trim() !== '' ? tipousuario.tipousuario.toLowerCase().includes(desc.toLowerCase()) : true;
-
-            return tipousuarioCoincide;
-        });
-
-        return {
-            tipousuarios: tipousuariosFiltrados,
-            totalPages: response.totalPages,
-            currentPage: response.currentPage,
-        };
-    };
+    const recuperarRoles = () => {
+        setQuery(q => ({ ...q }));
+    }
 
     const recuperarUsuarios = async () => {
-        const response = await getUsuario();
-        setUsuarios(response);
-    }
-
-    const recuperarNetworkInfo = async () => {
-        const response = await getNetworkInfo();
-        return response;
-    }
-
-    const recuperarTipoUsuariosConFiltro = async (page) => {
-        if (tipoUsuarioBuscado.trim() === '') {
-            return await recuperarTipoUsuarios(page, tipoUsuarioBuscado);
-        } else {
-            return await getTipoUsuarioPorDesc(tipoUsuarioBuscado, page);
-        }
-    };
-
-    useEffect(() => {
-        recuperarTipoUsuarios(page, tipoUsuarioBuscado);
-        recuperarUsuarios();
-    }, []);
-
-    const actualizarRoles = async () => {
-        const resultado = await recuperarTipoUsuariosConFiltro(page);
-        setTipoUsuarios(resultado.tipousuarios);
-        setTotalPages(resultado.totalPages);
-        if (page >= resultado.totalPages) setPage(0);
+        const response = await getUser();
+        setUsuarios(response.items);
     }
 
     useEffect(() => {
-        const buscarTipoUsuarios = async () => {
-            try {
-                actualizarRoles();
-            } catch (error) {
-                console.error('Error buscando tipos de usuarios:', error);
-            }
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getRole(query.page, query.size, query.order, filtrosFinal);
+            setRoles(response.items);
+            setTotalPages(response.totalPages);
+            recuperarUsuarios();
         };
+        load();
+    }, [query]);
 
-        buscarTipoUsuarios();
-    }, [page, tipoUsuarioBuscado]);
-
-    const eliminarTipoUsuarioFn = async (id) => {
-        try {
-            await deleteTipoUsuario(id);
-            agregarAcceso('Eliminar', id);
-            actualizarRoles();
-        } catch (error) {
-            console.error('Error eliminando tipos de usuarios:', error);
-        }
+    const eliminarRolFn = async (id) => {
+        await deleteRole(id);
+        await AddAccess('Eliminar', id, userLog, "Roles");
+        recuperarRoles();
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarTipoUsuarioFn(id);
-        setTipoUsuarioAEliminar(null);
+        eliminarRolFn(id);
+        setRolAEliminar(null);
     }
 
-    const handleEliminarTipoUsuario = (tipousuario) => {
-        const usuariosrelacionado = usuarios.find(v => v.tipousuario.id === tipousuario.id);
-
-        if (usuariosrelacionado) {
-            setTipoUsuarioNoEliminar(tipousuario);
-        } else {
-            setTipoUsuarioAEliminar(tipousuario);
-        }
+    const handleEliminarRol = (rol) => {
+        const rel = usuarios.find(v => v.tipousuario.id === rol.id);
+        if (rel) setRolNoEliminar(rol);
+        else setRolAEliminar(rol);
     };
 
-    const guardarFn = async (tipoUsuarioAGuardar) => {
+    const guardarFn = async (rolAGuardar) => {
 
-        if (tipoUsuarioAGuardar.id) {
-            await updateTipoUsuario(tipoUsuarioAGuardar.id, tipoUsuarioAGuardar);
-            agregarAcceso('Modificar', tipoUsuarioAGuardar.id);
+        if (rolAGuardar.id) {
+            await updateRole(rolAGuardar.id, rolAGuardar);
+            await AddAccess('Modificar', rolAGuardar.id, userLog, "Roles");
         } else {
-            const nuevoRol = await saveTipoUsuario(tipoUsuarioAGuardar);
-            agregarAcceso('Insertar', nuevoRol.id);
+            const nuevoRol = await saveRole(rolAGuardar);
+            await AddAccess('Insertar', nuevoRol.saved.id, userLog, "Roles");
         }
-
-        setTipoUsuarioAGuardar(null);
-        actualizarRoles();
+        setRolAGuardar(null);
+        recuperarRoles();
     };
 
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
+    };
+
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
         }
+
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
     };
 
     const handleSubmit = (event) => {
@@ -189,7 +157,7 @@ export const RolApp = ({ usuarioUsed }) => {
         const form = event.currentTarget;
 
         if (form.checkValidity()) {
-            guardarFn({ ...tipoUsuarioAGuardar });
+            guardarFn({ ...rolAGuardar });
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -197,13 +165,17 @@ export const RolApp = ({ usuarioUsed }) => {
     };
 
     const refrescar = () => {
-        setTipoUsuarioBuscado('');
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
     }
+
+    const rows = [...roles];
+    while (rows.length < query.size) rows.push(null);
 
     return (
         <>
 
-            {tipoUsuarioAEliminar && (
+            {rolAEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -215,13 +187,13 @@ export const RolApp = ({ usuarioUsed }) => {
                                 </div>
                                 <div className="mt-3">
                                     <button
-                                        onClick={() => confirmarEliminacion(tipoUsuarioAEliminar.id)}
+                                        onClick={() => confirmarEliminacion(rolAEliminar.id)}
                                         className="btn btn-success text-black me-4 fw-bold"
                                     >
                                         <i className="bi bi-trash-fill me-2"></i>Eliminar
                                     </button>
                                     <button
-                                        onClick={() => setTipoUsuarioAEliminar(null)}
+                                        onClick={() => setRolAEliminar(null)}
                                         className="btn btn-danger text-black ms-4 fw-bold"
                                     >
                                         <i className="bi bi-x-lg me-2"></i>Cancelar
@@ -233,7 +205,7 @@ export const RolApp = ({ usuarioUsed }) => {
                 </>
             )}
 
-            {tipoUsuarioNoEliminar && (
+            {rolNoEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -244,7 +216,7 @@ export const RolApp = ({ usuarioUsed }) => {
                                     <p className='fs-5'>El rol está siendo referenciado en otra tabla</p>
                                 </div>
                                 <button
-                                    onClick={() => setTipoUsuarioNoEliminar(null)}
+                                    onClick={() => setRolNoEliminar(null)}
                                     className="btn btn-danger mt-3 fw-bold text-black">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
@@ -254,7 +226,7 @@ export const RolApp = ({ usuarioUsed }) => {
                 </>
             )}
 
-            {tipoUsuarioAVisualizar && (
+            {rolAVisualizar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -268,12 +240,12 @@ export const RolApp = ({ usuarioUsed }) => {
                                             id="tipousuario"
                                             name="tipousuario"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={tipoUsuarioAVisualizar.tipousuario}
+                                            value={rolAVisualizar.tipousuario}
                                             readOnly
                                         />
                                     </div>
                                 </div>
-                                <button onClick={() => setTipoUsuarioAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
+                                <button onClick={() => setRolAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -282,7 +254,7 @@ export const RolApp = ({ usuarioUsed }) => {
                 </>
             )}
 
-            {tipoUsuarioAGuardar && (
+            {rolAGuardar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -304,8 +276,8 @@ export const RolApp = ({ usuarioUsed }) => {
                                                     name="tipousuario"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={tipoUsuarioAGuardar.tipousuario}
-                                                    onChange={(event) => setTipoUsuarioAGuardar({ ...tipoUsuarioAGuardar, [event.target.name]: event.target.value })}
+                                                    value={rolAGuardar.tipousuario}
+                                                    onChange={(event) => setRolAGuardar({ ...rolAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
                                                     maxLength={50}
@@ -320,7 +292,7 @@ export const RolApp = ({ usuarioUsed }) => {
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => setTipoUsuarioAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => setRolAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
@@ -332,123 +304,178 @@ export const RolApp = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'ROLES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
+                <Header userLog={userLog} title={'ROLES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-1 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
                             <i className="bi bi-search me-2 fs-5"></i>Listado de Roles
                         </p>
                         <div className="p-3">
-                            <div className="d-flex align-items-center mb-3 fw-bold">
-                                <label htmlFor="tipousuario" className="form-label m-0">Descripción</label>
-                                <input
-                                    type="text"
-                                    id="tipousuario"
-                                    name="tipousuario"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
-                                    value={tipoUsuarioBuscado}
-                                    onChange={(e) => setTipoUsuarioBuscado(e.target.value)} // Actualiza el estado al escribir
-                                />
-                            </div>
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
                                 <thead className='table-success'>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Descripción</th>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("tipousuario")} className="sortable-header">
+                                            Descripción
+                                            <i className={`bi ${getSortIcon("tipousuario")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["tipousuario"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "tipousuario",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {tipousuarios.length > 0 ? (
-                                        [...tipousuarios.slice(0, 10), ...Array(Math.max(0, 10 - tipousuarios.length)).fill(null)].map((v, index) => {
-                                            const puedeEditar = v && v.id && v.id != 1;
+                                    {roles.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="3" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
+                                            const puedeEditar = v && v.id && v.id !== 1;
                                             return (
                                                 <tr
                                                     className="text-center align-middle"
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) {
-                                                            setTipoUsuarioAGuardar(v);
-                                                        }
+                                                        if (puedeEditar) setRolAGuardar(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
-                                                    {v ? (
-                                                        <>
-                                                            <td style={{ width: '60px' }}>{v.id}</td>
-                                                            <td className='text-start'>{v.tipousuario}</td>
-                                                            <td style={{ width: '100px' }}>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        if (v.id != 1) {
-                                                                            handleEliminarTipoUsuario(v)
-                                                                        }
-                                                                    }}
-                                                                    className="btn border-0 me-2 p-0"
-                                                                    style={{ cursor: v.id == 1 ? 'default' : 'pointer' }}
-                                                                >
-                                                                    <i className={`bi bi-trash-fill ${v.id == 1 ? 'text-danger-emphasis' : 'text-danger'}`}></i>
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        agregarAcceso('Visualizar', v.id);
-                                                                        setTipoUsuarioAVisualizar(v)
-                                                                    }}
-                                                                    className="btn border-0 ms-2 p-0"
-                                                                >
-                                                                    <i className="bi bi-eye-fill text-primary p-0"></i>
-                                                                </button>
-                                                            </td>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                        </>
-                                                    )}
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className="text-start">{v.tipousuario}</td>
+                                                    <td style={{ width: '100px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (v.id !== 1) handleEliminarRol(v);
+                                                            }}
+                                                            className="btn border-0 me-2 p-0"
+                                                            style={{ cursor: v.id == 1 ? 'default' : 'pointer' }}
+                                                        >
+                                                            <i className={`bi bi-trash-fill ${v.id == 1 ? 'text-danger-emphasis' : 'text-danger'}`}></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await AddAccess('Visualizar', v.id, userLog, "Roles");
+                                                                setRolAVisualizar(v);
+                                                            }}
+                                                            className="btn border-0 ms-2 p-0"
+                                                        >
+                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
-                                            )
+                                            );
                                         })
-                                    ) : (
-                                        <tr className="text-center align-middle">
-                                            <td colSpan="3" className="text-center" style={{ height: '325px' }}>
-                                                <div className='fw-bolder fs-1'>No hay roles disponibles</div>
-                                            </td>
-                                        </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setTipoUsuarioAGuardar(tipousuarioSelected)} className="btn btn-success text-black fw-bold me-3">
-                                <i className="bi bi-plus-lg me-2"></i>Registrar
+                            <button onClick={() => setRolAGuardar(selected)} className="btn btn-secondary fw-bold me-2">
+                                <i className="bi bi-plus-circle"></i>
                             </button>
-                            <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold ms-3">
-                                <i className="bi bi-arrow-clockwise me-2"></i>Refrescar
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
                             </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
-                                    <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${page === 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => handlePageChange(page - 1)}>Anterior</button>
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
                                     </li>
-                                    <li className={`page-item ${(page === totalPages - 1 || tipousuarios.length === 0) ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${(page === totalPages - 1 || tipousuarios.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
                                     </li>
                                 </ul>
                             </nav>
                         </div>
-                    </div >
-                </div >
-            </div >
+                    </div>
+                </div>
+            </div>
         </>
     );
 }

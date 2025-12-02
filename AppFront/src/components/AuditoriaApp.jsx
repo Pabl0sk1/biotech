@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
-import { getAuditoriaPaginado, deleteAuditoria, getAuditoriaPorUsuario, getAuditoriaPorOperacion, getAuditoriaPorUsuarioYOperacion } from '../services/auditoria.service.js';
+import { getAccess, deleteAccess } from '../services/auditoria.service.js';
 import Header from '../Header';
+import { FiltroModal } from "../FiltroModal.jsx";
+import { DateHourFormat } from '../utils/DateHourFormat.js';
 
-export const AuditoriaApp = ({ usuarioUsed }) => {
+export const AuditoriaApp = ({ userLog }) => {
 
-    const [operacionBuscado, setOperacionBuscado] = useState('');
-    const [usuarioBuscado, setUsuarioBuscado] = useState('');
     const [auditorias, setAuditorias] = useState([]);
-    const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [auditoriaAEliminar, setAuditoriaAEliminar] = useState(null);
     const [auditoriaAVisualizar, setAuditoriaAVisualizar] = useState(null);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -26,7 +32,6 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
         };
     }, []);
 
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {
@@ -40,68 +45,23 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
         });
     }, []);
 
-    const recuperarAuditorias = async (pageNumber = 0, operacion = '', usuario = '') => {
-        const response = await getAuditoriaPaginado(pageNumber);
-
-        // Filtrar auditorias por rol, nombre y estado en un solo paso
-        const auditoriasFiltrados = response.auditorias.filter(auditoria => {
-            const operacionCoincide = operacion !== '' ? auditoria.operacion === operacion : true;
-            const usuarioCoincide = usuario ? auditoria.usuario.id === parseInt(usuario) : true;
-
-            return operacionCoincide && usuarioCoincide;
-        });
-
-        return {
-            auditorias: auditoriasFiltrados,
-            totalPages: response.totalPages,
-            currentPage: response.currentPage,
-        };
-    };
-
-    const recuperarAuditoriasConFiltro = async (page) => {
-        if (operacionBuscado === '' && usuarioBuscado === '') {
-            return await recuperarAuditorias(page, operacionBuscado, usuarioBuscado);
-        } else {
-            if (operacionBuscado !== '' && usuarioBuscado !== '') {
-                return await getAuditoriaPorUsuarioYOperacion(usuarioBuscado, operacionBuscado, page);
-            } else if (operacionBuscado !== '') {
-                return await getAuditoriaPorOperacion(operacionBuscado, page);
-            } else if (usuarioBuscado !== '') {
-                return await getAuditoriaPorUsuario(usuarioBuscado, page);
-            }
-        }
+    const recuperarAuditorias = () => {
+        setQuery(q => ({ ...q }));
     }
 
     useEffect(() => {
-        recuperarAuditorias(page, operacionBuscado, usuarioBuscado);
-    }, []);
-
-    const actualizarAuditorias = async () => {
-        const resultado = await recuperarAuditoriasConFiltro(page);
-        setAuditorias(resultado.auditorias);
-        setTotalPages(resultado.totalPages);
-        if (page >= resultado.totalPages) setPage(0);
-    }
-
-    useEffect(() => {
-        const buscarAuditorias = async () => {
-            try {
-                actualizarAuditorias();
-            } catch (error) {
-                console.error('Error buscando auditorias:', error);
-            }
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getAccess(query.page, query.size, query.order, filtrosFinal);
+            setAuditorias(response.items);
+            setTotalPages(response.totalPages);
         };
-
-        buscarAuditorias();
-    }, [page, operacionBuscado, usuarioBuscado]);
+        load();
+    }, [query]);
 
     const eliminarAuditoriaFn = async (id) => {
-        try {
-            await deleteAuditoria(id);
-            actualizarAuditorias();
-        } catch (error) {
-            console.error('Error buscando auditorias:', error);
-        }
+        await deleteAccess(id);
+        recuperarAuditorias();
     };
 
     const confirmarEliminacion = (id) => {
@@ -109,27 +69,59 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
         setAuditoriaAEliminar(null);
     }
 
-    // Controla el cambio de página
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
-        }
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
     };
 
-    const formatearFechaYHora = (fecha) => {
-        const date = new Date(fecha);
-        const dia = String(date.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(date.getMonth() + 1).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
-        const anio = date.getFullYear();
-        const hora = String(date.getHours()).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(date.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
-        return `${dia}/${mes}/${anio} ${hora}:${minuto}`; // Formato DD/MM/YYYY HH:MM:SS
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
+        }
+
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
     };
 
     const refrescar = () => {
-        setOperacionBuscado('');
-        setUsuarioBuscado('');
-    };
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
+    }
+
+    const rows = [...auditorias];
+    while (rows.length < query.size) rows.push(null);
 
     return (
         <>
@@ -191,15 +183,27 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
                                             value={auditoriaAVisualizar.programa}
                                             readOnly
                                         />
-                                        <label htmlFor="operacion" className="form-label m-0 mb-2">Operación</label>
+                                        <label htmlFor="ip" className="form-label m-0 mb-2">IP</label>
                                         <input
                                             type="text"
-                                            id="operacion"
-                                            name="operacion"
+                                            id="ip"
+                                            name="ip"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.operacion}
+                                            value={auditoriaAVisualizar.ip}
                                             readOnly
                                         />
+                                        <label htmlFor="codregistro" className="form-label m-0 mb-2">Cód. Registro</label>
+                                        <input
+                                            type="number"
+                                            id="codregistro"
+                                            name="codregistro"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={auditoriaAVisualizar.codregistro}
+                                            readOnly
+                                        />
+                                    </div>
+                                    {/*Columna 2 de visualizar*/}
+                                    <div className='col ms-5 ps-0'>
                                         <label htmlFor="fechahora" className="form-label m-0 mb-2">Fecha y Hora</label>
                                         <input
                                             type="datetime-local"
@@ -211,25 +215,13 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
                                             step={60}
                                             readOnly
                                         />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="codregistro" className="form-label m-0 mb-2">Cód. Registro</label>
-                                        <input
-                                            type="number"
-                                            id="codregistro"
-                                            name="codregistro"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.codregistro}
-                                            readOnly
-                                        />
-                                        <label htmlFor="ip" className="form-label m-0 mb-2">IP</label>
+                                        <label htmlFor="operacion" className="form-label m-0 mb-2">Operación</label>
                                         <input
                                             type="text"
-                                            id="ip"
-                                            name="ip"
+                                            id="operacion"
+                                            name="operacion"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.ip}
+                                            value={auditoriaAVisualizar.operacion}
                                             readOnly
                                         />
                                         <label htmlFor="equipo" className="form-label m-0 mb-2">Equipo</label>
@@ -243,7 +235,7 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
                                         />
                                     </div>
                                 </div>
-                                <button onClick={() => setAuditoriaAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
+                                <button onClick={() => setAuditoriaAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -253,126 +245,259 @@ export const AuditoriaApp = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'ACCESOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
+                <Header userLog={userLog} title={'ACCESOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
                             <i className="bi bi-search me-2 fs-5"></i>Listado de Accesos
                         </p>
                         <div className="p-3">
-                            <div className="d-flex align-items-center mb-3 fw-bold">
-                                <label htmlFor="usuario" className="form-label m-0">Usuario</label>
-                                <input
-                                    type='text'
-                                    id="usuario"
-                                    name="usuario"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
-                                    value={usuarioBuscado}
-                                    onChange={(e) => { setUsuarioBuscado(e.target.value); }}
-                                />
-                                <label htmlFor="operacion" className="form-label m-0">Operación</label>
-                                <select
-                                    id="operacion"
-                                    name="operacion"
-                                    className="me-4 ms-2 form-select border-input"
-                                    value={operacionBuscado}
-                                    onChange={(e) => setOperacionBuscado(e.target.value)} // Actualiza el estado al escribir
-                                >
-                                    <option value="">Seleccione una operación...</option>
-                                    <option value="Insertar">Insertar</option>
-                                    <option value="Modificar">Modificar</option>
-                                    <option value="Eliminar">Eliminar</option>
-                                    <option value="Visualizar">Visualizar</option>
-                                    <option value="Consultar">Consultar</option>
-                                    <option value="Realizar Informe">Realizar Informe</option>
-                                    <option value="Iniciar Sesión">Iniciar Sesión</option>
-                                    <option value="Cerrar Sesión">Cerrar Sesión</option>
-                                </select>
-                            </div>
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
                                 <thead className='table-success'>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Usuario</th>
-                                        <th>Fecha y Hora</th>
-                                        <th>Módulo</th>
-                                        <th>Operación</th>
-                                        <th>Cód. Registro</th>
-                                        <th>IP</th>
-                                        <th>Equipo</th>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("usuario.nombreusuario")} className="sortable-header">
+                                            Usuario
+                                            <i className={`bi ${getSortIcon("usuario.nombreusuario")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["usuario.nombreusuario"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "usuario.nombreusuario",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("fecha")} className="sortable-header">
+                                            Fecha y Hora
+                                            <i className={`bi ${getSortIcon("fecha")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["fecha"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "fecha",
+                                                        type: "date",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("programa")} className="sortable-header">
+                                            Módulo
+                                            <i className={`bi ${getSortIcon("programa")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["programa"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "programa",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("operacion")} className="sortable-header">
+                                            Operación
+                                            <i className={`bi ${getSortIcon("operacion")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["operacion"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "operacion",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("codregistro")} className="sortable-header">
+                                            Cód. Registro
+                                            <i className={`bi ${getSortIcon("codregistro")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["codregistro"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "codregistro",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {auditorias.length > 0 ? (
-                                        [...auditorias.slice(0, 10), ...Array(Math.max(0, 10 - auditorias.length)).fill(null)].map((v, index) => (
-                                            <tr className="text-center align-middle" key={v ? v.id : `empty-${index}`}>
-                                                {v ? (
-                                                    <>
-                                                        <td style={{ width: '60px' }}>{v.id}</td>
-                                                        <td className='text-start'>{v.usuario.nombreusuario}</td>
-                                                        <td>{formatearFechaYHora(v.fechahora)}</td>
-                                                        <td>{v.programa}</td>
-                                                        <td>{v.operacion}</td>
-                                                        <td>{v.codregistro}</td>
-                                                        <td>{v.ip}</td>
-                                                        <td>{v.equipo}</td>
-                                                        <td style={{ width: '100px' }}>
-                                                            <button
-                                                                onClick={() => setAuditoriaAEliminar(v)}
-                                                                className="btn border-0 me-2 p-0"
-                                                            >
-                                                                <i className="bi bi-trash-fill text-danger"></i>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setAuditoriaAVisualizar(v)}
-                                                                className="btn border-0 ms-2 p-0"
-                                                            >
-                                                                <i className="bi bi-eye-fill text-primary p-0"></i>
-                                                            </button>
-                                                        </td>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                    </>
-                                                )}
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr className="text-center align-middle">
-                                            <td colSpan="9" className="text-center" style={{ height: '325px' }}>
-                                                <div className='fw-bolder fs-1'>No hay accesos disponibles</div>
+                                    {auditorias.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="7" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
                                             </td>
                                         </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
+                                            return (
+                                                <tr className="text-center align-middle" key={v ? v.id : `empty-${index}`}>
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{v.usuario.nombreusuario}</td>
+                                                    <td>{DateHourFormat(v.fechahora, 1)}</td>
+                                                    <td>{v.programa}</td>
+                                                    <td>{v.operacion}</td>
+                                                    <td>{v.codregistro}</td>
+                                                    <td style={{ width: '100px' }}>
+                                                        <button
+                                                            onClick={() => setAuditoriaAEliminar(v)}
+                                                            className="btn border-0 me-2 p-0"
+                                                        >
+                                                            <i className="bi bi-trash-fill text-danger"></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setAuditoriaAVisualizar(v)}
+                                                            className="btn border-0 ms-2 p-0"
+                                                        >
+                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold">
-                                <i className="bi bi-arrow-clockwise me-2"></i>Refrescar
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
                             </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
-                                    <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${page === 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => handlePageChange(page - 1)}>Anterior</button>
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
                                     </li>
-                                    <li className={`page-item ${(page === totalPages - 1 || auditorias.length === 0) ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${(page === totalPages - 1 || auditorias.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
                                     </li>
                                 </ul>
                             </nav>

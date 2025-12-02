@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
-import { getTokenPaginado, saveToken, deleteToken, getTokenPorUsuario } from '../services/token.service.js';
-import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
+import { getToken, saveToken, deleteToken } from '../services/token.service.js';
 import Header from '../Header';
+import { AddAccess } from "../utils/AddAccess.js";
+import { FiltroModal } from '../FiltroModal.jsx';
+import { DateHourFormat } from '../utils/DateHourFormat.js';
 
-export const TokenApp = ({ usuarioUsed }) => {
+export const TokenApp = ({ userLog }) => {
 
-    const [usuarioBuscado, setUsuarioBuscado] = useState('');
     const [tokens, setTokens] = useState([]);
-    const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [tokenAEliminar, setTokenAEliminar] = useState(null);
     const [tokenAGuardar, setTokenAGuardar] = useState(null);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -26,7 +33,6 @@ export const TokenApp = ({ usuarioUsed }) => {
         };
     }, []);
 
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {
@@ -40,96 +46,24 @@ export const TokenApp = ({ usuarioUsed }) => {
         });
     }, []);
 
-    const obtenerFechaHora = async () => {
-        const localDate = new Date();
-
-        const dia = String(localDate.getDate()).padStart(2, '0');
-        const mes = String(localDate.getMonth()).padStart(2, '0');
-        const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0');
-        const minuto = String(localDate.getMinutes()).padStart(2, '0');
-
-        return new Date(anio, mes, dia, hora, minuto);
-    };
-
-    const agregarAcceso = async (op, cod) => {
-        const network = await recuperarNetworkInfo();
-        const fechahora = await obtenerFechaHora();
-        const auditoria = {
-            id: null,
-            usuario: {
-                id: usuarioUsed.id
-            },
-            fechahora: fechahora,
-            programa: "Tokens",
-            operacion: op,
-            codregistro: cod,
-            ip: network.ip,
-            equipo: network.equipo
-        }
-        await saveAuditoria(auditoria);
-    }
-
-    const recuperarTokens = async (pageNumber = 0, desc = '') => {
-        const response = await getTokenPaginado(pageNumber);
-
-        const tokenFiltrados = response.tokens.content.filter(token => {
-            const tokenCoincide = desc.trim() !== '' ? token.token.toLowerCase().includes(desc.toLowerCase()) : true;
-
-            return tokenCoincide;
-        });
-
-        return {
-            tokens: tokenFiltrados,
-            totalPages: response.totalPages,
-            currentPage: response.currentPage,
-        };
-    };
-
-    const recuperarNetworkInfo = async () => {
-        const response = await getNetworkInfo();
-        return response;
-    }
-
-    const recuperarTokensConFiltro = async (page) => {
-        if (usuarioBuscado.trim() === '') {
-            return await recuperarTokens(page, usuarioBuscado);
-        } else {
-            return await getTokenPorUsuario(usuarioBuscado, page);
-        }
+    const recuperarTokens = () => {
+        setQuery(q => ({ ...q }));
     };
 
     useEffect(() => {
-        recuperarTokens(page, usuarioBuscado);
-    }, []);
-
-    const actualizarToken = async () => {
-        const resultado = await recuperarTokensConFiltro(page);
-        setTokens(resultado.tokens);
-        setTotalPages(resultado.totalPages);
-        if (page >= resultado.totalPages) setPage(0);
-    }
-
-    useEffect(() => {
-        const buscarTokens = async () => {
-            try {
-                actualizarToken();
-            } catch (error) {
-                console.error('Error buscando tokens:', error);
-            }
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getToken(query.page, query.size, query.order, filtrosFinal);
+            setTokens(response.items);
+            setTotalPages(response.totalPages);
         };
-
-        buscarTokens();
-    }, [page, usuarioBuscado]);
+        load();
+    }, [query]);
 
     const eliminarTokenFn = async (id) => {
-        try {
-            await deleteToken(id);
-            agregarAcceso('Eliminar', id);
-            actualizarToken();
-        } catch (error) {
-            console.error('Error eliminando tipos de usuarios:', error);
-        }
+        await deleteToken(id);
+        await AddAccess('Eliminar', id, userLog, "Tokens");
+        recuperarTokens();
     };
 
     const confirmarEliminacion = (id) => {
@@ -138,37 +72,65 @@ export const TokenApp = ({ usuarioUsed }) => {
     }
 
     const handleEliminarToken = (token) => {
-
         setTokenAEliminar(token);
     };
 
     const guardarFn = async () => {
 
-        const nuevoToken = await saveToken(usuarioUsed.id);
-        agregarAcceso('Insertar', nuevoToken.id);
-
+        const nuevoToken = await saveToken(userLog.id);
+        await AddAccess('Insertar', nuevoToken.saved.id, userLog, "Tokens");
         setTokenAGuardar(null);
-        actualizarToken();
+        recuperarTokens();
     };
 
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
+    };
+
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
         }
-    };
 
-    const formatearFechaYHora = (fecha) => {
-        const date = new Date(fecha);
-        const dia = String(date.getDate()).padStart(2, '0');
-        const mes = String(date.getMonth() + 1).padStart(2, '0');
-        const anio = date.getFullYear();
-        const hora = String(date.getHours()).padStart(2, '0');
-        const minuto = String(date.getMinutes()).padStart(2, '0');
-        return `${dia}/${mes}/${anio} ${hora}:${minuto}`;
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
     };
 
     const ocultarToken = (cadena, id, estado) => {
-        if (usuarioUsed.id === 1 || usuarioUsed.id === id) {
+        if (userLog.id === 1 || userLog.id === id) {
             return (
                 <p className={`${estado ? '' : 'text-decoration-line-through'} m-0`}>
                     {cadena}
@@ -186,16 +148,17 @@ export const TokenApp = ({ usuarioUsed }) => {
         }
     }
 
-    const obtenerEstadoCompleto = (estado) => {
-        return estado ? 'Activo' : 'Expirado';
-    };
-    const obtenerClaseEstado = (estado) => {
-        return estado ? 'text-bg-success' : 'text-bg-danger';
+    const obtenerClaseEstado = (activo) => {
+        return activo ? 'text-bg-success' : 'text-bg-danger';
     };
 
     const refrescar = () => {
-        setUsuarioBuscado('');
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
     }
+
+    const rows = [...tokens];
+    while (rows.length < query.size) rows.push(null);
 
     return (
         <>
@@ -261,109 +224,242 @@ export const TokenApp = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'TOKENS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
+                <Header userLog={userLog} title={'TOKENS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-1 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
                             <i className="bi bi-search me-2 fs-5"></i>Listado de Tokens
                         </p>
                         <div className="p-3">
-                            <div className="d-flex align-items-center mb-3 fw-bold">
-                                <label htmlFor="usuario" className="form-label m-0">Usuario</label>
-                                <input
-                                    type="text"
-                                    id="usuario"
-                                    name="usuario"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
-                                    value={usuarioBuscado}
-                                    onChange={(e) => setUsuarioBuscado(e.target.value)}
-                                />
-                            </div>
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
                                 <thead className='table-success'>
                                     <tr>
-                                        <th>#</th>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Token</th>
-                                        <th>Usuario</th>
-                                        <th>Fecha de Creación</th>
-                                        <th>Fecha de Expiración</th>
-                                        <th>Estado</th>
+                                        <th onClick={() => toggleOrder("usuario.nombreusuario")} className="sortable-header">
+                                            Usuario
+                                            <i className={`bi ${getSortIcon("usuario.nombreusuario")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["usuario.nombreusuario"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "usuario.nombreusuario",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("fechacreacion")} className="sortable-header">
+                                            Fecha de Creación
+                                            <i className={`bi ${getSortIcon("fechacreacion")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["fechacreacion"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "fechacreacion",
+                                                        type: "date",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("fechaexpiracion")} className="sortable-header">
+                                            Fecha de Expiración
+                                            <i className={`bi ${getSortIcon("fechaexpiracion")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["fechaexpiracion"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "fechaexpiracion",
+                                                        type: "date",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("estado")} className="sortable-header">
+                                            Estado
+                                            <i className={`bi ${getSortIcon("estado")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["estado"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "estado",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {tokens.length > 0 ? (
-                                        [...tokens.slice(0, 10), ...Array(Math.max(0, 10 - tokens.length)).fill(null)].map((v, index) => (
-                                            <tr className="text-center align-middle" key={v ? v.id : `empty-${index} `}>
-                                                {v ? (
-                                                    <>
-                                                        <td style={{ width: '60px' }}>{v.id}</td>
-                                                        <td className='text-start'>{ocultarToken(v.token, v.usuario.id, v.activo)}</td>
-                                                        <td>{v.usuario.nombreusuario}</td>
-                                                        <td>{formatearFechaYHora(v.fecha_creacion)}</td>
-                                                        <td>{formatearFechaYHora(v.fecha_expiracion)}</td>
-                                                        <td style={{ width: '110px' }}>
-                                                            <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
-                                                                {obtenerEstadoCompleto(v.activo)}
-                                                            </p>
-                                                        </td>
-                                                        <td style={{ width: '80px' }}>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    if (v.usuario.id != 1 || v.usuario.id === usuarioUsed.id || usuarioUsed.id === 1) {
-                                                                        handleEliminarToken(v)
-                                                                    }
-                                                                }}
-                                                                className="btn border-0 p-0"
-                                                                style={{ cursor: v.usuario.id != 1 || v.usuario.id === usuarioUsed.id || usuarioUsed.id === 1 ? 'pointer' : 'default' }}
-                                                            >
-                                                                <i className={`bi bi-trash-fill ${v.usuario.id != 1 || v.usuario.id === usuarioUsed.id || usuarioUsed.id === 1 ? 'text-danger' : 'text-danger-emphasis'} `}></i>
-                                                            </button>
-                                                        </td>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                        <td>&nbsp;</td>
-                                                    </>
-                                                )}
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr className="text-center align-middle">
-                                            <td colSpan="7" className="text-center" style={{ height: '325px' }}>
-                                                <div className='fw-bolder fs-1'>No hay tokens disponibles</div>
+                                    {tokens.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="7" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
                                             </td>
                                         </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
+                                            return (
+                                                <tr
+                                                    className="text-center align-middle"
+                                                    key={v ? v.id : `empty-${index}`}
+                                                >
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{ocultarToken(v.token, v.usuario.id, v.activo)}</td>
+                                                    <td>{v.usuario.nombreusuario}</td>
+                                                    <td>{DateHourFormat(v.fechacreacion, 0)}</td>
+                                                    <td>{DateHourFormat(v.fechaexpiracion, 0)}</td>
+                                                    <td style={{ width: '140px' }}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
+                                                            {v.estado}
+                                                        </p>
+                                                    </td>
+                                                    <td style={{ width: '80px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (v.usuario.id != 1 || v.usuario.id === userLog.id || userLog.id === 1) handleEliminarToken(v);
+                                                            }}
+                                                            className="btn border-0 p-0"
+                                                            style={{ cursor: v.usuario.id != 1 || v.usuario.id === userLog.id || userLog.id === 1 ? 'pointer' : 'default' }}
+                                                        >
+                                                            <i className={`bi bi-trash-fill ${v.usuario.id != 1 || v.usuario.id === userLog.id || userLog.id === 1 ? 'text-danger' : 'text-danger-emphasis'} `}></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setTokenAGuardar(true)} className="btn btn-success text-black fw-bold me-3">
-                                <i className="bi bi-plus-lg me-2"></i>Generar
+                            <button onClick={() => setTokenAGuardar(true)} className="btn btn-secondary fw-bold me-2">
+                                <i className="bi bi-plus-circle"></i>
                             </button>
-                            <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold ms-3">
-                                <i className="bi bi-arrow-clockwise me-2"></i>Refrescar
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
                             </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
-                                    <li className={`page-item ${page === 0 ? 'disabled' : ''} `}>
-                                        <button className={`page-link ${page === 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'} `} onClick={() => handlePageChange(page - 1)}>Anterior</button>
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
                                     </li>
-                                    <li className={`page-item ${(page === totalPages - 1 || tokens.length === 0) ? 'disabled' : ''} `}>
-                                        <button className={`page-link ${(page === totalPages - 1 || tokens.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'} `} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
                                     </li>
                                 </ul>
                             </nav>

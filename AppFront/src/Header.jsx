@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSidebarButton = true, icon = "list-task" }) => {
+export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebarButton = true, icon = "list-task" }) => {
     const navigate = useNavigate();
 
     return (
@@ -11,7 +11,7 @@ export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSid
                     <button
                         className="btn btn-light me-1 d-flex align-items-center justify-content-center"
                         style={{ width: '30px', height: '30px', padding: 0 }}
-                        onClick={onToggleSidebar ? onToggleSidebar : () => navigate('/biotech/home')}
+                        onClick={onToggleSidebar ? onToggleSidebar : () => navigate(-1)}
                     >
                         <i className={`bi bi-${icon} fs-5`}></i>
                     </button>
@@ -24,10 +24,10 @@ export const Header = ({ usuarioUsed, title = "Inicio", onToggleSidebar, showSid
                 <div className="d-flex flex-column text-end me-3">
                     <span className="fw-semibold text-success">
                         <i className="bi bi-person-circle me-1"></i>
-                        {usuarioUsed.tipousuario.tipousuario}
+                        {userLog.tipousuario.tipousuario}
                     </span>
 
-                    <small className="text-muted">{usuarioUsed.nombreusuario}</small>
+                    <small className="text-muted">{userLog.nombreusuario}</small>
                 </div>
                 <img
                     className='logo-img-bar'

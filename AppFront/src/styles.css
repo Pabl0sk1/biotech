@@ -140,6 +140,12 @@ input[type="time"]:hover::-webkit-calendar-picker-indicator {
   border: none;
   background-color: #9aa1a74e;
   border-radius: 3px;
+  cursor: pointer;
+}
+
+input[type="select"]:hover,
+select:hover {
+  cursor: pointer;
 }
 
 .breadLink:hover {
@@ -225,26 +231,12 @@ input[type="time"]:hover::-webkit-calendar-picker-indicator {
   background-position: center;
 }
 
-.menuBack {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transition: background-image 1s ease-in-out;
-}
-
-/* Para Chrome, Safari, Edge, Opera */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Para Firefox */
 input[type="number"] {
   appearance: textfield;
   -moz-appearance: textfield;
@@ -705,4 +697,13 @@ input[type="number"] {
   background-color: #7ea019;
   border-color: #000000;
   cursor: pointer;
+}
+
+.sortable-header {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.sortable-header:hover {
+  background-color: #e0ffe0;
 }

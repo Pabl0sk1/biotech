@@ -1,0 +1,489 @@
+import { useEffect, useState } from "react";
+import { getBranch, saveBranch, updateBranch, deleteBranch } from '../services/sucursal.service.js';
+import { getUser } from '../services/usuario.service.js';
+import { getEmployee } from '../services/funcionario.service.js';
+import Header from "../Header.jsx";
+import { AddAccess } from "../utils/AddAccess.js";
+import { FiltroModal } from "../FiltroModal.jsx";
+
+export const SucursalApp = ({ userLog }) => {
+
+    const [sucursales, setSucursales] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
+    const [funcionarios, setFuncionarios] = useState([]);
+    const [totalPages, setTotalPages] = useState(1);
+    const [sucursalAGuardar, setSucursalAGuardar] = useState(null);
+    const [sucursalAEliminar, setSucursalAEliminar] = useState(null);
+    const [sucursalNoEliminar, setSucursalNoEliminar] = useState(null);
+    const [sucursalAVisualizar, setSucursalAVisualizar] = useState(null);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
+
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                setSucursalAEliminar(null);
+                setSucursalNoEliminar(null);
+                setSucursalAVisualizar(null);
+                setSucursalAGuardar(null);
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, []);
+
+    useEffect(() => {
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, []);
+
+    const selected = {
+        id: null,
+        sucursal: ""
+    };
+
+    const recuperarSucursales = () => {
+        setQuery(q => ({ ...q }));
+    }
+
+    const recuperarUsuarios = async () => {
+        const response = await getUser();
+        setUsuarios(response.items);
+    }
+
+    const recuperarFuncionarios = async () => {
+        const response = await getEmployee();
+        setFuncionarios(response.items);
+    }
+
+    useEffect(() => {
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getBranch(query.page, query.size, query.order, filtrosFinal);
+            setSucursales(response.items);
+            setTotalPages(response.totalPages);
+            recuperarUsuarios();
+            recuperarFuncionarios();
+        };
+        load();
+    }, [query]);
+
+    const eliminarSucursalFn = async (id) => {
+        await deleteBranch(id);
+        await AddAccess('Eliminar', id, userLog, "Sucursales");
+        recuperarSucursales();
+    };
+
+    const confirmarEliminacion = (id) => {
+        eliminarSucursalFn(id);
+        setSucursalAEliminar(null);
+    }
+
+    const handleEliminarSucursal = (sucursal) => {
+        const rel = usuarios.find(v => v.sucursal.id === sucursal.id);
+        const rel2 = funcionarios.find(v => v.sucursal.id === sucursal.id);
+        if (rel || rel2) setSucursalNoEliminar(sucursal);
+        else setSucursalAEliminar(sucursal);
+    };
+
+    const guardarFn = async (sucursalAGuardar) => {
+
+        if (sucursalAGuardar.id) {
+            await updateBranch(sucursalAGuardar.id, sucursalAGuardar);
+            await AddAccess('Modificar', sucursalAGuardar.id, userLog, "Sucursales");
+        } else {
+            const nuevoSucursal = await saveBranch(sucursalAGuardar);
+            await AddAccess('Insertar', nuevoSucursal.saved.id, userLog, "Sucursales");
+        }
+        setSucursalAGuardar(null);
+        recuperarSucursales();
+    };
+
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
+    };
+
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
+        }
+
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+
+        if (form.checkValidity()) {
+            guardarFn({ ...sucursalAGuardar });
+            form.classList.remove('was-validated');
+        } else {
+            form.classList.add('was-validated');
+        }
+    };
+
+    const refrescar = () => {
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
+    }
+
+    const rows = [...sucursales];
+    while (rows.length < query.size) rows.push(null);
+
+    return (
+        <>
+
+            {sucursalAEliminar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
+                                <div className="fw-bolder d-flex flex-column align-items-center">
+                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
+                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la sucursal?</p>
+                                </div>
+                                <div className="mt-3">
+                                    <button
+                                        onClick={() => confirmarEliminacion(sucursalAEliminar.id)}
+                                        className="btn btn-success text-black me-4 fw-bold"
+                                    >
+                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
+                                    </button>
+                                    <button
+                                        onClick={() => setSucursalAEliminar(null)}
+                                        className="btn btn-danger text-black ms-4 fw-bold"
+                                    >
+                                        <i className="bi bi-x-lg me-2"></i>Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {sucursalNoEliminar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
+                                <div className="fw-bolder d-flex flex-column align-items-center">
+                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
+                                    <p className='fs-5'>La sucursal está siendo referenciado en otra tabla</p>
+                                </div>
+                                <button
+                                    onClick={() => setSucursalNoEliminar(null)}
+                                    className="btn btn-danger mt-3 fw-bold text-black">
+                                    <i className="bi bi-x-lg me-2"></i>Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {sucursalAVisualizar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
+                                <div className="row mb-3 fw-semibold text-start">
+                                    <div className='col'>
+                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Descripción</label>
+                                        <input
+                                            type="text"
+                                            id="sucursal"
+                                            name="sucursal"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={sucursalAVisualizar.sucursal}
+                                            readOnly
+                                        />
+                                    </div>
+                                </div>
+                                <button onClick={() => setSucursalAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
+                                    <i className="bi bi-x-lg me-2"></i>Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {sucursalAGuardar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
+                                <form
+                                    action="url.ph"
+                                    onSubmit={handleSubmit}
+                                    className="needs-validation"
+                                    noValidate
+                                >
+                                    <div className="row mb-3 fw-semibold text-start">
+                                        <div className='col'>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Descripción</label>
+                                                <input
+                                                    type="text"
+                                                    id="sucursal"
+                                                    name="sucursal"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={sucursalAGuardar.sucursal}
+                                                    onChange={(event) => setSucursalAGuardar({ ...sucursalAGuardar, [event.target.name]: event.target.value })}
+                                                    required
+                                                    autoFocus
+                                                    maxLength={50}
+                                                />
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 30 caracteres.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className='mt-3'>
+                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
+                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
+                                        </button>
+                                        <button onClick={() => setSucursalAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                            <i className="bi bi-x-lg me-2"></i>Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            <div className="modern-container colorPrimario">
+                <Header userLog={userLog} title={'SUCURSALES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <div className="container-fluid p-4 mt-2">
+                    <div className="form-card mt-5">
+                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Sucursales
+                        </p>
+                        <div className="p-3">
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
+                            <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
+                                <thead className='table-success'>
+                                    <tr>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("sucursal")} className="sortable-header">
+                                            Descripción
+                                            <i className={`bi ${getSortIcon("sucursal")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["sucursal"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "sucursal",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th>Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sucursales.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="3" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
+                                            const puedeEditar = v && v.id;
+                                            return (
+                                                <tr
+                                                    className="text-center align-middle"
+                                                    key={v ? v.id : `empty-${index}`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (puedeEditar) setSucursalAGuardar(v);
+                                                    }}
+                                                    style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
+                                                >
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{v.sucursal}</td>
+                                                    <td style={{ width: '100px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEliminarSucursal(v);
+                                                            }}
+                                                            className="btn border-0 me-2 p-0"
+                                                        >
+                                                            <i className="bi bi-trash-fill text-danger p-0"></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await AddAccess('Visualizar', v.id, userLog, "Sucursales");
+                                                                setSucursalAVisualizar(v);
+                                                            }}
+                                                            className="btn border-0 ms-2 p-0"
+                                                        >
+                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
+                            <button onClick={() => setSucursalAGuardar(selected)} className="btn btn-secondary fw-bold me-2">
+                                <i className="bi bi-plus-circle"></i>
+                            </button>
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                            <nav aria-label="page navigation" className='user-select-none ms-auto'>
+                                <ul className="pagination m-0">
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
+                                    </li>
+                                    <li className="page-item disabled">
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
+                                    </li>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div >
+                </div >
+            </div >
+        </>
+    );
+}

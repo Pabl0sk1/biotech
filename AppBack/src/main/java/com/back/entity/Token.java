@@ -1,5 +1,6 @@
 package com.back.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +11,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -44,9 +47,20 @@ public class Token {
 	@Column(nullable = false, unique = true)
 	private String token;
 	
-	private LocalDateTime fecha_creacion;
+	@Temporal(TemporalType.DATE)
+	private LocalDate fechacreacion;
 	
-	private LocalDateTime fecha_expiracion;
+	@Temporal(TemporalType.TIMESTAMP)
+	private LocalDateTime fechahoracreacion;
+	
+	@Temporal(TemporalType.DATE)
+	private LocalDate fechaexpiracion;
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	private LocalDateTime fechahoraexpiracion;
+	
+	@Size(max = 15)
+	private String estado;
 	
 	private Boolean activo;
 	

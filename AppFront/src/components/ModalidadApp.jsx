@@ -1,0 +1,480 @@
+import { useEffect, useState } from "react";
+import { getSchedule, saveSchedule, updateSchedule, deleteSchedule } from '../services/tipoturno.service.js';
+import { getShift } from '../services/turno.service.js';
+import Header from "../Header.jsx";
+import { AddAccess } from "../utils/AddAccess.js";
+import { FiltroModal } from "../FiltroModal.jsx";
+
+export const ModalidadApp = ({ userLog }) => {
+
+    const [modalidades, setModalidades] = useState([]);
+    const [turnos, setTurnos] = useState([]);
+    const [totalPages, setTotalPages] = useState(1);
+    const [modalidadAGuardar, setModalidadAGuardar] = useState(null);
+    const [modalidadAEliminar, setModalidadAEliminar] = useState(null);
+    const [modalidadNoEliminar, setModalidadNoEliminar] = useState(null);
+    const [modalidadAVisualizar, setModalidadAVisualizar] = useState(null);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
+
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                setModalidadAEliminar(null);
+                setModalidadNoEliminar(null);
+                setModalidadAVisualizar(null);
+                setModalidadAGuardar(null);
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, []);
+
+    useEffect(() => {
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, []);
+
+    const selected = {
+        id: null,
+        tipo: ""
+    };
+
+    const recuperarModalidades = () => {
+        setQuery(q => ({ ...q }));
+    }
+
+    const recuperarTurnos = async () => {
+        const response = await getShift();
+        setTurnos(response.items);
+    }
+
+    useEffect(() => {
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getSchedule(query.page, query.size, query.order, filtrosFinal);
+            setModalidades(response.items);
+            setTotalPages(response.totalPages);
+            recuperarTurnos();
+        };
+        load();
+    }, [query]);
+
+    const eliminarModalidadFn = async (id) => {
+        await deleteSchedule(id);
+        await AddAccess('Eliminar', id, userLog, "Modalidades");
+        recuperarModalidades();
+    };
+
+    const confirmarEliminacion = (id) => {
+        eliminarModalidadFn(id);
+        setModalidadAEliminar(null);
+    }
+
+    const handleEliminarModalidad = (modalidad) => {
+        const rel = turnos.find(v => v.tipoturno.id === modalidad.id);
+        if (rel) setModalidadNoEliminar(modalidad);
+        else setModalidadAEliminar(modalidad);
+    };
+
+    const guardarFn = async (modalidadAGuardar) => {
+
+        if (modalidadAGuardar.id) {
+            await updateSchedule(modalidadAGuardar.id, modalidadAGuardar);
+            await AddAccess('Modificar', modalidadAGuardar.id, userLog, "Modalidades");
+        } else {
+            const nuevoModalidad = await saveSchedule(modalidadAGuardar);
+            await AddAccess('Insertar', nuevoModalidad.saved.id, userLog, "Modalidades");
+        }
+        setModalidadAGuardar(null);
+        recuperarModalidades();
+    };
+
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
+    };
+
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
+        }
+
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+
+        if (form.checkValidity()) {
+            guardarFn({ ...modalidadAGuardar });
+            form.classList.remove('was-validated');
+        } else {
+            form.classList.add('was-validated');
+        }
+    };
+
+    const refrescar = () => {
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
+    }
+
+    const rows = [...modalidades];
+    while (rows.length < query.size) rows.push(null);
+
+    return (
+        <>
+
+            {modalidadAEliminar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" modalidade="alert">
+                                <div className="fw-bolder d-flex flex-column align-items-center">
+                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
+                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la modalidad?</p>
+                                </div>
+                                <div className="mt-3">
+                                    <button
+                                        onClick={() => confirmarEliminacion(modalidadAEliminar.id)}
+                                        className="btn btn-success text-black me-4 fw-bold"
+                                    >
+                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
+                                    </button>
+                                    <button
+                                        onClick={() => setModalidadAEliminar(null)}
+                                        className="btn btn-danger text-black ms-4 fw-bold"
+                                    >
+                                        <i className="bi bi-x-lg me-2"></i>Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {modalidadNoEliminar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" modalidade="alert">
+                                <div className="fw-bolder d-flex flex-column align-items-center">
+                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
+                                    <p className='fs-5'>La modalidad está siendo referenciado en otra tabla</p>
+                                </div>
+                                <button
+                                    onClick={() => setModalidadNoEliminar(null)}
+                                    className="btn btn-danger mt-3 fw-bold text-black">
+                                    <i className="bi bi-x-lg me-2"></i>Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {modalidadAVisualizar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" modalidade="alert">
+                                <div className="row mb-3 fw-semibold text-start">
+                                    <div className='col'>
+                                        <label htmlFor="tipo" className="form-label m-0 mb-2">Descripción</label>
+                                        <input
+                                            type="text"
+                                            id="tipo"
+                                            name="tipo"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={modalidadAVisualizar.tipo}
+                                            readOnly
+                                        />
+                                    </div>
+                                </div>
+                                <button onClick={() => setModalidadAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
+                                    <i className="bi bi-x-lg me-2"></i>Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {modalidadAGuardar && (
+                <>
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" modalidade="alert">
+                                <form
+                                    action="url.ph"
+                                    onSubmit={handleSubmit}
+                                    className="needs-validation"
+                                    noValidate
+                                >
+                                    <div className="row mb-3 fw-semibold text-start">
+                                        <div className='col'>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="tipo" className="form-label m-0 mb-2">Descripción</label>
+                                                <input
+                                                    type="text"
+                                                    id="tipo"
+                                                    name="tipo"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={modalidadAGuardar.tipo}
+                                                    onChange={(event) => setModalidadAGuardar({ ...modalidadAGuardar, [event.target.name]: event.target.value })}
+                                                    required
+                                                    autoFocus
+                                                    maxLength={50}
+                                                />
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className='mt-3'>
+                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
+                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
+                                        </button>
+                                        <button onClick={() => setModalidadAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                            <i className="bi bi-x-lg me-2"></i>Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            <div className="modern-container colorPrimario">
+                <Header userLog={userLog} title={'MODALIDADES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <div className="container-fluid p-4 mt-2">
+                    <div className="form-card mt-5">
+                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Modalidades
+                        </p>
+                        <div className="p-3">
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
+                            <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
+                                <thead className='table-success'>
+                                    <tr>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("tipo")} className="sortable-header">
+                                            Descripción
+                                            <i className={`bi ${getSortIcon("tipo")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["tipo"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "tipo",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th>Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {modalidades.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="3" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
+                                            const puedeEditar = v && v.id;
+                                            return (
+                                                <tr
+                                                    className="text-center align-middle"
+                                                    key={v ? v.id : `empty-${index}`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (puedeEditar) setModalidadAGuardar(v);
+                                                    }}
+                                                    style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
+                                                >
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{v.tipo}</td>
+                                                    <td style={{ width: '100px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEliminarModalidad(v);
+                                                            }}
+                                                            className="btn border-0 me-2 p-0"
+                                                        >
+                                                            <i className="bi bi-trash-fill text-danger p-0"></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await AddAccess('Visualizar', v.id, userLog, "Modalidades");
+                                                                setModalidadAVisualizar(v);
+                                                            }}
+                                                            className="btn border-0 ms-2 p-0"
+                                                        >
+                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
+                            <button onClick={() => setModalidadAGuardar(selected)} className="btn btn-secondary fw-bold me-2">
+                                <i className="bi bi-plus-circle"></i>
+                            </button>
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                            <nav aria-label="page navigation" className='user-select-none ms-auto'>
+                                <ul className="pagination m-0">
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
+                                    </li>
+                                    <li className="page-item disabled">
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
+                                    </li>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div >
+                </div >
+            </div >
+        </>
+    );
+}

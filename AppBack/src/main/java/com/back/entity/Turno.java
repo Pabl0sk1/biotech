@@ -15,6 +15,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -48,13 +50,13 @@ public class Turno {
 	@Size(max = 50)
 	private String descripcion;
 
-	@Column(name = "horaent")
+	@Temporal(TemporalType.TIME)
 	private LocalTime horaent;
 	
-	@Column(name = "horasal")
+	@Temporal(TemporalType.TIME)
 	private LocalTime horasal;
 	
-	@Column(name = "horades")
+	@Temporal(TemporalType.TIME)
 	private LocalTime horades;
 
 	@Column(name = "thoras")
@@ -63,7 +65,7 @@ public class Turno {
 	@Column(name = "extporcen")
 	private Integer extporcen;
 	
-	@OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	@JsonManagedReference
 	@Size(min = 1)
 	public List<TurnoDia> turnodia;

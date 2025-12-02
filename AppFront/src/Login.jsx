@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUsuario } from "./services/usuario.service";
-import { saveAuditoria, getNetworkInfo } from './services/auditoria.service.js';
+import { login } from "./services/usuario.service";
+import { AddAccess } from "./utils/AddAccess.js";
 
-export const Login = ({ setUsuarioUsed }) => {
+export const Login = ({ setUserLog }) => {
 
     const navigate = useNavigate();
     const [nombreusuario, setNombreUsuario] = useState("");
@@ -11,41 +11,6 @@ export const Login = ({ setUsuarioUsed }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-
-    const recuperarNetworkInfo = async () => {
-        const response = await getNetworkInfo();
-        return response;
-    }
-
-    const obtenerFechaHora = async () => {
-        const localDate = new Date();
-
-        const dia = String(localDate.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(localDate.getMonth()).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
-        const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(localDate.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
-
-        return new Date(anio, mes, dia, hora, minuto);
-    };
-
-    const agregarAcceso = async (idx) => {
-        const network = await recuperarNetworkInfo();
-        const fechahora = await obtenerFechaHora();
-        const auditoria = {
-            id: null,
-            usuario: {
-                id: idx
-            },
-            fechahora: fechahora,
-            programa: 'Login',
-            operacion: 'Iniciar Sesión',
-            codregistro: 0,
-            ip: network.ip,
-            equipo: network.equipo
-        }
-        await saveAuditoria(auditoria);
-    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -58,19 +23,16 @@ export const Login = ({ setUsuarioUsed }) => {
         try {
             setLoading(true);
             const credentials = { nombreusuario, contrasena };
-            const response = await loginUsuario(credentials);
+            const response = await login(credentials);
 
             if (response.ok) {
-                // Login exitoso
-                const usuarioEncontrado = response.usuario;
+                const usuarioEncontrado = response.user;
 
-                // Verificar estado del usuario (por si acaso no lo validas en el backend)
-                if (usuarioEncontrado.estado === 'I') {
+                if (usuarioEncontrado.activo == false) {
                     setError("El usuario está inactivo.");
                     return;
                 }
 
-                // Si el estado es 'A' (Activo), continuar con el login
                 const expirationTime = Date.now() + 60 * 60 * 1000;
                 const sessionData = {
                     user: usuarioEncontrado,
@@ -80,10 +42,10 @@ export const Login = ({ setUsuarioUsed }) => {
                 localStorage.setItem('session', JSON.stringify(sessionData));
                 sessionStorage.setItem('usuario', JSON.stringify(usuarioEncontrado));
 
-                agregarAcceso(usuarioEncontrado.id);
+                await AddAccess('Iniciar Sesión', 0, response.user, "Login");
 
-                setUsuarioUsed(usuarioEncontrado);
-                navigate('/biotech/home');
+                setUserLog(usuarioEncontrado);
+                navigate(-1);
             } else {
                 setError("Nombre de usuario o contraseña incorrectos.");
             }
@@ -95,7 +57,6 @@ export const Login = ({ setUsuarioUsed }) => {
         }
     };
 
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {

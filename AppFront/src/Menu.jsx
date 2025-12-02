@@ -1,70 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { saveAuditoria, getNetworkInfo } from './services/auditoria.service.js';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
+import { AddAccess } from './utils/AddAccess.js';
 
-export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
-    const UrlBase = '/biotech';
-    const UrlLocal = UrlBase + '/home';
+export const Menu = ({ userLog, setUserLog }) => {
 
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isSeguridadMenuOpen, setIsSeguridadMenuOpen] = useState(false);
     const [isReportesMenuOpen, setIsReportesMenuOpen] = useState(false);
     const [isRegistrosMenuOpen, setIsRegistrosMenuOpen] = useState(false);
-    const navigate = useNavigate();
 
-    const obtenerFechaHora = async () => {
-        const localDate = new Date();
-
-        const dia = String(localDate.getDate()).padStart(2, '0');
-        const mes = String(localDate.getMonth()).padStart(2, '0');
-        const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0');
-        const minuto = String(localDate.getMinutes()).padStart(2, '0');
-
-        return new Date(anio, mes, dia, hora, minuto);
-    };
-
-    const agregarAcceso = async (op, op2, path) => {
-        const network = await recuperarNetworkInfo();
-        const fechahora = await obtenerFechaHora();
-        const auditoria = {
-            id: null,
-            usuario: {
-                id: usuarioUsed.id
-            },
-            fechahora: fechahora,
-            programa: op,
-            operacion: op2,
-            codregistro: 0,
-            ip: network.ip,
-            equipo: network.equipo
-        }
-        await saveAuditoria(auditoria);
-        if (op !== 'Login') {
-            navigate(path);
-        }
-    }
-
-    // Función para alternar la visibilidad de la barra lateral
     const toggleSidebar = () => {
         setIsSidebarVisible(!isSidebarVisible);
     };
 
-    const recuperarNetworkInfo = async () => {
-        const response = await getNetworkInfo();
-        return response;
-    }
-
-    // Menu.jsx - useEffect mejorado
     useEffect(() => {
         let timeoutId;
         let activityListeners = [];
-
         const resetTimer = () => {
-            // Actualizar ambos almacenamientos
             const sessionData = localStorage.getItem('session');
             if (sessionData) {
                 const { user } = JSON.parse(sessionData);
@@ -88,7 +42,6 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
             window.location.href = '/biotech/login';
         };
 
-        // Eventos más completos
         const events = [
             'mousemove', 'keydown', 'click', 'scroll',
             'touchstart', 'touchmove', 'wheel'
@@ -98,8 +51,6 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
             window.addEventListener(event, resetTimer);
             activityListeners.push(event);
         });
-
-        // Inicializar timer
         resetTimer();
 
         return () => {
@@ -114,21 +65,17 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
         setShowLogoutModal(true);
     };
 
-    // Menu.jsx - confirmLogout actualizado
     const confirmLogout = async () => {
         setShowLogoutModal(false);
 
-        // Eliminar ambos almacenamientos
         localStorage.removeItem('session');
         sessionStorage.removeItem('usuario');
 
-        // Limpiar estado y forzar recarga completa
-        agregarAcceso('Login', 'Cerrar Sesión', '');
-        setUsuarioUsed(null);
+        await AddAccess('Cerrar Sesión', 0, userLog, 'Login');
+        setUserLog(null);
         window.location.href = '/biotech/login';
     };
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -141,7 +88,6 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
         };
     }, []);
 
-    // Despliegues de submenus
     const toggleSeguridadMenu = () => {
         setIsSeguridadMenuOpen(!isSeguridadMenuOpen);
     };
@@ -151,18 +97,6 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
     const toggleRegistrosMenu = () => {
         setIsRegistrosMenuOpen(!isRegistrosMenuOpen);
     }
-
-    // Carrusel de imagenes del menú
-    const [imagenActual, setImagenActual] = useState('c1');
-    useEffect(() => {
-        const imagenes = ['c1', 'c2', 'c3', 'c4'];
-        let index = 0;
-        const intervalo = setInterval(() => {
-            index = (index + 1) % imagenes.length;
-            setImagenActual(imagenes[index]);
-        }, 10000);
-        return () => clearInterval(intervalo);
-    }, []);
 
     return (
         <>
@@ -191,10 +125,10 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                 </>
             )}
 
-            <div className="menuBack position-fixed top-0 start-0 w-100 vh-100" style={{ backgroundImage: `url(/carrusel/${imagenActual}.jpg)` }}>
-                <Header usuarioUsed={usuarioUsed} title={'INICIO'} onToggleSidebar={toggleSidebar} on={1} icon={'list-task'} />
+            <div className="position-fixed top-0 start-0 w-100 vh-100">
+                <Header userLog={userLog} title={'INICIO'} onToggleSidebar={toggleSidebar} on={1} icon={'list-task'} />
                 <Sidebar
-                    usuarioUsed={usuarioUsed}
+                    userLog={userLog}
                     isSidebarVisible={isSidebarVisible}
                     toggleSeguridadMenu={toggleSeguridadMenu}
                     toggleReportesMenu={toggleReportesMenu}
@@ -202,9 +136,7 @@ export const Menu = ({ usuarioUsed, setUsuarioUsed }) => {
                     isSeguridadMenuOpen={isSeguridadMenuOpen}
                     isReportesMenuOpen={isReportesMenuOpen}
                     isRegistrosMenuOpen={isRegistrosMenuOpen}
-                    agregarAcceso={agregarAcceso}
                     handleLogoutClick={handleLogoutClick}
-                    UrlLocal={UrlLocal}
                 />
             </div>
         </>

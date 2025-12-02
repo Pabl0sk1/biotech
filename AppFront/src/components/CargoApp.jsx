@@ -1,22 +1,28 @@
 import { useEffect, useState } from "react";
-import { getCargoPaginado, saveCargo, updateCargo, deleteCargo, getCargoPorDesc } from '../services/cargo.service.js';
-import { getFuncionario } from '../services/funcionario.service.js';
-import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
+import { getPosition, savePosition, updatePosition, deletePosition } from '../services/cargo.service.js';
+import { getEmployee } from '../services/funcionario.service.js';
 import Header from "../Header.jsx";
+import { AddAccess } from "../utils/AddAccess.js";
+import { FiltroModal } from "../FiltroModal.jsx";
 
-export const CargoApp = ({ usuarioUsed }) => {
+export const CargoApp = ({ userLog }) => {
 
-    const [cargoBuscado, setCargoBuscado] = useState('');
     const [cargos, setCargos] = useState([]);
     const [funcionarios, setFuncionarios] = useState([]);
-    const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [cargoAGuardar, setCargoAGuardar] = useState(null);
     const [cargoAEliminar, setCargoAEliminar] = useState(null);
     const [cargoNoEliminar, setCargoNoEliminar] = useState(null);
     const [cargoAVisualizar, setCargoAVisualizar] = useState(null);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -32,7 +38,6 @@ export const CargoApp = ({ usuarioUsed }) => {
         };
     }, []);
 
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {
@@ -46,106 +51,35 @@ export const CargoApp = ({ usuarioUsed }) => {
         });
     }, []);
 
-    const obtenerFechaHora = async () => {
-        const localDate = new Date();
-
-        const dia = String(localDate.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(localDate.getMonth()).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
-        const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(localDate.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
-
-        return new Date(anio, mes, dia, hora, minuto);
-    };
-
-    const agregarAcceso = async (op, cod) => {
-        const network = await recuperarNetworkInfo();
-        const fechahora = await obtenerFechaHora();
-        const auditoria = {
-            id: null,
-            usuario: {
-                id: usuarioUsed.id
-            },
-            fechahora: fechahora,
-            programa: "Cargos",
-            operacion: op,
-            codregistro: cod,
-            ip: network.ip,
-            equipo: network.equipo
-        }
-        await saveAuditoria(auditoria);
-    }
-
-    const cargoSelected = {
+    const selected = {
         id: null,
         cargo: ""
     };
 
-    const recuperarCargos = async (pageNumber = 0, desc = '') => {
-        const response = await getCargoPaginado(pageNumber);
-        const cargosFiltrados = response.cargos.filter(cargo => {
-            const cargoCoincide = desc.trim() !== '' ? cargo.cargo.toLowerCase().includes(desc.toLowerCase()) : true;
-
-            return cargoCoincide;
-        });
-
-        return {
-            cargos: cargosFiltrados,
-            totalPages: response.totalPages,
-            currentPage: response.currentPage,
-        };
-    };
+    const recuperarCargos = () => {
+        setQuery(q => ({ ...q }));
+    }
 
     const recuperarFuncionarios = async () => {
-        const response = await getFuncionario();
-        setFuncionarios(response);
-    }
-
-    const recuperarNetworkInfo = async () => {
-        const response = await getNetworkInfo();
-        return response;
-    }
-
-    const recuperarCargosConFiltro = async (page) => {
-        if (cargoBuscado.trim() === '') {
-            return await recuperarCargos(page, cargoBuscado);
-        } else {
-            return await getCargoPorDesc(cargoBuscado, page);
-        }
-    };
-
-    useEffect(() => {
-        recuperarCargos(page, cargoBuscado);
-        recuperarFuncionarios();
-    }, []);
-
-    const actualizarCargos = async () => {
-        const resultado = await recuperarCargosConFiltro(page);
-        setCargos(resultado.cargos);
-        setTotalPages(resultado.totalPages);
-        if (page >= resultado.totalPages) setPage(0);
+        const response = await getEmployee();
+        setFuncionarios(response.items);
     }
 
     useEffect(() => {
-        const buscarCargos = async () => {
-            try {
-                actualizarCargos();
-            } catch (error) {
-                console.error('Error buscando cargo:', error);
-            }
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getPosition(query.page, query.size, query.order, filtrosFinal);
+            setCargos(response.items);
+            setTotalPages(response.totalPages);
+            recuperarFuncionarios();
         };
-
-        buscarCargos();
-    }, [page, cargoBuscado]);
+        load();
+    }, [query]);
 
     const eliminarCargoFn = async (id) => {
-        try {
-            await deleteCargo(id);
-            agregarAcceso('Eliminar', id);
-            actualizarCargos();
-        } catch (error) {
-            console.error('Error eliminando cargo:', error);
-        }
+        await deletePosition(id);
+        await AddAccess('Eliminar', id, userLog, "Cargos");
+        recuperarCargos();
     };
 
     const confirmarEliminacion = (id) => {
@@ -154,33 +88,68 @@ export const CargoApp = ({ usuarioUsed }) => {
     }
 
     const handleEliminarCargo = (cargo) => {
-        const funcionariosRelacionado = funcionarios.find(v => v.cargo.id === cargo.id);
-
-        if (funcionariosRelacionado) {
-            setCargoNoEliminar(cargo);
-        } else {
-            setCargoAEliminar(cargo);
-        }
+        const rel = funcionarios.find(v => v.cargo.id === cargo.id);
+        if (rel) setCargoNoEliminar(cargo);
+        else setCargoAEliminar(cargo);
     };
 
     const guardarFn = async (cargoAGuardar) => {
 
         if (cargoAGuardar.id) {
-            await updateCargo(cargoAGuardar.id, cargoAGuardar);
-            agregarAcceso('Modificar', cargoAGuardar.id);
+            await updatePosition(cargoAGuardar.id, cargoAGuardar);
+            await AddAccess('Modificar', cargoAGuardar.id, userLog, "Cargos");
         } else {
-            const nuevoCargo = await saveCargo(cargoAGuardar);
-            agregarAcceso('Insertar', nuevoCargo.id);
+            const nuevoCargo = await savePosition(cargoAGuardar);
+            await AddAccess('Insertar', nuevoCargo.saved.id, userLog, "Cargos");
         }
-
         setCargoAGuardar(null);
-        actualizarCargos();
+        recuperarCargos();
     };
 
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
+    };
+
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
         }
+
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
     };
 
     const handleSubmit = (event) => {
@@ -196,8 +165,12 @@ export const CargoApp = ({ usuarioUsed }) => {
     };
 
     const refrescar = () => {
-        setCargoBuscado('');
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
     }
+
+    const rows = [...cargos];
+    while (rows.length < query.size) rows.push(null);
 
     return (
         <>
@@ -272,7 +245,7 @@ export const CargoApp = ({ usuarioUsed }) => {
                                         />
                                     </div>
                                 </div>
-                                <button onClick={() => setCargoAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
+                                <button onClick={() => setCargoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -331,37 +304,87 @@ export const CargoApp = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'CARGOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
+                <Header userLog={userLog} title={'CARGOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
                             <i className="bi bi-search me-2 fs-5"></i>Listado de Cargos
                         </p>
                         <div className="p-3">
-                            <div className="d-flex align-items-center mb-3 fw-bold">
-                                <label htmlFor="cargo" className="form-label m-0">Descripción</label>
-                                <input
-                                    type="text"
-                                    id="cargo"
-                                    name="cargo"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
-                                    value={cargoBuscado}
-                                    onChange={(e) => setCargoBuscado(e.target.value)} // Actualiza el estado al escribir
-                                />
-                            </div>
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
                                 <thead className='table-success'>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Descripción</th>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("cargo")} className="sortable-header">
+                                            Descripción
+                                            <i className={`bi ${getSortIcon("cargo")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["cargo"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "cargo",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cargos.length > 0 ? (
-                                        [...cargos.slice(0, 10), ...Array(Math.max(0, 10 - cargos.length)).fill(null)].map((v, index) => {
+                                    {cargos.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="3" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
                                             const puedeEditar = v && v.id;
                                             return (
                                                 <tr
@@ -369,82 +392,89 @@ export const CargoApp = ({ usuarioUsed }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) {
-                                                            setCargoAGuardar(v);
-                                                        }
+                                                        if (puedeEditar) setCargoAGuardar(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
-                                                    {v ? (
-                                                        <>
-                                                            <td style={{ width: '60px' }}>{v.id}</td>
-                                                            <td className='text-start'>{v.cargo}</td>
-                                                            <td style={{ width: '100px' }}>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleEliminarCargo(v);
-                                                                    }}
-                                                                    className="btn border-0 me-2 p-0"
-                                                                >
-                                                                    <i className="bi bi-trash-fill text-danger p-0"></i>
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        agregarAcceso('Visualizar', v.id);
-                                                                        setCargoAVisualizar(v)
-                                                                    }}
-                                                                    className="btn border-0 ms-2 p-0"
-                                                                >
-                                                                    <i className="bi bi-eye-fill text-primary p-0"></i>
-                                                                </button>
-                                                            </td>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                        </>
-                                                    )}
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{v.cargo}</td>
+                                                    <td style={{ width: '100px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEliminarCargo(v);
+                                                            }}
+                                                            className="btn border-0 me-2 p-0"
+                                                        >
+                                                            <i className="bi bi-trash-fill text-danger p-0"></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await AddAccess('Visualizar', v.id, userLog, "Cargos");
+                                                                setCargoAVisualizar(v);
+                                                            }}
+                                                            className="btn border-0 ms-2 p-0"
+                                                        >
+                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
-                                            )
+                                            );
                                         })
-                                    ) : (
-                                        <tr className="text-center align-middle">
-                                            <td colSpan="3" className="text-center" style={{ height: '325px' }}>
-                                                <div className='fw-bolder fs-1'>No hay cargos disponibles</div>
-                                            </td>
-                                        </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setCargoAGuardar(cargoSelected)} className="btn btn-success text-black fw-bold me-3">
-                                <i className="bi bi-plus-lg me-2"></i>Registrar
+                            <button onClick={() => setCargoAGuardar(selected)} className="btn btn-secondary fw-bold me-2">
+                                <i className="bi bi-plus-circle"></i>
                             </button>
-                            <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold ms-3">
-                                <i className="bi bi-arrow-clockwise me-2"></i>Refrescar
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
                             </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
-                                    <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${page === 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => handlePageChange(page - 1)}>Anterior</button>
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
                                     </li>
-                                    <li className={`page-item ${(page === totalPages - 1 || cargos.length === 0) ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${(page === totalPages - 1 || cargos.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
                                     </li>
                                 </ul>
                             </nav>
                         </div>
-                    </div >
-                </div >
-            </div >
+                    </div>
+                </div>
+            </div>
         </>
     );
 }

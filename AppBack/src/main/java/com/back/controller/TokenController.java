@@ -1,22 +1,24 @@
 package com.back.controller;
 
-import java.util.HashMap;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.back.entity.Token;
+import com.back.entity.Usuario;
 import com.back.service.TokenService;
+import com.back.service.UsuarioService;
 
 @RestController
 @RequestMapping(path = "/api/token")
@@ -24,98 +26,87 @@ public class TokenController {
 	
 	@Autowired
 	TokenService serv;
-
-	@GetMapping(path = "listar")
-	public Map<String, Object> listar() {
-		Map<String, Object> result = new HashMap<>();
-
-		result.put("ok", true);
-		result.put("size", serv.listar().size());
-		result.put("list", serv.listar());
-
-		return result;
-	}
 	
-	@GetMapping(path = "listarPaginado")
-	public Map<String, Object> listarTabla(@RequestParam(defaultValue = "0") int page,
-										   @RequestParam(defaultValue = "10") int size,
-										   @RequestParam(defaultValue = "id") String sortBy,
-									   	   @RequestParam(defaultValue = "false") boolean sortType){
-		Map<String, Object> result = new HashMap<>();
-
-		result.put("ok", true);
-		result.put("size", serv.listarPaginado(page, size, sortBy, sortType).getSize());
-		result.put("list", serv.listarPaginado(page, size, sortBy, sortType));
-
-		return result;
-	}
-
-	@GetMapping(path = "buscarPorId/{id}")
-	public Map<String, Object> buscarPorId(@PathVariable Integer id) {
-		Map<String, Object> map = new HashMap<>();
-
-		map.put("ok", true);
-		map.put("list", serv.buscarPorId(id));
-
-		return map;
-	}
-
-	@PostMapping(path = "guardar/{id}")
-	public Map<String, Object> guardar(@PathVariable Integer id) {
-		Map<String, Object> map = new HashMap<>();
-		map.put("ok", true);
-		map.put("added", serv.guardar(id));
-		return map;
-	}
+	@Autowired
+	UsuarioService servU;
 	
-	@PutMapping(path = "modificar/{id}")
-	public Map<String, Object> modificar(@PathVariable Integer id) {
-		Map<String, Object> map = new HashMap<>();
-		map.put("ok", true);
-		map.put("modified", serv.guardar(id));
-		return map;
-	}
-
-	@DeleteMapping(path = "eliminar/{id}")
-	public Map<String, Object> eliminar(@PathVariable Integer id) {
-		Map<String, Object> map = new HashMap<>();
+	@GetMapping("list")
+	public Map<String, Object> listar(
+	        @RequestParam(required = false) Integer page,
+	        @RequestParam(required = false) Integer size,
+	        @RequestParam(required = false) String order,
+	        @RequestParam(required = false) String filter,
+	        @RequestParam(required = false) String detail
+	) {
+		Map<String, Object> result = new LinkedHashMap<>();
 		
-		try {
-			Token token = serv.buscarPorId(id);
-		    serv.eliminar(id);
-		    map.put("ok", true);
-			map.put("deleted", token);
-		} catch(RuntimeException e) {
-		    map.put("ok", false);
-		    map.put("message", e.getMessage());
+		var data = serv.query(Token.class, page, size, order, filter, detail);
+	    
+	    if (page == null || size == null) {
+	        result.put("items", data.getContent());
+	        return result;
+	    }
+	    
+	    result.put("totalItems", data.getTotalElements());
+	    result.put("itemsPerPage", size);
+	    result.put("totalPages", data.getTotalPages());
+	    result.put("currentPage", page);
+	    result.put("items", data.getContent());
+	    
+	    return result;
+	}
+
+	@PostMapping(path = "save/{id}")
+	public Map<String, Object> guardar(@PathVariable Integer id) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		
+		Usuario usuario = servU.buscarPorId(id);
+
+	    Token token = new Token();
+	    token.setUsuario(usuario);
+	    token.setToken(UUID.randomUUID().toString());
+	    token.setFechacreacion(LocalDate.now());
+	    token.setFechaexpiracion(LocalDate.now().plusMonths(6));
+	    token.setFechahoracreacion(LocalDateTime.now());
+	    token.setFechahoraexpiracion(LocalDateTime.now().plusMonths(6));
+	    token.setActivo(true);
+	    token.setEstado("Activo");
+	    
+		result.put("saved", serv.guardar(token));
+		
+		return result;
+	}
+	
+	@PutMapping(path = "update/{id}")
+	public Map<String, Object> modificar(@PathVariable Integer id, @RequestBody Token token) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		
+		Token exist = serv.buscarPorId(id);
+
+		if (exist != null) {
+			token.setId(id);
+			result.put("updated", serv.guardar(token));
+		} else {
+			result.put("message", "Registro de ID " + id + " no existe.");
 		}
 
-		return map;
+		return result;
 	}
-	
-	@GetMapping(path = "buscarPorUsuario")
-	public Map<String, Object> buscarPorUsuario(
-	        @RequestParam String usuario,
-	        @RequestParam(defaultValue = "0") int page,
-	        @RequestParam(defaultValue = "10") int size,
-		    @RequestParam(defaultValue = "id") String sortBy,
-	   	    @RequestParam(defaultValue = "false") boolean sortType) {
-	    Map<String, Object> result = new HashMap<>();
-	    Sort sort = sortType ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-	    Pageable pageable = PageRequest.of(page, size, sort);
 
-	    try {
-	        Page<Token> turnos = serv.BuscarPorUsuario(usuario, pageable);
-	        result.put("ok", true);
-	        result.put("size", turnos.getTotalElements());
-	        result.put("list", turnos.getContent());
-	        result.put("totalPages", turnos.getTotalPages());
-	    } catch (Exception e) {
-	        result.put("ok", false);
-	        result.put("message", "Error al buscar turnos: " + e.getMessage());
-	    }
+	@DeleteMapping(path = "delete/{id}")
+	public Map<String, Object> eliminar(@PathVariable Integer id) {
+		Map<String, Object> result = new LinkedHashMap<>();
+				
+		Token exist = serv.buscarPorId(id);
 
-	    return result;
+		if (exist != null) {
+			serv.eliminar(id);
+			result.put("deleted", exist);
+		} else {
+			result.put("message", "Registro de ID " + id + " no existe.");
+		}
+
+		return result;
 	}
 
 }

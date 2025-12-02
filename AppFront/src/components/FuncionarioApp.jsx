@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
-import { getFuncionarioPaginado, saveFuncionario, updateFuncionario, deleteFuncionario, getFuncionarioPorNrodoc, getFuncionarioPorNombre, getFuncionarioPorNrodocYNombre } from '../services/funcionario.service.js';
-import { saveAuditoria, getNetworkInfo } from '../services/auditoria.service.js';
-import { getCargo } from '../services/cargo.service.js';
+import { getEmployee, saveEmployee, updateEmployee, deleteEmployee } from '../services/funcionario.service.js';
+import { getPosition } from '../services/cargo.service.js';
+import { getBranch } from '../services/sucursal.service.js';
 import { NumericFormat } from 'react-number-format';
 import Header from '../Header.jsx';
+import { AddAccess } from "../utils/AddAccess.js";
+import { FiltroModal } from '../FiltroModal.jsx';
+import { DateHourFormat } from '../utils/DateHourFormat.js';
 
-export const FuncionarioApp = ({ usuarioUsed }) => {
+export const FuncionarioApp = ({ userLog }) => {
 
-    const [nombreBuscado, setNombreBuscado] = useState('');
-    const [nrodocBuscado, setNrodocBuscado] = useState('');
     const [funcionarios, setFuncionarios] = useState([]);
+    const [sucursales, setSucursales] = useState([]);
     const [cargos, setCargos] = useState([]);
-    const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [funcionarioAGuardar, setFuncionarioAGuardar] = useState(null);
     const [funcionarioAEliminar, setFuncionarioAEliminar] = useState(null);
@@ -21,8 +22,15 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
     const [indiceSeleccionado, setIndiceSeleccionado] = useState(-1);
     const [cargoMsj, setCargoMsj] = useState('');
     const [cargoError, setCargoError] = useState(false);
+    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
+    const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [query, setQuery] = useState({
+        page: 0,
+        size: 10,
+        order: "",
+        filter: []
+    });
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -38,8 +46,6 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         };
     }, []);
 
-
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {
@@ -53,39 +59,12 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         });
     }, []);
 
-    const obtenerFechaHora = async () => {
-        const localDate = new Date();
-
-        const dia = String(localDate.getDate()).padStart(2, '0'); // Asegura que el día tenga 2 dígitos
-        const mes = String(localDate.getMonth()).padStart(2, '0'); // Los meses son 0-indexados, así que sumamos 1
-        const anio = localDate.getFullYear();
-        const hora = String(localDate.getHours() - 3).padStart(2, '0'); // Asegura que la hora tenga 2 dígitos
-        const minuto = String(localDate.getMinutes()).padStart(2, '0'); // Asegura que los minutos tengan 2 dígitos
-
-        return new Date(anio, mes, dia, hora, minuto);
-    };
-
-    const agregarAcceso = async (op, cod) => {
-        const network = await recuperarNetworkInfo();
-        const fechahora = await obtenerFechaHora();
-        const auditoria = {
-            id: null,
-            usuario: {
-                id: usuarioUsed.id
-            },
-            fechahora: fechahora,
-            programa: "Funcionarios",
-            operacion: op,
-            codregistro: cod,
-            ip: network.ip,
-            equipo: network.equipo
-        }
-        await saveAuditoria(auditoria);
-    }
-
-    const funcionarioSelected = {
+    const selected = {
         id: null,
         cargo: {
+            id: 0
+        },
+        sucursal: {
             id: 0
         },
         nomape: "",
@@ -93,94 +72,42 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         apellido: "",
         nrodoc: "",
         nrotelefono: "",
+        correo: "",
         salario: 0,
         codigo: 0,
-        fecha_nacimiento: ""
+        fechanacimiento: ""
     };
 
-    const formatearFecha = (fecha) => {
-        if (!fecha) return '';
-        const date = new Date(fecha + 'T00:00:00Z');
-        const day = String(date.getUTCDate()).padStart(2, '0'); // Agrega un cero si es necesario
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Los meses comienzan desde 0
-        const year = date.getUTCFullYear();
-        return `${day}/${month}/${year}`;
-    };
-
-    const recuperarFuncionarios = async (pageNumber = 0, nrodoc = '', nombre = '') => {
-        const response = await getFuncionarioPaginado(pageNumber);
-
-        // Filtrar funcionarios
-        const funcionariosFiltrados = response.funcionarios.filter(funcionario => {
-            const nombreCoincide = nombre.trim() !== '' ? funcionario.nombre.toLowerCase().includes(nombre.toLowerCase()) : true;
-            const nrodocCoincide = nrodoc.trim() !== '' ? funcionario.nrodoc.toLowerCase().includes(nrodoc.toLowerCase()) : true;
-
-            return nombreCoincide && nrodocCoincide;
-        });
-
-        return {
-            funcionarios: funcionariosFiltrados,
-            totalPages: response.totalPages,
-            currentPage: response.currentPage,
-        };
+    const recuperarFuncionarios = () => {
+        setQuery(q => ({ ...q }));
     };
 
     const recuperarCargos = async () => {
-        const response = await getCargo();
-        setCargos(response);
+        const response = await getPosition();
+        setCargos(response.items);
     }
 
-    const recuperarNetworkInfo = async () => {
-        const response = await getNetworkInfo();
-        return response;
-    }
-
-    const recuperarFuncionariosConFiltro = async (page) => {
-        if (nombreBuscado.trim() === '' && nrodocBuscado.trim() === '') {
-            return await recuperarFuncionarios(page, nombreBuscado, nrodocBuscado);
-        } else {
-            if (nombreBuscado.trim() !== '' && nrodocBuscado !== '') {
-                return await getFuncionarioPorNrodocYNombre(nrodocBuscado, nombreBuscado, page);
-            } else if (nombreBuscado.trim() !== '') {
-                return await getFuncionarioPorNombre(nombreBuscado, page);
-            } else if (nrodocBuscado.trim() !== '') {
-                return await getFuncionarioPorNrodoc(nrodocBuscado, page);
-            }
-        }
+    const recuperarSucursales = async () => {
+        const response = await getBranch();
+        setSucursales(response.items);
     }
 
     useEffect(() => {
-        recuperarFuncionarios(page, nrodocBuscado, nombreBuscado);
-        recuperarCargos();
-    }, []);
-
-    const actualizarFuncionarios = async () => {
-        const resultado = await recuperarFuncionariosConFiltro(page);
-        setFuncionarios(resultado.funcionarios);
-        setTotalPages(resultado.totalPages);
-        if (page >= resultado.totalPages) setPage(0);
-    }
-
-    useEffect(() => {
-        const buscarFuncionarios = async () => {
-            try {
-                actualizarFuncionarios();
-            } catch (error) {
-                console.error('Error buscando funcionarios:', error);
-            }
+        const load = async () => {
+            const filtrosFinal = query.filter.join(";");
+            const response = await getEmployee(query.page, query.size, query.order, filtrosFinal);
+            setFuncionarios(response.items);
+            setTotalPages(response.totalPages);
+            recuperarCargos();
+            recuperarSucursales();
         };
-
-        buscarFuncionarios();
-    }, [page, nrodocBuscado, nombreBuscado]);
+        load();
+    }, [query]);
 
     const eliminarFuncionarioFn = async (id) => {
-        try {
-            await deleteFuncionario(id);
-            agregarAcceso('Eliminar', id);
-            actualizarFuncionarios();
-        } catch (error) {
-            console.error('Error buscando funcionarios:', error);
-        }
+        await deleteEmployee(id);
+        await AddAccess('Eliminar', id, userLog, "Funcionarios");
+        recuperarFuncionarios();
     };
 
     const confirmarEliminacion = (id) => {
@@ -189,7 +116,6 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
     }
 
     const handleEliminarFuncionario = (funcionario) => {
-
         setFuncionarioAEliminar(funcionario);
     };
 
@@ -201,22 +127,60 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         };
 
         if (funcionarioActualizado.id) {
-            await updateFuncionario(funcionarioActualizado.id, funcionarioActualizado);
-            agregarAcceso('Modificar', funcionarioActualizado.id);
+            await updateEmployee(funcionarioActualizado.id, funcionarioActualizado);
+            await AddAccess('Modificar', funcionarioActualizado.id, userLog, "Funcionarios");
         } else {
-            const nuevoFuncionario = await saveFuncionario(funcionarioActualizado);
-            agregarAcceso('Insertar', nuevoFuncionario.id);
+            const nuevoFuncionario = await saveEmployee(funcionarioActualizado);
+            await AddAccess('Insertar', nuevoFuncionario.saved.id, userLog, "Funcionarios");
         }
-
         setFuncionarioAGuardar(null);
-        actualizarFuncionarios();
+        recuperarFuncionarios();
     };
 
-    // Controla el cambio de página
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
+    const nextPage = () => {
+        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
+    };
+
+    const prevPage = () => {
+        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+    };
+
+    const toggleOrder = (field) => {
+        const [currentField, dir] = query.order.split(",");
+        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
+
+        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
+    };
+
+    const getSortIcon = (field) => {
+        const [currentField, direction] = query.order.split(",");
+
+        if (currentField !== field) return "bi-chevron-expand";
+
+        return direction === "asc"
+            ? "bi-chevron-up"
+            : "bi-chevron-down";
+    };
+
+    const generarFiltro = (f) => {
+        if (!f.op) {
+            setFiltroActivo({ ...filtroActivo, op: "eq" })
+            f = ({ ...f, op: "eq" })
         }
+
+        const field = f.field.trim();
+        const op = f.op.trim();
+        let filtro = "";
+
+        if (op === "between") {
+            if (!f.value1 || !f.value2) return null;
+            filtro = `${field}:between:${f.value1}..${f.value2}`;
+        } else {
+            if (!f.value) return null;
+            filtro = `${field}:${op}:${f.value}`;
+        }
+
+        return filtro;
     };
 
     const handleSubmit = (event) => {
@@ -225,13 +189,12 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
 
         let sw = 0;
 
-        // Verificar si está vacío
+        if (!funcionarioAGuardar.sucursal) sw = 1;
         if (!funcionarioAGuardar.cargo.cargo || funcionarioAGuardar.cargo.cargo.trim() === '') {
             setCargoMsj('El cargo es obligatorio.');
             setCargoError(true);
             sw = 1;
         } else {
-            // Verificar si el cargo seleccionado es válido
             const existe = verificarCargo(funcionarioAGuardar.cargo.cargo);
             if (!existe) {
                 setCargoMsj('El cargo es inválido.');
@@ -302,7 +265,6 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         });
 
         const existe = verificarCargo(nuevoDesc);
-
         if (nuevoDesc.trim() === '') {
             setCargoMsj('El cargo es obligatorio.');
             setCargoError(true);
@@ -321,8 +283,8 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
     }
 
     const refrescar = () => {
-        setNombreBuscado('');
-        setNrodocBuscado('');
+        setQuery(q => ({ ...q, order: "", filter: [] }));
+        setFiltrosAplicados({});
     };
 
     const handleOpenForm = (funcionario) => {
@@ -332,6 +294,9 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
         setCargoMsj('');
         setCargoError(false);
     }
+
+    const rows = [...funcionarios];
+    while (rows.length < query.size) rows.push(null);
 
     return (
         <>
@@ -433,6 +398,15 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             value={funcionarioAVisualizar.cargo.cargo}
                                             readOnly
                                         />
+                                        <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
+                                        <input
+                                            type="date"
+                                            id="fechanacimiento"
+                                            name="fechanacimiento"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={funcionarioAVisualizar.fechanacimiento || ''}
+                                            readOnly
+                                        />
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0'>
@@ -463,18 +437,18 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                             className="form-control border-input w-100 border-black mb-3"
                                             readOnly
                                         />
-                                        <label htmlFor="fecha_nacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
+                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
                                         <input
-                                            type="date"
-                                            id="fecha_nacimiento"
-                                            name="fecha_nacimiento"
+                                            type="text"
+                                            id="sucursal"
+                                            name="sucursal"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={funcionarioAVisualizar.fecha_nacimiento || ''}
+                                            value={funcionarioAVisualizar.sucursal.sucursal || ''}
                                             readOnly
                                         />
                                     </div>
                                 </div>
-                                <button onClick={() => setFuncionarioAVisualizar(null)} className="btn btn-danger mt-3 text-black fw-bold">
+                                <button onClick={() => setFuncionarioAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -599,6 +573,17 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>{cargoMsj}
                                                 </div>
                                             </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
+                                                <input
+                                                    type="date"
+                                                    id="fechanacimiento"
+                                                    name="fechanacimiento"
+                                                    className="form-control border-input w-100"
+                                                    value={funcionarioAGuardar.fechanacimiento || ''}
+                                                    onChange={(event) => setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}
                                         <div className='col ms-5 ps-0'>
@@ -654,15 +639,29 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="fecha_nacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
-                                                <input
-                                                    type="date"
-                                                    id="fecha_nacimiento"
-                                                    name="fecha_nacimiento"
-                                                    className="form-control border-input w-100"
-                                                    value={funcionarioAGuardar.fecha_nacimiento || ''}
-                                                    onChange={(event) => setFuncionarioAGuardar({ ...funcionarioAGuardar, [event.target.name]: event.target.value })}
-                                                />
+                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="sucursal"
+                                                    id='sucursal'
+                                                    value={funcionarioAGuardar.sucursal ? funcionarioAGuardar.sucursal.id : ''}
+                                                    onChange={(event) => {
+                                                        const selectedSucursal = sucursales.find(r => r.id === parseInt(event.target.value));
+                                                        setFuncionarioAGuardar({
+                                                            ...funcionarioAGuardar,
+                                                            sucursal: selectedSucursal
+                                                        });
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
+                                                    {sucursales.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La sucursal es obligatorio.
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -682,49 +681,165 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'FUNCIONARIOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
+                <Header userLog={userLog} title={'FUNCIONARIOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
                             <i className="bi bi-search me-2 fs-5"></i>Listado de Funcionarios
                         </p>
                         <div className="p-3">
-                            <div className="d-flex align-items-center mb-3 fw-bold">
-                                <label htmlFor="nombre" className="form-label m-0">Nombre/Apellido</label>
-                                <input
-                                    type="text"
-                                    id="nombre"
-                                    name="nombre"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
-                                    value={nombreBuscado}
-                                    onChange={(e) => setNombreBuscado(e.target.value)} // Actualiza el estado al escribir
-                                />
-                                <label htmlFor="nrodoc" className="form-label m-0">Nro. de documento</label>
-                                <input
-                                    type="text"
-                                    id="nrodoc"
-                                    name="nrodoc"
-                                    className="me-4 ms-2 form-control border-input"
-                                    placeholder='Escribe...'
-                                    value={nrodocBuscado}
-                                    onChange={(e) => setNrodocBuscado(e.target.value)} // Actualiza el estado al escribir
-                                />
-                            </div>
+                            <FiltroModal
+                                filtroActivo={filtroActivo}
+                                setFiltroActivo={setFiltroActivo}
+                                setQuery={setQuery}
+                                setFiltrosAplicados={setFiltrosAplicados}
+                                generarFiltro={generarFiltro}
+                            />
                             <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
                                 <thead className='table-success'>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Nombre/Apellido</th>
-                                        <th>Nro. de documento</th>
-                                        <th>Fecha de Nacimiento</th>
+                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
+                                            #
+                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["id"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "id",
+                                                        type: "number",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("nomape")} className="sortable-header">
+                                            Nombre/Apellido
+                                            <i className={`bi ${getSortIcon("nomape")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["nomape"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "nomape",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("sucursal.sucursal")} className="sortable-header">
+                                            Sucursal
+                                            <i className={`bi ${getSortIcon("sucursal.sucursal")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["sucursal.sucursal"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "sucursal.sucursal",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("nrodoc")} className="sortable-header">
+                                            Nro. de documento
+                                            <i className={`bi ${getSortIcon("nrodoc")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["nrodoc"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "nrodoc",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("fechanacimiento")} className="sortable-header">
+                                            Fecha de Nacimiento
+                                            <i className={`bi ${getSortIcon("fechanacimiento")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["fechanacimiento"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "fechanacimiento",
+                                                        type: "date",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {funcionarios.length > 0 ? (
-                                        [...funcionarios.slice(0, 10), ...Array(Math.max(0, 10 - funcionarios.length)).fill(null)].map((v, index) => {
+                                    {funcionarios.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="6" className="text-center py-3 text-muted fs-3 fw-bold">
+                                                No hay registros
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.filter(v => v).map((v, index) => {
                                             const puedeEditar = v && v.id;
                                             return (
                                                 <tr
@@ -732,79 +847,85 @@ export const FuncionarioApp = ({ usuarioUsed }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) {
-                                                            handleOpenForm(v);
-                                                        }
+                                                        if (puedeEditar) handleOpenForm(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
-                                                    {v ? (
-                                                        <>
-                                                            <td style={{ width: '60px' }}>{v.id}</td>
-                                                            <td className='text-start'>{v.nomape}</td>
-                                                            <td className='text-end'>{v.nrodoc}</td>
-                                                            <td>{formatearFecha(v.fecha_nacimiento)}</td>
-                                                            <td style={{ width: '100px' }}>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleEliminarFuncionario(v);
-                                                                    }}
-                                                                    className="btn border-0 me-2 p-0"
-                                                                >
-                                                                    <i className="bi bi-trash-fill text-danger"></i>
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        agregarAcceso('Visualizar', v.id);
-                                                                        setFuncionarioAVisualizar(v);
-                                                                    }}
-                                                                    className="btn border-0 ms-2 p-0"
-                                                                >
-                                                                    <i className="bi bi-eye-fill text-primary p-0"></i>
-                                                                </button>
-                                                            </td>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                        </>
-                                                    )}
+                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{v.nomape}</td>
+                                                    <td>{v.sucursal.sucursal}</td>
+                                                    <td className='text-end'>{v.nrodoc}</td>
+                                                    <td>{DateHourFormat(v.fechanacimiento, 0)}</td>
+                                                    <td style={{ width: '100px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEliminarFuncionario(v);
+                                                            }}
+                                                            className="btn border-0 me-2 p-0"
+                                                        >
+                                                            <i className="bi bi-trash-fill text-danger"></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await AddAccess('Visualizar', v.id, userLog, "Funcionarios");
+                                                                setFuncionarioAVisualizar(v);
+                                                            }}
+                                                            className="btn border-0 ms-2 p-0"
+                                                        >
+                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
-                                            )
+                                            );
                                         })
-                                    ) : (
-                                        <tr className="text-center align-middle">
-                                            <td colSpan="5" className="text-center" style={{ height: '325px' }}>
-                                                <div className='fw-bolder fs-1'>No hay funcionarios disponibles</div>
-                                            </td>
-                                        </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => handleOpenForm(funcionarioSelected)} className="btn btn-success text-black fw-bold me-3">
-                                <i className="bi bi-plus-lg me-2"></i>Registrar
+                            <button onClick={() => handleOpenForm(selected)} className="btn btn-secondary fw-bold me-2">
+                                <i className="bi bi-plus-circle"></i>
                             </button>
-                            <button onClick={() => refrescar()} className="btn btn-warning text-black fw-bold ms-3">
-                                <i className="bi bi-arrow-clockwise me-2"></i>Refrescar
+                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-arrow-repeat"></i>
                             </button>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Tamaño</label>
+                                <select
+                                    className="form-select form-select-sm border-black"
+                                    value={query.size}
+                                    onChange={(e) => {
+                                        const newSize = Number(e.target.value);
+                                        setQuery(q => ({
+                                            ...q,
+                                            page: 0,
+                                            size: newSize
+                                        }));
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={30}>30</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
-                                    <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${page === 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => handlePageChange(page - 1)}>Anterior</button>
+                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
+                                            <i className="bi bi-arrow-left"></i>
+                                        </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-warning rounded-0 fw-bold border-black">{page + 1}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
                                     </li>
-                                    <li className={`page-item ${(page === totalPages - 1 || funcionarios.length === 0) ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${(page === totalPages - 1 || funcionarios.length === 0) ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => handlePageChange(page + 1)}>Siguiente</button>
+                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
+                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </button>
                                     </li>
                                 </ul>
                             </nav>

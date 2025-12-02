@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getUsuario, updateUsuario } from "./services/usuario.service";
+import { getUser, updateUser } from "./services/usuario.service";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 
-export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
-    const UrlBase = '/biotech';
+export const Perfil = ({ userLog, setUserLog }) => {
 
     const [usuarios, setUsuarios] = useState([]);
-    const [data, setData] = useState(usuarioUsed);
+    const [data, setData] = useState(userLog);
     const [nombreUsuarioMsj, setNombreUsuarioMsj] = useState('');
     const [nombreUsuarioError, setNombreUsuarioError] = useState(false);
     const [nombreError, setNombreError] = useState(false);
+    const [apellidoError, setApellidoError] = useState(false);
     const [correoError, setCorreoError] = useState(false);
     const [cerrarPerfil, setCerrarPerfil] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -48,34 +48,30 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
 
     const confirmarEscape = () => {
         setCerrarPerfil(false);
-        navigate('/biotech/home');
+        navigate(-1);
     };
 
     const recuperarUsuarios = async () => {
-        const response = await getUsuario();
-        setUsuarios(response);
+        const response = await getUser();
+        setUsuarios(response.items);
     }
 
     useEffect(() => {
         recuperarUsuarios();
     }, []);
 
-    const actualizarUsuarioUsed = async () => {
-        try {
-            const response = await getUsuario();
-            const usuarioActualizado = response.find(u => u.id === usuarioUsed.id);
-            if (usuarioActualizado) {
-                setUsuarioUsed(usuarioActualizado);
+    const actualizaruserLog = async () => {
+        const response = await getUser();
+        const usuarioActualizado = response.items.find(u => u.id === userLog.id);
 
-                const sessionData = JSON.parse(localStorage.getItem('session') || '{}');
-                if (sessionData.user) {
-                    sessionData.user = usuarioActualizado;
-                    localStorage.setItem('session', JSON.stringify(sessionData));
-                }
-                sessionStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+        if (usuarioActualizado) {
+            setUserLog(usuarioActualizado);
+            const sessionData = JSON.parse(localStorage.getItem('session') || '{}');
+            if (sessionData.user) {
+                sessionData.user = usuarioActualizado;
+                localStorage.setItem('session', JSON.stringify(sessionData));
             }
-        } catch (error) {
-            console.error("Error al actualizar datos del usuario:", error);
+            sessionStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
         }
     };
 
@@ -84,14 +80,19 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
         setIsLoading(true);
         const form = event.currentTarget;
 
+        const newData = {
+            ...data,
+            nomape: data.nombre + ", " + data.apellido,
+        };
+
         let sw = 0;
 
-        if (!data.nombreusuario) {
+        if (!newData.nombreusuario) {
             setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 20 caracteres.');
             setNombreUsuarioError(true);
             sw = 1;
         } else {
-            const existeNombreUsuario = verificarNombreUsuarioExistente(data.nombreusuario, data.id);
+            const existeNombreUsuario = verificarNombreUsuarioExistente(newData.nombreusuario, newData.id);
             if (existeNombreUsuario) {
                 setNombreUsuarioMsj('El nombre de usuario ya existe.');
                 setNombreUsuarioError(true);
@@ -102,14 +103,19 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
             }
         }
 
-        if (!data.nombre) {
+        if (!newData.nombre) {
             setNombreError(true);
             sw = 1;
         } else {
             setNombreError(false);
         }
-
-        if (!data.correo) {
+        if (!newData.apellido) {
+            setApellidoError(true);
+            sw = 1;
+        } else {
+            setApellidoError(false);
+        }
+        if (!newData.correo) {
             setCorreoError(true);
             sw = 1;
         } else {
@@ -124,8 +130,8 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
         }
 
         if (form.checkValidity()) {
-            await updateUsuario(data.id, data);
-            await actualizarUsuarioUsed();
+            await updateUser(newData.id, newData);
+            await actualizaruserLog();
             setCerrarPerfil(true);
             form.classList.remove('was-validated');
         } else {
@@ -163,7 +169,7 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header usuarioUsed={usuarioUsed} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
 
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
@@ -173,10 +179,10 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
                                 <i className="bi bi-person-fill"></i>
                             </div>
                             <h2 className="profile-name">
-                                {data.nombre || 'Usuario'}
+                                {data.nombre + " " + data.apellido}
                             </h2>
                             <p className="profile-role">
-                                @{data.nombreusuario || 'username'}
+                                @{data.nombreusuario}
                             </p>
                         </div>
 
@@ -223,15 +229,15 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
                                         <div className="col-md-6">
                                             <div className="modern-input-group">
                                                 <label htmlFor="nombre" className="modern-label">
-                                                    <i className="bi bi-card-text me-2"></i>Nombre Completo <span className="required-field">*</span>
+                                                    <i className="bi bi-card-text me-2"></i>Nombre <span className="required-field">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     id="nombre"
                                                     name="nombre"
-                                                    placeholder="Ingresa tu nombre completo"
+                                                    placeholder="Ingresa tu nombre"
                                                     className={`modern-input ${nombreError ? 'error' : ''}`}
-                                                    value={data.nombre}
+                                                    value={data.nombre || ''}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                                     maxLength={50}
                                                 />
@@ -239,6 +245,30 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
                                                     <div className="error-message">
                                                         <i className="bi bi-exclamation-triangle-fill"></i>
                                                         El nombre es obligatorio (máx. 50 caracteres)
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="apellido" className="modern-label">
+                                                    <i className="bi bi-card-text me-2"></i>Apellido <span className="required-field">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="apellido"
+                                                    name="apellido"
+                                                    placeholder="Ingresa tu apellido"
+                                                    className={`modern-input ${apellidoError ? 'error' : ''}`}
+                                                    value={data.apellido || ''}
+                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                                    maxLength={50}
+                                                />
+                                                {apellidoError && (
+                                                    <div className="error-message">
+                                                        <i className="bi bi-exclamation-triangle-fill"></i>
+                                                        El apellido es obligatorio (máx. 50 caracteres)
                                                     </div>
                                                 )}
                                             </div>
@@ -258,6 +288,23 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
                                                     value={data.nrodoc}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                                     maxLength={15}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="fecha_nacimiento" className="modern-label">
+                                                    <i className="bi bi-credit-card me-2"></i>Fecha de Nacimiento
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    id="fecha_nacimiento"
+                                                    name="fecha_nacimiento"
+                                                    placeholder="Ej: 12345678"
+                                                    className="modern-input"
+                                                    value={data.fecha_nacimiento || ''}
+                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
@@ -342,12 +389,12 @@ export const Perfil = ({ usuarioUsed, setUsuarioUsed }) => {
                                 padding: '24px 32px',
                                 borderTop: '1px solid #e5e7eb',
                                 display: 'flex',
-                                justifyContent: 'flex-end',
+                                justifyContent: 'center',
                                 gap: '12px'
                             }}>
                                 <Link
                                     className="modern-button btn-secondary"
-                                    to={UrlBase + '/home'}
+                                    to={-1}
                                 >
                                     <i className="bi bi-x-lg"></i>
                                     Cancelar

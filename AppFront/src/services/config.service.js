@@ -5,60 +5,30 @@ import { HostLocation } from '../utils/HostLocation';
 const dir = HostLocation();
 
 // Ruta base
-const API_BASE_URL = `${dir}/configuracion`;
+const API_BASE_URL = `${dir}/config`;
 
-// Listado completo
-export const getConfig = async () => {
-    const result = await axios.get(`${API_BASE_URL}/listar`);
-    return result.data;
+export const getConfig = async (page, size, order, filter, detail) => {
+    const response = await axios.get(`${API_BASE_URL}/list`, {
+        params: { page, size, order, filter, detail },
+    });
+    return response.data;
 };
 
-// Buscar por ID
-export const getConfigPorId = async (id) => {
-    const result = await axios.get(`${API_BASE_URL}/buscarPorId/${id}`);
-    return result.data;
+export const saveConfig = async (config) => {
+    const response = await axios.post(`${API_BASE_URL}/save`, config, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
 };
 
-// Guardar nueva configuración
-export const saveConfig = async (formData) => {
-    try {
-        const response = await axios.post(`${API_BASE_URL}/guardar`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error al guardar la configuración:', error);
-        throw error;
-    }
+export const updateConfig = async (id, config) => {
+    const response = await axios.put(`${API_BASE_URL}/update/${id}`, config, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
 };
 
-// Actualizar configuración existente
-export const updateConfig = async (id, formData) => {
-    try {
-        const response = await axios.put(`${API_BASE_URL}/modificar/${id}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return response.data;
-    } catch (error) {
-        console.error(`Error al actualizar la configuración con ID ${id}:`, error);
-        throw error;
-    }
-};
-
-// Paginación
-export const getConfigPaginado = async (page = 0, size = 10, sortBy = 'id', sortType = false) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/listarPaginado`, {
-            params: { page, size, sortBy, sortType },
-        });
-        const result = response.data;
-        return {
-            configuraciones: result.list,
-            totalElements: result.size,
-            currentPage: page,
-        };
-    } catch (error) {
-        console.error('Error al obtener la configuración paginada:', error);
-        throw error;
-    }
+export const deleteImage = async (id) => {
+    const response = await axios.delete(`${API_BASE_URL}/deleteImage/${id}`);
+    return response.data;
 };

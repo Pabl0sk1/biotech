@@ -1,5 +1,5 @@
 
-export const HostLocation = () => {
+export const HostLocation = (op = 0) => {
 
     let init = "";
     let port = "";
@@ -10,6 +10,7 @@ export const HostLocation = () => {
         port = ":8082"
     } else init = "https";
 
-    return `${init}://${hostname}${port}/api`;
+    if (op == 1) return `${init}://${hostname}${port}`;
+    else return `${init}://${hostname}${port}/api`;
 
 }
