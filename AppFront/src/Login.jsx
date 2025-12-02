@@ -72,19 +72,18 @@ export const Login = ({ setUserLog }) => {
 
     return (
         <>
-            <div className="d-flex justify-content-center align-items-center vh-100 loginBack">
-                <div className="rounded-3 p-4 w-75" style={{ boxShadow: '0 0 25px rgba(0, 0, 0, 0.4)' }}>
+            <div className="d-flex justify-content-center align-items-center vh-100 login-container">
+                <div className="rounded-3 p-4 w-75 login-box">
                     <form
                         className="needs-validation"
                         onSubmit={handleSubmit}
                         autoComplete="off"
                         noValidate
                     >
-                        <img src="/logo.svg" className="w-75 my-4" alt="Biotech" />
-                        <div className="mt-4">
-                            {error && <div className="alert alert-danger p-2">{error}</div>}
-                            <div className="mt-3 pb-3 d-flex align-items-center">
-                                <i className="bi bi-person-fill me-2 fs-4"></i>
+                        <img src="/logo.svg" className="login-logo" alt="Biotech" />
+                        <div>
+                            {error && <div className="login-error">{error}</div>}
+                            <div className="d-flex align-items-center">
                                 <input
                                     type="text"
                                     className="modern-input"
@@ -95,8 +94,7 @@ export const Login = ({ setUserLog }) => {
                                     autoFocus
                                 />
                             </div>
-                            <div className="mt-5 pb-3 d-flex align-items-center position-relative">
-                                <i className="bi bi-key-fill me-2 fs-4"></i>
+                            <div className="mt-4 pb-3 d-flex align-items-center position-relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     className="modern-input pe-5"
@@ -121,7 +119,7 @@ export const Login = ({ setUserLog }) => {
                         <div className="mt-4">
                             <button
                                 type="submit"
-                                className="btn btn-success fw-bold px-4 text-black"
+                                className="btn btn-light btn-login fw-bold px-4 text-black"
                                 disabled={loading}
                             >
                                 <i className="bi bi-box-arrow-right me-2"></i>{loading ? 'Cargando' : 'Ingresar'}

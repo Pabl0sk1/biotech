@@ -2,7 +2,6 @@ package com.back.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -38,11 +37,9 @@ public class Auditoria {
 	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;
 	
-	@Column(name = "fecha")
 	@Temporal(TemporalType.DATE)
 	private LocalDate fecha;
 
-	@Column(name = "fechahora")
 	@Temporal(TemporalType.TIMESTAMP)
 	private LocalDateTime fechahora;
 
@@ -52,7 +49,6 @@ public class Auditoria {
 	@Size(max = 20)
 	private String operacion;
 
-	@Column(name = "codregistro")
 	private Integer codregistro;
 
 	@Size(max = 20)

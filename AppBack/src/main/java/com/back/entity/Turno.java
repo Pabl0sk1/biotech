@@ -4,7 +4,6 @@ import java.time.LocalTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -59,10 +58,8 @@ public class Turno {
 	@Temporal(TemporalType.TIME)
 	private LocalTime horades;
 
-	@Column(name = "thoras")
 	private Integer thoras;
 	
-	@Column(name = "extporcen")
 	private Integer extporcen;
 	
 	@OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)

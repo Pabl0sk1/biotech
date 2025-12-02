@@ -292,7 +292,7 @@ export const SucursalApp = ({ userLog }) => {
                                                     maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 30 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
                                                 </div>
                                             </div>
                                         </div>

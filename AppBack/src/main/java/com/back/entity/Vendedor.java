@@ -57,5 +57,10 @@ public class Vendedor {
 	
 	@Temporal(TemporalType.DATE)
 	private LocalDate fechanacimiento;
+	
+	public Vendedor(Integer id) {
+		super();
+		this.id = id;
+	}
 
 }

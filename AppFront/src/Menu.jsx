@@ -103,22 +103,23 @@ export const Menu = ({ userLog, setUserLog }) => {
 
             {showLogoutModal && (
                 <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-dark alert-dismissible fade show m-2 p-3 shadow-sm" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-box-arrow-left" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-3'>¿Cerrar Sesión?</p>
-                                </div>
-                                <div className="mt-4">
-                                    <button type="button" className="btn btn-light me-4 fw-bold border-black" onClick={confirmLogout}>
-                                        <i className="bi bi-check-lg me-2"></i>Aceptar
-                                    </button>
-                                    <button type="button" className="btn btn-light fw-bold border-black" onClick={() => setShowLogoutModal(false)}>
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
+                    <div className="modal-overlay"></div>
+                    <div className="logout-modal">
+                        <div className="logout-card">
+                            <i className="bi bi-box-arrow-right logout-icon"></i>
+                            <h2 className="logout-title">¿Seguro que querés cerrar sesión?</h2>
+                            <p className="logout-subtitle">
+                                Tu sesión actual será finalizada y tendrás que volver a iniciar sesión.
+                            </p>
+
+                            <div className="logout-actions">
+                                <button className="btn-logout-confirm" onClick={confirmLogout}>
+                                    <i className="bi bi-check2-circle me-2"></i> Sí, cerrar
+                                </button>
+
+                                <button className="btn-logout-cancel" onClick={() => setShowLogoutModal(false)}>
+                                    <i className="bi bi-x-circle me-2"></i> Cancelar
+                                </button>
                             </div>
                         </div>
                     </div>

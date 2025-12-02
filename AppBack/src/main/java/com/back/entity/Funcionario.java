@@ -1,7 +1,6 @@
 package com.back.entity;
 
 import java.time.LocalDate;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -43,7 +42,7 @@ public class Funcionario {
 	@JoinColumn(name = "sucursal_id")
 	private Sucursal sucursal;
 	
-	@Size(max = 100) 
+	@Size(max = 100)
 	private String nomape;
 	
 	@NotNull
@@ -52,6 +51,9 @@ public class Funcionario {
 	@Size(max = 50)
 	private String nombre;
 	
+	@NotNull
+	@NotEmpty
+	@NotBlank
 	@Size(max = 50)
 	private String apellido;
 	
@@ -67,11 +69,9 @@ public class Funcionario {
 	@Temporal(TemporalType.DATE)
 	private LocalDate fechanacimiento;
 
-	@Column(name = "salario")
 	private Integer salario;
 	
 	@NotNull
-	@Column(name = "codigo")
 	private Integer codigo;
 
 	public Funcionario(Integer id) {

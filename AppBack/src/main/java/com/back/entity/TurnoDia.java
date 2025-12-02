@@ -43,4 +43,9 @@ public class TurnoDia {
 	@Size(max = 20)
 	private String dia;
 	
+	public TurnoDia(Integer id) {
+		super();
+		this.id = id;
+	}
+	
 }

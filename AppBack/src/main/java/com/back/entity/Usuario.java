@@ -38,6 +38,7 @@ public class Usuario {
 	@JoinColumn(name = "tipousuario_id")
 	private TipoUsuario tipousuario;
 	
+	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "sucursal_id")
 	private Sucursal sucursal;
@@ -54,6 +55,9 @@ public class Usuario {
 	@Size(max = 255)
 	private String contrasena;
 	
+	@NotNull
+	@NotEmpty
+	@NotBlank
 	@Size(max = 100)
 	private String nomape;
 
@@ -77,7 +81,7 @@ public class Usuario {
 	@NotBlank
 	@Size(max = 30)
 	private String correo;
-
+	
 	@Size(max = 100)
 	private String direccion;
 
