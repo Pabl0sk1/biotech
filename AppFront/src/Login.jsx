@@ -72,60 +72,72 @@ export const Login = ({ setUserLog }) => {
 
     return (
         <>
-            <div className="d-flex justify-content-center align-items-center vh-100 login-container">
-                <div className="rounded-3 p-4 w-75 login-box">
-                    <form
-                        className="needs-validation"
-                        onSubmit={handleSubmit}
-                        autoComplete="off"
-                        noValidate
-                    >
-                        <img src="/logo.svg" className="login-logo" alt="Biotech" />
-                        <div>
-                            {error && <div className="login-error">{error}</div>}
-                            <div className="d-flex align-items-center">
-                                <input
-                                    type="text"
-                                    className="modern-input"
-                                    placeholder="Usuario"
-                                    value={nombreusuario}
-                                    onChange={(e) => setNombreUsuario(e.target.value.toUpperCase())}
-                                    maxLength={20}
-                                    autoFocus
-                                />
-                            </div>
-                            <div className="mt-4 pb-3 d-flex align-items-center position-relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    className="modern-input pe-5"
-                                    placeholder="Contraseña"
-                                    value={contrasena}
-                                    onChange={(e) => setContrasena(e.target.value)}
-                                    maxLength={30}
-                                />
-                                <button
-                                    type="button"
-                                    className="btn btn-light btn-eye p-0"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? (
-                                        <i className="bi bi-eye-slash-fill"></i>
-                                    ) : (
-                                        <i className="bi bi-eye-fill"></i>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="mt-4">
-                            <button
-                                type="submit"
-                                className="btn btn-light btn-login fw-bold px-4 text-black"
-                                disabled={loading}
+            <div className="login-container">
+                <div className="login-wrapper">
+                    {/* Lado izquierdo - Formulario de login */}
+                    <div className="login-left">
+                        <div className="rounded-3 p-4 w-75 login-box">
+                            <form
+                                className="needs-validation"
+                                onSubmit={handleSubmit}
+                                autoComplete="off"
+                                noValidate
                             >
-                                <i className="bi bi-box-arrow-right me-2"></i>{loading ? 'Cargando' : 'Ingresar'}
-                            </button>
+                                <img src="/logo.svg" className="login-logo" alt="Biotech" />
+                                <div>
+                                    {error && <div className="login-error">{error}</div>}
+                                    <div className="d-flex align-items-center">
+                                        <input
+                                            type="text"
+                                            className="modern-input"
+                                            placeholder="Usuario"
+                                            value={nombreusuario}
+                                            onChange={(e) => setNombreUsuario(e.target.value.toUpperCase())}
+                                            maxLength={20}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="mt-4 pb-3 d-flex align-items-center position-relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            className="modern-input pe-5"
+                                            placeholder="Contraseña"
+                                            value={contrasena}
+                                            onChange={(e) => setContrasena(e.target.value)}
+                                            maxLength={30}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="btn btn-light btn-eye p-0"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                        >
+                                            {showPassword ? (
+                                                <i className="bi bi-eye-slash-fill"></i>
+                                            ) : (
+                                                <i className="bi bi-eye-fill"></i>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="mt-4">
+                                    <button
+                                        type="submit"
+                                        className="btn btn-light btn-login fw-bold px-4 text-black"
+                                        disabled={loading}
+                                    >
+                                        <i className="bi bi-box-arrow-right me-2"></i>{loading ? 'Cargando' : 'Ingresar'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
+                    <div className="login-right">
+                        <img
+                            src="/portrait.jpg"
+                            alt="Biotech"
+                            className="login-image"
+                        />
+                    </div>
                 </div>
             </div>
         </>

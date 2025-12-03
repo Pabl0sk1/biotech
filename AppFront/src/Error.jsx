@@ -2,17 +2,39 @@ import { Link } from "react-router-dom";
 
 export const Error = () => {
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100 loginBack">
-            <div className="rounded-3 p-4 w-75" style={{ boxShadow: '0 0 25px rgba(0, 0, 0, 0.4)' }}>
-                <h1 className="text-black mb-2 fw-bolder">¡Ooops!</h1>
-                <h2 className="text-danger fw-bolder">ERROR 404</h2>
-                <div className="mb-5 fs-4 fw-lighter">
-                    <p>Ruta no encontrada</p>
-                    <i className="bi bi-exclamation-triangle-fill text-danger" style={{ fontSize: '5rem' }}></i>
+        <div className="error-container">
+            <div className="error-content">
+                {/* Animación del número 404 */}
+                <div className="error-number">
+                    <span className="error-digit">4</span>
+                    <span className="error-digit error-zero">
+                        <i className="bi bi-exclamation-triangle-fill"></i>
+                    </span>
+                    <span className="error-digit">4</span>
                 </div>
-                <Link className='btn btn-danger fw-bold px-4 text-black' to={-1}>
-                    <i className="bi bi-escape me-2"></i>Volver
-                </Link>
+
+                {/* Título y descripción */}
+                <h1 className="error-title">¡Página no encontrada!</h1>
+                <p className="error-description">
+                    Lo sentimos, la página que estás buscando no existe o ha sido movida.
+                </p>
+
+                {/* Sugerencias */}
+                <div className="error-suggestions">
+                    <p className="error-suggestions-title">Puedes intentar:</p>
+                    <ul className="error-list">
+                        <li>Verificar la URL ingresada</li>
+                        <li>Regresar a la página anterior</li>
+                    </ul>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="error-actions">
+                    <Link to={-1} className="btn-error btn-home">
+                        <i className="bi bi-arrow-left me-2"></i>
+                        Volver atrás
+                    </Link>
+                </div>
             </div>
         </div>
     );
