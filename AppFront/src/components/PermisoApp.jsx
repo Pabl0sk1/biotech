@@ -133,7 +133,7 @@ export const PermisoApp = ({ userLog }) => {
     };
 
     const verificarPermisoDuplicado = (dato) => {
-        return permisos.some(p => p.tipousuario.id == dato.tipousuario.id && p.modulo.id == dato.modulo.id);
+        return permisos.some(p => p.tipousuario.id == dato.tipousuario.id && p.modulo.id == dato.modulo.id && p.id !== dato.id);
     }
 
     const nextPage = () => {
