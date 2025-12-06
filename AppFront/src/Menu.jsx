@@ -11,10 +11,6 @@ export const Menu = ({ userLog, setUserLog }) => {
     const [isReportesMenuOpen, setIsReportesMenuOpen] = useState(false);
     const [isRegistrosMenuOpen, setIsRegistrosMenuOpen] = useState(false);
 
-    const toggleSidebar = () => {
-        setIsSidebarVisible(!isSidebarVisible);
-    };
-
     useEffect(() => {
         let timeoutId;
         let activityListeners = [];
@@ -88,15 +84,15 @@ export const Menu = ({ userLog, setUserLog }) => {
         };
     }, []);
 
-    const toggleSeguridadMenu = () => {
-        setIsSeguridadMenuOpen(!isSeguridadMenuOpen);
+    const toggleMenu = (menu) => {
+        setIsSeguridadMenuOpen(menu === 'seguridad' ? !isSeguridadMenuOpen : false);
+        setIsReportesMenuOpen(menu === 'reportes' ? !isReportesMenuOpen : false);
+        setIsRegistrosMenuOpen(menu === 'registros' ? !isRegistrosMenuOpen : false);
     };
-    const toggleReportesMenu = () => {
-        setIsReportesMenuOpen(!isReportesMenuOpen);
-    }
-    const toggleRegistrosMenu = () => {
-        setIsRegistrosMenuOpen(!isRegistrosMenuOpen);
-    }
+
+    const toggleSidebar = () => {
+        setIsSidebarVisible(!isSidebarVisible);
+    };
 
     return (
         <>
@@ -131,9 +127,7 @@ export const Menu = ({ userLog, setUserLog }) => {
                 <Sidebar
                     userLog={userLog}
                     isSidebarVisible={isSidebarVisible}
-                    toggleSeguridadMenu={toggleSeguridadMenu}
-                    toggleReportesMenu={toggleReportesMenu}
-                    toggleRegistrosMenu={toggleRegistrosMenu}
+                    toggleMenu={toggleMenu}
                     isSeguridadMenuOpen={isSeguridadMenuOpen}
                     isReportesMenuOpen={isReportesMenuOpen}
                     isRegistrosMenuOpen={isRegistrosMenuOpen}

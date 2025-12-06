@@ -6,9 +6,7 @@ import { getPermission } from './services/permiso.service.js';
 const Sidebar = ({
     userLog,
     isSidebarVisible,
-    toggleSeguridadMenu,
-    toggleReportesMenu,
-    toggleRegistrosMenu,
+    toggleMenu,
     isSeguridadMenuOpen,
     isReportesMenuOpen,
     isRegistrosMenuOpen,
@@ -114,7 +112,7 @@ const Sidebar = ({
                     {tienePermisoRuta(['rp01']) && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
-                                onClick={toggleReportesMenu}
+                                onClick={() => toggleMenu('reportes')}
                                 onMouseEnter={() => setHoveredItem('reportes')}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 style={{
@@ -143,12 +141,7 @@ const Sidebar = ({
                                     <i className="bi bi-file-earmark-bar-graph" style={{ color: '#22c55e' }}></i>
                                 </div>
                                 <span style={{ flex: 1, textAlign: 'left' }}>Reportes</span>
-                                <i className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
-                                    style={{
-                                        transition: 'transform 0.3s ease',
-                                        transform: isReportesMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                                    }}
-                                ></i>
+                                <i className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                             </button>
 
                             <div style={{
@@ -185,7 +178,7 @@ const Sidebar = ({
                     {tienePermisoRuta(['rg01', 'rg02', 'rg03', 'rg04', 'rg05', 'rg06', 'rg07']) && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
-                                onClick={toggleRegistrosMenu}
+                                onClick={() => toggleMenu('registros')}
                                 onMouseEnter={() => setHoveredItem('registros')}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 style={{
@@ -214,12 +207,7 @@ const Sidebar = ({
                                     <i className="bi bi-database" style={{ color: '#3b82f6' }}></i>
                                 </div>
                                 <span style={{ flex: 1, textAlign: 'left' }}>Registros</span>
-                                <i className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
-                                    style={{
-                                        transition: 'transform 0.3s ease',
-                                        transform: isRegistrosMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                                    }}
-                                ></i>
+                                <i className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                             </button>
 
                             <div style={{
@@ -382,7 +370,7 @@ const Sidebar = ({
                     {tienePermisoRuta(['sc01', 'sc02', 'sc03', 'sc04', 'sc05']) && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
-                                onClick={toggleSeguridadMenu}
+                                onClick={() => toggleMenu('seguridad')}
                                 onMouseEnter={() => setHoveredItem('seguridad')}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 style={{
@@ -411,12 +399,7 @@ const Sidebar = ({
                                     <i className="bi bi-shield-lock" style={{ color: '#ef4444' }}></i>
                                 </div>
                                 <span style={{ flex: 1, textAlign: 'left' }}>Seguridad</span>
-                                <i className={`bi ${isSeguridadMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
-                                    style={{
-                                        transition: 'transform 0.3s ease',
-                                        transform: isSeguridadMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                                    }}
-                                ></i>
+                                <i className={`bi ${isSeguridadMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                             </button>
 
                             <div style={{

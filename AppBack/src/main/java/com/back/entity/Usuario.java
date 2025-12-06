@@ -73,6 +73,9 @@ public class Usuario {
 	@Size(max = 50)
 	private String nombre;
 	
+	@NotNull
+	@NotEmpty
+	@NotBlank
 	@Size(max = 50)
 	private String apellido;
 
@@ -100,6 +103,7 @@ public class Usuario {
 	@NotNull
 	private Boolean activo = true;
 	
+	@NotNull
 	private Boolean vermapa = false;
 	
 	@Temporal(TemporalType.DATE)

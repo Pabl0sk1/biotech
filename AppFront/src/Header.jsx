@@ -29,8 +29,10 @@ export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebar
 
                     <small className="text-muted">{userLog.nombreusuario}</small>
                 </div>
+                {/* Ícono de café */}
+                <i className="bi bi-cup-hot-fill fs-3 text-danger mx-2" title='Tomáte una taza de café'></i>
                 <img
-                    className='logo-img-bar'
+                    className='logo-img-bar ms-3'
                     src="/logo2.svg"
                     alt="Biotech"
                 />

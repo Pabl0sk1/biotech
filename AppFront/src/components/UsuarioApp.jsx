@@ -641,7 +641,10 @@ export const UsuarioApp = ({ userLog }) => {
                                                     id='tipousuario'
                                                     value={usuarioAGuardar.tipousuario ? usuarioAGuardar.tipousuario.id : ''}
                                                     onChange={(event) => {
-                                                        const selectedTipoUsuario = roles.find(r => r.id === parseInt(event.target.value));
+                                                        const id = parseInt(event.target.value);
+                                                        const selectedTipoUsuario = roles.find(
+                                                            r => r.id === id && r.id !== 1
+                                                        );
                                                         setUsuarioAGuardar({
                                                             ...usuarioAGuardar,
                                                             tipousuario: selectedTipoUsuario
@@ -650,7 +653,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     required
                                                 >
                                                     <option value="" className="bg-secondary-subtle">Seleccione un rol...</option>
-                                                    {roles.map((tp) => (
+                                                    {roles.filter(tp => tp.id !== 1).map((tp) => (
                                                         <option key={tp.id} value={tp.id}>{tp.tipousuario}</option>
                                                     ))}
                                                 </select>
@@ -985,8 +988,8 @@ export const UsuarioApp = ({ userLog }) => {
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
-                                            const puedeEditar = permiso?.puedeeditar && v.id != userLog.id;
-                                            const puedeEliminar = permiso?.puedeeliminar && v.id != userLog.id;
+                                            const puedeEditar = permiso?.puedeeditar && v.id != userLog.id && v.id != 1;
+                                            const puedeEliminar = permiso?.puedeeliminar && v.id != userLog.id && v.id != 1;
                                             const puedeVer = permiso?.puedever;
                                             return (
                                                 <tr
