@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getUser, saveUser, updateUser, deleteUser } from '../services/usuario.service.js';
 import { getBranch } from '../services/sucursal.service.js';
 import { getRole } from '../services/tipousuario.service.js';
+import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
@@ -19,7 +20,9 @@ export const UsuarioApp = ({ userLog }) => {
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);
     const [sucursales, setSucursales] = useState([]);
+    const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [usuarioAGuardar, setUsuarioAGuardar] = useState(null);
     const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
     const [usuarioNoEliminar, setUsuarioNoEliminar] = useState(null);
@@ -82,6 +85,7 @@ export const UsuarioApp = ({ userLog }) => {
         direccion: "",
         estado: "Activo",
         activo: true,
+        vermapa: false,
         fechanacimiento: ""
     };
 
@@ -104,15 +108,22 @@ export const UsuarioApp = ({ userLog }) => {
         setSucursales(response.items);
     }
 
+    const permisoUsuario = async () => {
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc02`);
+        setPermiso(response.items[0]);
+    }
+
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
             const response = await getUser(query.page, query.size, query.order, filtrosFinal);
             setUsuarios(response.items);
             setTotalPages(response.totalPages);
+            setTotalItems(response.totalItems);
             recuperarUsuariosCompletos();
             recuperarRoles();
             recuperarSucursales();
+            permisoUsuario();
         };
         load();
     }, [query]);
@@ -391,6 +402,15 @@ export const UsuarioApp = ({ userLog }) => {
                                             value={usuarioAVisualizar.correo}
                                             readOnly
                                         />
+                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                        <input
+                                            type="text"
+                                            id="sucursal"
+                                            name="sucursal"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={usuarioAVisualizar.sucursal.sucursal || ''}
+                                            readOnly
+                                        />
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 me-5 p-0'>
@@ -430,6 +450,15 @@ export const UsuarioApp = ({ userLog }) => {
                                             value={usuarioAVisualizar.fechanacimiento || ''}
                                             readOnly
                                         />
+                                        <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
+                                        <input
+                                            type="text"
+                                            id="estado"
+                                            name="estado"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={usuarioAVisualizar.estado}
+                                            readOnly
+                                        />
                                     </div>
                                     {/*Columna 3 de visualizar*/}
                                     <div className='col ps-0'>
@@ -439,26 +468,18 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="direccion"
                                             name="direccion"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            style={{ resize: 'none', height: '123px' }}
+                                            style={{ resize: 'none', height: '295px' }}
                                             value={usuarioAVisualizar.direccion}
                                             readOnly>
                                         </textarea>
-                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                        <label htmlFor="vermapa" className="form-label m-0 mb-2 me-2 d-flex">Ver Mapa</label>
                                         <input
-                                            type="text"
-                                            id="sucursal"
-                                            name="sucursal"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.sucursal.sucursal || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
-                                        <input
-                                            type="text"
-                                            id="estado"
-                                            name="estado"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.estado}
+                                            type="checkbox"
+                                            id="vermapa"
+                                            name="vermapa"
+                                            className="form-check-input"
+                                            style={{ width: '60px', height: '30px' }}
+                                            checked={usuarioAVisualizar.vermapa}
                                             readOnly
                                         />
                                     </div>
@@ -584,6 +605,31 @@ export const UsuarioApp = ({ userLog }) => {
                                                     )}
                                                 </div>
                                             )}
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="sucursal"
+                                                    id='sucursal'
+                                                    value={usuarioAGuardar.sucursal ? usuarioAGuardar.sucursal.id : ''}
+                                                    onChange={(event) => {
+                                                        const selectedSucursal = sucursales.find(r => r.id === parseInt(event.target.value));
+                                                        setUsuarioAGuardar({
+                                                            ...usuarioAGuardar,
+                                                            sucursal: selectedSucursal
+                                                        });
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
+                                                    {sucursales.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La sucursal es obligatorio.
+                                                </div>
+                                            </div>
                                         </div>
                                         {/*Columna 2 de guardar*/}
                                         <div className='col ms-5 me-5 p-0'>
@@ -685,48 +731,6 @@ export const UsuarioApp = ({ userLog }) => {
                                                     )}
                                                 </div>
                                             )}
-                                        </div>
-                                        {/*Columna 3 de visualizar*/}
-                                        <div className='col ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="direccion" className="form-label m-0 mb-2">Dirección</label>
-                                                <textarea
-                                                    type="text"
-                                                    id="direccion"
-                                                    name="direccion"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    style={{ resize: 'none', height: '112px' }}
-                                                    value={usuarioAGuardar.direccion}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={100}>
-                                                </textarea>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="sucursal"
-                                                    id='sucursal'
-                                                    value={usuarioAGuardar.sucursal ? usuarioAGuardar.sucursal.id : ''}
-                                                    onChange={(event) => {
-                                                        const selectedSucursal = sucursales.find(r => r.id === parseInt(event.target.value));
-                                                        setUsuarioAGuardar({
-                                                            ...usuarioAGuardar,
-                                                            sucursal: selectedSucursal
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
-                                                    {sucursales.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La sucursal es obligatorio.
-                                                </div>
-                                            </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
                                                 <select
@@ -745,6 +749,38 @@ export const UsuarioApp = ({ userLog }) => {
                                                 <div className="invalid-feedback text-danger text-start">
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
                                                 </div>
+                                            </div>
+                                        </div>
+                                        {/*Columna 3 de visualizar*/}
+                                        <div className='col ps-0'>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="direccion" className="form-label m-0 mb-2">Dirección</label>
+                                                <textarea
+                                                    type="text"
+                                                    id="direccion"
+                                                    name="direccion"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    style={{ resize: 'none', height: '260px' }}
+                                                    value={usuarioAGuardar.direccion}
+                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={100}>
+                                                </textarea>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="vermapa" className="form-label m-0 mb-2 me-2 d-flex">Ver Mapa</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="vermapa"
+                                                    name="vermapa"
+                                                    className="form-check-input"
+                                                    style={{ width: '60px', height: '30px' }}
+                                                    checked={usuarioAGuardar.vermapa}
+                                                    onChange={(e) => {
+                                                        const check = e.target.checked;
+                                                        setUsuarioAGuardar({ ...usuarioAGuardar, [e.target.name]: check });
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -949,7 +985,9 @@ export const UsuarioApp = ({ userLog }) => {
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
-                                            const puedeEditar = v && v.id && userLog.id == 1 && userLog.id != v.id;
+                                            const puedeEditar = permiso?.puedeeditar && v.id != userLog.id;
+                                            const puedeEliminar = permiso?.puedeeliminar && v.id != userLog.id;
+                                            const puedeVer = permiso?.puedever;
                                             return (
                                                 <tr
                                                     className="text-center align-middle"
@@ -974,22 +1012,25 @@ export const UsuarioApp = ({ userLog }) => {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (v.id != userLog.id && v.id != 1) handleEliminarUsuario(v);
+                                                                if (puedeEliminar) handleEliminarUsuario(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
-                                                            style={{ cursor: v.id == userLog.id || v.id == 1 ? 'default' : 'pointer' }}
+                                                            style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
                                                         >
-                                                            <i className={`bi bi-trash-fill ${v.id == userLog.id || v.id == 1 ? 'text-danger-emphasis' : 'text-danger'}`}></i>
+                                                            <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
                                                         </button>
                                                         <button
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
-                                                                await AddAccess('Visualizar', v.id, userLog, "Usuarios");
-                                                                setUsuarioAVisualizar(v);
+                                                                if (puedeVer) {
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Usuarios");
+                                                                    setUsuarioAVisualizar(v);
+                                                                }
                                                             }}
                                                             className="btn border-0 ms-2 p-0"
+                                                            style={{ cursor: puedeVer ? 'pointer' : 'default' }}
                                                         >
-                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                            <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -1000,7 +1041,7 @@ export const UsuarioApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => handleOpenForm(selected)} className="btn btn-secondary fw-bold me-2">
+                            <button onClick={() => handleOpenForm(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
@@ -1027,6 +1068,9 @@ export const UsuarioApp = ({ userLog }) => {
                                     <option value={100}>100</option>
                                 </select>
                             </div>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Total</label>{totalItems}
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
                                     <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
@@ -1035,7 +1079,7 @@ export const UsuarioApp = ({ userLog }) => {
                                         </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages ? totalPages : 1}</button>
                                     </li>
                                     <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                                         <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>

@@ -22,27 +22,39 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-	name = "sucursales", 
+	name = "modulos", 
 	uniqueConstraints = {
-			@UniqueConstraint(columnNames = {"sucursal"}, name = "sucursal_uq1")
+			@UniqueConstraint(columnNames = {"var"}, name = "modulo_uq1")
 	}
 )
-public class Sucursal {
-	
-	@Id 
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sucursal_sec")
-	@SequenceGenerator(name = "sucursal_sec", sequenceName = "sucursales_id_seq", allocationSize = 1)
+public class Modulo {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "modulo_sec")
+	@SequenceGenerator(name = "modulo_sec", sequenceName = "modulos_id_seq", allocationSize = 1)
 	private Integer id;
 	
 	@NotNull
 	@NotEmpty
 	@NotBlank
 	@Size(max = 50)
-	private String sucursal;
+	private String moduloes;
 	
-	public Sucursal(Integer id) {
+	@NotNull
+	@NotEmpty
+	@NotBlank
+	@Size(max = 50)
+	private String moduloen;
+	
+	@NotNull
+	@NotEmpty
+	@NotBlank
+	@Size(max = 10)
+	private String var;
+	
+	public Modulo(Integer id) {
 		super();
 		this.id = id;
 	}
-
+	
 }

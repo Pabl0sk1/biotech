@@ -62,7 +62,8 @@ public class Token {
 	@Size(max = 15)
 	private String estado;
 	
-	private Boolean activo;
+	@NotNull
+	private Boolean activo = true;
 	
 	public Token(Integer id) {
 		super();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAccess, deleteAccess } from '../services/auditoria.service.js';
+import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header';
 import { FiltroModal } from "../FiltroModal.jsx";
 import { DateHourFormat } from '../utils/DateHourFormat.js';
@@ -7,7 +8,9 @@ import { DateHourFormat } from '../utils/DateHourFormat.js';
 export const AuditoriaApp = ({ userLog }) => {
 
     const [auditorias, setAuditorias] = useState([]);
+    const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [auditoriaAEliminar, setAuditoriaAEliminar] = useState(null);
     const [auditoriaAVisualizar, setAuditoriaAVisualizar] = useState(null);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
@@ -49,12 +52,19 @@ export const AuditoriaApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
+    const permisoUsuario = async () => {
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc01`);
+        setPermiso(response.items[0]);
+    }
+
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
             const response = await getAccess(query.page, query.size, query.order, filtrosFinal);
             setAuditorias(response.items);
             setTotalPages(response.totalPages);
+            setTotalItems(response.totalItems);
+            permisoUsuario();
         };
         load();
     }, [query]);
@@ -430,8 +440,13 @@ export const AuditoriaApp = ({ userLog }) => {
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
+                                            const puedeEliminar = permiso?.puedeeliminar;
+                                            const puedeVer = permiso?.puedever;
                                             return (
-                                                <tr className="text-center align-middle" key={v ? v.id : `empty-${index}`}>
+                                                <tr
+                                                    className="text-center align-middle"
+                                                    key={v ? v.id : `empty-${index}`}
+                                                >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
                                                     <td className='text-start'>{v.usuario.nombreusuario}</td>
                                                     <td>{DateHourFormat(v.fechahora, 1)}</td>
@@ -440,16 +455,24 @@ export const AuditoriaApp = ({ userLog }) => {
                                                     <td>{v.codregistro}</td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
-                                                            onClick={() => setAuditoriaAEliminar(v)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (puedeEliminar) setAuditoriaAEliminar(v);
+                                                            }}
                                                             className="btn border-0 me-2 p-0"
+                                                            style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
                                                         >
-                                                            <i className="bi bi-trash-fill text-danger"></i>
+                                                            <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
                                                         </button>
                                                         <button
-                                                            onClick={() => setAuditoriaAVisualizar(v)}
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (puedeVer) setAuditoriaAVisualizar(v);
+                                                            }}
                                                             className="btn border-0 ms-2 p-0"
+                                                            style={{ cursor: puedeVer ? 'pointer' : 'default' }}
                                                         >
-                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                            <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -484,6 +507,9 @@ export const AuditoriaApp = ({ userLog }) => {
                                     <option value={100}>100</option>
                                 </select>
                             </div>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Total</label>{totalItems}
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
                                     <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
@@ -492,7 +518,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                         </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages ? totalPages : 1}</button>
                                     </li>
                                     <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                                         <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>

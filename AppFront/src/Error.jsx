@@ -16,7 +16,7 @@ export const Error = () => {
                 {/* Título y descripción */}
                 <h1 className="error-title">¡Página no encontrada!</h1>
                 <p className="error-description">
-                    Lo sentimos, la página que estás buscando no existe o ha sido movida.
+                    Lo sentimos, la página que estás buscando no existe o no tienes permiso.
                 </p>
 
                 {/* Sugerencias */}
@@ -30,7 +30,7 @@ export const Error = () => {
 
                 {/* Botones de acción */}
                 <div className="error-actions">
-                    <Link to={-1} className="btn-error btn-home">
+                    <Link to={"/biotech/home"} className="btn-error btn-home">
                         <i className="bi bi-arrow-left me-2"></i>
                         Volver atrás
                     </Link>

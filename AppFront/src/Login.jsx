@@ -45,7 +45,7 @@ export const Login = ({ setUserLog }) => {
                 await AddAccess('Iniciar Sesión', 0, response.user, "Login");
 
                 setUserLog(usuarioEncontrado);
-                navigate(-1);
+                navigate("biotech/home");
             } else {
                 setError("Nombre de usuario o contraseña incorrectos.");
             }

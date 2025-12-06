@@ -1,23 +1,21 @@
 import { useEffect, useState } from "react";
-import { getRole, saveRole, updateRole, deleteRole } from '../services/tipousuario.service.js';
-import { getUser } from "../services/usuario.service.js";
+import { getModule, saveModule, updateModule, deleteModule } from '../services/modulo.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header';
+import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 
-export const RolApp = ({ userLog }) => {
+export const ModuloApp = ({ userLog }) => {
 
-    const [roles, setRoles] = useState([]);
-    const [usuarios, setUsuarios] = useState([]);
+    const [modulos, setModulos] = useState([]);
     const [permisos, setPermisos] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [rolAGuardar, setRolAGuardar] = useState(null);
-    const [rolAEliminar, setRolAEliminar] = useState(null);
-    const [rolNoEliminar, setRolNoEliminar] = useState(null);
-    const [rolAVisualizar, setRolAVisualizar] = useState(null);
+    const [moduloAGuardar, setModuloAGuardar] = useState(null);
+    const [moduloAEliminar, setModuloAEliminar] = useState(null);
+    const [moduloNoEliminar, setModuloNoEliminar] = useState(null);
+    const [moduloAVisualizar, setModuloAVisualizar] = useState(null);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -30,10 +28,10 @@ export const RolApp = ({ userLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setRolAEliminar(null);
-                setRolNoEliminar(null);
-                setRolAVisualizar(null);
-                setRolAGuardar(null);
+                setModuloAEliminar(null);
+                setModuloNoEliminar(null);
+                setModuloAVisualizar(null);
+                setModuloAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -57,16 +55,13 @@ export const RolApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        tipousuario: ""
+        moduloes: "",
+        moduloen: "",
+        var: ""
     };
 
-    const recuperarRoles = () => {
+    const recuperarModulos = () => {
         setQuery(q => ({ ...q }));
-    }
-
-    const recuperarUsuarios = async () => {
-        const response = await getUser();
-        setUsuarios(response.items);
     }
 
     const recuperarPermisos = async () => {
@@ -75,53 +70,51 @@ export const RolApp = ({ userLog }) => {
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc03`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:rg06`);
         setPermiso(response.items[0]);
     }
 
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
-            const response = await getRole(query.page, query.size, query.order, filtrosFinal);
-            setRoles(response.items);
+            const response = await getModule(query.page, query.size, query.order, filtrosFinal);
+            setModulos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarUsuarios();
             recuperarPermisos();
             permisoUsuario();
         };
         load();
     }, [query]);
 
-    const eliminarRolFn = async (id) => {
-        await deleteRole(id);
-        await AddAccess('Eliminar', id, userLog, "Roles");
-        recuperarRoles();
+    const eliminarModuloFn = async (id) => {
+        await deleteModule(id);
+        await AddAccess('Eliminar', id, userLog, "Modulos");
+        recuperarModulos();
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarRolFn(id);
-        setRolAEliminar(null);
+        eliminarModuloFn(id);
+        setModuloAEliminar(null);
     }
 
-    const handleEliminarRol = (rol) => {
-        const rel = usuarios.find(v => v.tipousuario.id === rol.id);
-        const rel2 = permisos.find(v => v.tipousuario.id === rol.id);
-        if (rel || rel2) setRolNoEliminar(rol);
-        else setRolAEliminar(rol);
+    const handleEliminarModulo = (modulo) => {
+        const rel = permisos.find(v => v.modulo.id === modulo.id);
+        if (rel) setModuloNoEliminar(modulo);
+        else setModuloAEliminar(modulo);
     };
 
-    const guardarFn = async (rolAGuardar) => {
+    const guardarFn = async (moduloAGuardar) => {
 
-        if (rolAGuardar.id) {
-            await updateRole(rolAGuardar.id, rolAGuardar);
-            await AddAccess('Modificar', rolAGuardar.id, userLog, "Roles");
+        if (moduloAGuardar.id) {
+            await updateModule(moduloAGuardar.id, moduloAGuardar);
+            await AddAccess('Modificar', moduloAGuardar.id, userLog, "Modulos");
         } else {
-            const nuevoRol = await saveRole(rolAGuardar);
-            await AddAccess('Insertar', nuevoRol.saved.id, userLog, "Roles");
+            const nuevoModulo = await saveModule(moduloAGuardar);
+            await AddAccess('Insertar', nuevoModulo.saved.id, userLog, "Modulos");
         }
-        setRolAGuardar(null);
-        recuperarRoles();
+        setModuloAGuardar(null);
+        recuperarModulos();
     };
 
     const nextPage = () => {
@@ -175,7 +168,7 @@ export const RolApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         if (form.checkValidity()) {
-            guardarFn({ ...rolAGuardar });
+            guardarFn({ ...moduloAGuardar });
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -187,31 +180,31 @@ export const RolApp = ({ userLog }) => {
         setFiltrosAplicados({});
     }
 
-    const rows = [...roles];
+    const rows = [...modulos];
     while (rows.length < query.size) rows.push(null);
 
     return (
         <>
 
-            {rolAEliminar && (
+            {moduloAEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el rol?</p>
+                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el modulo?</p>
                                 </div>
                                 <div className="mt-3">
                                     <button
-                                        onClick={() => confirmarEliminacion(rolAEliminar.id)}
+                                        onClick={() => confirmarEliminacion(moduloAEliminar.id)}
                                         className="btn btn-success text-black me-4 fw-bold"
                                     >
                                         <i className="bi bi-trash-fill me-2"></i>Eliminar
                                     </button>
                                     <button
-                                        onClick={() => setRolAEliminar(null)}
+                                        onClick={() => setModuloAEliminar(null)}
                                         className="btn btn-danger text-black ms-4 fw-bold"
                                     >
                                         <i className="bi bi-x-lg me-2"></i>Cancelar
@@ -223,18 +216,18 @@ export const RolApp = ({ userLog }) => {
                 </>
             )}
 
-            {rolNoEliminar && (
+            {moduloNoEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El rol está siendo referenciado en otra tabla</p>
+                                    <p className='fs-5'>El modulo está siendo referenciado en otra tabla</p>
                                 </div>
                                 <button
-                                    onClick={() => setRolNoEliminar(null)}
+                                    onClick={() => setModuloNoEliminar(null)}
                                     className="btn btn-danger mt-3 fw-bold text-black">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
@@ -244,26 +237,46 @@ export const RolApp = ({ userLog }) => {
                 </>
             )}
 
-            {rolAVisualizar && (
+            {moduloAVisualizar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
                                 <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="tipousuario" className="form-label m-0 mb-2">Descripción</label>
+                                    <div className='col me-5 pe-0'>
+                                        <label htmlFor="moduloes" className="form-label m-0 mb-2">Modulo Español</label>
                                         <input
                                             type="text"
-                                            id="tipousuario"
-                                            name="tipousuario"
+                                            id="moduloes"
+                                            name="moduloes"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={rolAVisualizar.tipousuario}
+                                            value={moduloAVisualizar.moduloes}
+                                            readOnly
+                                        />
+                                        <label htmlFor="var" className="form-label m-0 mb-2">Variable</label>
+                                        <input
+                                            type="text"
+                                            id="var"
+                                            name="var"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={moduloAVisualizar.var}
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div className='col ms-5 ps-0'>
+                                        <label htmlFor="moduloen" className="form-label m-0 mb-2">Modulo Inglés</label>
+                                        <input
+                                            type="text"
+                                            id="moduloen"
+                                            name="moduloen"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={moduloAVisualizar.moduloen}
                                             readOnly
                                         />
                                     </div>
                                 </div>
-                                <button onClick={() => setRolAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
+                                <button onClick={() => setModuloAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -272,12 +285,12 @@ export const RolApp = ({ userLog }) => {
                 </>
             )}
 
-            {rolAGuardar && (
+            {moduloAGuardar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
+                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
+                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
                                 <form
                                     action="url.ph"
                                     onSubmit={handleSubmit}
@@ -285,23 +298,61 @@ export const RolApp = ({ userLog }) => {
                                     noValidate
                                 >
                                     <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
+                                        <div className='col me-5 pe-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="tipousuario" className="form-label m-0 mb-2">Descripción</label>
+                                                <label htmlFor="moduloes" className="form-label m-0 mb-2">Modulo Español</label>
                                                 <input
                                                     type="text"
-                                                    id="tipousuario"
-                                                    name="tipousuario"
+                                                    id="moduloes"
+                                                    name="moduloes"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={rolAGuardar.tipousuario}
-                                                    onChange={(event) => setRolAGuardar({ ...rolAGuardar, [event.target.name]: event.target.value })}
+                                                    value={moduloAGuardar.moduloes}
+                                                    onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
                                                     maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El modulo en español es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                </div>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="var" className="form-label m-0 mb-2">Variable</label>
+                                                <input
+                                                    type="text"
+                                                    id="var"
+                                                    name="var"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={moduloAGuardar.var}
+                                                    onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
+                                                    required
+                                                    autoFocus
+                                                    maxLength={50}
+                                                />
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La variable es obligatoria y no debe sobrepasar los 10 caracteres.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className='col ms-5 ps-0'>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="moduloen" className="form-label m-0 mb-2">Modulo Inglés</label>
+                                                <input
+                                                    type="text"
+                                                    id="moduloen"
+                                                    name="moduloen"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={moduloAGuardar.moduloen}
+                                                    onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
+                                                    required
+                                                    autoFocus
+                                                    maxLength={50}
+                                                />
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El modulo en inglés es obligatorio y no debe sobrepasar los 50 caracteres.
                                                 </div>
                                             </div>
                                         </div>
@@ -310,7 +361,7 @@ export const RolApp = ({ userLog }) => {
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => setRolAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => setModuloAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
@@ -322,11 +373,11 @@ export const RolApp = ({ userLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'ROLES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'MODULOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
-                        <p className="extend-header text-black border-bottom border-1 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Roles
+                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Modulos
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -365,18 +416,70 @@ export const RolApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("tipousuario")} className="sortable-header">
-                                            Descripción
-                                            <i className={`bi ${getSortIcon("tipousuario")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("moduloes")} className="sortable-header">
+                                            Modulo Español
+                                            <i className={`bi ${getSortIcon("moduloes")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["tipousuario"] ?? {};
+                                                    const previo = filtrosAplicados["moduloes"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "tipousuario",
+                                                        field: "moduloes",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("moduloen")} className="sortable-header">
+                                            Modulo Inglés
+                                            <i className={`bi ${getSortIcon("moduloen")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["moduloen"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "moduloen",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("var")} className="sortable-header">
+                                            Variable
+                                            <i className={`bi ${getSortIcon("var")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["var"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "var",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -395,9 +498,9 @@ export const RolApp = ({ userLog }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {roles.length === 0 ? (
+                                    {modulos.length === 0 ? (
                                         <tr>
-                                            <td colSpan="3" className="text-center py-3 text-muted fs-3 fw-bold">
+                                            <td colSpan="5" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
                                             </td>
                                         </tr>
@@ -412,17 +515,19 @@ export const RolApp = ({ userLog }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) setRolAGuardar(v);
+                                                        if (puedeEditar) setModuloAGuardar(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className="text-start">{v.tipousuario}</td>
+                                                    <td className='text-start'>{v.moduloes}</td>
+                                                    <td className='text-start'>{v.moduloen}</td>
+                                                    <td>{v.var}</td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarRol(v);
+                                                                if (puedeEliminar) handleEliminarModulo(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
@@ -433,8 +538,8 @@ export const RolApp = ({ userLog }) => {
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Roles");
-                                                                    setRolAVisualizar(v);
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Modulos");
+                                                                    setModuloAVisualizar(v);
                                                                 }
                                                             }}
                                                             className="btn border-0 ms-2 p-0"
@@ -451,7 +556,7 @@ export const RolApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setRolAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
+                            <button onClick={() => setModuloAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
@@ -499,9 +604,9 @@ export const RolApp = ({ userLog }) => {
                                 </ul>
                             </nav>
                         </div>
-                    </div>
-                </div>
-            </div>
+                    </div >
+                </div >
+            </div >
         </>
     );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getToken, saveToken, deleteToken } from '../services/token.service.js';
+import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
@@ -8,7 +9,9 @@ import { DateHourFormat } from '../utils/DateHourFormat.js';
 export const TokenApp = ({ userLog }) => {
 
     const [tokens, setTokens] = useState([]);
+    const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [tokenAEliminar, setTokenAEliminar] = useState(null);
     const [tokenAGuardar, setTokenAGuardar] = useState(null);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
@@ -50,12 +53,19 @@ export const TokenApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     };
 
+    const permisoUsuario = async () => {
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc04`);
+        setPermiso(response.items[0]);
+    }
+
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
             const response = await getToken(query.page, query.size, query.order, filtrosFinal);
             setTokens(response.items);
             setTotalPages(response.totalPages);
+            setTotalItems(response.totalItems);
+            permisoUsuario();
         };
         load();
     }, [query]);
@@ -384,6 +394,7 @@ export const TokenApp = ({ userLog }) => {
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
+                                            const puedeEliminar = permiso?.puedeeliminar;
                                             return (
                                                 <tr
                                                     className="text-center align-middle"
@@ -403,12 +414,12 @@ export const TokenApp = ({ userLog }) => {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (v.usuario.id != 1 || v.usuario.id === userLog.id || userLog.id === 1) handleEliminarToken(v);
+                                                                if (puedeEliminar) handleEliminarToken(v);
                                                             }}
                                                             className="btn border-0 p-0"
-                                                            style={{ cursor: v.usuario.id != 1 || v.usuario.id === userLog.id || userLog.id === 1 ? 'pointer' : 'default' }}
+                                                            style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
                                                         >
-                                                            <i className={`bi bi-trash-fill ${v.usuario.id != 1 || v.usuario.id === userLog.id || userLog.id === 1 ? 'text-danger' : 'text-danger-emphasis'} `}></i>
+                                                            <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -419,7 +430,7 @@ export const TokenApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setTokenAGuardar(true)} className="btn btn-secondary fw-bold me-2">
+                            <button onClick={() => setTokenAGuardar(true)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
@@ -446,6 +457,9 @@ export const TokenApp = ({ userLog }) => {
                                     <option value={100}>100</option>
                                 </select>
                             </div>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Total</label>{totalItems}
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
                                     <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
@@ -454,7 +468,7 @@ export const TokenApp = ({ userLog }) => {
                                         </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages ? totalPages : 1}</button>
                                     </li>
                                     <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                                         <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>

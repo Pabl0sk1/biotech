@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getBranch, saveBranch, updateBranch, deleteBranch } from '../services/sucursal.service.js';
 import { getUser } from '../services/usuario.service.js';
 import { getEmployee } from '../services/funcionario.service.js';
+import { getPermission } from '../services/permiso.service.js';
 import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
@@ -11,7 +12,9 @@ export const SucursalApp = ({ userLog }) => {
     const [sucursales, setSucursales] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
     const [funcionarios, setFuncionarios] = useState([]);
+    const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [sucursalAGuardar, setSucursalAGuardar] = useState(null);
     const [sucursalAEliminar, setSucursalAEliminar] = useState(null);
     const [sucursalNoEliminar, setSucursalNoEliminar] = useState(null);
@@ -72,14 +75,21 @@ export const SucursalApp = ({ userLog }) => {
         setFuncionarios(response.items);
     }
 
+    const permisoUsuario = async () => {
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:rg03`);
+        setPermiso(response.items[0]);
+    }
+
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
             const response = await getBranch(query.page, query.size, query.order, filtrosFinal);
             setSucursales(response.items);
             setTotalPages(response.totalPages);
+            setTotalItems(response.totalItems);
             recuperarUsuarios();
             recuperarFuncionarios();
+            permisoUsuario();
         };
         load();
     }, [query]);
@@ -394,7 +404,9 @@ export const SucursalApp = ({ userLog }) => {
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
-                                            const puedeEditar = v && v.id;
+                                            const puedeEditar = permiso?.puedeeditar;
+                                            const puedeEliminar = permiso?.puedeeliminar;
+                                            const puedeVer = permiso?.puedever;
                                             return (
                                                 <tr
                                                     className="text-center align-middle"
@@ -411,21 +423,25 @@ export const SucursalApp = ({ userLog }) => {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleEliminarSucursal(v);
+                                                                if (puedeEliminar) handleEliminarSucursal(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
+                                                            style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
                                                         >
-                                                            <i className="bi bi-trash-fill text-danger p-0"></i>
+                                                            <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
                                                         </button>
                                                         <button
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
-                                                                await AddAccess('Visualizar', v.id, userLog, "Sucursales");
-                                                                setSucursalAVisualizar(v);
+                                                                if (puedeVer) {
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Sucursales");
+                                                                    setSucursalAVisualizar(v);
+                                                                }
                                                             }}
                                                             className="btn border-0 ms-2 p-0"
+                                                            style={{ cursor: puedeVer ? 'pointer' : 'default' }}
                                                         >
-                                                            <i className="bi bi-eye-fill text-primary p-0"></i>
+                                                            <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -436,7 +452,7 @@ export const SucursalApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setSucursalAGuardar(selected)} className="btn btn-secondary fw-bold me-2">
+                            <button onClick={() => setSucursalAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
@@ -463,6 +479,9 @@ export const SucursalApp = ({ userLog }) => {
                                     <option value={100}>100</option>
                                 </select>
                             </div>
+                            <div className="d-flex align-items-center ms-5">
+                                <label className="me-2 fw-semibold">Total</label>{totalItems}
+                            </div>
                             <nav aria-label="page navigation" className='user-select-none ms-auto'>
                                 <ul className="pagination m-0">
                                     <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
@@ -471,7 +490,7 @@ export const SucursalApp = ({ userLog }) => {
                                         </button>
                                     </li>
                                     <li className="page-item disabled">
-                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages}</button>
+                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages ? totalPages : 1}</button>
                                     </li>
                                     <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                                         <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>

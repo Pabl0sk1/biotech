@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
-import { getSeller, saveSeller, updateSeller, deleteSeller } from '../services/vendedor.service.js';
-import { getPermission } from '../services/permiso.service.js';
+import { getPermission, savePermission, updatePermission, deletePermission } from '../services/permiso.service.js';
+import { getRole } from '../services/tipousuario.service.js';
+import { getModule } from '../services/modulo.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from "../FiltroModal.jsx";
-import { DateHourFormat } from '../utils/DateHourFormat.js';
+import { FiltroModal } from '../FiltroModal.jsx';
 
-export const VendedorApp = ({ userLog }) => {
+export const PermisoApp = ({ userLog }) => {
 
-    const [vendedores, setVendedores] = useState([]);
+    const [permisos, setPermisos] = useState([]);
+    const [roles, setRoles] = useState([]);
+    const [modulos, setModulos] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [vendedorAGuardar, setVendedorAGuardar] = useState(null);
-    const [vendedorAEliminar, setVendedorAEliminar] = useState(null);
-    const [vendedorNoEliminar, setVendedorNoEliminar] = useState(null);
-    const [vendedorAVisualizar, setVendedorAVisualizar] = useState(null);
+    const [permisoAGuardar, setPermisoAGuardar] = useState(null);
+    const [permisoAEliminar, setPermisoAEliminar] = useState(null);
+    const [permisoNoEliminar, setPermisoNoEliminar] = useState(null);
+    const [permisoAVisualizar, setPermisoAVisualizar] = useState(null);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -28,10 +30,10 @@ export const VendedorApp = ({ userLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setVendedorAEliminar(null);
-                setVendedorNoEliminar(null);
-                setVendedorAVisualizar(null);
-                setVendedorAGuardar(null);
+                setPermisoAEliminar(null);
+                setPermisoNoEliminar(null);
+                setPermisoAVisualizar(null);
+                setPermisoAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -55,67 +57,78 @@ export const VendedorApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        nomape: "",
-        nombre: "",
-        apellido: "",
-        nrodoc: "",
-        nrotelefono: "",
-        correo: "",
-        fechanacimiento: ""
+        tipousuario: {
+            id: 0
+        },
+        modulo: {
+            id: 0
+        },
+        puedeconsultar: false,
+        puedever: false,
+        puedeagregar: false,
+        puedeeliminar: false,
+        puedeeditar: false
     };
 
-    const recuperarVendedores = () => {
+    const recuperarPermisos = () => {
         setQuery(q => ({ ...q }));
+    };
+
+    const recuperarRoles = async () => {
+        const response = await getRole();
+        setRoles(response.items);
+    }
+
+    const recuperarModulos = async () => {
+        const response = await getModule();
+        setModulos(response.items);
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:rg02`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc05`);
         setPermiso(response.items[0]);
     }
 
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
-            const response = await getSeller(query.page, query.size, query.order, filtrosFinal);
-            setVendedores(response.items);
+            const response = await getPermission(query.page, query.size, query.order, filtrosFinal);
+            setPermisos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
+            recuperarModulos();
+            recuperarRoles();
             permisoUsuario();
         };
         load();
     }, [query]);
 
-    const eliminarVendedorFn = async (id) => {
-        await deleteSeller(id);
-        await AddAccess('Eliminar', id, userLog, "Vendedores");
-        recuperarVendedores();
+    const eliminarPermisoFn = async (id) => {
+        await deletePermission(id);
+        await AddAccess('Eliminar', id, userLog, "Permisos");
+        recuperarPermisos();
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarVendedorFn(id);
-        setVendedorAEliminar(null);
+        eliminarPermisoFn(id);
+        setPermisoAEliminar(null);
     }
 
-    const handleEliminarVendedor = (vendedor) => {
-        setVendedorAEliminar(vendedor);
+    const handleEliminarPermiso = (permiso) => {
+        setPermisoAEliminar(permiso);
     };
 
-    const guardarFn = async (vendedorAGuardar) => {
+    const guardarFn = async (permisoAGuardar) => {
 
-        const vendedorActualizado = {
-            ...vendedorAGuardar,
-            nomape: vendedorAGuardar.nombre + ", " + vendedorAGuardar.apellido,
-        };
-
-        if (vendedorActualizado.id) {
-            await updateSeller(vendedorActualizado.id, vendedorActualizado);
-            await AddAccess('Modificar', vendedorActualizado.id, userLog, "Vendedores");
+        if (permisoAGuardar.id) {
+            await updatePermission(permisoAGuardar.id, permisoAGuardar);
+            await AddAccess('Modificar', permisoAGuardar.id, userLog, "Permisos");
         } else {
-            const nuevoVendedor = await saveSeller(vendedorActualizado);
-            await AddAccess('Insertar', nuevoVendedor.saved.id, userLog, "Vendedores");
+            const nuevoPermiso = await savePermission(permisoAGuardar);
+            await AddAccess('Insertar', nuevoPermiso.saved.id, userLog, "Permisos");
         }
-        setVendedorAGuardar(null);
-        recuperarVendedores();
+        setPermisoAGuardar(null);
+        recuperarPermisos();
     };
 
     const nextPage = () => {
@@ -168,8 +181,17 @@ export const VendedorApp = ({ userLog }) => {
         event.preventDefault();
         const form = event.currentTarget;
 
+        let sw = 0;
+        if (!permisoAGuardar.tipousuario || !permisoAGuardar.modulo) sw = 1;
+
+        if (sw === 1) {
+            event.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+
         if (form.checkValidity()) {
-            guardarFn({ ...vendedorAGuardar });
+            guardarFn({ ...permisoAGuardar });
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -179,15 +201,15 @@ export const VendedorApp = ({ userLog }) => {
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
         setFiltrosAplicados({});
-    }
+    };
 
-    const rows = [...vendedores];
+    const rows = [...permisos];
     while (rows.length < query.size) rows.push(null);
 
     return (
         <>
 
-            {vendedorAEliminar && (
+            {permisoAEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -195,17 +217,17 @@ export const VendedorApp = ({ userLog }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el vendedor?</p>
+                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el permiso?</p>
                                 </div>
                                 <div className="mt-3">
                                     <button
-                                        onClick={() => confirmarEliminacion(vendedorAEliminar.id)}
+                                        onClick={() => confirmarEliminacion(permisoAEliminar.id)}
                                         className="btn btn-success text-black me-4 fw-bold"
                                     >
                                         <i className="bi bi-trash-fill me-2"></i>Eliminar
                                     </button>
                                     <button
-                                        onClick={() => setVendedorAEliminar(null)}
+                                        onClick={() => setPermisoAEliminar(null)}
                                         className="btn btn-danger text-black ms-4 fw-bold"
                                     >
                                         <i className="bi bi-x-lg me-2"></i>Cancelar
@@ -217,7 +239,7 @@ export const VendedorApp = ({ userLog }) => {
                 </>
             )}
 
-            {vendedorNoEliminar && (
+            {permisoNoEliminar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -225,10 +247,10 @@ export const VendedorApp = ({ userLog }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
                                     <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El vendedor está siendo referenciado en otra tabla</p>
+                                    <p className='fs-5'>El permiso está siendo referenciado en otra tabla</p>
                                 </div>
                                 <button
-                                    onClick={() => setVendedorNoEliminar(null)}
+                                    onClick={() => setPermisoNoEliminar(null)}
                                     className="btn btn-danger mt-3 fw-bold text-black">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
@@ -238,7 +260,7 @@ export const VendedorApp = ({ userLog }) => {
                 </>
             )}
 
-            {vendedorAVisualizar && (
+            {permisoAVisualizar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -247,66 +269,86 @@ export const VendedorApp = ({ userLog }) => {
                                 <div className="row mb-3 fw-semibold text-start">
                                     {/*Columna 1 de visualizar*/}
                                     <div className='col me-5 pe-0'>
-                                        <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
+                                        <label htmlFor="modulo" className="form-label m-0 mb-2">Modulo</label>
                                         <input
                                             type="text"
-                                            id="nombre"
-                                            name="nombre"
+                                            id="modulo"
+                                            name="modulo"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={vendedorAVisualizar.nombre}
+                                            value={permisoAVisualizar.modulo.var}
                                             readOnly
                                         />
-                                        <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
+                                        <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
                                         <input
                                             type="text"
-                                            id="nrotelefono"
-                                            name="nrotelefono"
+                                            id="tipousuario"
+                                            name="tipousuario"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={vendedorAVisualizar.nrotelefono}
-                                            readOnly
-                                        />
-                                        <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                        <input
-                                            type="text"
-                                            id="nrodoc"
-                                            name="nrodoc"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={vendedorAVisualizar.nrodoc}
+                                            value={permisoAVisualizar.tipousuario.tipousuario}
                                             readOnly
                                         />
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0'>
-                                        <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
-                                        <input
-                                            type="text"
-                                            id="apellido"
-                                            name="apellido"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={vendedorAVisualizar.apellido}
-                                            readOnly
-                                        />
-                                        <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
-                                        <input
-                                            type="date"
-                                            id="fechanacimiento"
-                                            name="fechanacimiento"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={vendedorAVisualizar.fechanacimiento || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
-                                        <input
-                                            type="email"
-                                            id="correo"
-                                            name="correo"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={vendedorAVisualizar.correo || ''}
-                                            readOnly
-                                        />
+                                        <p htmlFor="operaciones" className="mb-1 fw-bold text-decoration-underline">Operaciones</p>
+                                        <div>
+                                            <label htmlFor="puedeconsultar" className="form-label m-0 me-2">Consultar?</label>
+                                            <input
+                                                type="checkbox"
+                                                id="puedeconsultar"
+                                                name="puedeconsultar"
+                                                className="form-check-input"
+                                                checked={permisoAVisualizar.puedeconsultar}
+                                                readOnly
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="puedeagregar" className="form-label m-0 me-2">Agregar?</label>
+                                            <input
+                                                type="checkbox"
+                                                id="puedeagregar"
+                                                name="puedeagregar"
+                                                className="form-check-input"
+                                                checked={permisoAVisualizar.puedeagregar}
+                                                readOnly
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="puedeeliminar" className="form-label m-0 me-2">Eliminar?</label>
+                                            <input
+                                                type="checkbox"
+                                                id="puedeeliminar"
+                                                name="puedeeliminar"
+                                                className="form-check-input"
+                                                checked={permisoAVisualizar.puedeeliminar}
+                                                readOnly
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="puedever" className="form-label m-0 me-2">Ver?</label>
+                                            <input
+                                                type="checkbox"
+                                                id="puedever"
+                                                name="puedever"
+                                                className="form-check-input"
+                                                checked={permisoAVisualizar.puedever}
+                                                readOnly
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
+                                            <input
+                                                type="checkbox"
+                                                id="puedeeditar"
+                                                name="puedeeditar"
+                                                className="form-check-input"
+                                                checked={permisoAVisualizar.puedeeditar}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setVendedorAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
+                                <button onClick={() => setPermisoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -315,7 +357,7 @@ export const VendedorApp = ({ userLog }) => {
                 </>
             )}
 
-            {vendedorAGuardar && (
+            {permisoAGuardar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -331,90 +373,127 @@ export const VendedorApp = ({ userLog }) => {
                                         {/*Columna 1 de visualizar*/}
                                         <div className='col me-5 pe-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
-                                                <input
-                                                    type="text"
-                                                    id="nombre"
-                                                    name="nombre"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={vendedorAGuardar.nombre}
-                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
+                                                <label htmlFor="modulo" className="form-label m-0 mb-2">Modulo</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="modulo"
+                                                    id='modulo'
+                                                    value={permisoAGuardar.modulo ? permisoAGuardar.modulo.id : ''}
+                                                    onChange={(event) => {
+                                                        const selectedModulo = modulos.find(r => r.id === parseInt(event.target.value));
+                                                        setPermisoAGuardar({
+                                                            ...permisoAGuardar,
+                                                            modulo: selectedModulo
+                                                        });
+                                                    }}
                                                     required
-                                                    autoFocus
-                                                    maxLength={50}
-                                                />
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione un modulo...</option>
+                                                    {modulos.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.moduloes}</option>
+                                                    ))}
+                                                </select>
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El modulo es obligatorio.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrotelefono"
-                                                    name="nrotelefono"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={vendedorAGuardar.nrotelefono}
-                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrodoc"
-                                                    name="nrodoc"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={vendedorAGuardar.nrodoc}
-                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
-                                                />
+                                                <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="tipousuario"
+                                                    id='tipousuario'
+                                                    value={permisoAGuardar.tipousuario ? permisoAGuardar.tipousuario.id : ''}
+                                                    onChange={(event) => {
+                                                        const selectedTipousuario = roles.find(r => r.id === parseInt(event.target.value));
+                                                        setPermisoAGuardar({
+                                                            ...permisoAGuardar,
+                                                            tipousuario: selectedTipousuario
+                                                        });
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione un rol...</option>
+                                                    {roles.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.tipousuario}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El rol es obligatorio.
+                                                </div>
                                             </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}
                                         <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
+                                            <p htmlFor="operaciones" className="mb-1 fw-bold text-decoration-underline">Operaciones</p>
+                                            <div className='form-group'>
+                                                <label htmlFor="puedeconsultar" className="form-label m-0 me-2">Consultar?</label>
                                                 <input
-                                                    type="text"
-                                                    id="apellido"
-                                                    name="apellido"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={vendedorAGuardar.apellido}
-                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={50}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El apellido es obligatorio y no debe sobrepasar los 50 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
-                                                <input
-                                                    type="date"
-                                                    id="fechanacimiento"
-                                                    name="fechanacimiento"
-                                                    className="form-control border-input w-100"
-                                                    value={vendedorAGuardar.fechanacimiento || ''}
-                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
+                                                    type="checkbox"
+                                                    id="puedeconsultar"
+                                                    name="puedeconsultar"
+                                                    className="form-check-input"
+                                                    checked={permisoAGuardar.puedeconsultar}
+                                                    onChange={(e) => {
+                                                        const estaChequeado = e.target.checked;
+                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
+                                                    }}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
+                                            <div className='form-group'>
+                                                <label htmlFor="puedeagregar" className="form-label m-0 me-2">Agregar?</label>
                                                 <input
-                                                    type="email"
-                                                    id="correo"
-                                                    name="correo"
-                                                    className="form-control border-input w-100"
-                                                    placeholder='Escribe...'
-                                                    value={vendedorAGuardar.correo || ''}
-                                                    onChange={(event) => setVendedorAGuardar({ ...vendedorAGuardar, [event.target.name]: event.target.value })}
+                                                    type="checkbox"
+                                                    id="puedeagregar"
+                                                    name="puedeagregar"
+                                                    className="form-check-input"
+                                                    checked={permisoAGuardar.puedeagregar}
+                                                    onChange={(e) => {
+                                                        const estaChequeado = e.target.checked;
+                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className='form-group'>
+                                                <label htmlFor="puedeeliminar" className="form-label m-0 me-2">Eliminar?</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="puedeeliminar"
+                                                    name="puedeeliminar"
+                                                    className="form-check-input"
+                                                    checked={permisoAGuardar.puedeeliminar}
+                                                    onChange={(e) => {
+                                                        const estaChequeado = e.target.checked;
+                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className='form-group'>
+                                                <label htmlFor="puedever" className="form-label m-0 me-2">Ver?</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="puedever"
+                                                    name="puedever"
+                                                    className="form-check-input"
+                                                    checked={permisoAGuardar.puedever}
+                                                    onChange={(e) => {
+                                                        const estaChequeado = e.target.checked;
+                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="puedeeditar"
+                                                    name="puedeeditar"
+                                                    className="form-check-input"
+                                                    checked={permisoAGuardar.puedeeditar}
+                                                    onChange={(e) => {
+                                                        const estaChequeado = e.target.checked;
+                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
+                                                    }}
                                                 />
                                             </div>
                                         </div>
@@ -423,7 +502,7 @@ export const VendedorApp = ({ userLog }) => {
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => setVendedorAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => setPermisoAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
@@ -435,11 +514,11 @@ export const VendedorApp = ({ userLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'VENDEDORES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'PERMISOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Vendedores
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Permisos
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -478,18 +557,18 @@ export const VendedorApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("nomape")} className="sortable-header">
-                                            Nombre/Apellido
-                                            <i className={`bi ${getSortIcon("nomape")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("modulo.var")} className="sortable-header">
+                                            Variable
+                                            <i className={`bi ${getSortIcon("modulo.var")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["nomape"] ?? {};
+                                                    const previo = filtrosAplicados["modulo.var"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "nomape",
+                                                        field: "modulo.var",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -504,18 +583,18 @@ export const VendedorApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("nrodoc")} className="sortable-header">
-                                            Nro. de documento
-                                            <i className={`bi ${getSortIcon("nrodoc")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("modulo.moduloes")} className="sortable-header">
+                                            Modulo
+                                            <i className={`bi ${getSortIcon("modulo.moduloes")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["nrodoc"] ?? {};
+                                                    const previo = filtrosAplicados["modulo.moduloes"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "nrodoc",
+                                                        field: "modulo.moduloes",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -530,19 +609,19 @@ export const VendedorApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("fechanacimiento")} className="sortable-header">
-                                            Fecha de Nacimiento
-                                            <i className={`bi ${getSortIcon("fechanacimiento")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("tipousuario.tipousuario")} className="sortable-header">
+                                            Rol
+                                            <i className={`bi ${getSortIcon("tipousuario.tipousuario")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["fechanacimiento"] ?? {};
+                                                    const previo = filtrosAplicados["tipousuario.tipousuario"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "fechanacimiento",
-                                                        type: "date",
+                                                        field: "tipousuario.tipousuario",
+                                                        type: "string",
                                                         visible: true,
                                                         op: previo.op,
                                                         value: previo.value,
@@ -560,9 +639,9 @@ export const VendedorApp = ({ userLog }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {vendedores.length === 0 ? (
+                                    {permisos.length === 0 ? (
                                         <tr>
-                                            <td colSpan="5" className="text-center py-3 text-muted fs-3 fw-bold">
+                                            <td colSpan="4" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
                                             </td>
                                         </tr>
@@ -577,19 +656,19 @@ export const VendedorApp = ({ userLog }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) setVendedorAGuardar(v);
+                                                        if (puedeEditar) setPermisoAGuardar(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.nomape}</td>
-                                                    <td className='text-end'>{v.nrodoc}</td>
-                                                    <td>{DateHourFormat(v.fechanacimiento, 0)}</td>
+                                                    <td>{v.modulo.var}</td>
+                                                    <td>{v.modulo.moduloes}</td>
+                                                    <td>{v.tipousuario.tipousuario}</td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarVendedor(v);
+                                                                if (puedeEliminar) handleEliminarPermiso(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
@@ -600,8 +679,8 @@ export const VendedorApp = ({ userLog }) => {
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Vendedores");
-                                                                    setVendedorAVisualizar(v);
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Permisos");
+                                                                    setPermisoAVisualizar(v);
                                                                 }
                                                             }}
                                                             className="btn border-0 ms-2 p-0"
@@ -618,7 +697,7 @@ export const VendedorApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setVendedorAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
+                            <button onClick={() => setPermisoAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">

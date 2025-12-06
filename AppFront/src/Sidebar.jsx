@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AddAccess } from './utils/AddAccess.js';
+import { getPermission } from './services/permiso.service.js';
 
 const Sidebar = ({
     userLog,
@@ -15,6 +16,27 @@ const Sidebar = ({
 }) => {
     const UrlLocal = '/biotech/home';
     const [hoveredItem, setHoveredItem] = useState(null);
+    const [permisos, setPermisos] = useState([]);
+
+    const recuperarPermisos = async () => {
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario.id}`);
+        setPermisos(response.items);
+    }
+
+    useEffect(() => {
+        recuperarPermisos();
+    }, []);
+
+    const tienePermisoRuta = (moduloVar) => {
+        if (!permisos) return false;
+
+        return moduloVar.some(mod => {
+            const permiso = permisos.find(
+                p => p.modulo.var.toLowerCase().trim() === mod.toLowerCase().trim()
+            );
+            return permiso?.puedeconsultar === true;
+        });
+    };
 
     const menuItemStyle = (isHovered) => ({
         transition: 'all 0.3s ease',
@@ -89,147 +111,59 @@ const Sidebar = ({
             <div style={{ padding: '16px 0', overflowY: 'auto', height: 'calc(100vh - 120px)' }}>
                 <nav>
                     {/* Reportes */}
-                    <div style={{ marginBottom: '8px' }}>
-                        <button
-                            onClick={toggleReportesMenu}
-                            onMouseEnter={() => setHoveredItem('reportes')}
-                            onMouseLeave={() => setHoveredItem(null)}
-                            style={{
-                                ...menuItemStyle(hoveredItem === 'reportes'),
-                                width: '100%',
-                                background: 'none',
-                                color: 'white',
-                                padding: '12px 20px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <div style={{
-                                width: '32px',
-                                height: '32px',
-                                background: 'rgba(34, 197, 94, 0.2)',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}>
-                                <i className="bi bi-file-earmark-bar-graph" style={{ color: '#22c55e' }}></i>
-                            </div>
-                            <span style={{ flex: 1, textAlign: 'left' }}>Reportes</span>
-                            <i className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
-                                style={{
-                                    transition: 'transform 0.3s ease',
-                                    transform: isReportesMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                                }}
-                            ></i>
-                        </button>
-
-                        <div style={{
-                            maxHeight: isReportesMenuOpen ? '200px' : '0',
-                            overflow: 'hidden',
-                            transition: 'max-height 0.3s ease',
-                        }}>
-                            {userLog?.tipousuario?.id && [1, 2, 5].includes(userLog.tipousuario.id) && (
-                                <Link
-                                    to={UrlLocal + '/reports/calcext'}
-                                    onClick={async () => await AddAccess('Realizar Informe', 0, userLog, 'Horas Extras')}
-                                    onMouseEnter={() => setHoveredItem('horas-extras')}
-                                    onMouseLeave={() => setHoveredItem(null)}
-                                    style={{
-                                        ...subMenuItemStyle(hoveredItem === 'horas-extras'),
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 20px 10px 52px',
-                                        color: 'rgba(255, 255, 255, 0.8)',
-                                        textDecoration: 'none',
-                                        fontSize: '13px',
-                                    }}
-                                >
-                                    <i className="bi bi-clock-history" style={{ color: '#f59e0b' }}></i>
-                                    Horas Extras
-                                </Link>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Registros */}
-                    <div style={{ marginBottom: '8px' }}>
-                        <button
-                            onClick={toggleRegistrosMenu}
-                            onMouseEnter={() => setHoveredItem('registros')}
-                            onMouseLeave={() => setHoveredItem(null)}
-                            style={{
-                                ...menuItemStyle(hoveredItem === 'registros'),
-                                width: '100%',
-                                background: 'none',
-                                color: 'white',
-                                padding: '12px 20px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <div style={{
-                                width: '32px',
-                                height: '32px',
-                                background: 'rgba(59, 130, 246, 0.2)',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}>
-                                <i className="bi bi-database" style={{ color: '#3b82f6' }}></i>
-                            </div>
-                            <span style={{ flex: 1, textAlign: 'left' }}>Registros</span>
-                            <i className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
-                                style={{
-                                    transition: 'transform 0.3s ease',
-                                    transform: isRegistrosMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                                }}
-                            ></i>
-                        </button>
-
-                        <div style={{
-                            maxHeight: isRegistrosMenuOpen ? '300px' : '0',
-                            overflow: 'hidden',
-                            transition: 'max-height 0.3s ease',
-                        }}>
-                            <Link
-                                to={UrlLocal + '/regs/branchs'}
-                                onClick={async () => await AddAccess('Consultar', 0, userLog, 'Sucursales')}
-                                onMouseEnter={() => setHoveredItem('sucursales')}
+                    {tienePermisoRuta(['rp01']) && (
+                        <div style={{ marginBottom: '8px' }}>
+                            <button
+                                onClick={toggleReportesMenu}
+                                onMouseEnter={() => setHoveredItem('reportes')}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 style={{
-                                    ...subMenuItemStyle(hoveredItem === 'sucursales'),
+                                    ...menuItemStyle(hoveredItem === 'reportes'),
+                                    width: '100%',
+                                    background: 'none',
+                                    color: 'white',
+                                    padding: '12px 20px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '12px',
-                                    padding: '10px 20px 10px 52px',
-                                    color: 'rgba(255, 255, 255, 0.8)',
-                                    textDecoration: 'none',
-                                    fontSize: '13px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    cursor: 'pointer',
                                 }}
                             >
-                                <i className="bi bi-building" style={{ color: '#f6cd5cff' }}></i>
-                                Sucursales
-                            </Link>
-                            {userLog?.tipousuario?.id && [1, 2, 5].includes(userLog.tipousuario.id) && (
-                                <>
+                                <div style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    background: 'rgba(34, 197, 94, 0.2)',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}>
+                                    <i className="bi bi-file-earmark-bar-graph" style={{ color: '#22c55e' }}></i>
+                                </div>
+                                <span style={{ flex: 1, textAlign: 'left' }}>Reportes</span>
+                                <i className={`bi ${isReportesMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
+                                    style={{
+                                        transition: 'transform 0.3s ease',
+                                        transform: isReportesMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                                    }}
+                                ></i>
+                            </button>
+
+                            <div style={{
+                                maxHeight: isReportesMenuOpen ? '200px' : '0',
+                                overflow: 'hidden',
+                                transition: 'max-height 0.3s ease',
+                            }}>
+                                {tienePermisoRuta(['rp01']) && (
                                     <Link
-                                        to={UrlLocal + '/regs/positions'}
-                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Cargos')}
-                                        onMouseEnter={() => setHoveredItem('cargos')}
+                                        to={UrlLocal + '/reports/calcext'}
+                                        onClick={async () => await AddAccess('Realizar Informe', 0, userLog, 'Horas Extras')}
+                                        onMouseEnter={() => setHoveredItem('horas-extras')}
                                         onMouseLeave={() => setHoveredItem(null)}
                                         style={{
-                                            ...subMenuItemStyle(hoveredItem === 'cargos'),
+                                            ...subMenuItemStyle(hoveredItem === 'horas-extras'),
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '12px',
@@ -239,9 +173,61 @@ const Sidebar = ({
                                             fontSize: '13px',
                                         }}
                                     >
-                                        <i className="bi bi-briefcase" style={{ color: '#8b5cf6' }}></i>
-                                        Cargos
+                                        <i className="bi bi-clock-history" style={{ color: '#f59e0b' }}></i>
+                                        Horas Extras
                                     </Link>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Registros */}
+                    {tienePermisoRuta(['rg01', 'rg02', 'rg03', 'rg04', 'rg05', 'rg06', 'rg07']) && (
+                        <div style={{ marginBottom: '8px' }}>
+                            <button
+                                onClick={toggleRegistrosMenu}
+                                onMouseEnter={() => setHoveredItem('registros')}
+                                onMouseLeave={() => setHoveredItem(null)}
+                                style={{
+                                    ...menuItemStyle(hoveredItem === 'registros'),
+                                    width: '100%',
+                                    background: 'none',
+                                    color: 'white',
+                                    padding: '12px 20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <div style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    background: 'rgba(59, 130, 246, 0.2)',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}>
+                                    <i className="bi bi-database" style={{ color: '#3b82f6' }}></i>
+                                </div>
+                                <span style={{ flex: 1, textAlign: 'left' }}>Registros</span>
+                                <i className={`bi ${isRegistrosMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}
+                                    style={{
+                                        transition: 'transform 0.3s ease',
+                                        transform: isRegistrosMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                                    }}
+                                ></i>
+                            </button>
+
+                            <div style={{
+                                maxHeight: isRegistrosMenuOpen ? '300px' : '0',
+                                overflow: 'hidden',
+                                transition: 'max-height 0.3s ease',
+                            }}>
+                                {tienePermisoRuta(['rg01']) && (
                                     <Link
                                         to={UrlLocal + '/regs/employees'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Funcionarios')}
@@ -261,11 +247,8 @@ const Sidebar = ({
                                         <i className="bi bi-people" style={{ color: '#06b6d4' }}></i>
                                         Funcionarios
                                     </Link>
-                                </>
-                            )}
-
-                            {userLog?.tipousuario?.id && [1, 9].includes(userLog.tipousuario.id) && (
-                                <>
+                                )}
+                                {tienePermisoRuta(['rg02']) && (
                                     <Link
                                         to={UrlLocal + '/regs/sellers'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Vendedores')}
@@ -285,11 +268,50 @@ const Sidebar = ({
                                         <i className="bi bi-person-check" style={{ color: '#7ee963ff' }}></i>
                                         Vendedores
                                     </Link>
-                                </>
-                            )}
-
-                            {userLog?.tipousuario?.id && [1].includes(userLog.tipousuario.id) && (
-                                <>
+                                )}
+                                {tienePermisoRuta(['rg03']) && (
+                                    <Link
+                                        to={UrlLocal + '/regs/branchs'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Sucursales')}
+                                        onMouseEnter={() => setHoveredItem('sucursales')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'sucursales'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-building" style={{ color: '#f6cd5cff' }}></i>
+                                        Sucursales
+                                    </Link>
+                                )}
+                                {tienePermisoRuta(['rg04']) && (
+                                    <Link
+                                        to={UrlLocal + '/regs/positions'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Cargos')}
+                                        onMouseEnter={() => setHoveredItem('cargos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'cargos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-briefcase" style={{ color: '#8b5cf6' }}></i>
+                                        Cargos
+                                    </Link>
+                                )}
+                                {tienePermisoRuta(['rg05']) && (
                                     <Link
                                         to={UrlLocal + '/regs/schedules'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Modalidades')}
@@ -309,6 +331,29 @@ const Sidebar = ({
                                         <i className="bi bi-calendar-check" style={{ color: '#10b981' }}></i>
                                         Modalidades
                                     </Link>
+                                )}
+                                {tienePermisoRuta(['rg06']) && (
+                                    <Link
+                                        to={UrlLocal + '/regs/modules'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Modulos')}
+                                        onMouseEnter={() => setHoveredItem('modulos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'modulos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-box" style={{ color: '#d75cf6ff' }}></i>
+                                        Modulos
+                                    </Link>
+                                )}
+                                {tienePermisoRuta(['rg07']) && (
                                     <Link
                                         to={UrlLocal + '/regs/shifts'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Turnos')}
@@ -328,13 +373,13 @@ const Sidebar = ({
                                         <i className="bi bi-arrow-repeat" style={{ color: '#f97316' }}></i>
                                         Turnos
                                     </Link>
-                                </>
-                            )}
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Seguridad */}
-                    {userLog?.tipousuario?.id && [1, 5].includes(userLog.tipousuario.id) && (
+                    {tienePermisoRuta(['sc01', 'sc02', 'sc03', 'sc04', 'sc05']) && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
                                 onClick={toggleSeguridadMenu}
@@ -379,7 +424,7 @@ const Sidebar = ({
                                 overflow: 'hidden',
                                 transition: 'max-height 0.3s ease',
                             }}>
-                                {[1, 5].includes(userLog.tipousuario.id) && (
+                                {tienePermisoRuta(['sc01']) && (
                                     <Link
                                         to={UrlLocal + '/security/access'}
                                         onMouseEnter={() => setHoveredItem('accesos')}
@@ -399,66 +444,89 @@ const Sidebar = ({
                                         Accesos
                                     </Link>
                                 )}
-                                {[1].includes(userLog.tipousuario.id) && (
-                                    <>
-                                        <Link
-                                            to={UrlLocal + '/security/users'}
-                                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Usuarios')}
-                                            onMouseEnter={() => setHoveredItem('usuarios')}
-                                            onMouseLeave={() => setHoveredItem(null)}
-                                            style={{
-                                                ...subMenuItemStyle(hoveredItem === 'usuarios'),
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px',
-                                                padding: '10px 20px 10px 52px',
-                                                color: 'rgba(255, 255, 255, 0.8)',
-                                                textDecoration: 'none',
-                                                fontSize: '13px',
-                                            }}
-                                        >
-                                            <i className="bi bi-person-gear" style={{ color: '#3b82f6' }}></i>
-                                            Usuarios
-                                        </Link>
-                                        <Link
-                                            to={UrlLocal + '/security/roles'}
-                                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Roles')}
-                                            onMouseEnter={() => setHoveredItem('roles')}
-                                            onMouseLeave={() => setHoveredItem(null)}
-                                            style={{
-                                                ...subMenuItemStyle(hoveredItem === 'roles'),
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px',
-                                                padding: '10px 20px 10px 52px',
-                                                color: 'rgba(255, 255, 255, 0.8)',
-                                                textDecoration: 'none',
-                                                fontSize: '13px',
-                                            }}
-                                        >
-                                            <i className="bi bi-diagram-3" style={{ color: '#8b5cf6' }}></i>
-                                            Roles
-                                        </Link>
-                                        <Link
-                                            to={UrlLocal + '/security/tokens'}
-                                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Tokens')}
-                                            onMouseEnter={() => setHoveredItem('tokens')}
-                                            onMouseLeave={() => setHoveredItem(null)}
-                                            style={{
-                                                ...subMenuItemStyle(hoveredItem === 'tokens'),
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px',
-                                                padding: '10px 20px 10px 52px',
-                                                color: 'rgba(255, 255, 255, 0.8)',
-                                                textDecoration: 'none',
-                                                fontSize: '13px',
-                                            }}
-                                        >
-                                            <i className="bi bi-asterisk" style={{ color: '#88e6ceff' }}></i>
-                                            Tokens
-                                        </Link>
-                                    </>
+                                {tienePermisoRuta(['sc02']) && (
+                                    <Link
+                                        to={UrlLocal + '/security/users'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Usuarios')}
+                                        onMouseEnter={() => setHoveredItem('usuarios')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'usuarios'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-person-gear" style={{ color: '#3b82f6' }}></i>
+                                        Usuarios
+                                    </Link>
+                                )}
+                                {tienePermisoRuta(['sc03']) && (
+                                    <Link
+                                        to={UrlLocal + '/security/roles'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Roles')}
+                                        onMouseEnter={() => setHoveredItem('roles')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'roles'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-diagram-3" style={{ color: '#8b5cf6' }}></i>
+                                        Roles
+                                    </Link>
+                                )}
+                                {tienePermisoRuta(['sc04']) && (
+                                    <Link
+                                        to={UrlLocal + '/security/tokens'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Tokens')}
+                                        onMouseEnter={() => setHoveredItem('tokens')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'tokens'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-asterisk" style={{ color: '#88e6ceff' }}></i>
+                                        Tokens
+                                    </Link>
+                                )}
+                                {tienePermisoRuta(['sc05']) && (
+                                    <Link
+                                        to={UrlLocal + '/security/permissions'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Permisos')}
+                                        onMouseEnter={() => setHoveredItem('permisos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'permisos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 20px 10px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        <i className="bi bi-award" style={{ color: '#3bf6aeff' }}></i>
+                                        Permisos
+                                    </Link>
                                 )}
                             </div>
                         </div>
@@ -472,71 +540,73 @@ const Sidebar = ({
                     }}></div>
 
                     {/* Opciones de usuario */}
-                    <Link
-                        to={UrlLocal + '/profile'}
-                        onClick={async () => await AddAccess('Modificar', 0, userLog, 'Perfil')}
-                        onMouseEnter={() => setHoveredItem('perfil')}
-                        onMouseLeave={() => setHoveredItem(null)}
-                        style={{
-                            ...menuItemStyle(hoveredItem === 'perfil'),
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 20px',
-                            color: 'rgba(255, 255, 255, 0.8)',
-                            textDecoration: 'none',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            marginBottom: '4px',
-                        }}
-                    >
-                        <div style={{
-                            width: '32px',
-                            height: '32px',
-                            background: 'rgba(168, 85, 247, 0.2)',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}>
-                            <i className="bi bi-person-circle" style={{ color: '#a855f7' }}></i>
-                        </div>
-                        <span>Perfil</span>
-                    </Link>
-
-                    <Link
-                        to={UrlLocal + '/changepassword'}
-                        onClick={async () => await AddAccess('Modificar', 0, userLog, 'Contraseña')}
-                        onMouseEnter={() => setHoveredItem('password')}
-                        onMouseLeave={() => setHoveredItem(null)}
-                        style={{
-                            ...menuItemStyle(hoveredItem === 'password'),
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 20px',
-                            color: 'rgba(255, 255, 255, 0.8)',
-                            textDecoration: 'none',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            marginBottom: '4px',
-                        }}
-                    >
-                        <div style={{
-                            width: '32px',
-                            height: '32px',
-                            background: 'rgba(245, 158, 11, 0.2)',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}>
-                            <i className="bi bi-key" style={{ color: '#f59e0b' }}></i>
-                        </div>
-                        <span>Contraseña</span>
-                    </Link>
-
-                    {userLog?.tipousuario?.id && [1].includes(userLog.tipousuario.id) && (
+                    {tienePermisoRuta(['ma01']) && (
+                        <Link
+                            to={UrlLocal + '/profile'}
+                            onClick={async () => await AddAccess('Modificar', 0, userLog, 'Perfil')}
+                            onMouseEnter={() => setHoveredItem('perfil')}
+                            onMouseLeave={() => setHoveredItem(null)}
+                            style={{
+                                ...menuItemStyle(hoveredItem === 'perfil'),
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '12px 20px',
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                textDecoration: 'none',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                marginBottom: '4px',
+                            }}
+                        >
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'rgba(168, 85, 247, 0.2)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <i className="bi bi-person-circle" style={{ color: '#a855f7' }}></i>
+                            </div>
+                            <span>Perfil</span>
+                        </Link>
+                    )}
+                    {tienePermisoRuta(['ma02']) && (
+                        <Link
+                            to={UrlLocal + '/changepassword'}
+                            onClick={async () => await AddAccess('Modificar', 0, userLog, 'Contraseña')}
+                            onMouseEnter={() => setHoveredItem('password')}
+                            onMouseLeave={() => setHoveredItem(null)}
+                            style={{
+                                ...menuItemStyle(hoveredItem === 'password'),
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '12px 20px',
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                textDecoration: 'none',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                marginBottom: '4px',
+                            }}
+                        >
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'rgba(245, 158, 11, 0.2)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <i className="bi bi-key" style={{ color: '#f59e0b' }}></i>
+                            </div>
+                            <span>Contraseña</span>
+                        </Link>
+                    )}
+                    {tienePermisoRuta(['ma03']) && (
                         <Link
                             to={UrlLocal + '/config'}
                             onClick={async () => await AddAccess('Modificar', 0, userLog, 'Configuración')}
