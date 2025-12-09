@@ -68,8 +68,13 @@ function App() {
       document.documentElement.style.setProperty('--color-ternario', config.colorter);
     };
     aplicarTema();
-    recuperarPermisos();
   }, []);
+
+  useEffect(() => {
+    if (userLog) {
+      recuperarPermisos();
+    }
+  }, [userLog]);
 
   return (
     <Router>
@@ -163,12 +168,12 @@ function App() {
         {/* Configuraciones */}
         <Route path={UrlLocal + "/profile"} element={
           <ProtectedRoute moduloVar="ma01" permisos={permisos}>
-            <Perfil userLog={userLog} />
+            <Perfil userLog={userLog} setUserLog={setUserLog} />
           </ProtectedRoute>
         } />
         <Route path={UrlLocal + "/changepassword"} element={
           <ProtectedRoute moduloVar="ma02" permisos={permisos}>
-            <CambiarContrasena userLog={userLog} />
+            <CambiarContrasena userLog={userLog} setUserLog={setUserLog} />
           </ProtectedRoute>
         } />
         <Route path={UrlLocal + "/config"} element={

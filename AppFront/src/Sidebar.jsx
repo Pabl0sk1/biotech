@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AddAccess } from './utils/AddAccess.js';
-import { getPermission } from './services/permiso.service.js';
 
 const Sidebar = ({
     userLog,
@@ -10,20 +9,11 @@ const Sidebar = ({
     isSeguridadMenuOpen,
     isReportesMenuOpen,
     isRegistrosMenuOpen,
-    handleLogoutClick
+    handleLogoutClick,
+    permisos
 }) => {
     const UrlLocal = '/biotech/home';
     const [hoveredItem, setHoveredItem] = useState(null);
-    const [permisos, setPermisos] = useState([]);
-
-    const recuperarPermisos = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario.id}`);
-        setPermisos(response.items);
-    }
-
-    useEffect(() => {
-        recuperarPermisos();
-    }, []);
 
     const tienePermisoRuta = (moduloVar) => {
         if (!permisos) return false;

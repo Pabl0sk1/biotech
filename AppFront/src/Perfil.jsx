@@ -17,7 +17,6 @@ export const Perfil = ({ userLog, setUserLog }) => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    //Cancelar eliminación con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -32,7 +31,6 @@ export const Perfil = ({ userLog, setUserLog }) => {
         };
     }, [cerrarPerfil]);
 
-    //Validación personalizada de formulario
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {

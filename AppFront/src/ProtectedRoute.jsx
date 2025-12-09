@@ -36,14 +36,11 @@ const ProtectedRoute = ({ moduloVar, permisos, children }) => {
   };
 
   // Si no está autenticado, redirige al login y guarda la ubicación intentada
-  if (!isAuthenticated()) {
-    return <Navigate to="/biotech/login" state={{ from: location }} replace />;
-  }
+  if (!isAuthenticated()) return <Navigate to="/biotech/login" state={{ from: location }} replace />;
+
 
   // Validar permiso si se pasó moduloVar
-  if (!tienePermisoRuta(moduloVar)) {
-    return <Error />;
-  }
+  if (!tienePermisoRuta(moduloVar)) return <Error />;
 
   // Si está autenticado, permite acceso a las rutas hijas
   return children;
