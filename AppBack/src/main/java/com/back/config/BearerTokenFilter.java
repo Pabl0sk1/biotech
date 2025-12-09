@@ -43,7 +43,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 	    }
 
 		String origin = request.getHeader("Origin");
-		if (origin != null && origin.contains(request.getServerName())) {
+		if (origin != null && (origin.contains("biotech.biosafrasgroup.com.py") || origin.contains(request.getServerName()))) {
 	        response.setStatus(HttpServletResponse.SC_OK);
 	        filterChain.doFilter(request, response);
 	        return;
