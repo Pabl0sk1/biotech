@@ -28,7 +28,16 @@ public class BearerTokenFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 		
 		String path = request.getRequestURI();
-		if (path.startsWith("/biotech/login") || path.equals("/") || path.equals("/index.html") || path.equals("/favicon.ico") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+		if (path.startsWith("/biotech/login") || 
+			path.equals("/") ||
+			path.equals("/index.html") ||
+			path.startsWith("/assets/") || 
+		    path.endsWith(".svg") || 
+		    path.endsWith(".jpg") || 
+		    path.endsWith(".png") ||
+			path.equals("/favicon.ico") || 
+			"OPTIONS".equalsIgnoreCase(request.getMethod())) 
+		{
 	        filterChain.doFilter(request, response);
 	        return;
 	    }
