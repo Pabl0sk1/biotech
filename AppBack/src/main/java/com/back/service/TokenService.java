@@ -116,5 +116,9 @@ public class TokenService {
             rep.save(token);
         }
     }
+	
+	public Token buscarPorToken(String token) {
+		return rep.findByToken(token);
+	}
 
 }

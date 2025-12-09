@@ -394,7 +394,7 @@ export const TokenApp = ({ userLog }) => {
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
-                                            const puedeEliminar = permiso?.puedeeliminar;
+                                            const puedeEliminar = permiso?.puedeeliminar && v.id !== 1;
                                             return (
                                                 <tr
                                                     className="text-center align-middle"

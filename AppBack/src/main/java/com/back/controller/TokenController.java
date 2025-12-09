@@ -81,13 +81,17 @@ public class TokenController {
 	public Map<String, Object> modificar(@PathVariable Integer id, @RequestBody Token token) {
 		Map<String, Object> result = new LinkedHashMap<>();
 		
-		Token exist = serv.buscarPorId(id);
+		if(id != 1) {
+			Token exist = serv.buscarPorId(id);
 
-		if (exist != null) {
-			token.setId(id);
-			result.put("updated", serv.guardar(token));
+			if (exist != null) {
+				token.setId(id);
+				result.put("updated", serv.guardar(token));
+			} else {
+				result.put("message", "Registro de ID " + id + " no existe.");
+			}
 		} else {
-			result.put("message", "Registro de ID " + id + " no existe.");
+			result.put("message", "No se puede modificar el token de ID " + id);
 		}
 
 		return result;
@@ -96,14 +100,18 @@ public class TokenController {
 	@DeleteMapping(path = "delete/{id}")
 	public Map<String, Object> eliminar(@PathVariable Integer id) {
 		Map<String, Object> result = new LinkedHashMap<>();
-				
-		Token exist = serv.buscarPorId(id);
+		
+		if (id != 1) {
+			Token exist = serv.buscarPorId(id);
 
-		if (exist != null) {
-			serv.eliminar(id);
-			result.put("deleted", exist);
+			if (exist != null) {
+				serv.eliminar(id);
+				result.put("deleted", exist);
+			} else {
+				result.put("message", "Registro de ID " + id + " no existe.");
+			}
 		} else {
-			result.put("message", "Registro de ID " + id + " no existe.");
+			result.put("message", "No se puede eliminar el token de ID " + id);
 		}
 
 		return result;

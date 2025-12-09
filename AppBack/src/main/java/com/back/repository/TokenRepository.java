@@ -11,4 +11,6 @@ public interface TokenRepository extends CrudRepository<Token, Integer>, PagingA
 	
 	List<Token> findByFechaexpiracionBeforeAndEstadoNot(LocalDate fecha, String estado);
 	
+	Token findByToken(String token);
+	
 }

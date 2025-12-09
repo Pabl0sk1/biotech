@@ -79,13 +79,17 @@ public class UsuarioController {
 	public Map<String, Object> eliminar(@PathVariable Integer id) {
 		Map<String, Object> result = new LinkedHashMap<>();
 		
-		Usuario exist = serv.buscarPorId(id);
+		if(id != 1) {
+			Usuario exist = serv.buscarPorId(id);
 
-		if (exist != null) {
-			serv.eliminar(id);
-			result.put("deleted", exist);
+			if (exist != null) {
+				serv.eliminar(id);
+				result.put("deleted", exist);
+			} else {
+				result.put("message", "Registro de ID " + id + " no existe.");
+			}
 		} else {
-			result.put("message", "Registro de ID " + id + " no existe.");
+			result.put("message", "No se puede eliminar el usuario de ID " + id);
 		}
 
 		return result;
