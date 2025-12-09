@@ -1,14 +1,19 @@
 
 export const DateHourFormat = (dateHour, op) => {
     if (!dateHour) return '';
-    const date = new Date(dateHour);
-    const dia = String(date.getDate()).padStart(2, '0');
-    const mes = String(date.getMonth() + 1).padStart(2, '0');
-    const anio = date.getFullYear();
+
+    const [anio, mes, dia] = dateHour.split('-').map(Number);
+    const date = new Date(anio, mes - 1, dia);
+
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+
     const hora = String(date.getHours()).padStart(2, '0');
     const minuto = String(date.getMinutes()).padStart(2, '0');
-    if (op == 1) return `${dia}/${mes}/${anio} ${hora}:${minuto}`;
-    else return `${dia}/${mes}/${anio}`;
+
+    if (op == 1) return `${dd}/${mm}/${yyyy} ${hora}:${minuto}`;
+    else return `${dd}/${mm}/${yyyy}`;
 }
 
 export const HourFormat = (hour) => {

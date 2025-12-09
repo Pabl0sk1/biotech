@@ -193,15 +193,6 @@ export const AuditoriaApp = ({ userLog }) => {
                                             value={auditoriaAVisualizar.programa}
                                             readOnly
                                         />
-                                        <label htmlFor="ip" className="form-label m-0 mb-2">IP</label>
-                                        <input
-                                            type="text"
-                                            id="ip"
-                                            name="ip"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.ip}
-                                            readOnly
-                                        />
                                         <label htmlFor="codregistro" className="form-label m-0 mb-2">Cód. Registro</label>
                                         <input
                                             type="number"
@@ -232,15 +223,6 @@ export const AuditoriaApp = ({ userLog }) => {
                                             name="operacion"
                                             className="form-control border-input w-100 border-black mb-3"
                                             value={auditoriaAVisualizar.operacion}
-                                            readOnly
-                                        />
-                                        <label htmlFor="equipo" className="form-label m-0 mb-2">Equipo</label>
-                                        <input
-                                            type="text"
-                                            id="equipo"
-                                            name="equipo"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.equipo}
                                             readOnly
                                         />
                                     </div>

@@ -1,6 +1,7 @@
 package com.back.entity;
 
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -59,6 +60,7 @@ public class Usuario {
 	@NotEmpty
 	@NotBlank
 	@Size(max = 255)
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String contrasena;
 	
 	@NotNull

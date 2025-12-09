@@ -151,7 +151,7 @@ export const TokenApp = ({ userLog }) => {
             return (
                 <>
                     {Array.from({ length: hiddenCount }).map((_, i) => (
-                        <i key={i} className="bi bi-asterisk text-muted ms-1" style={{ fontSize: '10px' }}></i>
+                        <i key={i} className="bi bi-asterisk text-muted ms-1" style={{ fontSize: '7px' }}></i>
                     ))}
                 </>
             );
