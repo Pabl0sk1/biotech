@@ -38,14 +38,16 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 		    path.endsWith(".webp") ||
 			path.equals("/favicon.ico") ||
 			path.startsWith("/webhook") ||
-			"OPTIONS".equalsIgnoreCase(request.getMethod())) 
+			"OPTIONS".equalsIgnoreCase(request.getMethod()))
 		{
 	        filterChain.doFilter(request, response);
 	        return;
 	    }
 		
 		String origin = request.getHeader("Origin");
-		if (origin != null && (origin.contains("http://localhost:5173") || origin.equals("https://biotech.biosafrasgroup.com.py"))) {
+		String referer = request.getHeader("Referer");
+		if ((origin != null && (origin.contains("http://localhost:5173") || origin.equals("https://biotech.biosafrasgroup.com.py"))) || 
+			(referer != null && referer.startsWith("https://biotech.biosafrasgroup.com.py"))) {
 	        filterChain.doFilter(request, response);
 	        return;
 	    }
