@@ -36,18 +36,20 @@ public class WebhookController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error validando signature");
         }
 
-        // Ejecutar script de deploy
-        try {
-            ProcessBuilder pb = new ProcessBuilder("/home/bioadmin/deploy_biotech.sh");
-            pb.inheritIO();
-            Process p = pb.start();
-            p.waitFor();
-            return ResponseEntity.ok("Deploy ejecutado correctamente");
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                 .body("Error al ejecutar deploy: " + e.getMessage());
-        }
+        // Ejecutar deploy en background
+        new Thread(() -> {
+            try {
+                ProcessBuilder pb = new ProcessBuilder("/home/bioadmin/deploy_biotech.sh");
+                pb.inheritIO();
+                Process p = pb.start();
+                p.waitFor();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        // Responder inmediatamente a GitHub
+        return ResponseEntity.ok("Deploy iniciado");
     }
 
 }
