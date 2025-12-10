@@ -44,18 +44,23 @@ public class Permiso {
 	private Modulo modulo;
 	
 	@NotNull
+	@Builder.Default
 	private Boolean puedeconsultar = false;
 	
 	@NotNull
+	@Builder.Default
     private Boolean puedever = false;
 
     @NotNull
+    @Builder.Default
     private Boolean puedeagregar = false;
 
     @NotNull
+    @Builder.Default
     private Boolean puedeeditar = false;
 
     @NotNull
+    @Builder.Default
     private Boolean puedeeliminar = false;
 	
 	public Permiso(Integer id) {

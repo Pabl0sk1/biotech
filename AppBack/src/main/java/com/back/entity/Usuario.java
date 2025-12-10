@@ -100,12 +100,15 @@ public class Usuario {
 	@NotEmpty
 	@NotBlank
 	@Size(max = 15)
-	private String estado;
+	@Builder.Default
+	private String estado = "Activo";
 	
 	@NotNull
+	@Builder.Default
 	private Boolean activo = true;
 	
 	@NotNull
+	@Builder.Default
 	private Boolean vermapa = false;
 	
 	@Temporal(TemporalType.DATE)

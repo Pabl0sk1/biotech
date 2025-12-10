@@ -60,9 +60,11 @@ public class Token {
 	private LocalDateTime fechahoraexpiracion;
 	
 	@Size(max = 15)
-	private String estado;
+	@Builder.Default
+	private String estado = "Activo";
 	
 	@NotNull
+	@Builder.Default
 	private Boolean activo = true;
 	
 	public Token(Integer id) {
