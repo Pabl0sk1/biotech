@@ -1,8 +1,9 @@
-import ExcelJS from 'exceljs';
 import { LogoImg } from "../utils/LogoImg";
 import { HostLocation } from '../utils/HostLocation';
 
 const generarExcel = async (data) => {
+    const ExcelJS = (await import('exceljs')).default;
+
     const { cantdias, fechadesde, fechahasta, listafuncionarios } = data;
 
     // Crear imagen

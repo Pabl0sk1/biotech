@@ -12,9 +12,6 @@
   "dependencies": {
     "axios": "^1.7.7",
     "exceljs": "^4.4.0",
-    "jsbarcode": "^3.12.1",
-    "jspdf": "^3.0.1",
-    "jspdf-autotable": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-number-format": "^5.4.2",
@@ -30,6 +27,7 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "rollup-plugin-visualizer": "^6.0.5",
     "vite": "^5.4.1"
   }
 }

@@ -773,7 +773,6 @@ export const Calculo = ({ userLog }) => {
         <>
             <div className="modern-container colorPrimario">
                 <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}
@@ -1225,7 +1224,7 @@ export const Calculo = ({ userLog }) => {
                                 justifyContent: 'flex-end',
                                 gap: '12px'
                             }}>
-                                <button type='submit' className="modern-button btn-primary">
+                                <button type='submit' className="btn btn-primary border-0 btn-lg" disabled={selectedFuncionarios.length == 0}>
                                     <i className="bi bi-printer-fill me-2"></i>Generar
                                 </button>
                             </div>

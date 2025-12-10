@@ -28,6 +28,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 		
 		String path = request.getRequestURI();
+		String origin = request.getHeader("Origin");
 		if (path.startsWith("/biotech/login") || 
 			path.equals("/") ||
 			path.equals("/index.html") ||
@@ -35,6 +36,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 		    path.endsWith(".svg") || 
 		    path.endsWith(".jpg") || 
 		    path.endsWith(".png") ||
+		    path.endsWith(".webp") ||
 			path.equals("/favicon.ico") || 
 			"OPTIONS".equalsIgnoreCase(request.getMethod())) 
 		{
@@ -42,9 +44,8 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 	        return;
 	    }
 
-		String origin = request.getHeader("Origin");
-		if (origin != null && (origin.contains("biotech.biosafrasgroup.com.py") || origin.contains(request.getServerName()))) {
-	        response.setStatus(HttpServletResponse.SC_OK);
+		
+		if (origin != null && origin.contains(request.getServerName())) {
 	        filterChain.doFilter(request, response);
 	        return;
 	    }

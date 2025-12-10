@@ -133,7 +133,7 @@ export const Login = ({ setUserLog }) => {
                     </div>
                     <div className="login-right">
                         <img
-                            src="/portrait.jpg"
+                            src="/portrait.webp"
                             alt="Biotech"
                             className="login-image"
                         />
