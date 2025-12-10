@@ -37,7 +37,9 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 		    path.endsWith(".jpg") || 
 		    path.endsWith(".png") ||
 		    path.endsWith(".webp") ||
-			path.equals("/favicon.ico") || 
+			path.equals("/favicon.ico") ||
+			path.startsWith("/webhook") ||
+			 path.startsWith("/api") ||
 			"OPTIONS".equalsIgnoreCase(request.getMethod())) 
 		{
 	        filterChain.doFilter(request, response);
