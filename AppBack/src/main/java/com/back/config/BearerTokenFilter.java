@@ -34,6 +34,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 			path.equals("/404.html") ||
 			path.equals("/stats.html") ||
 			path.equals("/sitemap.xml") ||
+			path.startsWith("/assets/") ||
 			path.startsWith("/biotech/") ||
 			path.startsWith("/docs/") ||
 		    path.endsWith(".svg") ||
