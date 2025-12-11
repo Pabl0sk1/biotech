@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebarButton = true, icon = "list-task" }) => {
     const navigate = useNavigate();
@@ -29,13 +30,20 @@ export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebar
 
                     <small className="text-muted">{userLog.nombreusuario}</small>
                 </div>
-                {/* Ícono de café */}
-                <i className="bi bi-cup-hot-fill fs-3 text-danger mx-2" title='Tomáte una taza de café'></i>
-                <img
-                    className='logo-img-bar ms-3'
-                    src="/logo2.svg"
-                    alt="Biotech"
-                />
+                <Link to="/docs" className='p-0 me-2'>
+                    <img
+                        className='logo-img-bar px-2'
+                        src="/api.svg"
+                        alt="Biotech"
+                    />
+                </Link>
+                <Link to="/biotech/home" className='p-0 me-2'>
+                    <img
+                        className='logo-img-bar px-2'
+                        src="/logo2.svg"
+                        alt="Biotech"
+                    />
+                </Link>
             </div>
         </nav>
     );

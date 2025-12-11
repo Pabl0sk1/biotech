@@ -667,9 +667,15 @@ input[type="number"] {
 }
 
 .logo-img-bar {
-  width: 100px;
+  width: 90px;
   height: 40px;
   object-fit: contain;
+}
+
+.logo-img-bar:hover {
+  background-color: #eeeeee;
+  border: 1px dashed green;
+  border-radius: 20px;
 }
 
 @media screen and (max-width: 576px) {
