@@ -9,19 +9,25 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/{path:[^\\.]*}")
-                .setViewName("forward:/index.html");
+                .setViewName("forward:/biotech/index.html");
 
         registry.addViewController("/**/{path:[^\\.]*}")
-                .setViewName("forward:/index.html");
+                .setViewName("forward:/biotech/index.html");
 
         registry.addViewController("/biotech/login")
-                .setViewName("forward:/index.html");
+                .setViewName("forward:/biotech/index.html");
+        
+        registry.addViewController("/docs/**")
+        		.setViewName("forward:/docs/index.html");
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/assets/**")
-                .addResourceLocations("classpath:/static/assets/");
+        registry.addResourceHandler("/biotech/**")
+                .addResourceLocations("classpath:/static/biotech/");
+        
+        registry.addResourceHandler("/docs/**")
+        		.addResourceLocations("classpath:/static/docs/");
 
         registry.addResourceHandler("/**/*.js", "/**/*.css", "/**/*.svg", "/**/*.png")
                 .addResourceLocations("classpath:/static/");

@@ -31,7 +31,11 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 		if (path.startsWith("/biotech/login") || 
 			path.equals("/") ||
 			path.equals("/index.html") ||
-			path.startsWith("/assets/") ||
+			path.equals("/404.html") ||
+			path.equals("/stats.html") ||
+			path.equals("/sitemap.xml") ||
+			path.startsWith("/biotech/") ||
+			path.startsWith("/docs/") ||
 		    path.endsWith(".svg") ||
 		    path.endsWith(".jpg") ||
 		    path.endsWith(".png") ||
@@ -46,7 +50,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 		
 		String origin = request.getHeader("Origin");
 		String referer = request.getHeader("Referer");
-		if ((origin != null && (origin.contains("http://localhost:5173") || origin.equals("https://biotech.biosafrasgroup.com.py"))) || 
+		if ((origin != null && (origin.contains("http://localhost:5173") || origin.contains("http://localhost:3000") || origin.equals("https://biotech.biosafrasgroup.com.py"))) || 
 			(referer != null && referer.startsWith("https://biotech.biosafrasgroup.com.py"))) {
 	        filterChain.doFilter(request, response);
 	        return;
