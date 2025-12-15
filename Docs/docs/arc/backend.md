@@ -103,9 +103,6 @@ El backend expone los módulos:
 - usuarios
 - turnos
 - permisos
-- auditoría
-- token
-- configuraciones
 - sucursales
 - funcionarios
 - modulos

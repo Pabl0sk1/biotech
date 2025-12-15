@@ -150,8 +150,6 @@ GET /api/user/list?detail=contactos&page=0&size=10&filter=nrotelefono:contains:0
 
 ## Módulos de la API
 
-- [Configuración](api/config)
-- [Auditoría](api/access)
 - [Cargos](api/position)
 - [Funcionarios](api/employee)
 - [Modulos](api/module)
@@ -159,7 +157,6 @@ GET /api/user/list?detail=contactos&page=0&size=10&filter=nrotelefono:contains:0
 - [Sucursales](api/branch)
 - [Modalidades](api/schedule)
 - [Roles](api/role)
-- [Tokens](api/token)
 - [Turnos](api/shift)
 - [Usuarios](api/user)
 - [Vendedores](api/seller)

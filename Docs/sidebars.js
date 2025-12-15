@@ -30,8 +30,6 @@ const sidebars = {
       type: 'category',
       label: 'API',
       items: [
-        'api/config',
-        'api/access',
         'api/position',
         'api/employee',
         'api/module',
@@ -39,7 +37,6 @@ const sidebars = {
         'api/branch',
         'api/schedule',
         'api/role',
-        'api/token',
         'api/shift',
         'api/user',
         'api/seller',

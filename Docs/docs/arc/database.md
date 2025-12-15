@@ -33,27 +33,15 @@ El esquema refleja la estructura organizacional y elementos operativos.
 
 - Rol laboral del funcionario.
 
-### 7. Configuración
-
-- Valores globales del sistema (correo, colores, imagenurl, etc.)
-
-### 8. Turnos y Modalidades
+### 7. Turnos y Modalidades
 
 - Manejo horario y modalidades.
 
-### 9. Auditoría
-
-- Registros detallados de actividad.
-
-### 10. Tokens
-
-- Control de autenticación y validez.
-
-### 11. Sucursales
+### 8. Sucursales
 
 - Manejo de las sucursales.
 
-### 12. Vendedores
+### 9. Vendedores
 
 - Información de los vendedores.
 
