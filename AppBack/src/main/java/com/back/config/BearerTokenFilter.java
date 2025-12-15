@@ -28,31 +28,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 		
 		String path = request.getRequestURI();
-		if (path.startsWith("/biotech/login") || 
-			path.equals("/") ||
-			path.equals("/index.html") ||
-			path.equals("/404.html") ||
-			path.equals("/stats.html") ||
-			path.equals("/sitemap.xml") ||
-			path.startsWith("/assets/") ||
-			path.startsWith("/biotech/") ||
-			path.startsWith("/docs/") ||
-		    path.endsWith(".svg") ||
-		    path.endsWith(".jpg") ||
-		    path.endsWith(".png") ||
-		    path.endsWith(".webp") ||
-			path.equals("/favicon.ico") ||
-			path.startsWith("/webhook") ||
-			"OPTIONS".equalsIgnoreCase(request.getMethod()))
-		{
-	        filterChain.doFilter(request, response);
-	        return;
-	    }
-		
-		String origin = request.getHeader("Origin");
-		String referer = request.getHeader("Referer");
-		if ((origin != null && (origin.contains("http://localhost:5173") || origin.contains("http://localhost:3000") || origin.equals("https://biotech.biosafrasgroup.com.py"))) || 
-			(referer != null && referer.startsWith("https://biotech.biosafrasgroup.com.py"))) {
+		if (!path.startsWith("/api/")) {
 	        filterChain.doFilter(request, response);
 	        return;
 	    }
