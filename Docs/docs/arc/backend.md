@@ -72,8 +72,6 @@ El sistema registra:
 
 El frontend React consume la API vía endpoints REST:
 
-Ejemplo:
-
 ```
 GET https://biotech.biosafrasgroup.com.py/api/user/list
 ```
@@ -110,7 +108,6 @@ El backend expone los módulos:
 - roles
 - modalidades
 - vendedores
-- etc.
 
 Cada módulo tiene:
 

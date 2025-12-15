@@ -33,6 +33,10 @@ Lista todos los turnos con paginación.
 
 Retorna los datos de un turno específico.
 
+### GET `/api/shift/list?detail=days`
+
+Lista el detalle todos los días de los turnos marcados.
+
 ### POST `/api/shift/save`
 
 Crea un nuevo turno.

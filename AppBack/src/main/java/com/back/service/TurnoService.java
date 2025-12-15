@@ -31,7 +31,7 @@ public class TurnoService {
 	
 	@PostConstruct
     public void init() {
-		detailRegistry.put("turnodia", repT);
+		detailRegistry.put("days", repT);
     }
 	
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {

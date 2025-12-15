@@ -136,16 +136,26 @@ GET /api/user/list?filter=id:between:10..20
 GET /api/user/list?filter=fechanacimiento:between:1991-04-17..2003-04-17;nombre:contains:el;activo:eq:true
 ```
 
+### Filter (Relacionado)
+
+```
+GET /api/user/list?filter=tipousuario.tipousuario:contains:ad
+```
+
+```
+GET /api/employee/list?filter=sucursal.sucursal:contains:001
+```
+
 ### Detail (Si es que lo contiene)
 
 ```
-GET /api/user/list?detail=contactos
+GET /api/shift/list?detail=days
 ```
 
 ### Detail (Con filtros y paginación también)
 
 ```
-GET /api/user/list?detail=contactos&page=0&size=10&filter=nrotelefono:contains:0981
+GET /api/shift/list?detail=days&page=0&size=10&filter=dia:eq:lunes
 ```
 
 ## Módulos de la API
