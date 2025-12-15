@@ -33,6 +33,14 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 	        return;
 	    }
 		
+		String origin = request.getHeader("Origin");
+		String referer = request.getHeader("Referer");
+		if ((origin != null && (origin.contains("http://localhost:5173") || origin.contains("http://localhost:3000") || origin.equals("https://biotech.biosafrasgroup.com.py"))) || 
+			(referer != null && referer.startsWith("https://biotech.biosafrasgroup.com.py"))) {
+	        filterChain.doFilter(request, response);
+	        return;
+	    }
+		
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
