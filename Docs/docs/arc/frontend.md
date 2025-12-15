@@ -1,4 +1,4 @@
-# Frontend (React)
+# Frontend
 
 ## Descripción general
 

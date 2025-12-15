@@ -1,4 +1,4 @@
-# Backend (Spring Boot)
+# Backend
 
 ## Descripción general
 

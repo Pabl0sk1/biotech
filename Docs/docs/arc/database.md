@@ -1,4 +1,4 @@
-# Base de Datos (PostgreSQL)
+# Base de Datos
 
 ## Descripción general
 
