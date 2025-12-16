@@ -82,11 +82,11 @@ const Sidebar = ({
                             fontWeight: 'bold'
                         }}
                     >
-                        {userLog.nombreusuario?.charAt(0).toUpperCase()}
+                        {userLog?.nombreusuario?.charAt(0).toUpperCase()}
                     </div>
                     <div className='text-start'>
                         <div style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>
-                            {userLog.nombreusuario}
+                            {userLog?.nombreusuario}
                         </div>
                         <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>
                             En línea

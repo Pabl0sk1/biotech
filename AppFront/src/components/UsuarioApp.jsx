@@ -109,7 +109,7 @@ export const UsuarioApp = ({ userLog }) => {
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc02`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc02`);
         setPermiso(response.items[0]);
     }
 
@@ -988,8 +988,8 @@ export const UsuarioApp = ({ userLog }) => {
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
-                                            const puedeEditar = permiso?.puedeeditar && v.id != userLog.id && v.id != 1;
-                                            const puedeEliminar = permiso?.puedeeliminar && v.id != userLog.id && v.id != 1;
+                                            const puedeEditar = permiso?.puedeeditar && v.id != userLog?.id && v.id != 1;
+                                            const puedeEliminar = permiso?.puedeeliminar && v.id != userLog?.id && v.id != 1;
                                             const puedeVer = permiso?.puedever;
                                             return (
                                                 <tr

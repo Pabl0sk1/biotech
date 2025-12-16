@@ -53,7 +53,7 @@ export const AuditoriaApp = ({ userLog }) => {
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc01`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc01`);
         setPermiso(response.items[0]);
     }
 

@@ -69,7 +69,7 @@ export const ModalidadApp = ({ userLog }) => {
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:rg05`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rg05`);
         setPermiso(response.items[0]);
     }
 

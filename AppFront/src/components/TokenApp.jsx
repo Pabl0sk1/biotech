@@ -54,7 +54,7 @@ export const TokenApp = ({ userLog }) => {
     };
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc04`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc04`);
         setPermiso(response.items[0]);
     }
 
@@ -87,7 +87,7 @@ export const TokenApp = ({ userLog }) => {
 
     const guardarFn = async () => {
 
-        const nuevoToken = await saveToken(userLog.id);
+        const nuevoToken = await saveToken(userLog?.id);
         await AddAccess('Insertar', nuevoToken.saved.id, userLog, "Tokens");
         setTokenAGuardar(null);
         recuperarTokens();
@@ -140,7 +140,7 @@ export const TokenApp = ({ userLog }) => {
     };
 
     const ocultarToken = (cadena, id, estado) => {
-        if (userLog.id === 1 || userLog.id === id) {
+        if (userLog?.id === 1 || userLog?.id === id) {
             return (
                 <p className={`${estado ? '' : 'text-decoration-line-through'} m-0`}>
                     {cadena}

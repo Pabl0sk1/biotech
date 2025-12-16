@@ -75,7 +75,7 @@ export const RolApp = ({ userLog }) => {
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog.tipousuario.id};modulo.var:eq:sc03`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc03`);
         setPermiso(response.items[0]);
     }
 

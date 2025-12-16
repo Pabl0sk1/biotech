@@ -60,7 +60,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
 
     const actualizaruserLog = async () => {
         const response = await getUser();
-        const usuarioActualizado = response.items.find(u => u.id === userLog.id);
+        const usuarioActualizado = response.items.find(u => u.id === userLog?.id);
 
         if (usuarioActualizado) {
             setUserLog(usuarioActualizado);

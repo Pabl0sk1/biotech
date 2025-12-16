@@ -57,7 +57,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
 
     const actualizaruserLog = async () => {
         const response = await getUser();
-        const usuarioActualizado = response.items.find(u => u.id === userLog.id);
+        const usuarioActualizado = response.items.find(u => u.id === userLog?.id);
 
         if (usuarioActualizado) {
             setUserLog(usuarioActualizado);
@@ -116,7 +116,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
             try {
                 setLoading(true);
 
-                const response = await changePassword(userLog.id, {
+                const response = await changePassword(userLog?.id, {
                     contrasenaActual: formData.contrasenaActual,
                     contrasenaNueva: formData.contrasenaNueva
                 });

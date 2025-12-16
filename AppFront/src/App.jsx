@@ -53,7 +53,7 @@ function App() {
   const [permisos, setPermisos] = useState([]);
 
   const recuperarPermisos = async () => {
-    const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario.id}`);
+    const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id}`);
     setPermisos(response.items);
   }
 

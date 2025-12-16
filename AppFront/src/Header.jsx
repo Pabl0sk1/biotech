@@ -25,10 +25,10 @@ export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebar
                 <div className="d-flex flex-column text-end me-3">
                     <span className="fw-semibold text-success">
                         <i className="bi bi-person-circle me-1"></i>
-                        {userLog.tipousuario.tipousuario}
+                        {userLog?.tipousuario?.tipousuario}
                     </span>
 
-                    <small className="text-muted">{userLog.nombreusuario}</small>
+                    <small className="text-muted">{userLog?.nombreusuario}</small>
                 </div>
                 <Link to="https://biotech.biosafrasgroup.com.py/docs" className='p-0 me-2'>
                     <img

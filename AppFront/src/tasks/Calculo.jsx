@@ -958,7 +958,7 @@ export const Calculo = ({ userLog }) => {
                                                         <th colSpan="4">Horarios</th>
                                                         <th colSpan="8">Horas Extras</th>
                                                         <th colSpan="2">Estado</th>
-                                                        <th rowSpan="2" hidden={![1].includes(userLog.tipousuario.id)}>Tr.</th>
+                                                        <th rowSpan="2" hidden={![1].includes(userLog?.tipousuario?.id)}>Tr.</th>
                                                     </tr>
                                                     <tr className='text-center align-middle'>
                                                         {/* Subheaders para Horarios */}
@@ -1199,7 +1199,7 @@ export const Calculo = ({ userLog }) => {
                                                             </td>
 
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`}
-                                                                hidden={![1].includes(userLog.tipousuario.id)}
+                                                                hidden={![1].includes(userLog?.tipousuario?.id)}
                                                                 style={{ width: '60px' }}>
                                                                 <input
                                                                     type="text"

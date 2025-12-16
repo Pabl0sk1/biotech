@@ -26,7 +26,7 @@ export const AddAccess = async (op, cod, userLog, module) => {
     const access = {
         id: null,
         usuario: {
-            id: userLog.id
+            id: userLog?.id
         },
         fechahora: data.fechahora,
         fecha: data.fecha,
