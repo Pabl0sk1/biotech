@@ -25,8 +25,7 @@ import { getConfig } from "./services/config.service";
 import { getPermission } from './services/permiso.service.js';
 
 function App() {
-  const UrlBase = '/biotech';
-  const UrlLocal = UrlBase + '/home';
+  const UrlLocal = '/home';
 
   const getUserFromSession = () => {
     const sessionUser = sessionStorage.getItem('usuario');
@@ -77,16 +76,16 @@ function App() {
   }, [userLog]);
 
   return (
-    <Router>
+    <Router basename='/biotech'>
       <Routes>
         {/* Ruta pública de login */}
-        <Route path={UrlBase + "/login"} element={
+        <Route path={"/login"} element={
           userLog ? <Navigate to={UrlLocal} /> : <Login setUserLog={setUserLog} />
         } />
 
         {/* Ruta por defecto - redirige al login o inicio dependiendo de la autenticación */}
         <Route path="/" element={
-          userLog ? <Navigate to={UrlLocal} /> : <Navigate to={UrlBase + "/login"} />
+          userLog ? <Navigate to={UrlLocal} /> : <Navigate to={"/login"} />
         } />
 
         {/* Menu principal */}

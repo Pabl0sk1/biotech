@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Error } from './Error';
 
 const ProtectedRoute = ({ moduloVar, permisos, children }) => {
@@ -36,7 +36,7 @@ const ProtectedRoute = ({ moduloVar, permisos, children }) => {
   };
 
   // Si no está autenticado, redirige al login y guarda la ubicación intentada
-  if (!isAuthenticated()) return <Navigate to="/biotech/login" state={{ from: location }} replace />;
+  if (!isAuthenticated()) return <Navigate to="/login" state={{ from: location }} replace />;
 
 
   // Validar permiso si se pasó moduloVar

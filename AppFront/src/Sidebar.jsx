@@ -12,7 +12,7 @@ const Sidebar = ({
     handleLogoutClick,
     permisos
 }) => {
-    const UrlLocal = '/biotech/home';
+    const UrlLocal = '/home';
     const [hoveredItem, setHoveredItem] = useState(null);
 
     const tienePermisoRuta = (moduloVar) => {

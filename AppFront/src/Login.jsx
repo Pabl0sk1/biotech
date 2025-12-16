@@ -83,7 +83,7 @@ export const Login = ({ setUserLog }) => {
                                 autoComplete="off"
                                 noValidate
                             >
-                                <img src="/logo.svg" className="login-logo" alt="Biotech" />
+                                <img src="/biotech/logo.svg" className="login-logo" alt="Biotech" />
                                 <div>
                                     {error && <div className="login-error">{error}</div>}
                                     <div className="d-flex align-items-center">
@@ -133,8 +133,8 @@ export const Login = ({ setUserLog }) => {
                     </div>
                     <div className="login-right">
                         <img
-                            src="/portrait.webp"
-                            alt="Biotech"
+                            src="/biotech/portrait.webp"
+                            alt="Retrato"
                             className="login-image"
                         />
                     </div>
