@@ -12,8 +12,8 @@ export const Configuracion = ({ userLog }) => {
     const [cerrarConfig, setCerrarConfig] = useState(false);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
     const [imagenFile, setImagenFile] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
     const [eliminarImagen, setEliminarImagen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const [config, setConfig] = useState({
@@ -77,7 +77,7 @@ export const Configuracion = ({ userLog }) => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         setIsLoading(true);
-        const form = event.target;
+        const form = event.currentTarget;
 
         let sw = 0;
         if (!config.entidad) {
@@ -172,20 +172,19 @@ export const Configuracion = ({ userLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'CONFIGURACIÓN'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
+                <Header userLog={userLog} title={'EMPRESA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}
                         <div className="extend-header">
                             <div className="security-icon">
-                                <i className="bi bi-gear-fill"></i>
+                                <i className="bi bi-building-fill"></i>
                             </div>
                             <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Configuración
+                                Empresa
                             </h2>
                             <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
-                                Ajusta tu cuenta a tu manera
+                                Ajusta tu empresa a tu manera
                             </p>
                         </div>
 

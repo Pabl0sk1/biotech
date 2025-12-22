@@ -2,8 +2,15 @@
 export const DateHourFormat = (dateHour, op) => {
     if (!dateHour) return '';
 
-    const [anio, mes, dia] = dateHour.split('-').map(Number);
-    const date = new Date(anio, mes - 1, dia);
+    let date;
+    if (op == 1) {
+        date = new Date(dateHour);
+        if (isNaN(date)) return '';
+    } else {
+        const [anio, mes, dia] = dateHour.split('-').map(Number);
+        date = new Date(anio, mes - 1, dia);
+    }
+
 
     const dd = String(date.getDate()).padStart(2, '0');
     const mm = String(date.getMonth() + 1).padStart(2, '0');

@@ -10,7 +10,7 @@ import { HourFormat } from '../utils/DateHourFormat.js';
 export const TurnoApp = ({ userLog }) => {
 
     const [turnos, setTurnos] = useState([]);
-    const [tipoturnos, setTipoturnos] = useState([]);
+    const [modalidades, setModalidades] = useState([]);
     const [detallesAEliminar, setDetallesAEliminar] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
@@ -78,13 +78,13 @@ export const TurnoApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const recuperarTipoTurnos = async () => {
+    const recuperarModalidades = async () => {
         const response = await getSchedule();
-        setTipoturnos(response.items);
+        setModalidades(response.items);
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rg07`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh03`);
         setPermiso(response.items[0]);
     }
 
@@ -95,7 +95,7 @@ export const TurnoApp = ({ userLog }) => {
             setTurnos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarTipoTurnos();
+            recuperarModalidades();
             permisoUsuario();
         };
         load();
@@ -111,6 +111,10 @@ export const TurnoApp = ({ userLog }) => {
         eliminarTurnoFn(id);
         setTurnoAEliminar(null);
     }
+
+    const handleEliminarTurno = async (turno) => {
+        setTurnoAEliminar(turno);
+    };
 
     const guardarFn = async (turnoAGuardar) => {
 
@@ -216,8 +220,8 @@ export const TurnoApp = ({ userLog }) => {
 
             {turnoAEliminar && (
                 <>
-                    <div className="position-fixed top-0 start-0 z-1 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-2 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
@@ -246,8 +250,8 @@ export const TurnoApp = ({ userLog }) => {
 
             {detalleNoEliminar && (
                 <>
-                    <div className="position-fixed top-0 start-0 z-3 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-4 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                    <div className="position-fixed top-0 start-0 z-4 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-5 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="fw-bolder d-flex flex-column align-items-center">
@@ -267,8 +271,8 @@ export const TurnoApp = ({ userLog }) => {
 
             {turnoAVisualizar && (
                 <>
-                    <div className="position-fixed top-0 start-0 z-1 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-2 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="row mb-3 fw-semibold text-start">
@@ -389,8 +393,8 @@ export const TurnoApp = ({ userLog }) => {
 
             {turnoAGuardar && (
                 <>
-                    <div className="position-fixed top-0 start-0 z-1 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-2 d-flex align-items-center justify-content-center translate-middle user-select-none">
+                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
+                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <form
@@ -467,7 +471,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     id='tipoturno'
                                                     value={turnoAGuardar.tipoturno?.id ?? ''}
                                                     onChange={(event) => {
-                                                        const selectedTipoTurno = tipoturnos.find(r => r.id === parseInt(event.target.value));
+                                                        const selectedTipoTurno = modalidades.find(r => r.id === parseInt(event.target.value));
                                                         setTurnoAGuardar({
                                                             ...turnoAGuardar,
                                                             tipoturno: selectedTipoTurno
@@ -476,7 +480,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     required
                                                 >
                                                     <option value="" className="bg-secondary-subtle">Seleccione una modalidad...</option>
-                                                    {tipoturnos.map((tp) => (
+                                                    {modalidades.map((tp) => (
                                                         <option key={tp.id} value={tp.id}>{tp.tipo}</option>
                                                     ))}
                                                 </select>
@@ -701,7 +705,7 @@ export const TurnoApp = ({ userLog }) => {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (puedeEliminar) setTurnoAEliminar(v);
+                                                                if (puedeEliminar) handleEliminarTurno(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}

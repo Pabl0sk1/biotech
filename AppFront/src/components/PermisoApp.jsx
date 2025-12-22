@@ -115,7 +115,7 @@ export const PermisoApp = ({ userLog }) => {
         setPermisoAEliminar(null);
     }
 
-    const handleEliminarPermiso = (permiso) => {
+    const handleEliminarPermiso = async (permiso) => {
         setPermisoAEliminar(permiso);
     };
 

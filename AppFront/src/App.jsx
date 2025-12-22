@@ -11,16 +11,24 @@ import { UsuarioApp } from './components/UsuarioApp.jsx';
 import { AuditoriaApp } from './components/AuditoriaApp.jsx';
 import { RolApp } from './components/RolApp.jsx';
 import { TurnoApp } from './components/TurnoApp.jsx';
-import { FuncionarioApp } from './components/FuncionarioApp.jsx';
 import { Error } from './Error.jsx';
 import { Calculo } from './tasks/Calculo.jsx'
 import { CargoApp } from './components/CargoApp.jsx';
 import { ModalidadApp } from './components/ModalidadApp.jsx';
 import { TokenApp } from './components/TokenApp.jsx';
-import { VendedorApp } from './components/VendedorApp.jsx';
 import { SucursalApp } from './components/SucursalesApp.jsx';
 import { ModuloApp } from './components/ModuloApp.jsx';
 import { PermisoApp } from './components/PermisoApp.jsx';
+import { CarteraApp } from './components/CarteraApp.jsx';
+import { ZafraApp } from './components/ZafraApp.jsx';
+import { MedidaApp } from './components/MedidaApp.jsx';
+import { MonedaApp } from './components/MonedaApp.jsx';
+import { EntidadApp } from './components/EntidadApp.jsx';
+import { FaseCultivoApp } from './components/FaseCultivoApp.jsx';
+import { TributacionApp } from './components/TributacionApp.jsx';
+import { CategoriaApp } from './components/CategoriaApp.jsx';
+import { ClaseApp } from './components/ClaseApp.jsx';
+import { PrincipioActivoApp } from './components/PrincipioActivoApp.jsx';
 import { getConfig } from "./services/config.service";
 import { getPermission } from './services/permiso.service.js';
 
@@ -93,47 +101,90 @@ function App() {
           <Menu userLog={userLog} setUserLog={setUserLog} />
         } />
 
-        {/* Reportes */}
-        <Route path={UrlLocal + "/reports/calcext"} element={
-          <ProtectedRoute moduloVar="rp01" permisos={permisos}>
-            <Calculo userLog={userLog} />
+        {/* Catastros */}
+        <Route path={UrlLocal + "/cadastres/entities"} element={
+          <ProtectedRoute moduloVar="ca01" permisos={permisos}>
+            <EntidadApp userLog={userLog} />
           </ProtectedRoute>
         } />
 
-        {/* Registros */}
-        <Route path={UrlLocal + "/regs/employees"} element={
-          <ProtectedRoute moduloVar="rg01" permisos={permisos}>
-            <FuncionarioApp userLog={userLog} />
+        {/* Configuraciones - Generales */}
+        <Route path={UrlLocal + "/config/general/crops"} element={
+          <ProtectedRoute moduloVar="gr01" permisos={permisos}>
+            <FaseCultivoApp userLog={userLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/regs/sellers"} element={
-          <ProtectedRoute moduloVar="rg02" permisos={permisos}>
-            <VendedorApp userLog={userLog} />
+        <Route path={UrlLocal + "/config/general/currencies"} element={
+          <ProtectedRoute moduloVar="gr02" permisos={permisos}>
+            <MonedaApp userLog={userLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/regs/branchs"} element={
-          <ProtectedRoute moduloVar="rg03" permisos={permisos}>
+        <Route path={UrlLocal + "/config/general/branchs"} element={
+          <ProtectedRoute moduloVar="gr03" permisos={permisos}>
             <SucursalApp userLog={userLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/regs/positions"} element={
-          <ProtectedRoute moduloVar="rg04" permisos={permisos}>
+        <Route path={UrlLocal + "/config/general/taxations"} element={
+          <ProtectedRoute moduloVar="gr04" permisos={permisos}>
+            <TributacionApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/config/general/taxations"} element={
+          <ProtectedRoute moduloVar="gr04" permisos={permisos}>
+            <TributacionApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/config/general/harvests"} element={
+          <ProtectedRoute moduloVar="gr05" permisos={permisos}>
+            <ZafraApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/config/general/categories"} element={
+          <ProtectedRoute moduloVar="gr06" permisos={permisos}>
+            <CategoriaApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        {/* Configuraciones - RRHH */}
+        <Route path={UrlLocal + "/config/rrhh/positions"} element={
+          <ProtectedRoute moduloVar="rh01" permisos={permisos}>
             <CargoApp userLog={userLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/regs/schedules"} element={
-          <ProtectedRoute moduloVar="rg05" permisos={permisos}>
+        <Route path={UrlLocal + "/config/rrhh/schedules"} element={
+          <ProtectedRoute moduloVar="rh02" permisos={permisos}>
             <ModalidadApp userLog={userLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/regs/modules"} element={
-          <ProtectedRoute moduloVar="rg06" permisos={permisos}>
-            <ModuloApp userLog={userLog} />
+        <Route path={UrlLocal + "/config/rrhh/shifts"} element={
+          <ProtectedRoute moduloVar="rh03" permisos={permisos}>
+            <TurnoApp userLog={userLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/regs/shifts"} element={
-          <ProtectedRoute moduloVar="rg07" permisos={permisos}>
-            <TurnoApp userLog={userLog} />
+        <Route path={UrlLocal + "/config/rrhh/calcext"} element={
+          <ProtectedRoute moduloVar="rh04" permisos={permisos}>
+            <Calculo userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        {/* Configuraciones - Comercial */}
+        <Route path={UrlLocal + "/config/commercial/wallets"} element={
+          <ProtectedRoute moduloVar="cm01" permisos={permisos}>
+            <CarteraApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        {/* Configuraciones - Productos */}
+        <Route path={UrlLocal + "/config/product/measures"} element={
+          <ProtectedRoute moduloVar="pr02" permisos={permisos}>
+            <MedidaApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/config/product/assets"} element={
+          <ProtectedRoute moduloVar="pr03" permisos={permisos}>
+            <PrincipioActivoApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/config/product/classes"} element={
+          <ProtectedRoute moduloVar="pr04" permisos={permisos}>
+            <ClaseApp userLog={userLog} />
           </ProtectedRoute>
         } />
 
@@ -143,9 +194,9 @@ function App() {
             <AuditoriaApp userLog={userLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/security/users"} element={
+        <Route path={UrlLocal + "/security/modules"} element={
           <ProtectedRoute moduloVar="sc02" permisos={permisos}>
-            <UsuarioApp userLog={userLog} />
+            <ModuloApp userLog={userLog} />
           </ProtectedRoute>
         } />
         <Route path={UrlLocal + "/security/roles"} element={
@@ -163,20 +214,23 @@ function App() {
             <PermisoApp userLog={userLog} />
           </ProtectedRoute>
         } />
-
-        {/* Configuraciones */}
+        <Route path={UrlLocal + "/security/users"} element={
+          <ProtectedRoute moduloVar="sc06" permisos={permisos}>
+            <UsuarioApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
         <Route path={UrlLocal + "/profile"} element={
-          <ProtectedRoute moduloVar="ma01" permisos={permisos}>
+          <ProtectedRoute moduloVar="sc08" permisos={permisos}>
             <Perfil userLog={userLog} setUserLog={setUserLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/changepassword"} element={
-          <ProtectedRoute moduloVar="ma02" permisos={permisos}>
+        <Route path={UrlLocal + "/security/changepassword"} element={
+          <ProtectedRoute moduloVar="sc09" permisos={permisos}>
             <CambiarContrasena userLog={userLog} setUserLog={setUserLog} />
           </ProtectedRoute>
         } />
-        <Route path={UrlLocal + "/config"} element={
-          <ProtectedRoute moduloVar="ma03" permisos={permisos}>
+        <Route path={UrlLocal + "/company"} element={
+          <ProtectedRoute moduloVar="sc10" permisos={permisos}>
             <Configuracion userLog={userLog} />
           </ProtectedRoute>
         } />

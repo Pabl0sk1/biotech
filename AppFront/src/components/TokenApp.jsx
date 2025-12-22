@@ -81,7 +81,7 @@ export const TokenApp = ({ userLog }) => {
         setTokenAEliminar(null);
     }
 
-    const handleEliminarToken = (token) => {
+    const handleEliminarToken = async (token) => {
         setTokenAEliminar(token);
     };
 

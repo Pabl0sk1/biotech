@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getUser, updateUser } from "./services/usuario.service";
+import { getUser, updateUser, updateUserImage, deleteUserImage } from "./services/usuario.service";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
+import { HostLocation } from './utils/HostLocation';
 
 export const Perfil = ({ userLog, setUserLog }) => {
 
@@ -15,6 +16,9 @@ export const Perfil = ({ userLog, setUserLog }) => {
     const [correoError, setCorreoError] = useState(false);
     const [cerrarPerfil, setCerrarPerfil] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
+    const [imagenFile, setImagenFile] = useState(null);
+    const [eliminarImagen, setEliminarImagen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -52,6 +56,8 @@ export const Perfil = ({ userLog, setUserLog }) => {
     const recuperarUsuarios = async () => {
         const response = await getUser();
         setUsuarios(response.items);
+        const BACKEND_URL = HostLocation(1);
+        if (userLog?.imagenurl) setImagenSeleccionada(BACKEND_URL + userLog?.imagenurl);
     }
 
     useEffect(() => {
@@ -84,7 +90,6 @@ export const Perfil = ({ userLog, setUserLog }) => {
         };
 
         let sw = 0;
-
         if (!newData.nombreusuario) {
             setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 20 caracteres.');
             setNombreUsuarioError(true);
@@ -128,7 +133,24 @@ export const Perfil = ({ userLog, setUserLog }) => {
         }
 
         if (form.checkValidity()) {
+            if (eliminarImagen && !imagenFile) {
+                await deleteUserImage(newData.id);
+                setEliminarImagen(false);
+            }
+
             await updateUser(newData.id, newData);
+
+            if (imagenFile) {
+                const formData = new FormData();
+                formData.append("imagen", imagenFile);
+
+                if (newData.imagenurl) {
+                    formData.append("imagenAnterior", newData.imagenurl);
+                }
+
+                await updateUserImage(newData.id, formData);
+            }
+
             await actualizaruserLog();
             setCerrarPerfil(true);
             form.classList.remove('was-validated');
@@ -138,8 +160,26 @@ export const Perfil = ({ userLog, setUserLog }) => {
         setIsLoading(false);
     };
 
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        setImagenFile(file);
+        setEliminarImagen(false);
+        setData(prev => ({
+            ...prev,
+            imagennombre: file.name,
+            imagentipo: file.type
+        }));
+        const reader = new FileReader();
+
+        reader.onloadend = () => {
+            setImagenSeleccionada(reader.result);
+        };
+        reader.readAsDataURL(file);
+    };
+
     const verificarNombreUsuarioExistente = (nombreUsuario, id) => {
-        return usuarios.some(usuario => usuario.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && usuario.id !== id);
+        return usuarios.some(u => u.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && u.id !== id);
     };
 
     return (
@@ -168,7 +208,6 @@ export const Perfil = ({ userLog, setUserLog }) => {
 
             <div className="modern-container colorPrimario">
                 <Header userLog={userLog} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}
@@ -186,6 +225,57 @@ export const Perfil = ({ userLog, setUserLog }) => {
 
                         <form onSubmit={handleSubmit} className="needs-validation" noValidate>
                             <div className="form-body">
+                                {/* Profile picture Section */}
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
+                                        <i className="bi bi-image me-2"></i>Foto
+                                    </label>
+                                    <div
+                                        className={`image-upload ${imagenSeleccionada ? 'has-image' : ''}`}
+                                        onClick={() => document.getElementById('fileInput').click()}
+                                    >
+                                        {imagenSeleccionada ? (
+                                            <>
+                                                <img
+                                                    src={imagenSeleccionada}
+                                                    alt="Vista previa"
+                                                    className="image-preview"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="remove-image"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setImagenFile(null);
+                                                        setImagenSeleccionada(null);
+                                                        setEliminarImagen(true);
+                                                        setData({ ...data, imagennombre: "", imagentipo: "", imagenurl: "" });
+                                                    }}
+                                                >
+                                                    <i className="bi bi-x-lg"></i>
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div>
+                                                <div className="upload-icon">
+                                                    <i className="bi bi-cloud-upload"></i>
+                                                </div>
+                                                <div className="upload-text">
+                                                    <strong>Hacer clic para subir</strong>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        id="fileInput"
+                                        name="imagen"
+                                        accept="image/*"
+                                        className="d-none"
+                                        onChange={handleImageChange}
+                                    />
+                                </div>
+
                                 {/* Sección de Información de Cuenta */}
                                 <div className="form-section">
                                     <h3 className="section-title">
@@ -292,16 +382,16 @@ export const Perfil = ({ userLog, setUserLog }) => {
 
                                         <div className="col-md-6">
                                             <div className="modern-input-group">
-                                                <label htmlFor="fecha_nacimiento" className="modern-label">
+                                                <label htmlFor="fechanacimiento" className="modern-label">
                                                     <i className="bi bi-credit-card me-2"></i>Fecha de Nacimiento
                                                 </label>
                                                 <input
                                                     type="date"
-                                                    id="fecha_nacimiento"
-                                                    name="fecha_nacimiento"
+                                                    id="fechanacimiento"
+                                                    name="fechanacimiento"
                                                     placeholder="Ej: 12345678"
                                                     className="modern-input"
-                                                    value={data.fecha_nacimiento || ''}
+                                                    value={data.fechanacimiento || ''}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                                 />
                                             </div>

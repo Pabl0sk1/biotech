@@ -9,7 +9,6 @@ import { FiltroModal } from "../FiltroModal.jsx";
 export const ModalidadApp = ({ userLog }) => {
 
     const [modalidades, setModalidades] = useState([]);
-    const [turnos, setTurnos] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -63,13 +62,8 @@ export const ModalidadApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const recuperarTurnos = async () => {
-        const response = await getShift();
-        setTurnos(response.items);
-    }
-
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rg05`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh02`);
         setPermiso(response.items[0]);
     }
 
@@ -80,7 +74,6 @@ export const ModalidadApp = ({ userLog }) => {
             setModalidades(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarTurnos();
             permisoUsuario();
         };
         load();
@@ -97,9 +90,9 @@ export const ModalidadApp = ({ userLog }) => {
         setModalidadAEliminar(null);
     }
 
-    const handleEliminarModalidad = (modalidad) => {
-        const rel = turnos.find(v => v.tipoturno.id === modalidad.id);
-        if (rel) setModalidadNoEliminar(modalidad);
+    const handleEliminarModalidad = async (modalidad) => {
+        const rel = await getShift('', '', '', `modalidad.id:eq:${modalidad?.id}`);
+        if (rel.items.length > 0) setModalidadNoEliminar(modalidad);
         else setModalidadAEliminar(modalidad);
     };
 

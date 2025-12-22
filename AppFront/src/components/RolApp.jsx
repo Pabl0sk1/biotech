@@ -9,8 +9,6 @@ import { FiltroModal } from "../FiltroModal.jsx";
 export const RolApp = ({ userLog }) => {
 
     const [roles, setRoles] = useState([]);
-    const [usuarios, setUsuarios] = useState([]);
-    const [permisos, setPermisos] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -64,16 +62,6 @@ export const RolApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const recuperarUsuarios = async () => {
-        const response = await getUser();
-        setUsuarios(response.items);
-    }
-
-    const recuperarPermisos = async () => {
-        const response = await getPermission();
-        setPermisos(response.items);
-    }
-
     const permisoUsuario = async () => {
         const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc03`);
         setPermiso(response.items[0]);
@@ -86,8 +74,6 @@ export const RolApp = ({ userLog }) => {
             setRoles(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarUsuarios();
-            recuperarPermisos();
             permisoUsuario();
         };
         load();
@@ -104,10 +90,10 @@ export const RolApp = ({ userLog }) => {
         setRolAEliminar(null);
     }
 
-    const handleEliminarRol = (rol) => {
-        const rel = usuarios.find(v => v.tipousuario.id === rol.id);
-        const rel2 = permisos.find(v => v.tipousuario.id === rol.id);
-        if (rel || rel2) setRolNoEliminar(rol);
+    const handleEliminarRol = async (rol) => {
+        const rel = await getUser('', '', '', `tipousuario.id:eq:${rol?.id}`);
+        const rel2 = await getPermission('', '', '', `tipousuario.id:eq:${rol?.id}`);
+        if (rel.items.length > 0 || rel2.items.length > 0) setRolNoEliminar(rol);
         else setRolAEliminar(rol);
     };
 

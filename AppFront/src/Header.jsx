@@ -5,7 +5,7 @@ export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebar
     const navigate = useNavigate();
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm position-fixed top-0 w-100 px-3 py-1 z-3 border-bottom border-success border-4">
+        <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm position-fixed top-0 w-100 px-3 py-1 z-1 border-bottom border-success border-4">
             {/* Sección izquierda: botón y título */}
             <div className="d-flex align-items-center">
                 {showSidebarButton && (
@@ -28,7 +28,7 @@ export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebar
                         {userLog?.tipousuario?.tipousuario}
                     </span>
 
-                    <small className="text-muted">{userLog?.nombreusuario}</small>
+                    <small className="text-muted">{userLog.nombreusuario}</small>
                 </div>
                 <Link to="https://biotech.biosafrasgroup.com.py/docs" className='p-0 me-2'>
                     <img

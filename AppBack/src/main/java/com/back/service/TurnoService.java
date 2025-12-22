@@ -25,13 +25,13 @@ public class TurnoService {
 	TurnoRepository rep;
 	
 	@Autowired
-	TurnoDiaRepository repT;
+	TurnoDiaRepository repD1;
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
 	@PostConstruct
     public void init() {
-		detailRegistry.put("days", repT);
+		detailRegistry.put("days", repD1);
     }
 	
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
@@ -98,7 +98,7 @@ public class TurnoService {
 	}
 	
 	public void eliminarDia(Integer id) {
-		repT.deleteById(id);
+		repD1.deleteById(id);
 	}
 
 	public Turno buscarPorId(Integer id) {
@@ -115,7 +115,7 @@ public class TurnoService {
 	
 	public TurnoDia buscarPorIdDia(Integer id) {
 		
-		Optional<TurnoDia> dia = repT.findById(id);
+		Optional<TurnoDia> dia = repD1.findById(id);
 		
 		if (dia.isPresent()) {
 			return dia.get();

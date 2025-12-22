@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getBranch, saveBranch, updateBranch, deleteBranch } from '../services/sucursal.service.js';
 import { getUser } from '../services/usuario.service.js';
-import { getEmployee } from '../services/funcionario.service.js';
+import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
@@ -10,8 +10,6 @@ import { FiltroModal } from "../FiltroModal.jsx";
 export const SucursalApp = ({ userLog }) => {
 
     const [sucursales, setSucursales] = useState([]);
-    const [usuarios, setUsuarios] = useState([]);
-    const [funcionarios, setFuncionarios] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -65,18 +63,8 @@ export const SucursalApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const recuperarUsuarios = async () => {
-        const response = await getUser();
-        setUsuarios(response.items);
-    }
-
-    const recuperarFuncionarios = async () => {
-        const response = await getEmployee();
-        setFuncionarios(response.items);
-    }
-
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rg03`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:gr03`);
         setPermiso(response.items[0]);
     }
 
@@ -87,8 +75,6 @@ export const SucursalApp = ({ userLog }) => {
             setSucursales(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarUsuarios();
-            recuperarFuncionarios();
             permisoUsuario();
         };
         load();
@@ -105,10 +91,10 @@ export const SucursalApp = ({ userLog }) => {
         setSucursalAEliminar(null);
     }
 
-    const handleEliminarSucursal = (sucursal) => {
-        const rel = usuarios.find(v => v.sucursal.id === sucursal.id);
-        const rel2 = funcionarios.find(v => v.sucursal.id === sucursal.id);
-        if (rel || rel2) setSucursalNoEliminar(sucursal);
+    const handleEliminarSucursal = async (sucursal) => {
+        const rel = await getUser('', '', '', `sucursal.id:eq:${sucursal?.id}`);
+        const rel2 = await getEntity('', '', '', `sucursal.id:eq:${sucursal?.id}`);
+        if (rel.items.length > 0 || rel2.items.length > 0) setSucursalNoEliminar(sucursal);
         else setSucursalAEliminar(sucursal);
     };
 

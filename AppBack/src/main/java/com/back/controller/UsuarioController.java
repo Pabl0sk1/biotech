@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.back.entity.Usuario;
 import com.back.service.UsuarioService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping(path = "/api/user")
@@ -75,6 +77,38 @@ public class UsuarioController {
 		return result;
 	}
 	
+	@PutMapping(path = "updateImage/{id}", consumes = "multipart/form-data")
+	public Map<String, Object> modificarImagen(@PathVariable Integer id,
+							 			       @RequestParam(value = "imagen", required = false) MultipartFile imagenurl,
+							 			       @RequestParam(value = "imagenAnterior", required = false) String imagenAnt
+	) throws Exception {
+		Map<String, Object> result = new LinkedHashMap<>();
+		
+		Usuario usuario = serv.buscarPorId(id);
+		if (usuario == null) {
+	        result.put("message", "Registro de ID " + id + " no existe.");
+	        return result;
+	    }
+	    
+	    if (imagenurl != null && !imagenurl.isEmpty()) {
+	    	if (imagenAnt != null && !imagenAnt.isEmpty()) {
+	            serv.eliminarImagen(imagenAnt);
+	        }
+	    	
+	        String ruta = serv.guardarImagen(imagenurl);
+	        usuario.setImagenurl(ruta);
+	        usuario.setImagennombre(imagenurl.getOriginalFilename());
+	        usuario.setImagentipo(imagenurl.getContentType());
+	    } else {
+	    	usuario.setImagenurl(usuario.getImagenurl());
+	    	usuario.setImagennombre(usuario.getImagennombre());
+	    	usuario.setImagentipo(usuario.getImagentipo());
+	    }
+
+	    result.put("updated", serv.guardar(usuario));
+		return result;
+	}
+	
 	@DeleteMapping(path = "delete/{id}")
 	public Map<String, Object> eliminar(@PathVariable Integer id) {
 		Map<String, Object> result = new LinkedHashMap<>();
@@ -133,6 +167,28 @@ public class UsuarioController {
         	result.put("message", "Las credenciales son incorrectas");
         }
 	    
+	    return result;
+	}
+	
+	@DeleteMapping("deleteImage/{id}")
+	public Map<String, Object> eliminarImagen(@PathVariable Integer id) throws Exception {
+	    Map<String, Object> result = new LinkedHashMap<>();
+
+	    Usuario usuario = serv.buscarPorId(id);
+	    if (usuario == null) {
+	    	result.put("message", "Registro de ID " + id + " no existe.");
+	        return result;
+	    }
+	    
+	    if (usuario.getImagenurl() != null && !usuario.getImagenurl().isEmpty()) {
+	        serv.eliminarImagen(usuario.getImagenurl());
+	        usuario.setImagenurl(null);
+	        usuario.setImagennombre(null);
+	        usuario.setImagentipo(null);
+	        serv.guardar(usuario);
+	    }
+
+	    result.put("deleted", true);
 	    return result;
 	}
 

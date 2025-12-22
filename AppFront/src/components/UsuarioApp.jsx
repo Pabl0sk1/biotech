@@ -16,7 +16,6 @@ export const UsuarioApp = ({ userLog }) => {
     const [repeatPassMsj, setRepeatPassMsj] = useState('');
     const [repeatPassError, setRepeatPassError] = useState(false);
     const [repeatPassword, setRepeatPassword] = useState('');
-    const [usuariosCompleto, setUsuariosCompleto] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);
     const [sucursales, setSucursales] = useState([]);
@@ -86,16 +85,14 @@ export const UsuarioApp = ({ userLog }) => {
         estado: "Activo",
         activo: true,
         vermapa: false,
-        fechanacimiento: ""
+        fechanacimiento: "",
+        imagentipo: "",
+        imagennombre: "",
+        imagenurl: ""
     };
 
     const recuperarUsuarios = () => {
         setQuery(q => ({ ...q }));
-    };
-
-    const recuperarUsuariosCompletos = async () => {
-        const response = await getUser();
-        setUsuariosCompleto(response.items);
     };
 
     const recuperarRoles = async () => {
@@ -120,7 +117,6 @@ export const UsuarioApp = ({ userLog }) => {
             setUsuarios(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarUsuariosCompletos();
             recuperarRoles();
             recuperarSucursales();
             permisoUsuario();
@@ -139,7 +135,7 @@ export const UsuarioApp = ({ userLog }) => {
         setUsuarioAEliminar(null);
     }
 
-    const handleEliminarUsuario = (usuario) => {
+    const handleEliminarUsuario = async (usuario) => {
         setUsuarioAEliminar(usuario);
     };
 
@@ -158,7 +154,7 @@ export const UsuarioApp = ({ userLog }) => {
             await updateUser(usuarioActualizado.id, usuarioActualizado);
             await AddAccess('Modificar', usuarioActualizado.id, userLog, "Usuarios");
         } else {
-            const nuevoUsuario = await saveUser(usuarioActualizado);
+            const nuevoUsuario = await saveUser(formData);
             await AddAccess('Insertar', nuevoUsuario.saved.id, userLog, "Usuarios");
         }
         setUsuarioAGuardar(null);
@@ -216,7 +212,6 @@ export const UsuarioApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         let sw = 0;
-
         if (!usuarioAGuardar.tipousuario) sw = 1;
         if (!usuarioAGuardar.nombreusuario) {
             setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 20 caracteres.');
@@ -279,7 +274,7 @@ export const UsuarioApp = ({ userLog }) => {
     };
 
     const verificarNombreUsuarioExistente = (nombreUsuario, id) => {
-        return usuariosCompleto.some(usuario => usuario.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && usuario.id !== id);
+        return usuarios.some(u => u.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && u.id !== id);
     };
 
     const refrescar = () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPosition, savePosition, updatePosition, deletePosition } from '../services/cargo.service.js';
-import { getEmployee } from '../services/funcionario.service.js';
+import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
@@ -9,7 +9,6 @@ import { FiltroModal } from "../FiltroModal.jsx";
 export const CargoApp = ({ userLog }) => {
 
     const [cargos, setCargos] = useState([]);
-    const [funcionarios, setFuncionarios] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -63,13 +62,8 @@ export const CargoApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const recuperarFuncionarios = async () => {
-        const response = await getEmployee();
-        setFuncionarios(response.items);
-    }
-
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rg04`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh01`);
         setPermiso(response.items[0]);
     }
 
@@ -80,7 +74,6 @@ export const CargoApp = ({ userLog }) => {
             setCargos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarFuncionarios();
             permisoUsuario();
         };
         load();
@@ -97,9 +90,9 @@ export const CargoApp = ({ userLog }) => {
         setCargoAEliminar(null);
     }
 
-    const handleEliminarCargo = (cargo) => {
-        const rel = funcionarios.find(v => v.cargo.id === cargo.id);
-        if (rel) setCargoNoEliminar(cargo);
+    const handleEliminarCargo = async (cargo) => {
+        const rel = await getEntity('', '', '', `cargo.id:eq:${cargo?.id}`);
+        if (rel.items.length > 0) setCargoNoEliminar(cargo);
         else setCargoAEliminar(cargo);
     };
 

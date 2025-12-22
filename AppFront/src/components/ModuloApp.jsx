@@ -8,7 +8,6 @@ import { FiltroModal } from "../FiltroModal.jsx";
 export const ModuloApp = ({ userLog }) => {
 
     const [modulos, setModulos] = useState([]);
-    const [permisos, setPermisos] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -64,13 +63,8 @@ export const ModuloApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const recuperarPermisos = async () => {
-        const response = await getPermission();
-        setPermisos(response.items);
-    }
-
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rg06`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc02`);
         setPermiso(response.items[0]);
     }
 
@@ -81,7 +75,6 @@ export const ModuloApp = ({ userLog }) => {
             setModulos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarPermisos();
             permisoUsuario();
         };
         load();
@@ -98,9 +91,9 @@ export const ModuloApp = ({ userLog }) => {
         setModuloAEliminar(null);
     }
 
-    const handleEliminarModulo = (modulo) => {
-        const rel = permisos.find(v => v.modulo.id === modulo.id);
-        if (rel) setModuloNoEliminar(modulo);
+    const handleEliminarModulo = async (modulo) => {
+        const rel = await getPermission('', '', '', `modulo.id:eq:${modulo?.id}`);
+        if (rel.items.length > 0) setModuloNoEliminar(modulo);
         else setModuloAEliminar(modulo);
     };
 
@@ -328,7 +321,6 @@ export const ModuloApp = ({ userLog }) => {
                                                     value={moduloAGuardar.var}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
                                                     required
-                                                    autoFocus
                                                     maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
@@ -348,7 +340,6 @@ export const ModuloApp = ({ userLog }) => {
                                                     value={moduloAGuardar.moduloen}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
                                                     required
-                                                    autoFocus
                                                     maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">

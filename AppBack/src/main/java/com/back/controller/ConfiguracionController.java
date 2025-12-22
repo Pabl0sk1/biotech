@@ -88,7 +88,6 @@ public class ConfiguracionController {
 	    Configuracion config = mapper.readValue(configJson, Configuracion.class);
 	    config.setId(id);
 	    
-	    
 	    if (imagenurl != null && !imagenurl.isEmpty() && imagenAnt != null && !imagenAnt.isEmpty()) {
 	        serv.eliminarImagen(imagenAnt);
 	    }

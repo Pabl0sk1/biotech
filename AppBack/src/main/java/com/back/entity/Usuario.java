@@ -114,6 +114,12 @@ public class Usuario {
 	@Temporal(TemporalType.DATE)
 	private LocalDate fechanacimiento;
 	
+	private String imagennombre;
+    
+    private String imagentipo;
+    
+	private String imagenurl;
+	
 	public Usuario(Integer id) {
 		super();
 		this.id = id;

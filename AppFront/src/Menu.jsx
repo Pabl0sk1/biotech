@@ -6,11 +6,8 @@ import { getPermission } from './services/permiso.service.js';
 
 export const Menu = ({ userLog, setUserLog }) => {
 
-    const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
-    const [isSeguridadMenuOpen, setIsSeguridadMenuOpen] = useState(false);
-    const [isReportesMenuOpen, setIsReportesMenuOpen] = useState(false);
-    const [isRegistrosMenuOpen, setIsRegistrosMenuOpen] = useState(false);
+    const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [permisos, setPermisos] = useState([]);
 
     const recuperarPermisos = async () => {
@@ -95,12 +92,6 @@ export const Menu = ({ userLog, setUserLog }) => {
         };
     }, []);
 
-    const toggleMenu = (menu) => {
-        setIsSeguridadMenuOpen(menu === 'seguridad' ? !isSeguridadMenuOpen : false);
-        setIsReportesMenuOpen(menu === 'reportes' ? !isReportesMenuOpen : false);
-        setIsRegistrosMenuOpen(menu === 'registros' ? !isRegistrosMenuOpen : false);
-    };
-
     const toggleSidebar = () => {
         setIsSidebarVisible(!isSidebarVisible);
     };
@@ -138,10 +129,6 @@ export const Menu = ({ userLog, setUserLog }) => {
                 <Sidebar
                     userLog={userLog}
                     isSidebarVisible={isSidebarVisible}
-                    toggleMenu={toggleMenu}
-                    isSeguridadMenuOpen={isSeguridadMenuOpen}
-                    isReportesMenuOpen={isReportesMenuOpen}
-                    isRegistrosMenuOpen={isRegistrosMenuOpen}
                     handleLogoutClick={handleLogoutClick}
                     permisos={permisos}
                 />

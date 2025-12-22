@@ -24,8 +24,20 @@ export const updateUser = async (id, user) => {
     return response.data;
 };
 
+export const updateUserImage = async (id, user) => {
+    const response = await axios.put(`${API_BASE_URL}/updateImage/${id}`, user, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
+};
+
 export const deleteUser = async (id) => {
     const response = await axios.delete(`${API_BASE_URL}/delete/${id}`);
+    return response.data;
+};
+
+export const deleteUserImage = async (id) => {
+    const response = await axios.delete(`${API_BASE_URL}/deleteImage/${id}`);
     return response.data;
 };
 

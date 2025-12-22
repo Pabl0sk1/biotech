@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getEmployee } from '../services/funcionario.service';
+import { getEntity } from '../services/entidad.service';
 import { getShift } from '../services/turno.service';
 import { generarExcel } from './ArchivoExcel';
 import Header from '../Header';
@@ -671,7 +671,7 @@ export const Calculo = ({ userLog }) => {
     };
 
     const recuperarFuncionarios = async () => {
-        const response = await getEmployee();
+        const response = await getEntity('', '', '', 'tipoentidad.id:eq:1');
         setFuncionarios(response.items);
         const fechasDelMes = obtenerFechasDelMes();
 
