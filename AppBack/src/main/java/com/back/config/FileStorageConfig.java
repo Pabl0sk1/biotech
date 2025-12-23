@@ -9,9 +9,6 @@ public class FileStorageConfig implements WebMvcConfigurer {
 	
 	@Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		
-		registry.addResourceHandler("/**/*.js", "/**/*.css", "/**/*.svg", "/**/*.png")
-        		.addResourceLocations("classpath:/static/");
 
         registry.addResourceHandler("/biotech/logo/**")
                 .addResourceLocations("classpath:/logo/");
