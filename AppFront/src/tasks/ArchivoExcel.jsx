@@ -133,7 +133,7 @@ const generarExcel = async (data) => {
 
         // Agregar logo si existe
         if (logo.tipo) {
-            const imgUrl = HostLocation(1) + logo.imagen;
+            const imgUrl = HostLocation(1) + "/biotech" + logo.imagen;
 
             const logoBuffer = getImageBuffer(imgUrl);
             const imageId = workbook.addImage({
