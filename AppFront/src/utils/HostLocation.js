@@ -1,16 +1,10 @@
 
 export const HostLocation = (op = 0) => {
 
-    let init = "";
-    let port = "";
+    let protocol = window.location.protocol;
     let hostname = window.location.hostname;
+    let port = hostname === 'localhost' ? ':8082' : '';
 
-    if (hostname == "localhost") {
-        init = "http"
-        port = ":8082"
-    } else init = "https";
-
-    if (op == 1) return `${init}://${hostname}${port}/biotech`;
-    else return `${init}://${hostname}${port}/api`;
-
+    if (op === 1) return `${protocol}//${hostname}${port}`;
+    else return `${protocol}//${hostname}${port}/api`;
 }
