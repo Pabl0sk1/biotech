@@ -629,8 +629,7 @@ export const Calculo = ({ userLog }) => {
             detalles: funcionario.detalles.map((detalle) => {
                 if (detalle.fecha === fechaFeriado) {
                     // Replicar la lógica de determinarHoras
-                    let hn = 0, hnn = 0, hnmd = 0, hnmn = 0, hen = 0, hent = 0;
-                    let hextras = 0;
+                    let hn = 0, hnn = 0, hnmd = 0, hnmn = 0, hen = 0, hent = 0, hextras = 0;
                     const trn = detalle.turno;
                     const tot = detalle.total;
                     if (["A", "D"].includes(trn)) {
@@ -656,7 +655,7 @@ export const Calculo = ({ userLog }) => {
                         hnmn,
                         hen,
                         hent,
-                        hextras: 0
+                        hextras
                     };
                 }
                 return detalle;

@@ -56,8 +56,9 @@ export const Perfil = ({ userLog, setUserLog }) => {
     const recuperarUsuarios = async () => {
         const response = await getUser();
         setUsuarios(response.items);
+
         const BACKEND_URL = HostLocation(1);
-        if (userLog?.imagenurl) setImagenSeleccionada(BACKEND_URL + userLog?.imagenurl);
+        if (userLog?.imagenurl) setImagenSeleccionada(BACKEND_URL + "/biotech" + userLog?.imagenurl);
     }
 
     useEffect(() => {

@@ -50,6 +50,8 @@ const generarExcel = async (data) => {
         return `${day}/${month}/${year}`;
     };
 
+    const safeText = (txt) => txt != null ? String(txt) : '';
+
     const capitalize = (text) => {
         return text
             .toLowerCase()
@@ -113,7 +115,7 @@ const generarExcel = async (data) => {
 
     // Procesar cada funcionario
     listafuncionarios.forEach((funcionario) => {
-        const nombreCompleto = (`${funcionario.apellido}, ${funcionario.nombre}`).toUpperCase();
+        const nombreCompleto = (`${funcionario.nomape}`).toUpperCase();
         const cargoLab = funcionario.cargo.cargo.toUpperCase();
 
         // Crear worksheet
@@ -131,7 +133,7 @@ const generarExcel = async (data) => {
 
         // Agregar logo si existe
         if (logo.tipo) {
-            const imgUrl = HostLocation(1) + logo.imagen;
+            const imgUrl = HostLocation(1) + "/biotech" + logo.imagen;
 
             const logoBuffer = getImageBuffer(imgUrl);
             const imageId = workbook.addImage({
@@ -160,7 +162,7 @@ const generarExcel = async (data) => {
         funcionarioCell.value = {
             richText: [
                 { text: 'FUNCIONARIO: ', font: estilos.negrita },
-                { text: nombreCompleto, font: estilos.normal }
+                { text: safeText(nombreCompleto), font: estilos.normal }
             ]
         };
         worksheet.mergeCells('A3:E3');
@@ -169,7 +171,7 @@ const generarExcel = async (data) => {
         cinCell.value = {
             richText: [
                 { text: 'CIN°: ', font: estilos.negrita },
-                { text: formatearNumero(funcionario.nrodoc), font: estilos.normal }
+                { text: safeText(formatearNumero(funcionario.nrodoc)), font: estilos.normal }
             ]
         };
         worksheet.mergeCells('F3:H3');
@@ -178,7 +180,7 @@ const generarExcel = async (data) => {
         cargoCell.value = {
             richText: [
                 { text: 'CARGO: ', font: estilos.negrita },
-                { text: cargoLab, font: estilos.normal }
+                { text: safeText(cargoLab), font: estilos.normal }
             ]
         };
         worksheet.mergeCells('I3:K3');
