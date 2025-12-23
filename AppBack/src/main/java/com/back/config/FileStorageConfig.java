@@ -14,10 +14,10 @@ public class FileStorageConfig implements WebMvcConfigurer {
         		.addResourceLocations("classpath:/static/");
 
         registry.addResourceHandler("/logo/**")
-                .addResourceLocations("file:/src/main/resources/logo/");
+                .addResourceLocations("classpath:/logo/");
         
         registry.addResourceHandler("/profilepic/**")
-        		.addResourceLocations("file:/src/main/resources/profilepic/");
+        		.addResourceLocations("classpath:/profilepic/");
     }
 
 }

@@ -65,8 +65,9 @@ export const Configuracion = ({ userLog }) => {
 
     const recuperarConfig = async () => {
         const response = await getConfig();
-        const BACKEND_URL = HostLocation(1);
         setConfig(response.items[0]);
+
+        const BACKEND_URL = HostLocation(1);
         if (response.items[0].imagenurl) setImagenSeleccionada(BACKEND_URL + response.items[0].imagenurl);
     }
 
