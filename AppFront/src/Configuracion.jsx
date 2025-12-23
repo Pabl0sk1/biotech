@@ -68,7 +68,7 @@ export const Configuracion = ({ userLog }) => {
         setConfig(response.items[0]);
 
         const BACKEND_URL = HostLocation(1);
-        if (response.items[0].imagenurl) setImagenSeleccionada(BACKEND_URL + "/biotech" + response.items[0].imagenurl);
+        if (response.items[0].imagenurl) setImagenSeleccionada(BACKEND_URL + response.items[0].imagenurl);
     }
 
     useEffect(() => {

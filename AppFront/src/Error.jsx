@@ -30,9 +30,9 @@ export const Error = () => {
 
                 {/* Botones de acción */}
                 <div className="error-actions">
-                    <Link to={-1} className="btn-error btn-home">
+                    <Link to="/home" className="btn-error btn-home">
                         <i className="bi bi-arrow-left me-2"></i>
-                        Volver atrás
+                        Volver al Inicio
                     </Link>
                 </div>
             </div>

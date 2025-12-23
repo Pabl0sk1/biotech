@@ -26,7 +26,7 @@ const Sidebar = ({
         load();
 
         const BACKEND_URL = HostLocation(1);
-        if (userLog?.imagenurl) setAvatar(BACKEND_URL + "/biotech" + userLog?.imagenurl);
+        if (userLog?.imagenurl) setAvatar(BACKEND_URL + userLog?.imagenurl);
     }, []);
 
     const tienePermisoRuta = (moduloVar) => {
