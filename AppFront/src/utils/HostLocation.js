@@ -10,7 +10,7 @@ export const HostLocation = (op = 0) => {
         port = ":8082"
     } else init = "https";
 
-    if (op == 1) return `${init}://${hostname}${port}`;
+    if (op == 1) return `${init}://${hostname}${port}/biotech`;
     else return `${init}://${hostname}${port}/api`;
 
 }

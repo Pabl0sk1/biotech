@@ -26,6 +26,7 @@ const Sidebar = ({
         load();
 
         const BACKEND_URL = HostLocation(1);
+        console.log(BACKEND_URL + userLog?.imagenurl);
         if (userLog?.imagenurl) setAvatar(BACKEND_URL + userLog?.imagenurl);
     }, []);
 
