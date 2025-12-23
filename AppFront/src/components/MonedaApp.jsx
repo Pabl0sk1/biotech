@@ -405,7 +405,7 @@ export const MonedaApp = ({ userLog }) => {
                                             ></i>
                                         </th>
                                         <th onClick={() => toggleOrder("codiso")} className="sortable-header">
-                                            Descripción
+                                            Código ISO
                                             <i className={`bi ${getSortIcon("codiso")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
