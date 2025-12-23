@@ -12,12 +12,15 @@ public class FileStorageConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		String logoPath = Paths.get("src/main/resources/logo/").toAbsolutePath().toUri().toString();
 		String profilepicPath = Paths.get("src/main/resources/profilepic/").toAbsolutePath().toUri().toString();
+		
+		registry.addResourceHandler("/**/*.js", "/**/*.css", "/**/*.svg", "/**/*.png")
+        		.addResourceLocations("classpath:/static/");
 
         registry.addResourceHandler("/logo/**")
-                .addResourceLocations(logoPath);
+                .addResourceLocations("file:/opt/app/logo/");
         
         registry.addResourceHandler("/profilepic/**")
-        		.addResourceLocations(profilepicPath);
+        		.addResourceLocations("file:/opt/app/profilepic/");
     }
 
 }

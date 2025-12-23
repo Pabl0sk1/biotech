@@ -404,13 +404,39 @@ export const MonedaApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
+                                        <th onClick={() => toggleOrder("codiso")} className="sortable-header">
+                                            Descripción
+                                            <i className={`bi ${getSortIcon("codiso")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["codiso"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "codiso",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {monedas.length === 0 ? (
                                         <tr>
-                                            <td colSpan="3" className="text-center py-3 text-muted fs-3 fw-bold">
+                                            <td colSpan="4" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
                                             </td>
                                         </tr>
@@ -431,6 +457,7 @@ export const MonedaApp = ({ userLog }) => {
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
                                                     <td className='text-start'>{v.moneda}</td>
+                                                    <td>{v.codiso}</td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {
