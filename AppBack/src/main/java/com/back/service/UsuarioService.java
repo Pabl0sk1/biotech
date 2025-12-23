@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +18,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Usuario;
 import com.back.repository.UsuarioRepository;
@@ -154,7 +152,7 @@ public class UsuarioService {
 	}
 	
 	public String guardarImagen(MultipartFile archivo) throws Exception {
-	    String folder = "src/main/resources/profilepic/";
+	    String folder = "uploads/profilepic/";
 	    File dir = new File(folder);
 	    if (!dir.exists()) dir.mkdirs();
 
@@ -167,7 +165,7 @@ public class UsuarioService {
 	}
 	
 	public void eliminarImagen(String ruta) throws Exception {
-	    Path path = Paths.get("src/main/resources" + ruta);
+	    Path path = Paths.get("uploads" + ruta);
 	    Files.deleteIfExists(path);
 	}
 

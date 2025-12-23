@@ -107,7 +107,7 @@ public class ConfiguracionService {
 	}
 	
 	public String guardarImagen(MultipartFile archivo) throws Exception {
-	    String folder = "src/main/resources/logo/";
+	    String folder = "uploads/logo/";
 	    File dir = new File(folder);
 	    if (!dir.exists()) dir.mkdirs();
 
@@ -120,7 +120,7 @@ public class ConfiguracionService {
 	}
 	
 	public void eliminarImagen(String ruta) throws Exception {
-	    Path path = Paths.get("src/main/resources" + ruta);
+	    Path path = Paths.get("uploads" + ruta);
 	    Files.deleteIfExists(path);
 	}
 	

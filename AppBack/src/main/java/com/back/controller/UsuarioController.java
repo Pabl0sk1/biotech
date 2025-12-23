@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import com.back.entity.Usuario;
 import com.back.service.UsuarioService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping(path = "/api/user")

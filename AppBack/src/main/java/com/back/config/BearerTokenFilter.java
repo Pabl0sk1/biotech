@@ -28,7 +28,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 		
 		String path = request.getRequestURI();
-		if (!path.startsWith("/api/") || path.contains("/logo/") || path.contains("/profilepic/")) {
+		if (!path.startsWith("/api/")) {
 			filterChain.doFilter(request, response);
 	        return;
 	    }
