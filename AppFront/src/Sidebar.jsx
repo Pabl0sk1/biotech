@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { AddAccess } from './utils/AddAccess.js';
 import { getMenu } from './services/menu.service.js';
 import { HostLocation } from './utils/HostLocation';
-import { tienePermisoRuta } from './utils/RouteAccess.js';
+import { tieneAccesoModulo } from './utils/RouteAccess.js';
+import { getPermission } from './services/permiso.service.js';
 
 const Sidebar = ({
     userLog,
@@ -25,59 +26,61 @@ const Sidebar = ({
 
         const loadPermisos = async () => {
             const id = userLog?.tipousuario?.id;
+            const response = await getPermission('', '', '', `tipousuario.id:eq:${id}`);
+            const result = response.items;
 
             setPermisos({
                 perfil: {
-                    ok: await tienePermisoRuta(['sc08'], id),
+                    ok: tieneAccesoModulo(['sc08'], result),
                 },
                 catastros: {
-                    ok: await tienePermisoRuta(['ca01'], id),
-                    entidades: await tienePermisoRuta(['ca01'], id),
-                    productos: await tienePermisoRuta(['ca02'], id),
+                    ok: tieneAccesoModulo(['ca01'], result),
+                    entidades: tieneAccesoModulo(['ca01'], result),
+                    productos: tieneAccesoModulo(['ca02'], result),
                 },
                 configuraciones: {
                     generales: {
-                        ok: await tienePermisoRuta(['gr01', 'gr02', 'gr03', 'gr04', 'gr05', 'gr06'], id),
-                        fasecultivos: await tienePermisoRuta(['gr01'], id),
-                        monedas: await tienePermisoRuta(['gr02'], id),
-                        sucursales: await tienePermisoRuta(['gr03'], id),
-                        tributaciones: await tienePermisoRuta(['gr04'], id),
-                        zafras: await tienePermisoRuta(['gr05'], id),
-                        categorias: await tienePermisoRuta(['gr06'], id),
+                        ok: tieneAccesoModulo(['gr01', 'gr02', 'gr03', 'gr04', 'gr05', 'gr06'], result),
+                        fasecultivos: tieneAccesoModulo(['gr01'], result),
+                        monedas: tieneAccesoModulo(['gr02'], result),
+                        sucursales: tieneAccesoModulo(['gr03'], result),
+                        tributaciones: tieneAccesoModulo(['gr04'], result),
+                        zafras: tieneAccesoModulo(['gr05'], result),
+                        categorias: tieneAccesoModulo(['gr06'], result),
                     },
                     rrhh: {
-                        ok: await tienePermisoRuta(['rh01', 'rh02', 'rh03', 'rh04'], id),
-                        cargos: await tienePermisoRuta(['rh01'], id),
-                        modalidades: await tienePermisoRuta(['rh02'], id),
-                        turnos: await tienePermisoRuta(['rh03'], id),
-                        horasextras: await tienePermisoRuta(['rh04'], id),
+                        ok: tieneAccesoModulo(['rh01', 'rh02', 'rh03', 'rh04'], result),
+                        cargos: tieneAccesoModulo(['rh01'], result),
+                        modalidades: tieneAccesoModulo(['rh02'], result),
+                        turnos: tieneAccesoModulo(['rh03'], result),
+                        horasextras: tieneAccesoModulo(['rh04'], result),
                     },
                     comerciales: {
-                        ok: await tienePermisoRuta(['cm01'], id),
-                        carteras: await tienePermisoRuta(['cm01'], id),
-                        nombrecomerciales: await tienePermisoRuta(['cm02'], id),
+                        ok: tieneAccesoModulo(['cm01'], result),
+                        carteras: tieneAccesoModulo(['cm01'], result),
+                        nombrecomerciales: tieneAccesoModulo(['cm02'], result),
                     },
                     productos: {
-                        ok: await tienePermisoRuta(['pr02', 'pr03', 'pr04'], id),
-                        grupoproductos: await tienePermisoRuta(['pr01'], id),
-                        medidas: await tienePermisoRuta(['pr02'], id),
-                        principioactivos: await tienePermisoRuta(['pr03'], id),
-                        clases: await tienePermisoRuta(['pr04'], id),
+                        ok: tieneAccesoModulo(['pr02', 'pr03', 'pr04'], result),
+                        grupoproductos: tieneAccesoModulo(['pr01'], result),
+                        medidas: tieneAccesoModulo(['pr02'], result),
+                        principioactivos: tieneAccesoModulo(['pr03'], result),
+                        clases: tieneAccesoModulo(['pr04'], result),
                     }
                 },
                 seguridad: {
-                    ok: await tienePermisoRuta(['sc01', 'sc02', 'sc03', 'sc04', 'sc05', 'sc06', 'sc07', 'sc09'], id),
-                    accesos: await tienePermisoRuta(['sc01'], id),
-                    modulos: await tienePermisoRuta(['sc02'], id),
-                    roles: await tienePermisoRuta(['sc03'], id),
-                    tokens: await tienePermisoRuta(['sc04'], id),
-                    permisos: await tienePermisoRuta(['sc05'], id),
-                    usuarios: await tienePermisoRuta(['sc06'], id),
-                    menus: await tienePermisoRuta(['sc07'], id),
-                    contrasenha: await tienePermisoRuta(['sc09'], id),
+                    ok: tieneAccesoModulo(['sc01', 'sc02', 'sc03', 'sc04', 'sc05', 'sc06', 'sc07', 'sc09'], result),
+                    accesos: tieneAccesoModulo(['sc01'], result),
+                    modulos: tieneAccesoModulo(['sc02'], result),
+                    roles: tieneAccesoModulo(['sc03'], result),
+                    tokens: tieneAccesoModulo(['sc04'], result),
+                    permisos: tieneAccesoModulo(['sc05'], result),
+                    usuarios: tieneAccesoModulo(['sc06'], result),
+                    menus: tieneAccesoModulo(['sc07'], result),
+                    contrasenha: tieneAccesoModulo(['sc09'], result),
                 },
                 empresa: {
-                    ok: await tienePermisoRuta(['sc10'], id),
+                    ok: tieneAccesoModulo(['sc10'], result),
                 },
             });
         };

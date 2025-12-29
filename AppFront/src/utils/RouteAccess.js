@@ -12,3 +12,15 @@ export const tienePermisoRuta = async (moduloVar, id) => {
         return permiso?.puedeconsultar === true;
     });
 };
+
+export const tieneAccesoModulo = (modulos, lista) => {
+    if (!Array.isArray(modulos) || !Array.isArray(lista)) return false;
+
+    const setModulos = new Set(
+        modulos.map(m => m.toLowerCase().trim())
+    );
+
+    return lista.some(p =>
+        setModulos.has(p.modulo.var.toLowerCase().trim())
+    );
+};
