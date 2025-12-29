@@ -6,7 +6,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -21,12 +20,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-	name = "tipoturnos", 
-	uniqueConstraints = {
-			@UniqueConstraint(columnNames = {"tipo"}, name = "tipoturno_uq1")
-	}
-)
+@Table(name = "tipoturnos")
 public class TipoTurno {
 
 	@Id

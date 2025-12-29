@@ -7,6 +7,7 @@ import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
+import AutocompleteSelect from '../AutocompleteSelect.jsx';
 
 export const CarteraApp = ({ userLog }) => {
 
@@ -72,9 +73,7 @@ export const CarteraApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        entidad: {
-            id: 0
-        },
+        entidad: null,
         nombre: "",
         region: "",
         erpid: 0
@@ -344,32 +343,29 @@ export const CarteraApp = ({ userLog }) => {
                                                 <label htmlFor="entidad" className="form-label m-0 mb-2">Vendedor</label>
                                                 <i style={{ cursor: puedeCrearEntidad ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearEntidad ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearEntidad) navigate('/home/cadastres/entities');
+                                                    onClick={async () => {
+                                                        if (puedeCrearEntidad) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Entidades')
+                                                            navigate('/home/cadastres/entities');
+                                                        }
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="entidad"
-                                                    id='entidad'
-                                                    value={carteraAGuardar.entidad ? carteraAGuardar.entidad.id : ''}
-                                                    onChange={(event) => {
-                                                        const selectedVendedor = vendedores.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={vendedores}
+                                                    value={carteraAGuardar.entidad}
+                                                    getLabel={(v) => v.nomape}
+                                                    searchFields={[
+                                                        v => v.nomape,
+                                                        v => v.nrodoc
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setCarteraAGuardar({
                                                             ...carteraAGuardar,
-                                                            entidad: selectedVendedor
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un vendedor...</option>
-                                                    {vendedores.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.nomape}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El vendedor es obligatorio.
-                                                </div>
+                                                            entidad: v
+                                                        })
+                                                    }
+                                                    required={true}
+                                                />
                                             </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}

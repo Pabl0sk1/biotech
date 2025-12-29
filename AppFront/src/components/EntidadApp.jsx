@@ -13,6 +13,7 @@ import { FiltroModal } from '../FiltroModal.jsx';
 import { DateHourFormat } from '../utils/DateHourFormat.js';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
+import AutocompleteSelect from '../AutocompleteSelect.jsx';
 
 export const EntidadApp = ({ userLog }) => {
 
@@ -90,18 +91,10 @@ export const EntidadApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        cargo: {
-            id: 0
-        },
-        sucursal: {
-            id: 0
-        },
-        cartera: {
-            id: 0
-        },
-        tipoentidad: {
-            id: 0
-        },
+        cargo: null,
+        sucursal: null,
+        cartera: null,
+        tipoentidad: null,
         nomape: "",
         nombre: "",
         apellido: "",
@@ -254,8 +247,7 @@ export const EntidadApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         let sw = 0;
-        if (!entidadAGuardar.sucursal) sw = 1;
-        if (!entidadAGuardar.cargo.cargo || entidadAGuardar.cargo.cargo.trim() === '') sw = 1;
+        if (!entidadAGuardar.tipoentidad || !entidadAGuardar.nombre || !entidadAGuardar.apellido) sw = 1;
 
         if (sw === 1) {
             event.stopPropagation();
@@ -586,55 +578,53 @@ export const EntidadApp = ({ userLog }) => {
                                                 <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
                                                 <i style={{ cursor: puedeCrearCargo ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCargo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearCargo) navigate('/home/config/rrhh/positions');
+                                                    onClick={async () => {
+                                                        if (puedeCrearCargo) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Cargos')
+                                                            navigate('/home/config/rrhh/positions')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="cargo"
-                                                    id='cargo'
-                                                    value={entidadAGuardar.cargo ? entidadAGuardar.cargo.id : ''}
-                                                    onChange={(event) => {
-                                                        const selected = cargos.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={cargos}
+                                                    value={entidadAGuardar.cargo}
+                                                    getLabel={(v) => v.cargo}
+                                                    searchFields={[
+                                                        v => v.cargo
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setEntidadAGuardar({
                                                             ...entidadAGuardar,
-                                                            cargo: selected
-                                                        });
-                                                    }}
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un cargo...</option>
-                                                    {cargos.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.cargo}</option>
-                                                    ))}
-                                                </select>
+                                                            cargo: v
+                                                        })
+                                                    }
+                                                />
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="cartera" className="form-label m-0 mb-2">Cartera</label>
                                                 <i style={{ cursor: puedeCrearCartera ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCartera ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearCartera) navigate('/home/config/commercial/wallets');
+                                                    onClick={async () => {
+                                                        if (puedeCrearCartera) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Carteras')
+                                                            navigate('/home/config/commercial/wallets')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="cartera"
-                                                    id='cartera'
-                                                    value={entidadAGuardar.cartera ? entidadAGuardar.cartera.id : ''}
-                                                    onChange={(event) => {
-                                                        const selected = carteras.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={carteras}
+                                                    value={entidadAGuardar.cartera}
+                                                    getLabel={(v) => v.nombre}
+                                                    searchFields={[
+                                                        v => v.nombre
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setEntidadAGuardar({
                                                             ...entidadAGuardar,
-                                                            cartera: selected
-                                                        });
-                                                    }}
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una cartera...</option>
-                                                    {carteras.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.nombre}</option>
-                                                    ))}
-                                                </select>
+                                                            cartera: v
+                                                        })
+                                                    }
+                                                />
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
@@ -731,59 +721,54 @@ export const EntidadApp = ({ userLog }) => {
                                                 <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
                                                 <i style={{ cursor: puedeCrearSucursal ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSucursal ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearSucursal) navigate('/home/config/general/branchs');
+                                                    onClick={async () => {
+                                                        if (puedeCrearSucursal) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Sucursales')
+                                                            navigate('/home/config/general/branchs')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="sucursal"
-                                                    id='sucursal'
-                                                    value={entidadAGuardar.sucursal ? entidadAGuardar.sucursal.id : ''}
-                                                    onChange={(event) => {
-                                                        const selected = sucursales.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={sucursales}
+                                                    value={entidadAGuardar.sucursal}
+                                                    getLabel={(v) => v.sucursal}
+                                                    searchFields={[
+                                                        v => v.sucursal
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setEntidadAGuardar({
                                                             ...entidadAGuardar,
-                                                            sucursal: selected
-                                                        });
-                                                    }}
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
-                                                    {sucursales.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
-                                                    ))}
-                                                </select>
+                                                            sucursal: v
+                                                        })
+                                                    }
+                                                />
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="categoria" className="form-label m-0 mb-2">Categoría</label>
                                                 <i style={{ cursor: puedeCrearCategoria ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCategoria ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearCategoria) navigate('/home/config/general/categories');
+                                                    onClick={async () => {
+                                                        if (puedeCrearCategoria) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Categorias')
+                                                            navigate('/home/config/general/categories')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="categoria"
-                                                    id='categoria'
-                                                    value={entidadAGuardar.tipoentidad ? entidadAGuardar.tipoentidad.id : ''}
-                                                    onChange={(event) => {
-                                                        const selected = categorias.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={categorias}
+                                                    value={entidadAGuardar.tipoentidad}
+                                                    getLabel={(v) => v.tipoentidad}
+                                                    searchFields={[
+                                                        v => v.tipoentidad
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setEntidadAGuardar({
                                                             ...entidadAGuardar,
-                                                            tipoentidad: selected
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una categoría...</option>
-                                                    {categorias.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.tipoentidad}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La categoría es obligatoria.
-                                                </div>
+                                                            tipoentidad: v
+                                                        })
+                                                    }
+                                                    required={true}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -977,7 +962,7 @@ export const EntidadApp = ({ userLog }) => {
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
                                                     <td className='text-start'>{v.nomape}</td>
-                                                    <td>{v.sucursal.sucursal}</td>
+                                                    <td>{v.sucursal?.sucursal}</td>
                                                     <td className='text-end'>{v.nrodoc}</td>
                                                     <td>{DateHourFormat(v.fechanacimiento, 0)}</td>
                                                     <td style={{ width: '100px' }}>

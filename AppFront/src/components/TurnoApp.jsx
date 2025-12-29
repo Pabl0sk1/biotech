@@ -8,6 +8,7 @@ import { FiltroModal } from "../FiltroModal.jsx";
 import { HourFormat } from '../utils/DateHourFormat.js';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
+import AutocompleteSelect from '../AutocompleteSelect.jsx';
 
 export const TurnoApp = ({ userLog }) => {
 
@@ -78,9 +79,7 @@ export const TurnoApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        tipoturno: {
-            id: 0
-        },
+        tipoturno: null,
         descripcion: "",
         horaent: "00:00",
         horasal: "00:00",
@@ -483,32 +482,28 @@ export const TurnoApp = ({ userLog }) => {
                                                 <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
                                                 <i style={{ cursor: puedeCrearModalidad ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModalidad ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearModalidad) navigate('/home/config/rrhh/schedules');
+                                                    onClick={async () => {
+                                                        if (puedeCrearModalidad) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Modalidades')
+                                                            navigate('/home/config/rrhh/schedules')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="tipoturno"
-                                                    id='tipoturno'
-                                                    value={turnoAGuardar.tipoturno?.id ?? ''}
-                                                    onChange={(event) => {
-                                                        const selectedTipoTurno = modalidades.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={modalidades}
+                                                    value={turnoAGuardar.tipoturno}
+                                                    getLabel={(v) => v.tipo}
+                                                    searchFields={[
+                                                        v => v.tipo
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setTurnoAGuardar({
                                                             ...turnoAGuardar,
-                                                            tipoturno: selectedTipoTurno
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una modalidad...</option>
-                                                    {modalidades.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.tipo}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La modalidad es obligatoria.
-                                                </div>
+                                                            tipoturno: v
+                                                        })
+                                                    }
+                                                    required={true}
+                                                />
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="horasal" className="form-label m-0 mb-2">Horarío de Salida</label>

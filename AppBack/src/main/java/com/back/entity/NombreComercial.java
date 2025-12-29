@@ -8,7 +8,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -23,12 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-	name = "nombrecomerciales",
-	uniqueConstraints = {
-			@UniqueConstraint(columnNames = {"nombrecomercial"}, name = "nombrecomercial_uq1")
-	}
-)
+@Table(name = "nombrecomerciales")
 public class NombreComercial {
 	
 	@Id

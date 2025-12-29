@@ -7,6 +7,7 @@ import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
+import AutocompleteSelect from '../AutocompleteSelect.jsx';
 
 export const PermisoApp = ({ userLog }) => {
 
@@ -77,12 +78,8 @@ export const PermisoApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        tipousuario: {
-            id: 0
-        },
-        modulo: {
-            id: 0
-        },
+        tipousuario: null,
+        modulo: null,
         puedeconsultar: false,
         puedever: false,
         puedeagregar: false,
@@ -426,63 +423,55 @@ export const PermisoApp = ({ userLog }) => {
                                                 <label htmlFor="modulo" className="form-label m-0 mb-2">Modulo</label>
                                                 <i style={{ cursor: puedeCrearModulo ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModulo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearModulo) navigate('/home/security/modules');
+                                                    onClick={async () => {
+                                                        if (puedeCrearModulo) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Modulos')
+                                                            navigate('/home/security/modules')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="modulo"
-                                                    id='modulo'
-                                                    value={permisoAGuardar.modulo ? permisoAGuardar.modulo.id : ''}
-                                                    onChange={(event) => {
-                                                        const selectedModulo = modulos.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={modulos}
+                                                    value={permisoAGuardar.modulo}
+                                                    getLabel={(v) => v.moduloes}
+                                                    searchFields={[
+                                                        v => v.moduloes
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setPermisoAGuardar({
                                                             ...permisoAGuardar,
-                                                            modulo: selectedModulo
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un modulo...</option>
-                                                    {modulos.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.moduloes}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El modulo es obligatorio.
-                                                </div>
+                                                            modulo: v
+                                                        })
+                                                    }
+                                                    required={true}
+                                                />
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
                                                 <i style={{ cursor: puedeCrearRol ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearRol ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearRol) navigate('/home/security/roles');
+                                                    onClick={async () => {
+                                                        if (puedeCrearRol) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Roles')
+                                                            navigate('/home/security/roles')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="tipousuario"
-                                                    id='tipousuario'
-                                                    value={permisoAGuardar.tipousuario ? permisoAGuardar.tipousuario.id : ''}
-                                                    onChange={(event) => {
-                                                        const selectedTipousuario = roles.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={roles}
+                                                    value={permisoAGuardar.tipousuario}
+                                                    getLabel={(v) => v.tipousuario}
+                                                    searchFields={[
+                                                        v => v.tipousuario
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setPermisoAGuardar({
                                                             ...permisoAGuardar,
-                                                            tipousuario: selectedTipousuario
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un rol...</option>
-                                                    {roles.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.tipousuario}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El rol es obligatorio.
-                                                </div>
+                                                            tipousuario: v
+                                                        })
+                                                    }
+                                                    required={true}
+                                                />
                                             </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}

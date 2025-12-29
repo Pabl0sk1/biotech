@@ -13,7 +13,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -28,12 +27,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-	name = "grupoproductos",
-	uniqueConstraints = {
-			@UniqueConstraint(columnNames = {"grupoproducto"}, name = "grupoproducto_uq1")
-	}
-)
+@Table(name = "grupoproductos")
 public class GrupoProducto {
 	
 	@Id

@@ -8,6 +8,7 @@ import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
+import AutocompleteSelect from '../AutocompleteSelect.jsx';
 
 export const UsuarioApp = ({ userLog }) => {
 
@@ -86,12 +87,8 @@ export const UsuarioApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        tipousuario: {
-            id: 0
-        },
-        sucursal: {
-            id: 0
-        },
+        tipousuario: null,
+        sucursal: null,
         nombreusuario: "",
         contrasena: "",
         nomape: "",
@@ -173,7 +170,7 @@ export const UsuarioApp = ({ userLog }) => {
             await updateUser(usuarioActualizado.id, usuarioActualizado);
             await AddAccess('Modificar', usuarioActualizado.id, userLog, "Usuarios");
         } else {
-            const nuevoUsuario = await saveUser(formData);
+            const nuevoUsuario = await saveUser(usuarioActualizado);
             await AddAccess('Insertar', nuevoUsuario.saved.id, userLog, "Usuarios");
         }
         setUsuarioAGuardar(null);
@@ -591,32 +588,28 @@ export const UsuarioApp = ({ userLog }) => {
                                                 <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
                                                 <i style={{ cursor: puedeCrearSucursal ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSucursal ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearSucursal) navigate('/home/config/general/branchs');
+                                                    onClick={async () => {
+                                                        if (puedeCrearSucursal) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Sucursales')
+                                                            navigate('/home/config/general/branchs')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="sucursal"
-                                                    id='sucursal'
-                                                    value={usuarioAGuardar.sucursal ? usuarioAGuardar.sucursal.id : ''}
-                                                    onChange={(event) => {
-                                                        const selectedSucursal = sucursales.find(r => r.id === parseInt(event.target.value));
+                                                <AutocompleteSelect
+                                                    options={sucursales}
+                                                    value={usuarioAGuardar.sucursal}
+                                                    getLabel={(v) => v.sucursal}
+                                                    searchFields={[
+                                                        v => v.sucursal
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setUsuarioAGuardar({
                                                             ...usuarioAGuardar,
-                                                            sucursal: selectedSucursal
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
-                                                    {sucursales.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La sucursal es obligatorio.
-                                                </div>
+                                                            sucursal: v
+                                                        })
+                                                    }
+                                                    required={true}
+                                                />
                                             </div>
                                             {usuarioAGuardar.id === null && (
                                                 <div className='form-group mb-1'>
@@ -657,35 +650,28 @@ export const UsuarioApp = ({ userLog }) => {
                                                 <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
                                                 <i style={{ cursor: puedeCrearRol ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearRol ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={() => {
-                                                        if (puedeCrearRol) navigate('/home/security/roles');
+                                                    onClick={async () => {
+                                                        if (puedeCrearRol) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Roles')
+                                                            navigate('/home/security/roles')
+                                                        };
                                                     }}>
                                                 </i>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="tipousuario"
-                                                    id='tipousuario'
-                                                    value={usuarioAGuardar.tipousuario ? usuarioAGuardar.tipousuario.id : ''}
-                                                    onChange={(event) => {
-                                                        const id = parseInt(event.target.value);
-                                                        const selectedTipoUsuario = roles.find(
-                                                            r => r.id === id && r.id !== 1
-                                                        );
+                                                <AutocompleteSelect
+                                                    options={roles}
+                                                    value={usuarioAGuardar.tipousuario}
+                                                    getLabel={(v) => v.tipousuario}
+                                                    searchFields={[
+                                                        v => v.tipousuario
+                                                    ]}
+                                                    onChange={(v) =>
                                                         setUsuarioAGuardar({
                                                             ...usuarioAGuardar,
-                                                            tipousuario: selectedTipoUsuario
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un rol...</option>
-                                                    {roles.filter(tp => tp.id !== 1).map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.tipousuario}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El rol es obligatorio.
-                                                </div>
+                                                            tipousuario: v
+                                                        })
+                                                    }
+                                                    required={true}
+                                                />
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>

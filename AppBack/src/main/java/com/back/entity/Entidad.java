@@ -11,7 +11,6 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -26,12 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-	name = "entidades",
-	uniqueConstraints = {
-			@UniqueConstraint(columnNames = {"nrodoc"}, name = "entidad_uq1")
-	}
-)
+@Table(name = "entidades")
 public class Entidad {
 	
 	@Id

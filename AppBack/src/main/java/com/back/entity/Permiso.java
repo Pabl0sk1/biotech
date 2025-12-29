@@ -8,7 +8,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,12 +19,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-    name = "permisos",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"tipousuario_id", "modulo_id"}, name = "permiso_uq1")
-    }
-)
+@Table(name = "permisos")
 public class Permiso {
 	
 	@Id 
