@@ -6,9 +6,12 @@ import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { HourFormat } from '../utils/DateHourFormat.js';
+import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { useNavigate } from 'react-router-dom';
 
 export const TurnoApp = ({ userLog }) => {
 
+    const navigate = useNavigate();
     const [turnos, setTurnos] = useState([]);
     const [modalidades, setModalidades] = useState([]);
     const [detallesAEliminar, setDetallesAEliminar] = useState([]);
@@ -27,6 +30,19 @@ export const TurnoApp = ({ userLog }) => {
         order: "",
         filter: []
     });
+
+    const [puedeCrearModalidad, setPuedeCrearModalidad] = useState(false);
+
+    useEffect(() => {
+        const loadPermiso = async () => {
+            const ok1 = await tienePermisoRuta(['rh02'], userLog?.tipousuario?.id);
+            setPuedeCrearModalidad(ok1);
+        };
+
+        if (userLog?.tipousuario?.id) {
+            loadPermiso();
+        }
+    }, [userLog]);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -465,6 +481,12 @@ export const TurnoApp = ({ userLog }) => {
                                         <div className='col ms-5 ps-0'>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
+                                                <i style={{ cursor: puedeCrearModalidad ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModalidad ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearModalidad) navigate('/home/config/rrhh/schedules');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="tipoturno"

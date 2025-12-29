@@ -5,9 +5,12 @@ import { getModule } from '../services/modulo.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
+import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { useNavigate } from 'react-router-dom';
 
 export const PermisoApp = ({ userLog }) => {
 
+    const navigate = useNavigate();
     const [permisos, setPermisos] = useState([]);
     const [roles, setRoles] = useState([]);
     const [modulos, setModulos] = useState([]);
@@ -27,6 +30,22 @@ export const PermisoApp = ({ userLog }) => {
         order: "",
         filter: []
     });
+
+    const [puedeCrearRol, setPuedeCrearRol] = useState(false);
+    const [puedeCrearModulo, setPuedeCrearModulo] = useState(false);
+
+    useEffect(() => {
+        const loadPermiso = async () => {
+            const ok1 = await tienePermisoRuta(['sc03'], userLog?.tipousuario?.id);
+            setPuedeCrearRol(ok1);
+            const ok2 = await tienePermisoRuta(['sc02'], userLog?.tipousuario?.id);
+            setPuedeCrearModulo(ok2);
+        };
+
+        if (userLog?.tipousuario?.id) {
+            loadPermiso();
+        }
+    }, [userLog]);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -405,6 +424,12 @@ export const PermisoApp = ({ userLog }) => {
                                         <div className='col me-5 pe-0'>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="modulo" className="form-label m-0 mb-2">Modulo</label>
+                                                <i style={{ cursor: puedeCrearModulo ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModulo ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearModulo) navigate('/home/security/modules');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="modulo"
@@ -430,6 +455,12 @@ export const PermisoApp = ({ userLog }) => {
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
+                                                <i style={{ cursor: puedeCrearRol ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearRol ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearRol) navigate('/home/security/roles');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="tipousuario"

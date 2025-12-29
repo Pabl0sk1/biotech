@@ -11,9 +11,12 @@ import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { DateHourFormat } from '../utils/DateHourFormat.js';
+import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { useNavigate } from 'react-router-dom';
 
 export const EntidadApp = ({ userLog }) => {
 
+    const navigate = useNavigate();
     const [entidades, setEntidades] = useState([]);
     const [sucursales, setSucursales] = useState([]);
     const [cargos, setCargos] = useState([]);
@@ -26,10 +29,6 @@ export const EntidadApp = ({ userLog }) => {
     const [entidadAEliminar, setEntidadAEliminar] = useState(null);
     const [entidadNoEliminar, setEntidadNoEliminar] = useState(null);
     const [entidadAVisualizar, setEntidadAVisualizar] = useState(null);
-    const [sugerencias, setSugerencias] = useState([]);
-    const [indiceSeleccionado, setIndiceSeleccionado] = useState(-1);
-    const [cargoMsj, setCargoMsj] = useState('');
-    const [cargoError, setCargoError] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -38,6 +37,28 @@ export const EntidadApp = ({ userLog }) => {
         order: "",
         filter: []
     });
+
+    const [puedeCrearCargo, setPuedeCrearCargo] = useState(false);
+    const [puedeCrearSucursal, setPuedeCrearSucursal] = useState(false);
+    const [puedeCrearCartera, setPuedeCrearCartera] = useState(false);
+    const [puedeCrearCategoria, setPuedeCrearCategoria] = useState(false);
+
+    useEffect(() => {
+        const loadPermiso = async () => {
+            const ok1 = await tienePermisoRuta(['rh01'], userLog?.tipousuario?.id);
+            setPuedeCrearCargo(ok1);
+            const ok2 = await tienePermisoRuta(['gr03'], userLog?.tipousuario?.id);
+            setPuedeCrearSucursal(ok2);
+            const ok3 = await tienePermisoRuta(['cm01'], userLog?.tipousuario?.id);
+            setPuedeCrearCartera(ok3);
+            const ok4 = await tienePermisoRuta(['gr06'], userLog?.tipousuario?.id);
+            setPuedeCrearCategoria(ok4);
+        };
+
+        if (userLog?.tipousuario?.id) {
+            loadPermiso();
+        }
+    }, [userLog]);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -234,11 +255,7 @@ export const EntidadApp = ({ userLog }) => {
 
         let sw = 0;
         if (!entidadAGuardar.sucursal) sw = 1;
-        if (!entidadAGuardar.cargo.cargo || entidadAGuardar.cargo.cargo.trim() === '') {
-            setCargoMsj('El cargo es obligatorio.');
-            setCargoError(true);
-            sw = 1;
-        }
+        if (!entidadAGuardar.cargo.cargo || entidadAGuardar.cargo.cargo.trim() === '') sw = 1;
 
         if (sw === 1) {
             event.stopPropagation();
@@ -567,6 +584,12 @@ export const EntidadApp = ({ userLog }) => {
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
+                                                <i style={{ cursor: puedeCrearCargo ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCargo ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearCargo) navigate('/home/config/rrhh/positions');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="cargo"
@@ -588,6 +611,12 @@ export const EntidadApp = ({ userLog }) => {
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="cartera" className="form-label m-0 mb-2">Cartera</label>
+                                                <i style={{ cursor: puedeCrearCartera ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCartera ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearCartera) navigate('/home/config/commercial/wallets');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="cartera"
@@ -700,6 +729,12 @@ export const EntidadApp = ({ userLog }) => {
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                                <i style={{ cursor: puedeCrearSucursal ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSucursal ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearSucursal) navigate('/home/config/general/branchs');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="sucursal"
@@ -721,6 +756,12 @@ export const EntidadApp = ({ userLog }) => {
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="categoria" className="form-label m-0 mb-2">Categoría</label>
+                                                <i style={{ cursor: puedeCrearCategoria ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCategoria ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearCategoria) navigate('/home/config/general/categories');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="categoria"

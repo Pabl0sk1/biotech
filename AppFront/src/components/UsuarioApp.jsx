@@ -6,9 +6,12 @@ import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
+import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { useNavigate } from 'react-router-dom';
 
 export const UsuarioApp = ({ userLog }) => {
 
+    const navigate = useNavigate();
     const [nombreUsuarioMsj, setNombreUsuarioMsj] = useState('');
     const [nombreUsuarioError, setNombreUsuarioError] = useState(false);
     const [newPassMsj, setNewPassMsj] = useState('');
@@ -36,6 +39,22 @@ export const UsuarioApp = ({ userLog }) => {
         order: "",
         filter: []
     });
+
+    const [puedeCrearRol, setPuedeCrearRol] = useState(false);
+    const [puedeCrearSucursal, setPuedeCrearSucursal] = useState(false);
+
+    useEffect(() => {
+        const loadPermiso = async () => {
+            const ok1 = await tienePermisoRuta(['sc03'], userLog?.tipousuario?.id);
+            setPuedeCrearRol(ok1);
+            const ok2 = await tienePermisoRuta(['gr03'], userLog?.tipousuario?.id);
+            setPuedeCrearSucursal(ok2);
+        };
+
+        if (userLog?.tipousuario?.id) {
+            loadPermiso();
+        }
+    }, [userLog]);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -568,6 +587,37 @@ export const UsuarioApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El correo es obligatorio y no debe sobrepasar los 30 caracteres.
                                                 </div>
                                             </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
+                                                <i style={{ cursor: puedeCrearSucursal ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSucursal ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearSucursal) navigate('/home/config/general/branchs');
+                                                    }}>
+                                                </i>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="sucursal"
+                                                    id='sucursal'
+                                                    value={usuarioAGuardar.sucursal ? usuarioAGuardar.sucursal.id : ''}
+                                                    onChange={(event) => {
+                                                        const selectedSucursal = sucursales.find(r => r.id === parseInt(event.target.value));
+                                                        setUsuarioAGuardar({
+                                                            ...usuarioAGuardar,
+                                                            sucursal: selectedSucursal
+                                                        });
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
+                                                    {sucursales.map((tp) => (
+                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La sucursal es obligatorio.
+                                                </div>
+                                            </div>
                                             {usuarioAGuardar.id === null && (
                                                 <div className='form-group mb-1'>
                                                     <label htmlFor="contrasena" className="form-label m-0 mb-2">Contraseña</label>
@@ -600,36 +650,17 @@ export const UsuarioApp = ({ userLog }) => {
                                                     )}
                                                 </div>
                                             )}
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="sucursal"
-                                                    id='sucursal'
-                                                    value={usuarioAGuardar.sucursal ? usuarioAGuardar.sucursal.id : ''}
-                                                    onChange={(event) => {
-                                                        const selectedSucursal = sucursales.find(r => r.id === parseInt(event.target.value));
-                                                        setUsuarioAGuardar({
-                                                            ...usuarioAGuardar,
-                                                            sucursal: selectedSucursal
-                                                        });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una sucursal...</option>
-                                                    {sucursales.map((tp) => (
-                                                        <option key={tp.id} value={tp.id}>{tp.sucursal}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La sucursal es obligatorio.
-                                                </div>
-                                            </div>
                                         </div>
                                         {/*Columna 2 de guardar*/}
                                         <div className='col ms-5 me-5 p-0'>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
+                                                <i style={{ cursor: puedeCrearRol ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearRol ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearRol) navigate('/home/security/roles');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="tipousuario"
@@ -698,6 +729,25 @@ export const UsuarioApp = ({ userLog }) => {
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
+                                                <select
+                                                    className="form-select border-input w-100"
+                                                    name="estado"
+                                                    id='estado'
+                                                    value={usuarioAGuardar.estado ? usuarioAGuardar.estado : ''}
+                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
+                                                    disabled={!usuarioAGuardar.id}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
+                                                    <option key={1} value={'Activo'}>Activo</option>
+                                                    <option key={2} value={'Inactivo'}>Inactivo</option>
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
+                                                </div>
+                                            </div>
                                             {usuarioAGuardar.id === null && (
                                                 <div className='form-group mb-1'>
                                                     <label htmlFor="repetircontrasena" className="form-label m-0 mb-2">Repetir Contraseña</label>
@@ -729,25 +779,6 @@ export const UsuarioApp = ({ userLog }) => {
                                                     )}
                                                 </div>
                                             )}
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
-                                                <select
-                                                    className="form-select border-input w-100"
-                                                    name="estado"
-                                                    id='estado'
-                                                    value={usuarioAGuardar.estado ? usuarioAGuardar.estado : ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    disabled={!usuarioAGuardar.id}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
-                                                    <option key={1} value={'Activo'}>Activo</option>
-                                                    <option key={2} value={'Inactivo'}>Inactivo</option>
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
-                                                </div>
-                                            </div>
                                         </div>
                                         {/*Columna 3 de visualizar*/}
                                         <div className='col ps-0'>

@@ -3,20 +3,87 @@ import { useEffect, useState } from 'react';
 import { AddAccess } from './utils/AddAccess.js';
 import { getMenu } from './services/menu.service.js';
 import { HostLocation } from './utils/HostLocation';
+import { tienePermisoRuta } from './utils/RouteAccess.js';
 
 const Sidebar = ({
     userLog,
     isSidebarVisible,
-    handleLogoutClick,
-    permisos
+    handleLogoutClick
 }) => {
     const UrlLocal = '/home';
-    const [hoveredItem, setHoveredItem] = useState(null);
-    const [menus, setMenus] = useState([]);
+
     const [isSeguridadMenuOpen, setIsSeguridadMenuOpen] = useState(false);
     const [isCatastrosMenuOpen, setIsCatastrosMenuOpen] = useState(false);
     const [isConfiguracionesMenuOpen, setIsConfiguracionesMenuOpen] = useState(false);
     const [avatar, setAvatar] = useState(null);
+    const [hoveredItem, setHoveredItem] = useState(null);
+    const [menus, setMenus] = useState([]);
+    const [permisos, setPermisos] = useState({});
+
+    useEffect(() => {
+        if (!userLog?.tipousuario?.id) return;
+
+        const loadPermisos = async () => {
+            const id = userLog?.tipousuario?.id;
+
+            setPermisos({
+                perfil: {
+                    ok: await tienePermisoRuta(['sc08'], id),
+                },
+                catastros: {
+                    ok: await tienePermisoRuta(['ca01'], id),
+                    entidades: await tienePermisoRuta(['ca01'], id),
+                    productos: await tienePermisoRuta(['ca02'], id),
+                },
+                configuraciones: {
+                    generales: {
+                        ok: await tienePermisoRuta(['gr01', 'gr02', 'gr03', 'gr04', 'gr05', 'gr06'], id),
+                        fasecultivos: await tienePermisoRuta(['gr01'], id),
+                        monedas: await tienePermisoRuta(['gr02'], id),
+                        sucursales: await tienePermisoRuta(['gr03'], id),
+                        tributaciones: await tienePermisoRuta(['gr04'], id),
+                        zafras: await tienePermisoRuta(['gr05'], id),
+                        categorias: await tienePermisoRuta(['gr06'], id),
+                    },
+                    rrhh: {
+                        ok: await tienePermisoRuta(['rh01', 'rh02', 'rh03', 'rh04'], id),
+                        cargos: await tienePermisoRuta(['rh01'], id),
+                        modalidades: await tienePermisoRuta(['rh02'], id),
+                        turnos: await tienePermisoRuta(['rh03'], id),
+                        horasextras: await tienePermisoRuta(['rh04'], id),
+                    },
+                    comerciales: {
+                        ok: await tienePermisoRuta(['cm01'], id),
+                        carteras: await tienePermisoRuta(['cm01'], id),
+                        nombrecomerciales: await tienePermisoRuta(['cm02'], id),
+                    },
+                    productos: {
+                        ok: await tienePermisoRuta(['pr02', 'pr03', 'pr04'], id),
+                        grupoproductos: await tienePermisoRuta(['pr01'], id),
+                        medidas: await tienePermisoRuta(['pr02'], id),
+                        principioactivos: await tienePermisoRuta(['pr03'], id),
+                        clases: await tienePermisoRuta(['pr04'], id),
+                    }
+                },
+                seguridad: {
+                    ok: await tienePermisoRuta(['sc01', 'sc02', 'sc03', 'sc04', 'sc05', 'sc06', 'sc07', 'sc09'], id),
+                    accesos: await tienePermisoRuta(['sc01'], id),
+                    modulos: await tienePermisoRuta(['sc02'], id),
+                    roles: await tienePermisoRuta(['sc03'], id),
+                    tokens: await tienePermisoRuta(['sc04'], id),
+                    permisos: await tienePermisoRuta(['sc05'], id),
+                    usuarios: await tienePermisoRuta(['sc06'], id),
+                    menus: await tienePermisoRuta(['sc07'], id),
+                    contrasenha: await tienePermisoRuta(['sc09'], id),
+                },
+                empresa: {
+                    ok: await tienePermisoRuta(['sc10'], id),
+                },
+            });
+        };
+
+        loadPermisos();
+    }, [userLog]);
 
     useEffect(() => {
         const load = async () => {
@@ -28,17 +95,6 @@ const Sidebar = ({
         const BACKEND_URL = HostLocation(1);
         if (userLog?.imagenurl) setAvatar(BACKEND_URL + "/biotech" + userLog?.imagenurl);
     }, []);
-
-    const tienePermisoRuta = (moduloVar) => {
-        if (!permisos) return false;
-
-        return moduloVar.some(mod => {
-            const permiso = permisos.find(
-                p => p.modulo.var.toLowerCase().trim() === mod.toLowerCase().trim()
-            );
-            return permiso?.puedeconsultar === true;
-        });
-    };
 
     const toggleMenu = (menu) => {
         setIsSeguridadMenuOpen(menu === 'seguridad' ? !isSeguridadMenuOpen : false);
@@ -89,9 +145,11 @@ const Sidebar = ({
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Link className="perfilBtn"
-                        to={tienePermisoRuta(['sc08']) ? UrlLocal + '/profile' : ''}
-                        onClick={async () => { tienePermisoRuta(['sc08']) ? await AddAccess('Modificar', 0, userLog, 'Perfil') : '' }}
-                        style={{ cursor: tienePermisoRuta(['sc08']) ? 'pointer' : 'default' }}
+                        to={permisos.perfil?.ok ? UrlLocal + '/profile' : ''}
+                        onClick={() => {
+                            if (permisos.perfil?.ok) AddAccess('Modificar', 0, userLog, 'Perfil');
+                        }}
+                        style={{ cursor: permisos.perfil?.ok ? 'pointer' : 'default' }}
                     >
                         {avatar ? (
                             <img
@@ -127,7 +185,7 @@ const Sidebar = ({
             <div style={{ padding: '16px 0', overflowY: 'auto', height: 'calc(100vh - 120px)' }}>
                 <nav>
                     {/* Catastros */}
-                    {tienePermisoRuta(['ca01', 'ca02']) && (
+                    {permisos.catastros?.ok && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
                                 onClick={() => toggleMenu('catastros')}
@@ -167,7 +225,7 @@ const Sidebar = ({
                                 overflow: 'hidden',
                                 transition: 'max-height 0.3s ease',
                             }}>
-                                {tienePermisoRuta(['ca01']) && (
+                                {permisos.catastros.entidades && (
                                     <Link
                                         to={UrlLocal + '/cadastres/entities'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Entidades')}
@@ -192,7 +250,7 @@ const Sidebar = ({
                     )}
 
                     {/* Generales */}
-                    {tienePermisoRuta(['gr01', 'gr02', 'gr03', 'gr04', 'gr05', 'gr06', 'rh01', 'rh02', 'rh03', 'rh04', 'cm01', 'cm02', 'pr01', 'pr02', 'pr03', 'pr04']) && (
+                    {permisos.configuraciones?.generales?.ok && permisos.configuraciones?.rrhh?.ok && permisos.configuraciones?.comerciales?.ok && permisos.configuraciones?.productos?.ok && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
                                 onClick={() => toggleMenu('configuraciones')}
@@ -232,7 +290,7 @@ const Sidebar = ({
                                 overflow: 'hidden',
                                 transition: 'max-height 0.3s ease',
                             }}>
-                                {tienePermisoRuta(['gr01']) && (
+                                {permisos.configuraciones.generales.fasecultivos && (
                                     <Link
                                         to={UrlLocal + '/config/general/crops'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Fase de Cultivos')}
@@ -252,7 +310,7 @@ const Sidebar = ({
                                         Fase de Cultivos<div className='recurso'>GR01</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['gr02']) && (
+                                {permisos.configuraciones.generales.monedas && (
                                     <Link
                                         to={UrlLocal + '/config/general/currencies'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Monedas')}
@@ -272,7 +330,7 @@ const Sidebar = ({
                                         Monedas<div className='recurso'>GR02</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['gr03']) && (
+                                {permisos.configuraciones.generales.sucursales && (
                                     <Link
                                         to={UrlLocal + '/config/general/branchs'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Sucursales')}
@@ -292,7 +350,7 @@ const Sidebar = ({
                                         Sucursales<div className='recurso'>GR03</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['gr04']) && (
+                                {permisos.configuraciones.generales.tributaciones && (
                                     <Link
                                         to={UrlLocal + '/config/general/taxations'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Tributaciones')}
@@ -312,7 +370,7 @@ const Sidebar = ({
                                         Tributaciones<div className='recurso'>GR04</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['gr05']) && (
+                                {permisos.configuraciones.generales.zafras && (
                                     <Link
                                         to={UrlLocal + '/config/general/harvests'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Zafras')}
@@ -332,7 +390,7 @@ const Sidebar = ({
                                         Zafras<div className='recurso'>GR05</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['gr06']) && (
+                                {permisos.configuraciones.generales.categorias && (
                                     <Link
                                         to={UrlLocal + '/config/general/categories'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Categorias')}
@@ -352,7 +410,7 @@ const Sidebar = ({
                                         Categorías<div className='recurso'>GR06</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['rh01']) && (
+                                {permisos.configuraciones.rrhh.cargos && (
                                     <Link
                                         to={UrlLocal + '/config/rrhh/positions'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Cargos')}
@@ -372,7 +430,7 @@ const Sidebar = ({
                                         Cargos<div className='recurso'>RH01</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['rh02']) && (
+                                {permisos.configuraciones.rrhh.modalidades && (
                                     <Link
                                         to={UrlLocal + '/config/rrhh/schedules'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Modalidades')}
@@ -392,7 +450,7 @@ const Sidebar = ({
                                         Modalidades<div className='recurso'>RH02</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['rh03']) && (
+                                {permisos.configuraciones.rrhh.turnos && (
                                     <Link
                                         to={UrlLocal + '/config/rrhh/shifts'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Turnos')}
@@ -412,7 +470,7 @@ const Sidebar = ({
                                         Turnos<div className='recurso'>RH03</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['rh04']) && (
+                                {permisos.configuraciones.rrhh.horasextras && (
                                     <Link
                                         to={UrlLocal + '/config/rrhh/calcext'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Horas Extras')}
@@ -432,7 +490,7 @@ const Sidebar = ({
                                         Horas Extras<div className='recurso'>RH04</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['cm01']) && (
+                                {permisos.configuraciones.comerciales.carteras && (
                                     <Link
                                         to={UrlLocal + '/config/commercial/wallets'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Carteras')}
@@ -452,7 +510,7 @@ const Sidebar = ({
                                         Carteras<div className='recurso'>CM01</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['pr02']) && (
+                                {permisos.configuraciones.productos.medidas && (
                                     <Link
                                         to={UrlLocal + '/config/product/measures'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Medidas')}
@@ -472,7 +530,7 @@ const Sidebar = ({
                                         Medidas<div className='recurso'>PR02</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['pr03']) && (
+                                {permisos.configuraciones.productos.principioactivos && (
                                     <Link
                                         to={UrlLocal + '/config/product/assets'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Principios Activos')}
@@ -492,7 +550,7 @@ const Sidebar = ({
                                         Principios Activos<div className='recurso'>PR03</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['pr04']) && (
+                                {permisos.configuraciones.productos.clases && (
                                     <Link
                                         to={UrlLocal + '/config/product/classes'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Clases')}
@@ -517,7 +575,7 @@ const Sidebar = ({
                     )}
 
                     {/* Seguridad */}
-                    {tienePermisoRuta(['sc01', 'sc02', 'sc03', 'sc04', 'sc05', 'sc06', 'sc07', 'sc09']) && (
+                    {permisos.seguridad?.ok && (
                         <div style={{ marginBottom: '8px' }}>
                             <button
                                 onClick={() => toggleMenu('seguridad')}
@@ -557,7 +615,7 @@ const Sidebar = ({
                                 overflow: 'hidden',
                                 transition: 'max-height 0.3s ease',
                             }}>
-                                {tienePermisoRuta(['sc01']) && (
+                                {permisos.seguridad.accesos && (
                                     <Link
                                         to={UrlLocal + '/security/access'}
                                         onMouseEnter={() => setHoveredItem('accesos')}
@@ -576,7 +634,7 @@ const Sidebar = ({
                                         Accesos<div className='recurso'>SC01</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['sc02']) && (
+                                {permisos.seguridad.modulos && (
                                     <Link
                                         to={UrlLocal + '/security/modules'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Modulos')}
@@ -596,7 +654,7 @@ const Sidebar = ({
                                         Modulos<div className='recurso'>SC02</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['sc03']) && (
+                                {permisos.seguridad.roles && (
                                     <Link
                                         to={UrlLocal + '/security/roles'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Roles')}
@@ -616,7 +674,7 @@ const Sidebar = ({
                                         Roles<div className='recurso'>SC03</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['sc04']) && (
+                                {permisos.seguridad.tokens && (
                                     <Link
                                         to={UrlLocal + '/security/tokens'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Tokens')}
@@ -636,7 +694,7 @@ const Sidebar = ({
                                         Tokens<div className='recurso'>SC04</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['sc05']) && (
+                                {permisos.seguridad.permisos && (
                                     <Link
                                         to={UrlLocal + '/security/permissions'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Permisos')}
@@ -656,7 +714,7 @@ const Sidebar = ({
                                         Permisos<div className='recurso'>SC05</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['sc06']) && (
+                                {permisos.seguridad.usuarios && (
                                     <Link
                                         to={UrlLocal + '/security/users'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Usuarios')}
@@ -676,7 +734,7 @@ const Sidebar = ({
                                         Usuarios<div className='recurso'>SC06</div>
                                     </Link>
                                 )}
-                                {tienePermisoRuta(['sc09']) && (
+                                {permisos.seguridad.contrasenha && (
                                     <Link
                                         to={UrlLocal + '/security/changepassword'}
                                         onClick={async () => await AddAccess('Consultar', 0, userLog, 'Contraseña')}
@@ -707,8 +765,8 @@ const Sidebar = ({
                         margin: '16px 20px',
                     }}></div>
 
-                    {/* Opciones de usuario */}
-                    {tienePermisoRuta(['sc10']) && (
+                    {/* Configuración de empresa */}
+                    {permisos.empresa?.ok && (
                         <Link
                             to={UrlLocal + '/company'}
                             onClick={async () => await AddAccess('Modificar', 0, userLog, 'Empresa')}

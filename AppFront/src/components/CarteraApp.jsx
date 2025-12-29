@@ -5,9 +5,12 @@ import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { useNavigate } from 'react-router-dom';
 
 export const CarteraApp = ({ userLog }) => {
 
+    const navigate = useNavigate();
     const [carteras, setCarteras] = useState([]);
     const [vendedores, setVendedores] = useState([]);
     const [permiso, setPermiso] = useState({});
@@ -25,6 +28,19 @@ export const CarteraApp = ({ userLog }) => {
         order: "",
         filter: []
     });
+
+    const [puedeCrearEntidad, setPuedeCrearEntidad] = useState(false);
+
+    useEffect(() => {
+        const loadPermiso = async () => {
+            const ok1 = await tienePermisoRuta(['ca01'], userLog?.tipousuario?.id);
+            setPuedeCrearEntidad(ok1);
+        };
+
+        if (userLog?.tipousuario?.id) {
+            loadPermiso();
+        }
+    }, [userLog]);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -326,6 +342,12 @@ export const CarteraApp = ({ userLog }) => {
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="entidad" className="form-label m-0 mb-2">Vendedor</label>
+                                                <i style={{ cursor: puedeCrearEntidad ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearEntidad ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={() => {
+                                                        if (puedeCrearEntidad) navigate('/home/cadastres/entities');
+                                                    }}>
+                                                </i>
                                                 <select
                                                     className="form-select border-input w-100"
                                                     name="entidad"

@@ -2,22 +2,11 @@ import { useState, useEffect } from 'react';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 import { AddAccess } from './utils/AddAccess.js';
-import { getPermission } from './services/permiso.service.js';
 
 export const Menu = ({ userLog, setUserLog }) => {
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-    const [permisos, setPermisos] = useState([]);
-
-    const recuperarPermisos = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario.id}`);
-        setPermisos(response.items);
-    }
-
-    useEffect(() => {
-        recuperarPermisos();
-    }, []);
 
     useEffect(() => {
         let timeoutId;
@@ -130,7 +119,6 @@ export const Menu = ({ userLog, setUserLog }) => {
                     userLog={userLog}
                     isSidebarVisible={isSidebarVisible}
                     handleLogoutClick={handleLogoutClick}
-                    permisos={permisos}
                 />
                 {userLog?.vermapa && userLog?.sucursal?.id == 13 && (
                     <iframe title="Informe_Mapa_000" className='map-box' src="https://app.powerbi.com/reportEmbed?reportId=0e941ed0-c4cb-41ee-bb1b-2c6ab4286769&autoAuth=true&ctid=40624d4e-58ff-4299-b81f-b7b4ff748c91"></iframe>
