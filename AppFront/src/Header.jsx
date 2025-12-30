@@ -28,7 +28,7 @@ export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebar
                         {userLog?.tipousuario?.tipousuario}
                     </span>
 
-                    <small className="text-muted">{userLog.nombreusuario}</small>
+                    <small className="text-muted">{userLog?.nombreusuario}</small>
                 </div>
                 <Link to="https://biotech.biosafrasgroup.com.py/docs" className='p-0 me-2'>
                     <img
