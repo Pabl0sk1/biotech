@@ -1,6 +1,7 @@
 package com.back.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import com.back.config.RestQueryErp;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Entidad;
 import com.back.repository.EntidadRepository;
@@ -21,6 +23,12 @@ public class EntidadService {
 
 	@Autowired
 	EntidadRepository rep;
+	
+	private final RestQueryErp rest;
+	
+	public EntidadService(RestQueryErp rest) {
+        this.rest = rest;
+    }
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
@@ -102,6 +110,12 @@ public class EntidadService {
 			throw new RuntimeException("No se encontro la entidad con ID: " + id);
 		}
 
+	}
+	
+	public void actualizarErp() {
+		
+		List<Map<String, Object>> data = rest.fetchAll("BA31");
+		
 	}
 	
 }
