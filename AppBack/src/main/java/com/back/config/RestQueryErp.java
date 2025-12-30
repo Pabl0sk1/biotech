@@ -17,7 +17,7 @@ public class RestQueryErp {
 	
 	private static final String BASE_URL = "https://app.versat.ag/api/Polling/Data?";
 	
-	@Value("${VERSAT_TOKEN}")
+	@Value("${versat.token}")
 	private String token;
 	
 	private final RestTemplate restTemplate = new RestTemplate();

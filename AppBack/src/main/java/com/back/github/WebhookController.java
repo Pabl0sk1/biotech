@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class WebhookController {
 	
-	@Value("${WEBHOOK_SECRET}")
+	@Value("${webhook.secret}")
     private String webhookSecret;
 
     @PostMapping("/webhook")
