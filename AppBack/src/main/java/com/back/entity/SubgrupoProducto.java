@@ -40,7 +40,7 @@ public class SubgrupoProducto {
 	@NotNull
 	@NotBlank
 	@NotEmpty
-	@Size(max = 50)
+	@Size(max = 150)
 	private String subgrupoproducto;
 	
 	private Integer erpid;

@@ -46,29 +46,26 @@ public class Entidad {
 	private Cartera cartera;
 	
 	@NotNull
-	@ManyToOne
-	@JoinColumn(name = "tipoentidad_id")
-	private TipoEntidad tipoentidad;
+	@NotEmpty
+	@NotBlank
+	private String categorias;
 	
-	@Size(max = 100) 
+	@Size(max = 150) 
 	private String nomape;
 	
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String nombre;
 	
-	@NotNull
-	@NotEmpty
-	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String apellido;
 	
-	@Size(max = 15)
+	@Size(max = 30)
 	private String nrodoc;
 
-	@Size(max = 15)
+	@Size(max = 30)
 	private String nrotelefono;
 	
 	@Size(max = 30)

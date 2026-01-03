@@ -5,6 +5,9 @@ import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
 
 export const RolApp = ({ userLog }) => {
 
@@ -16,6 +19,7 @@ export const RolApp = ({ userLog }) => {
     const [rolAEliminar, setRolAEliminar] = useState(null);
     const [rolNoEliminar, setRolNoEliminar] = useState(null);
     const [rolAVisualizar, setRolAVisualizar] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -80,9 +84,11 @@ export const RolApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarRolFn = async (id) => {
+        setLoading(true);
         await deleteRole(id);
         await AddAccess('Eliminar', id, userLog, "Roles");
         recuperarRoles();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -98,6 +104,7 @@ export const RolApp = ({ userLog }) => {
     };
 
     const guardarFn = async (rolAGuardar) => {
+        setLoading(true);
 
         if (rolAGuardar.id) {
             await updateRole(rolAGuardar.id, rolAGuardar);
@@ -108,6 +115,7 @@ export const RolApp = ({ userLog }) => {
         }
         setRolAGuardar(null);
         recuperarRoles();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -179,55 +187,14 @@ export const RolApp = ({ userLog }) => {
     return (
         <>
 
-            {rolAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el rol?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(rolAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setRolAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {rolAEliminar && (
+                <Delete setEliminar={setRolAEliminar} title={'rol'} gen={true} confirmar={confirmarEliminacion} id={rolAEliminar.id} />
+            )}
             {rolNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El rol está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setRolNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setRolNoEliminar} title={'rol'} gen={true} />
             )}
 
             {rolAVisualizar && (
@@ -284,10 +251,10 @@ export const RolApp = ({ userLog }) => {
                                                     onChange={(event) => setRolAGuardar({ ...rolAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                         </div>

@@ -31,8 +31,11 @@ public class TipoProducto {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String tipoproducto;
+	
+	@Size(max = 20)
+	private String recurso;
 	
 	public TipoProducto(Integer id) {
 		super();

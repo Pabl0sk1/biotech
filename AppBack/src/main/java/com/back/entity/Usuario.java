@@ -47,7 +47,7 @@ public class Usuario {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 20)
+	@Size(max = 50)
 	private String nombreusuario;
 
 	@NotNull
@@ -57,37 +57,28 @@ public class Usuario {
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String contrasena;
 	
-	@NotNull
-	@NotEmpty
-	@NotBlank
-	@Size(max = 100)
+	@Size(max = 150)
 	private String nomape;
 
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String nombre;
 	
-	@NotNull
-	@NotEmpty
-	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String apellido;
 
-	@Size(max = 15)
+	@Size(max = 30)
 	private String nrodoc;
 
-	@Size(max = 15)
+	@Size(max = 30)
 	private String nrotelefono;
-
-	@NotNull
-	@NotEmpty
-	@NotBlank
+	
 	@Size(max = 30)
 	private String correo;
 	
-	@Size(max = 100)
+	@Size(max = 150)
 	private String direccion;
 
 	@NotNull

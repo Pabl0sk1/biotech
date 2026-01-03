@@ -31,7 +31,7 @@ public class PrincipioActivo {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String principioactivo;
 	
 	private Integer erpid;

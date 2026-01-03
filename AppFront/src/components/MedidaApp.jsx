@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getMeasure, saveMeasure, updateMeasure, deleteMeasure } from '../services/medida.service.js';
+import { getMeasure, saveMeasure, updateMeasure, deleteMeasure, updateErpMeasure } from '../services/medida.service.js';
 import { getCommercial } from '../services/nombrecomercial.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const MedidaApp = ({ userLog }) => {
 
@@ -16,6 +20,8 @@ export const MedidaApp = ({ userLog }) => {
     const [medidaAEliminar, setMedidaAEliminar] = useState(null);
     const [medidaNoEliminar, setMedidaNoEliminar] = useState(null);
     const [medidaAVisualizar, setMedidaAVisualizar] = useState(null);
+    const [medidaErp, setMedidaErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -32,6 +38,7 @@ export const MedidaApp = ({ userLog }) => {
                 setMedidaNoEliminar(null);
                 setMedidaAVisualizar(null);
                 setMedidaAGuardar(null);
+                setMedidaErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -56,6 +63,7 @@ export const MedidaApp = ({ userLog }) => {
     const selected = {
         id: null,
         medida: "",
+        abreviatura: "",
         erpid: 0
     };
 
@@ -81,9 +89,11 @@ export const MedidaApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarMedidaFn = async (id) => {
+        setLoading(true);
         await deleteMeasure(id);
         await AddAccess('Eliminar', id, userLog, "Medidas");
         recuperarMedidas();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -97,7 +107,16 @@ export const MedidaApp = ({ userLog }) => {
         else setMedidaAEliminar(medida);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setMedidaErp(null);
+        await updateErpMeasure();
+        recuperarMedidas();
+        setLoading(false);
+    }
+
     const guardarFn = async (medidaAGuardar) => {
+        setLoading(true);
 
         if (medidaAGuardar.id) {
             await updateMeasure(medidaAGuardar.id, medidaAGuardar);
@@ -108,6 +127,7 @@ export const MedidaApp = ({ userLog }) => {
         }
         setMedidaAGuardar(null);
         recuperarMedidas();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -179,55 +199,17 @@ export const MedidaApp = ({ userLog }) => {
     return (
         <>
 
-            {medidaAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la medida?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(medidaAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setMedidaAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {medidaErp && (
+                <ImportErp setErp={setMedidaErp} title={'medidas'} fun={importarDatosERP} />
+            )}
+            {medidaAEliminar && (
+                <Delete setEliminar={setMedidaAEliminar} title={'medida'} gen={false} confirmar={confirmarEliminacion} id={medidaAEliminar.id} />
+            )}
             {medidaNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La medida está siendo referenciada en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setMedidaNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setMedidaNoEliminar} title={'medida'} gen={false} />
             )}
 
             {medidaAVisualizar && (
@@ -237,7 +219,7 @@ export const MedidaApp = ({ userLog }) => {
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
+                                    <div className='col me-5 pe-0'>
                                         <label htmlFor="medida" className="form-label m-0 mb-2">Descripción</label>
                                         <input
                                             type="text"
@@ -245,6 +227,28 @@ export const MedidaApp = ({ userLog }) => {
                                             name="medida"
                                             className="form-control border-input w-100 border-black mb-3"
                                             value={medidaAVisualizar.medida}
+                                            readOnly
+                                        />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={medidaAVisualizar.erpid}
+                                                readOnly
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className='col ms-5 ps-0'>
+                                        <label htmlFor="abreviatura" className="form-label m-0 mb-2">Abreviatura</label>
+                                        <input
+                                            type="text"
+                                            id="abreviatura"
+                                            name="abreviatura"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={medidaAVisualizar.abreviatura}
                                             readOnly
                                         />
                                     </div>
@@ -271,7 +275,7 @@ export const MedidaApp = ({ userLog }) => {
                                     noValidate
                                 >
                                     <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
+                                        <div className='col me-5 pe-0'>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="medida" className="form-label m-0 mb-2">Descripción</label>
                                                 <input
@@ -284,11 +288,38 @@ export const MedidaApp = ({ userLog }) => {
                                                     onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={medidaAGuardar.erpid}
+                                                    onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className='col ms-5 ps-0'>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="abreviatura" className="form-label m-0 mb-2">Abreviatura</label>
+                                                <input
+                                                    type="text"
+                                                    id="abreviatura"
+                                                    name="abreviatura"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={medidaAGuardar.abreviatura}
+                                                    onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={20}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -442,6 +473,9 @@ export const MedidaApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setMedidaErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

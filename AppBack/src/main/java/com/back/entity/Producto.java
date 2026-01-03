@@ -68,7 +68,7 @@ public class Producto {
 	@Builder.Default
 	private Boolean activo = true;
 	
-	@Size(max = 100)
+	@Size(max = 150)
 	private String obs;
 	
 	private Integer erpid;

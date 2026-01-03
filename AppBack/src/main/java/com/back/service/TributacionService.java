@@ -1,6 +1,7 @@
 package com.back.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import com.back.config.RestQueryErp;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Tributacion;
 import com.back.repository.TributacionRepository;
@@ -21,6 +23,12 @@ public class TributacionService {
 
 	@Autowired
 	TributacionRepository rep;
+	
+	private final RestQueryErp rest;
+	
+	public TributacionService(RestQueryErp rest) {
+        this.rest = rest;
+    }
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
@@ -102,6 +110,32 @@ public class TributacionService {
 			throw new RuntimeException("No se encontro la tributacion con ID: " + id);
 		}
 
+	}
+	
+	public void actualizarErp() {
+		List<Map<String, Object>> dataList = rest.fetchAll("OX54", "", "", "");
+		
+		for (Map<String, Object> item : dataList) {
+			
+			try {
+		        Integer erpId = (Integer) item.get("id");
+		        String descripcion = (String) item.get("Descripcion_cb");
+		        Number ivaRaw = (Number) item.get("Perc_iva");
+		        Integer iva = ivaRaw != null ? ivaRaw.intValue() : null;
+		        
+		        Tributacion data = rep.findByErpid(erpId).orElse(new Tributacion());
+		        data.setErpid(erpId);
+		        data.setTributacion(descripcion);
+		        data.setIva(iva);
+	
+		        rep.save(data);
+		        
+			} catch (Exception e) {
+		        System.err.println("Error procesando item: " + item);
+		        e.printStackTrace();
+		    }
+	    }
+		
 	}
 	
 }

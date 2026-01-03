@@ -48,7 +48,7 @@ public class GrupoProducto {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String grupoproducto;
 	
 	private Integer erpid;

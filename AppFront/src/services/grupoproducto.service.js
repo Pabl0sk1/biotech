@@ -33,3 +33,8 @@ export const deleteSubgroup = async (id) => {
     const response = await axios.delete(`${API_BASE_URL}/deleteSubgroup/${id}`);
     return response.data;
 };
+
+export const updateErpProductGroup = async () => {
+    const response = await axios.post(`${API_BASE_URL}/updateErp`);
+    return response.data;
+}

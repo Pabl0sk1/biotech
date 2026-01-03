@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getHarvest, saveHarvest, updateHarvest, deleteHarvest } from '../services/zafra.service.js';
+import { getHarvest, saveHarvest, updateHarvest, deleteHarvest, updateErpHarvest } from '../services/zafra.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { DateHourFormat } from '../utils/DateHourFormat.js';
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const ZafraApp = ({ userLog }) => {
 
@@ -16,6 +20,8 @@ export const ZafraApp = ({ userLog }) => {
     const [zafraAEliminar, setZafraAEliminar] = useState(null);
     const [zafraNoEliminar, setZafraNoEliminar] = useState(null);
     const [zafraAVisualizar, setZafraAVisualizar] = useState(null);
+    const [zafraErp, setZafraErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -32,6 +38,7 @@ export const ZafraApp = ({ userLog }) => {
                 setZafraNoEliminar(null);
                 setZafraAVisualizar(null);
                 setZafraAGuardar(null);
+                setZafraErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -84,9 +91,11 @@ export const ZafraApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarZafraFn = async (id) => {
+        setLoading(true);
         await deleteHarvest(id);
         await AddAccess('Eliminar', id, userLog, "Zafras");
         recuperarZafras();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -98,7 +107,16 @@ export const ZafraApp = ({ userLog }) => {
         setZafraAEliminar(zafra);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setZafraErp(null);
+        await updateErpHarvest();
+        recuperarZafras();
+        setLoading(false);
+    }
+
     const guardarFn = async (zafraAGuardar) => {
+        setLoading(true);
 
         if (zafraAGuardar.id) {
             await updateHarvest(zafraAGuardar.id, zafraAGuardar);
@@ -109,6 +127,7 @@ export const ZafraApp = ({ userLog }) => {
         }
         setZafraAGuardar(null);
         recuperarZafras();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -180,55 +199,17 @@ export const ZafraApp = ({ userLog }) => {
     return (
         <>
 
-            {zafraAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la zafra?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(zafraAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setZafraAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {zafraErp && (
+                <ImportErp setErp={setZafraErp} title={'zafras'} fun={importarDatosERP} />
+            )}
+            {zafraAEliminar && (
+                <Delete setEliminar={setZafraAEliminar} title={'zafra'} gen={false} confirmar={confirmarEliminacion} id={zafraAEliminar.id} />
+            )}
             {zafraNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La zafra está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setZafraNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setZafraNoEliminar} title={'zafra'} gen={false} />
             )}
 
             {zafraAVisualizar && (
@@ -258,6 +239,17 @@ export const ZafraApp = ({ userLog }) => {
                                             value={zafraAVisualizar.fechainicio || ''}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={zafraAVisualizar.erpid || ''}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0'>
@@ -317,10 +309,10 @@ export const ZafraApp = ({ userLog }) => {
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
@@ -331,6 +323,17 @@ export const ZafraApp = ({ userLog }) => {
                                                     name="fechainicio"
                                                     className="form-control border-input w-100"
                                                     value={zafraAGuardar.fechainicio || ''}
+                                                    onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    value={zafraAGuardar.erpid || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
@@ -347,7 +350,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     placeholder="Escribe..."
                                                     value={zafraAGuardar.cultura}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
+                                                    maxLength={150}
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -567,6 +570,9 @@ export const ZafraApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setZafraErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

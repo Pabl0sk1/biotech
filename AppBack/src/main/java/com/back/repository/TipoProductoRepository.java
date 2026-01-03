@@ -9,4 +9,6 @@ import com.back.entity.TipoProducto;
 @Repository
 public interface TipoProductoRepository extends CrudRepository<TipoProducto, Integer>, PagingAndSortingRepository<TipoProducto, Integer>, JpaSpecificationExecutor<TipoProducto> {
 	
+	TipoProducto findByRecurso(String recurso);
+	
 }

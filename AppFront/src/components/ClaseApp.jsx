@@ -5,6 +5,9 @@ import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
 
 export const ClaseApp = ({ userLog }) => {
 
@@ -16,6 +19,7 @@ export const ClaseApp = ({ userLog }) => {
     const [claseAEliminar, setClaseAEliminar] = useState(null);
     const [claseNoEliminar, setClaseNoEliminar] = useState(null);
     const [claseAVisualizar, setClaseAVisualizar] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -80,9 +84,11 @@ export const ClaseApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarClaseFn = async (id) => {
+        setLoading(true);
         await deleteProductType(id);
         await AddAccess('Eliminar', id, userLog, "Clases");
         recuperarClases();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -97,6 +103,7 @@ export const ClaseApp = ({ userLog }) => {
     };
 
     const guardarFn = async (claseAGuardar) => {
+        setLoading(true);
 
         if (claseAGuardar.id) {
             await updateProductType(claseAGuardar.id, claseAGuardar);
@@ -107,6 +114,7 @@ export const ClaseApp = ({ userLog }) => {
         }
         setClaseAGuardar(null);
         recuperarClases();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -178,55 +186,14 @@ export const ClaseApp = ({ userLog }) => {
     return (
         <>
 
-            {claseAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la clase?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(claseAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setClaseAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {claseAEliminar && (
+                <Delete setEliminar={setClaseAEliminar} title={'clase'} gen={false} confirmar={confirmarEliminacion} id={claseAEliminar.id} />
+            )}
             {claseNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La clase está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setClaseNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setClaseNoEliminar} title={'clase'} gen={false} />
             )}
 
             {claseAVisualizar && (
@@ -244,6 +211,15 @@ export const ClaseApp = ({ userLog }) => {
                                             name="tipoproducto"
                                             className="form-control border-input w-100 border-black mb-3"
                                             value={claseAVisualizar.tipoproducto || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="recurso" className="form-label m-0 mb-2">Recurso</label>
+                                        <input
+                                            type="text"
+                                            id="recurso"
+                                            name="recurso"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={claseAVisualizar.recurso || ''}
                                             readOnly
                                         />
                                     </div>
@@ -283,11 +259,24 @@ export const ClaseApp = ({ userLog }) => {
                                                     onChange={(event) => setClaseAGuardar({ ...claseAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="recurso" className="form-label m-0 mb-2">Recurso</label>
+                                                <input
+                                                    type="text"
+                                                    id="recurso"
+                                                    name="recurso"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={claseAGuardar.recurso || ''}
+                                                    onChange={(event) => setClaseAGuardar({ ...claseAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={20}
+                                                />
                                             </div>
                                         </div>
                                     </div>

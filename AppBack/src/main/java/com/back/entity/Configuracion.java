@@ -31,17 +31,17 @@ public class Configuracion {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max=50)
+	@Size(max=150)
 	private String entidad;
+
+	@Size(max=30)
+	private String nrodoc;
 	
-	@NotNull
-	@NotEmpty
-	@NotBlank
+	@Size(max=30)
+	private String nrotelefono;
+	
 	@Size(max=30)
 	private String correo;
-	
-	@Size(max=15)
-	private String nrotelefono;
 	
 	@NotNull
 	@NotEmpty
@@ -61,9 +61,9 @@ public class Configuracion {
 	@Size(max=20)
 	private String colorter;
 	
-	private String nombre;
+	private String imagennombre;
     
-    private String tipo;
+    private String imagentipo;
     
 	private String imagenurl;
 

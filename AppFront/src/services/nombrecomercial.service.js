@@ -28,3 +28,8 @@ export const deleteCommercial = async (id) => {
     const response = await axios.delete(`${API_BASE_URL}/delete/${id}`);
     return response.data;
 }
+
+export const updateErpCommercial = async () => {
+    const response = await axios.post(`${API_BASE_URL}/updateErp`);
+    return response.data;
+}

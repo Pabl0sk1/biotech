@@ -34,10 +34,10 @@ public class Zafra {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String descripcion;
 	
-	@Size(max = 30)
+	@Size(max = 150)
 	private String cultura;
 	
 	@Temporal(TemporalType.DATE)

@@ -35,6 +35,9 @@ public class Moneda {
 	private String moneda;
 	
 	@Size(max = 20)
+	private String simbolo;
+	
+	@Size(max = 20)
 	private String codiso;
 	
 	private Integer erpid;

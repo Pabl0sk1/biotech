@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getCurrency, saveCurrency, updateCurrency, deleteCurrency } from '../services/moneda.service.js';
+import { getCurrency, saveCurrency, updateCurrency, deleteCurrency, updateErpCurrency } from '../services/moneda.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const MonedaApp = ({ userLog }) => {
 
@@ -16,6 +20,8 @@ export const MonedaApp = ({ userLog }) => {
     const [monedaAEliminar, setMonedaAEliminar] = useState(null);
     const [monedaNoEliminar, setMonedaNoEliminar] = useState(null);
     const [monedaAVisualizar, setMonedaAVisualizar] = useState(null);
+    const [monedaErp, setMonedaErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -32,6 +38,7 @@ export const MonedaApp = ({ userLog }) => {
                 setMonedaNoEliminar(null);
                 setMonedaAVisualizar(null);
                 setMonedaAGuardar(null);
+                setMonedaErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -56,6 +63,7 @@ export const MonedaApp = ({ userLog }) => {
     const selected = {
         id: null,
         moneda: "",
+        simbolo: "",
         codiso: "",
         erpid: 0
     };
@@ -82,9 +90,11 @@ export const MonedaApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarMonedaFn = async (id) => {
+        setLoading(true);
         await deleteCurrency(id);
         await AddAccess('Eliminar', id, userLog, "Monedas");
         recuperarMonedas();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -98,7 +108,16 @@ export const MonedaApp = ({ userLog }) => {
         else setMonedaAEliminar(moneda);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setMonedaErp(null);
+        await updateErpCurrency();
+        recuperarMonedas();
+        setLoading(false);
+    }
+
     const guardarFn = async (monedaAGuardar) => {
+        setLoading(true);
 
         if (monedaAGuardar.id) {
             await updateCurrency(monedaAGuardar.id, monedaAGuardar);
@@ -109,6 +128,7 @@ export const MonedaApp = ({ userLog }) => {
         }
         setMonedaAGuardar(null);
         recuperarMonedas();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -180,55 +200,17 @@ export const MonedaApp = ({ userLog }) => {
     return (
         <>
 
-            {monedaAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la moneda?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(monedaAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setMonedaAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {monedaErp && (
+                <ImportErp setErp={setMonedaErp} title={'monedas'} fun={importarDatosERP} />
+            )}
+            {monedaAEliminar && (
+                <Delete setEliminar={setMonedaAEliminar} title={'moneda'} gen={false} confirmar={confirmarEliminacion} id={monedaAEliminar.id} />
+            )}
             {monedaNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La moneda está siendo referenciada en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setMonedaNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setMonedaNoEliminar} title={'moneda'} gen={false} />
             )}
 
             {monedaAVisualizar && (
@@ -248,6 +230,15 @@ export const MonedaApp = ({ userLog }) => {
                                             value={monedaAVisualizar.moneda}
                                             readOnly
                                         />
+                                        <label htmlFor="simbolo" className="form-label m-0 mb-2">Símbolo</label>
+                                        <input
+                                            type="text"
+                                            id="simbolo"
+                                            name="simbolo"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={monedaAVisualizar.simbolo}
+                                            readOnly
+                                        />
                                     </div>
                                     <div className='col ms-5 ps-0'>
                                         <label htmlFor="codiso" className="form-label m-0 mb-2">Código ISO</label>
@@ -259,6 +250,17 @@ export const MonedaApp = ({ userLog }) => {
                                             value={monedaAVisualizar.codiso}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="text"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={monedaAVisualizar.erpid}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => setMonedaAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
@@ -302,6 +304,19 @@ export const MonedaApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
                                                 </div>
                                             </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="simbolo" className="form-label m-0 mb-2">Símbolo</label>
+                                                <input
+                                                    type="text"
+                                                    id="simbolo"
+                                                    name="simbolo"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={monedaAGuardar.simbolo}
+                                                    onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={20}
+                                                />
+                                            </div>
                                         </div>
                                         <div className='col ms-5 ps-0'>
                                             <div className='form-group mb-1'>
@@ -315,6 +330,18 @@ export const MonedaApp = ({ userLog }) => {
                                                     value={monedaAGuardar.codiso}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={20}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={monedaAGuardar.erpid}
+                                                    onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
@@ -496,6 +523,9 @@ export const MonedaApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setMonedaErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

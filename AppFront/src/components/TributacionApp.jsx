@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getTaxation, saveTaxation, updateTaxation, deleteTaxation } from '../services/tributaciones.service.js';
+import { getTaxation, saveTaxation, updateTaxation, deleteTaxation, updateErpTaxation } from '../services/tributaciones.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const TributacionApp = ({ userLog }) => {
 
@@ -16,6 +20,8 @@ export const TributacionApp = ({ userLog }) => {
     const [tributacionAEliminar, setTributacionAEliminar] = useState(null);
     const [tributacionNoEliminar, setTributacionNoEliminar] = useState(null);
     const [tributacionAVisualizar, setTributacionAVisualizar] = useState(null);
+    const [tributacionErp, setTributacionErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -32,6 +38,7 @@ export const TributacionApp = ({ userLog }) => {
                 setTributacionNoEliminar(null);
                 setTributacionAVisualizar(null);
                 setTributacionAGuardar(null);
+                setTributacionErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -82,9 +89,11 @@ export const TributacionApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarTributacionFn = async (id) => {
+        setLoading(true);
         await deleteTaxation(id);
         await AddAccess('Eliminar', id, userLog, "Tributaciones");
         recuperarTributaciones();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -98,7 +107,16 @@ export const TributacionApp = ({ userLog }) => {
         else setTributacionAEliminar(tributacion);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setTributacionErp(null);
+        await updateErpTaxation();
+        recuperarTributaciones();
+        setLoading(false);
+    }
+
     const guardarFn = async (tributacionAGuardar) => {
+        setLoading(true);
 
         if (tributacionAGuardar.id) {
             await updateTaxation(tributacionAGuardar.id, tributacionAGuardar);
@@ -109,6 +127,7 @@ export const TributacionApp = ({ userLog }) => {
         }
         setTributacionAGuardar(null);
         recuperarTributaciones();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -180,55 +199,17 @@ export const TributacionApp = ({ userLog }) => {
     return (
         <>
 
-            {tributacionAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la tributacion?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(tributacionAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setTributacionAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {tributacionErp && (
+                <ImportErp setErp={setTributacionErp} title={'tributacions'} fun={importarDatosERP} />
+            )}
+            {tributacionAEliminar && (
+                <Delete setEliminar={setTributacionAEliminar} title={'tributacion'} gen={false} confirmar={confirmarEliminacion} id={tributacionAEliminar.id} />
+            )}
             {tributacionNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La tributacion está siendo referenciada en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setTributacionNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setTributacionNoEliminar} title={'tributacion'} gen={false} />
             )}
 
             {tributacionAVisualizar && (
@@ -245,9 +226,20 @@ export const TributacionApp = ({ userLog }) => {
                                             id="tributacion"
                                             name="tributacion"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={tributacionAVisualizar.tributacion}
+                                            value={tributacionAVisualizar.tributacion || ''}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={tributacionAVisualizar.erpid || ''}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                     <div className='col ms-5 ps-0'>
                                         <label htmlFor="iva" className="form-label m-0 mb-2">IVA</label>
@@ -256,7 +248,7 @@ export const TributacionApp = ({ userLog }) => {
                                             id="iva"
                                             name="iva"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={tributacionAVisualizar.iva}
+                                            value={tributacionAVisualizar.iva || ''}
                                             readOnly
                                         />
                                     </div>
@@ -296,11 +288,23 @@ export const TributacionApp = ({ userLog }) => {
                                                     onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={tributacionAGuardar.erpid || ''}
+                                                    onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}
+                                                />
                                             </div>
                                         </div>
                                         <div className='col ms-5 ps-0'>
@@ -495,6 +499,9 @@ export const TributacionApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setTributacionErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

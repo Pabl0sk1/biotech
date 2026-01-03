@@ -46,7 +46,7 @@ public class Turno {
 	@NotNull
 	@NotBlank
 	@NotEmpty
-	@Size(max = 50)
+	@Size(max = 150)
 	private String descripcion;
 
 	@Temporal(TemporalType.TIME)

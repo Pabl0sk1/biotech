@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getCrop, saveCrop, updateCrop, deleteCrop } from '../services/fasecultivo.service.js';
+import { getCrop, saveCrop, updateCrop, deleteCrop, updateErpCrop } from '../services/fasecultivo.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const FaseCultivoApp = ({ userLog }) => {
 
@@ -16,6 +20,8 @@ export const FaseCultivoApp = ({ userLog }) => {
     const [fasecultivoAEliminar, setFaseCultivoAEliminar] = useState(null);
     const [fasecultivoNoEliminar, setFaseCultivoNoEliminar] = useState(null);
     const [fasecultivoAVisualizar, setFaseCultivoAVisualizar] = useState(null);
+    const [fasecultivoErp, setFaseCultivoErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -32,6 +38,7 @@ export const FaseCultivoApp = ({ userLog }) => {
                 setFaseCultivoNoEliminar(null);
                 setFaseCultivoAVisualizar(null);
                 setFaseCultivoAGuardar(null);
+                setFaseCultivoErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -81,9 +88,11 @@ export const FaseCultivoApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarFaseCultivoFn = async (id) => {
+        setLoading(true);
         await deleteCrop(id);
         await AddAccess('Eliminar', id, userLog, "Fase de Cultivos");
         recuperarFaseCultivos();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -97,7 +106,16 @@ export const FaseCultivoApp = ({ userLog }) => {
         else setFaseCultivoAEliminar(fasecultivo);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setFaseCultivoErp(null);
+        await updateErpCrop();
+        recuperarFaseCultivos();
+        setLoading(false);
+    }
+
     const guardarFn = async (fasecultivoAGuardar) => {
+        setLoading(true);
 
         if (fasecultivoAGuardar.id) {
             await updateCrop(fasecultivoAGuardar.id, fasecultivoAGuardar);
@@ -108,6 +126,7 @@ export const FaseCultivoApp = ({ userLog }) => {
         }
         setFaseCultivoAGuardar(null);
         recuperarFaseCultivos();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -179,55 +198,17 @@ export const FaseCultivoApp = ({ userLog }) => {
     return (
         <>
 
-            {fasecultivoAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la fase de cultivo?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(fasecultivoAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setFaseCultivoAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {fasecultivoErp && (
+                <ImportErp setErp={setFaseCultivoErp} title={'fases de cultivos'} fun={importarDatosERP} />
+            )}
+            {fasecultivoAEliminar && (
+                <Delete setEliminar={setFaseCultivoAEliminar} title={'fase de cultivo'} gen={false} confirmar={confirmarEliminacion} id={fasecultivoAEliminar.id} />
+            )}
             {fasecultivoNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La fase de cultivo está siendo referenciada en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setFaseCultivoNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setFaseCultivoNoEliminar} title={'fase de cultivo'} gen={false} />
             )}
 
             {fasecultivoAVisualizar && (
@@ -247,6 +228,17 @@ export const FaseCultivoApp = ({ userLog }) => {
                                             value={fasecultivoAVisualizar.fasecultivo}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={fasecultivoAVisualizar.erpid}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => setFaseCultivoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
@@ -284,11 +276,23 @@ export const FaseCultivoApp = ({ userLog }) => {
                                                     onChange={(event) => setFaseCultivoAGuardar({ ...fasecultivoAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={fasecultivoAGuardar.erpid}
+                                                    onChange={(event) => setFaseCultivoAGuardar({ ...fasecultivoAGuardar, [event.target.name]: event.target.value })}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -442,6 +446,9 @@ export const FaseCultivoApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setFaseCultivoErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

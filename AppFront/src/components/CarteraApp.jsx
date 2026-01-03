@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getWallet, saveWallet, updateWallet, deleteWallet } from '../services/cartera.service.js';
+import { getWallet, saveWallet, updateWallet, deleteWallet, updateErpWallet } from '../services/cartera.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
@@ -8,6 +8,10 @@ import { FiltroModal } from "../FiltroModal.jsx";
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const CarteraApp = ({ userLog }) => {
 
@@ -21,6 +25,8 @@ export const CarteraApp = ({ userLog }) => {
     const [carteraAEliminar, setCarteraAEliminar] = useState(null);
     const [carteraNoEliminar, setCarteraNoEliminar] = useState(null);
     const [carteraAVisualizar, setCarteraAVisualizar] = useState(null);
+    const [carteraErp, setCarteraErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -50,6 +56,7 @@ export const CarteraApp = ({ userLog }) => {
                 setCarteraNoEliminar(null);
                 setCarteraAVisualizar(null);
                 setCarteraAGuardar(null);
+                setCarteraErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -84,7 +91,7 @@ export const CarteraApp = ({ userLog }) => {
     }
 
     const recuperarVendedores = async () => {
-        const response = await getEntity('', '', '', `tipoentidad.id:eq:2`);
+        const response = await getEntity('', '', '', `categorias:contains:Vendedor`);
         setVendedores(response.items);
     }
 
@@ -107,9 +114,11 @@ export const CarteraApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarCarteraFn = async (id) => {
+        setLoading(true);
         await deleteWallet(id);
         await AddAccess('Eliminar', id, userLog, "Carteras");
         recuperarCarteras();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -123,7 +132,16 @@ export const CarteraApp = ({ userLog }) => {
         else setCarteraAEliminar(cartera);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setCarteraErp(null);
+        await updateErpWallet();
+        recuperarCarteras();
+        setLoading(false);
+    }
+
     const guardarFn = async (carteraAGuardar) => {
+        setLoading(true);
 
         if (carteraAGuardar.id) {
             await updateWallet(carteraAGuardar.id, carteraAGuardar);
@@ -134,6 +152,7 @@ export const CarteraApp = ({ userLog }) => {
         }
         setCarteraAGuardar(null);
         recuperarCarteras();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -205,55 +224,17 @@ export const CarteraApp = ({ userLog }) => {
     return (
         <>
 
-            {carteraAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la cartera?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(carteraAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setCarteraAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {carteraErp && (
+                <ImportErp setErp={setCarteraErp} title={'carteras'} fun={importarDatosERP} />
+            )}
+            {carteraAEliminar && (
+                <Delete setEliminar={setCarteraAEliminar} title={'cartera'} gen={false} confirmar={confirmarEliminacion} id={carteraAEliminar.id} />
+            )}
             {carteraNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La cartera está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setCarteraNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setCarteraNoEliminar} title={'cartera'} gen={false} />
             )}
 
             {carteraAVisualizar && (
@@ -280,7 +261,7 @@ export const CarteraApp = ({ userLog }) => {
                                             id="entidad"
                                             name="entidad"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.entidad.nomape || ''}
+                                            value={carteraAVisualizar.entidad?.nomape || ''}
                                             readOnly
                                         />
                                     </div>
@@ -295,6 +276,17 @@ export const CarteraApp = ({ userLog }) => {
                                             value={carteraAVisualizar.region || ''}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={carteraAVisualizar.erpid || ''}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => setCarteraAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
@@ -333,10 +325,10 @@ export const CarteraApp = ({ userLog }) => {
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
@@ -364,7 +356,6 @@ export const CarteraApp = ({ userLog }) => {
                                                             entidad: v
                                                         })
                                                     }
-                                                    required={true}
                                                 />
                                             </div>
                                         </div>
@@ -381,11 +372,23 @@ export const CarteraApp = ({ userLog }) => {
                                                     value={carteraAGuardar.region}
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
                                                     required
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La región es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La región es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={carteraAGuardar.erpid}
+                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -552,7 +555,7 @@ export const CarteraApp = ({ userLog }) => {
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.entidad.nomape}</td>
+                                                    <td className='text-start'>{v.entidad?.nomape}</td>
                                                     <td className='text-start'>{v.nombre}</td>
                                                     <td>{v.region}</td>
                                                     <td style={{ width: '100px' }}>
@@ -593,6 +596,9 @@ export const CarteraApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setCarteraErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

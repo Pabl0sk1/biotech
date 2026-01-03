@@ -31,8 +31,10 @@ public class Cargo {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String cargo;
+	
+	private Integer erpid;
 	
 	public Cargo(Integer id) {
 		super();

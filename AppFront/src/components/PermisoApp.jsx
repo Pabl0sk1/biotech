@@ -8,6 +8,10 @@ import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import Duplicate from '../layouts/Duplicate.jsx';
 
 export const PermisoApp = ({ userLog }) => {
 
@@ -23,6 +27,7 @@ export const PermisoApp = ({ userLog }) => {
     const [permisoNoEliminar, setPermisoNoEliminar] = useState(null);
     const [permisoAVisualizar, setPermisoAVisualizar] = useState(null);
     const [permisoDuplicado, setPermisoDuplicado] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -55,6 +60,7 @@ export const PermisoApp = ({ userLog }) => {
                 setPermisoNoEliminar(null);
                 setPermisoAVisualizar(null);
                 setPermisoAGuardar(null);
+                setPermisoDuplicado(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -121,9 +127,11 @@ export const PermisoApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarPermisoFn = async (id) => {
+        setLoading(true);
         await deletePermission(id);
         await AddAccess('Eliminar', id, userLog, "Permisos");
         recuperarPermisos();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -136,6 +144,7 @@ export const PermisoApp = ({ userLog }) => {
     };
 
     const guardarFn = async (permisoAGuardar) => {
+        setLoading(true);
 
         if (permisoAGuardar.id) {
             await updatePermission(permisoAGuardar.id, permisoAGuardar);
@@ -146,6 +155,7 @@ export const PermisoApp = ({ userLog }) => {
         }
         setPermisoAGuardar(null);
         recuperarPermisos();
+        setLoading(false);
     };
 
     const verificarPermisoDuplicado = (dato) => {
@@ -235,76 +245,17 @@ export const PermisoApp = ({ userLog }) => {
     return (
         <>
 
+            {loading && (
+                <Loading />
+            )}
             {permisoDuplicado && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-dash-circle-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El permiso ya existe</p>
-                                </div>
-                                <button
-                                    onClick={() => setPermisoDuplicado(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <Duplicate setDuplicado={setPermisoDuplicado} title={'permiso'} gen={true} />
             )}
-
             {permisoAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el permiso?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(permisoAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setPermisoAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <Delete setEliminar={setPermisoAEliminar} title={'permiso'} gen={true} confirmar={confirmarEliminacion} id={permisoAEliminar.id} />
             )}
-
             {permisoNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El permiso está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setPermisoNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setPermisoNoEliminar} title={'permiso'} gen={true} />
             )}
 
             {permisoAVisualizar && (

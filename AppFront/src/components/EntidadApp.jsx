@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getEntity, saveEntity, updateEntity, deleteEntity } from '../services/entidad.service.js';
+import { getEntity, saveEntity, updateEntity, deleteEntity, updateErpEntity } from '../services/entidad.service.js';
 import { getPosition } from '../services/cargo.service.js';
 import { getBranch } from '../services/sucursal.service.js';
 import { getWallet } from '../services/cartera.service.js';
@@ -14,6 +14,10 @@ import { DateHourFormat } from '../utils/DateHourFormat.js';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const EntidadApp = ({ userLog }) => {
 
@@ -30,6 +34,8 @@ export const EntidadApp = ({ userLog }) => {
     const [entidadAEliminar, setEntidadAEliminar] = useState(null);
     const [entidadNoEliminar, setEntidadNoEliminar] = useState(null);
     const [entidadAVisualizar, setEntidadAVisualizar] = useState(null);
+    const [entidadErp, setEntidadErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -68,6 +74,7 @@ export const EntidadApp = ({ userLog }) => {
                 setEntidadNoEliminar(null);
                 setEntidadAVisualizar(null);
                 setEntidadAGuardar(null);
+                setEntidadErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -94,7 +101,7 @@ export const EntidadApp = ({ userLog }) => {
         cargo: null,
         sucursal: null,
         cartera: null,
-        tipoentidad: null,
+        categorias: [],
         nomape: "",
         nombre: "",
         apellido: "",
@@ -157,9 +164,11 @@ export const EntidadApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarEntidadFn = async (id) => {
+        setLoading(true);
         await deleteEntity(id);
         await AddAccess('Eliminar', id, userLog, "Entidades");
         recuperarEntidades();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -174,14 +183,26 @@ export const EntidadApp = ({ userLog }) => {
         else setEntidadAEliminar(entidad);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setEntidadErp(null);
+        await updateErpEntity();
+        recuperarEntidades();
+        setLoading(false);
+    }
+
     const guardarFn = async (entidadAGuardar) => {
+        setLoading(true);
 
         let activo = true;
         if (entidadAGuardar.estado == 'Inactivo') activo = false;
 
+        let apellido = "";
+        if (entidadAGuardar.apellido) apellido = ", " + entidadAGuardar.apellido;
+
         const entidadActualizado = {
             ...entidadAGuardar,
-            nomape: entidadAGuardar.nombre + ", " + entidadAGuardar.apellido,
+            nomape: entidadAGuardar.nombre + apellido,
             activo: activo
         };
 
@@ -194,6 +215,7 @@ export const EntidadApp = ({ userLog }) => {
         }
         setEntidadAGuardar(null);
         recuperarEntidades();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -247,7 +269,7 @@ export const EntidadApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         let sw = 0;
-        if (!entidadAGuardar.tipoentidad || !entidadAGuardar.nombre || !entidadAGuardar.apellido) sw = 1;
+        if (!entidadAGuardar.categorias || !entidadAGuardar.nombre) sw = 1;
 
         if (sw === 1) {
             event.stopPropagation();
@@ -263,6 +285,16 @@ export const EntidadApp = ({ userLog }) => {
         }
     };
 
+    const getCategoriasSeleccionadas = () => {
+        if (entidadAGuardar.categorias.length == 0) return [];
+
+        const categoriasArray = entidadAGuardar.categorias.split(',').map(c => c.trim());
+
+        return categorias.filter(v =>
+            categoriasArray.includes(v.tipoentidad)
+        );
+    };
+
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
         setFiltrosAplicados({});
@@ -274,55 +306,17 @@ export const EntidadApp = ({ userLog }) => {
     return (
         <>
 
-            {entidadAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la entidad?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(entidadAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setEntidadAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {entidadErp && (
+                <ImportErp setErp={setEntidadErp} title={'entidades'} fun={importarDatosERP} />
+            )}
+            {entidadAEliminar && (
+                <Delete setEliminar={setEntidadAEliminar} title={'entidad'} gen={false} confirmar={confirmarEliminacion} id={entidadAEliminar.id} />
+            )}
             {entidadNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La entidad está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setEntidadNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setEntidadNoEliminar} title={'entidad'} gen={false} />
             )}
 
             {entidadAVisualizar && (
@@ -386,7 +380,7 @@ export const EntidadApp = ({ userLog }) => {
                                             id="cargo"
                                             name="cargo"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.cargo.cargo || ''}
+                                            value={entidadAVisualizar.cargo?.cargo || ''}
                                             readOnly
                                         />
                                         <label htmlFor="cartera" className="form-label m-0 mb-2">Cartera</label>
@@ -395,7 +389,7 @@ export const EntidadApp = ({ userLog }) => {
                                             id="cartera"
                                             name="cartera"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.cargo.nombre || ''}
+                                            value={entidadAVisualizar.cartera?.nombre || ''}
                                             readOnly
                                         />
                                         <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
@@ -461,7 +455,7 @@ export const EntidadApp = ({ userLog }) => {
                                             id="sucursal"
                                             name="sucursal"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.sucursal.sucursal || ''}
+                                            value={entidadAVisualizar.sucursal?.sucursal || ''}
                                             readOnly
                                         />
                                         <label htmlFor="categoria" className="form-label m-0 mb-2">Categoría</label>
@@ -470,9 +464,20 @@ export const EntidadApp = ({ userLog }) => {
                                             id="categoria"
                                             name="categoria"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.tipoentidad.tipoentidad || ''}
+                                            value={entidadAVisualizar.categorias || ''}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={entidadAVisualizar.erpid || ''}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => setEntidadAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
@@ -511,10 +516,10 @@ export const EntidadApp = ({ userLog }) => {
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
@@ -527,7 +532,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.nrotelefono || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
+                                                    maxLength={30}
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -658,12 +663,8 @@ export const EntidadApp = ({ userLog }) => {
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.apellido || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El apellido es obligatorio y no debe sobrepasar los 50 caracteres.
-                                                </div>
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
@@ -675,7 +676,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.nrodoc || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
+                                                    maxLength={30}
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -756,18 +757,31 @@ export const EntidadApp = ({ userLog }) => {
                                                 </i>
                                                 <AutocompleteSelect
                                                     options={categorias}
-                                                    value={entidadAGuardar.tipoentidad}
+                                                    value={getCategoriasSeleccionadas(entidadAGuardar.categorias)}
                                                     getLabel={(v) => v.tipoentidad}
                                                     searchFields={[
                                                         v => v.tipoentidad
                                                     ]}
-                                                    onChange={(v) =>
+                                                    onChange={(v) => {
+                                                        const categoriasString = v.map(c => c.tipoentidad).join(',');
                                                         setEntidadAGuardar({
                                                             ...entidadAGuardar,
-                                                            tipoentidad: v
-                                                        })
-                                                    }
+                                                            categorias: categoriasString
+                                                        });
+                                                    }}
+                                                    multiple={true}
                                                     required={true}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    value={entidadAGuardar.erpid || ''}
+                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
@@ -1003,6 +1017,9 @@ export const EntidadApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setEntidadErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

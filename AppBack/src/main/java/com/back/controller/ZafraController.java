@@ -88,5 +88,17 @@ public class ZafraController {
 
 		return result;
 	}
+	
+	@PostMapping(path = "updateErp")
+	public Map<String, Object> actualizarErp() {
+		Map<String, Object> result = new LinkedHashMap<>();
+		
+		serv.actualizarErp();
+		
+		result.put("ok", true);
+		result.put("update", "Registros del ERP actualizados.");
+		
+		return result;
+	}
 
 }

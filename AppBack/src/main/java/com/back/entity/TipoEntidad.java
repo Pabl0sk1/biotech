@@ -31,7 +31,7 @@ public class TipoEntidad {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String tipoentidad;
 	
 	public TipoEntidad(Integer id) {

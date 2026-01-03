@@ -31,8 +31,10 @@ public class Sucursal {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String sucursal;
+	
+	private Integer erpid;
 	
 	public Sucursal(Integer id) {
 		super();

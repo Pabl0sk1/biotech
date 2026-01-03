@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
-import { getBranch, saveBranch, updateBranch, deleteBranch } from '../services/sucursal.service.js';
+import { getBranch, saveBranch, updateBranch, deleteBranch, updateErpBranch } from '../services/sucursal.service.js';
 import { getUser } from '../services/usuario.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
 export const SucursalApp = ({ userLog }) => {
 
@@ -17,6 +21,8 @@ export const SucursalApp = ({ userLog }) => {
     const [sucursalAEliminar, setSucursalAEliminar] = useState(null);
     const [sucursalNoEliminar, setSucursalNoEliminar] = useState(null);
     const [sucursalAVisualizar, setSucursalAVisualizar] = useState(null);
+    const [sucursalErp, setSucursalErp] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -33,6 +39,7 @@ export const SucursalApp = ({ userLog }) => {
                 setSucursalNoEliminar(null);
                 setSucursalAVisualizar(null);
                 setSucursalAGuardar(null);
+                setSucursalErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -81,9 +88,11 @@ export const SucursalApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarSucursalFn = async (id) => {
+        setLoading(true);
         await deleteBranch(id);
         await AddAccess('Eliminar', id, userLog, "Sucursales");
         recuperarSucursales();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -98,7 +107,16 @@ export const SucursalApp = ({ userLog }) => {
         else setSucursalAEliminar(sucursal);
     };
 
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setSucursalErp(null);
+        await updateErpBranch();
+        recuperarSucursales();
+        setLoading(false);
+    }
+
     const guardarFn = async (sucursalAGuardar) => {
+        setLoading(true);
 
         if (sucursalAGuardar.id) {
             await updateBranch(sucursalAGuardar.id, sucursalAGuardar);
@@ -109,6 +127,7 @@ export const SucursalApp = ({ userLog }) => {
         }
         setSucursalAGuardar(null);
         recuperarSucursales();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -180,55 +199,17 @@ export const SucursalApp = ({ userLog }) => {
     return (
         <>
 
-            {sucursalAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar la sucursal?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(sucursalAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setSucursalAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {sucursalErp && (
+                <ImportErp setErp={setSucursalErp} title={'sucursales'} fun={importarDatosERP} />
+            )}
+            {sucursalAEliminar && (
+                <Delete setEliminar={setSucursalAEliminar} title={'sucursal'} gen={true} confirmar={confirmarEliminacion} id={sucursalAEliminar.id} />
+            )}
             {sucursalNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>La sucursal está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setSucursalNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setSucursalNoEliminar} title={'sucursal'} gen={true} />
             )}
 
             {sucursalAVisualizar && (
@@ -248,6 +229,17 @@ export const SucursalApp = ({ userLog }) => {
                                             value={sucursalAVisualizar.sucursal}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={sucursalAVisualizar.erpid}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => setSucursalAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
@@ -285,11 +277,23 @@ export const SucursalApp = ({ userLog }) => {
                                                     onChange={(event) => setSucursalAGuardar({ ...sucursalAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={sucursalAGuardar.erpid}
+                                                    onChange={(event) => setSucursalAGuardar({ ...sucursalAGuardar, [event.target.name]: event.target.value })}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -443,6 +447,9 @@ export const SucursalApp = ({ userLog }) => {
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setSucursalErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>

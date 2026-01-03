@@ -1,5 +1,6 @@
 package com.back.repository;
 
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -8,5 +9,7 @@ import com.back.entity.Medida;
 
 @Repository
 public interface MedidaRepository extends CrudRepository<Medida, Integer>, PagingAndSortingRepository<Medida, Integer>, JpaSpecificationExecutor<Medida> {
+	
+	Optional<Medida> findByErpid(Integer erpid);
 	
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AutocompleteSelect({
     options = [],
@@ -6,91 +6,73 @@ export default function AutocompleteSelect({
     onChange,
     getLabel,
     searchFields = [],
+    multiple = false,
     disabled = false,
     required = false
 }) {
-    const [input, setInput] = useState('');
+    const [inputValue, setInputValue] = useState('');
     const [open, setOpen] = useState(false);
     const [highlight, setHighlight] = useState(-1);
-    const listRef = useRef(null);
+
+    const selected = multiple
+        ? Array.isArray(value) ? value : []
+        : value ? [value] : [];
 
     useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
+        setInputValue('');
+    }, [value]);
 
-    useEffect(() => {
-        if (value) {
-            const label = getLabel(value);
-            setInput(label ?? '');
-        } else {
-            setInput('');
-        }
-    }, [value, getLabel]);
-
-    const findExactMatch = (text) => {
-        const normalized = text.trim().toLowerCase();
-        return options.find(o => {
-            if (searchFields.length === 0) {
-                return (getLabel(o) ?? '').toLowerCase() === normalized;
-            }
-
-            return searchFields.some(fn =>
-                String(fn(o)).toLowerCase() === normalized
-            );
-        }) || null;
-    };
-
-    const normalizedInput = (input ?? '').trim().toLowerCase();
+    const normalizedInput = inputValue.trim().toLowerCase();
     const filtered = options.filter(o => {
         if (searchFields.length === 0) {
             return (getLabel(o) ?? '').toLowerCase().includes(normalizedInput);
         }
-
-        return searchFields.some(fn => {
-            const val = fn(o);
-            if (val === null || val === undefined) return false;
-
-            return String(val).toLowerCase().includes(normalizedInput);
-        });
+        return searchFields.some(fn => (fn(o) ?? '').toString().toLowerCase().includes(normalizedInput));
     }).slice(0, 5);
 
     const selectItem = (item) => {
-        onChange(item);
-        setInput(getLabel(item));
-        setOpen(false);
-        setHighlight(-1);
+        if (!multiple) {
+            const isSame = value?.id === item.id;
+            onChange(isSame ? null : item);
+            setOpen(false);
+            setInputValue('');
+            return;
+        }
+
+        const exists = selected.some(s => s.id === item.id);
+        const next = exists ? selected.filter(s => s.id !== item.id) : [...selected, item];
+        onChange(next);
+        setInputValue('');
+        setOpen(true);
     };
 
     const handleKeyDown = (e) => {
         if (!open) return;
-
         if (e.key === "ArrowDown") {
             e.preventDefault();
             setHighlight(h => Math.min(h + 1, filtered.length - 1));
         }
-
         if (e.key === "ArrowUp") {
             e.preventDefault();
             setHighlight(h => Math.max(h - 1, 0));
         }
-
         if (e.key === "Enter" && highlight >= 0) {
             e.preventDefault();
             selectItem(filtered[highlight]);
         }
-
         if (e.key === "Escape") {
             setOpen(false);
         }
+    };
+
+    const displayValue = () => {
+        if (open && inputValue !== '') return inputValue;
+        if (multiple) {
+            if (open) return '';
+            if (selected.length === 0) return '';
+            return `${selected.length} seleccionado${selected.length > 1 ? 's' : ''}`;
+        }
+        return !multiple && !open && value ? getLabel(value) : inputValue;
     };
 
     return (
@@ -99,26 +81,24 @@ export default function AutocompleteSelect({
                 type="text"
                 className="form-control border-input w-100"
                 placeholder="Buscar..."
-                value={input}
                 disabled={disabled}
-                onChange={(e) => {
-                    const text = e.target.value;
-                    setInput(text);
+                value={displayValue()}
+                onFocus={() => {
                     setOpen(true);
-                    const match = findExactMatch(text);
-                    if (!match && value !== null) onChange(null);
+                    setInputValue('');
+                }}
+                onChange={(e) => {
+                    setInputValue(e.target.value);
+                    setOpen(true);
+                    if (!multiple && e.target.value === '') {
+                        onChange(null);
+                    }
                 }}
                 onKeyDown={handleKeyDown}
-                onBlur={() => {
-                    setTimeout(() => {
-                        const match = findExactMatch(input);
-                        if (!match) {
-                            setInput('');
-                            onChange(null);
-                        }
-                        setOpen(false);
-                    }, 150);
-                }}
+                onBlur={() => setTimeout(() => {
+                    setOpen(false);
+                    setInputValue('');
+                }, 150)}
                 required={required}
             />
             <div className="invalid-feedback text-danger text-start">
@@ -126,21 +106,23 @@ export default function AutocompleteSelect({
             </div>
 
             {open && filtered.length > 0 && (
-                <ul
-                    ref={listRef}
-                    className="list-group position-absolute w-100 shadow z-3"
-                >
-                    {filtered.map((item, idx) => (
-                        <li
-                            key={item.id}
-                            className={`list-group-item list-group-item-action
-                ${idx === highlight ? 'active' : ''}`}
-                            style={{ cursor: 'pointer' }}
-                            onMouseDown={() => selectItem(item)}
-                        >
-                            {getLabel(item)}
-                        </li>
-                    ))}
+                <ul className="list-group position-absolute w-100 shadow z-3">
+                    {filtered.map((item, idx) => {
+                        const isSelected = selected.some(s => s.id === item.id);
+                        return (
+                            <li
+                                key={item.id}
+                                className={`list-group-item list-group-item-action
+                                    ${idx === highlight ? 'active' : ''}
+                                    ${isSelected ? 'fw-bold text-success' : ''}`}
+                                style={{ cursor: 'pointer' }}
+                                onMouseDown={() => selectItem(item)}
+                            >
+                                {getLabel(item)}
+                                {isSelected && <i className="bi bi-check-circle-fill float-end"></i>}
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
         </div>

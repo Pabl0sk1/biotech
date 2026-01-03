@@ -9,6 +9,9 @@ import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
 
 export const UsuarioApp = ({ userLog }) => {
 
@@ -32,6 +35,7 @@ export const UsuarioApp = ({ userLog }) => {
     const [usuarioAVisualizar, setUsuarioAVisualizar] = useState(null);
     const [showPasswordNueva, setShowPasswordNueva] = useState(false);
     const [showPasswordRepetir, setShowPasswordRepetir] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -141,9 +145,11 @@ export const UsuarioApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarUsuarioFn = async (id) => {
+        setLoading(true);
         await deleteUser(id);
         await AddAccess('Eliminar', id, userLog, "Usuarios");
         recuperarUsuarios();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -156,13 +162,17 @@ export const UsuarioApp = ({ userLog }) => {
     };
 
     const guardarFn = async (usuarioAGuardar) => {
+        setLoading(true);
 
         let activo = true;
         if (usuarioAGuardar.estado == 'Inactivo') activo = false;
 
+        let apellido = "";
+        if (usuarioAGuardar.apellido) apellido = ", " + usuarioAGuardar.apellido;
+
         const usuarioActualizado = {
             ...usuarioAGuardar,
-            nomape: usuarioAGuardar.nombre + ", " + usuarioAGuardar.apellido,
+            nomape: usuarioAGuardar.nombre + apellido,
             activo: activo
         };
 
@@ -175,6 +185,7 @@ export const UsuarioApp = ({ userLog }) => {
         }
         setUsuarioAGuardar(null);
         recuperarUsuarios();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -228,9 +239,9 @@ export const UsuarioApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         let sw = 0;
-        if (!usuarioAGuardar.tipousuario) sw = 1;
+        if (!usuarioAGuardar.tipousuario || !usuarioAGuardar.nombre) sw = 1;
         if (!usuarioAGuardar.nombreusuario) {
-            setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 20 caracteres.');
+            setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 50 caracteres.');
             setNombreUsuarioError(true);
             sw = 1;
         } else {
@@ -317,55 +328,14 @@ export const UsuarioApp = ({ userLog }) => {
     return (
         <>
 
-            {usuarioAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar al usuario?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(usuarioAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setUsuarioAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {usuarioAEliminar && (
+                <Delete setEliminar={setUsuarioAEliminar} title={'usuario'} gen={true} confirmar={confirmarEliminacion} id={usuarioAEliminar.id} />
+            )}
             {usuarioNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El usuario está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setUsuarioNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setUsuarioNoEliminar} title={'usuario'} gen={true} />
             )}
 
             {usuarioAVisualizar && (
@@ -531,7 +501,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value.toUpperCase() })}
                                                     required
                                                     autoFocus
-                                                    maxLength={20}
+                                                    maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>{nombreUsuarioMsj}
@@ -548,10 +518,10 @@ export const UsuarioApp = ({ userLog }) => {
                                                     value={usuarioAGuardar.nombre}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     required
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 <div className="invalid-feedback text-dangertext-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
@@ -564,7 +534,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.nrodoc}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
+                                                    maxLength={30}
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -578,11 +548,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     value={usuarioAGuardar.correo}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={30}
-                                                    required
                                                 />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El correo es obligatorio y no debe sobrepasar los 30 caracteres.
-                                                </div>
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
@@ -683,12 +649,8 @@ export const UsuarioApp = ({ userLog }) => {
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.apellido || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
-                                                <div className="invalid-feedback text-dangertext-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El apellido es obligatorio y no debe sobrepasar los 50 caracteres.
-                                                </div>
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
@@ -700,7 +662,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.nrotelefono}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
+                                                    maxLength={30}
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -779,7 +741,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     style={{ resize: 'none', height: '260px' }}
                                                     value={usuarioAGuardar.direccion}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={100}>
+                                                    maxLength={150}>
                                                 </textarea>
                                             </div>
                                             <div className='form-group mb-1'>

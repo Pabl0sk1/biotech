@@ -1,6 +1,8 @@
 package com.back.service;
 
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import com.back.config.RestQueryErp;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Zafra;
 import com.back.repository.ZafraRepository;
@@ -21,6 +24,12 @@ public class ZafraService {
 
 	@Autowired
 	ZafraRepository rep;
+	
+	private final RestQueryErp rest;
+	
+	public ZafraService(RestQueryErp rest) {
+        this.rest = rest;
+    }
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
@@ -102,6 +111,35 @@ public class ZafraService {
 			throw new RuntimeException("No se encontro el zafra con ID: " + id);
 		}
 
+	}
+	
+	public void actualizarErp() {
+		List<Map<String, Object>> dataList = rest.fetchAll("OA21", "", "", "");
+		
+		for (Map<String, Object> item : dataList) {
+			
+			try {
+		        Integer erpId = (Integer) item.get("id");
+		        String descripcion = (String) item.get("Descripcion_cb");
+		        String cultura = (String) item.get("Cultura_txt");
+		        LocalDate fechainicio = rest.parseDate(item.get("Fecha_inicio"));
+		        LocalDate fechafin = rest.parseDate(item.get("Fecha_fin"));
+		        
+		        Zafra data = rep.findByErpid(erpId).orElse(new Zafra());
+		        data.setErpid(erpId);
+		        data.setDescripcion(descripcion);
+		        data.setCultura(cultura);
+		        data.setFechainicio(fechainicio);
+		        data.setFechafin(fechafin);
+	
+		        rep.save(data);
+		        
+			} catch (Exception e) {
+		        System.err.println("Error procesando item: " + item);
+		        e.printStackTrace();
+		    }
+	    }
+		
 	}
 	
 }

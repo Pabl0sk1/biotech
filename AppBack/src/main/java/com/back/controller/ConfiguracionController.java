@@ -61,8 +61,8 @@ public class ConfiguracionController {
 	    if (imagenurl != null && !imagenurl.isEmpty()) {
 	        String ruta = serv.guardarImagen(imagenurl);
 	        config.setImagenurl(ruta);
-	        config.setNombre(imagenurl.getOriginalFilename());
-	        config.setTipo(imagenurl.getContentType());
+	        config.setImagennombre(imagenurl.getOriginalFilename());
+	        config.setImagentipo(imagenurl.getContentType());
 	    }
 		
 		result.put("saved", serv.guardar(config));
@@ -95,12 +95,12 @@ public class ConfiguracionController {
 	    if (imagenurl != null && !imagenurl.isEmpty()) {
 	        String ruta = serv.guardarImagen(imagenurl);
 	        config.setImagenurl(ruta);
-	        config.setNombre(imagenurl.getOriginalFilename());
-	        config.setTipo(imagenurl.getContentType());
+	        config.setImagennombre(imagenurl.getOriginalFilename());
+	        config.setImagentipo(imagenurl.getContentType());
 	    } else {
 	        config.setImagenurl(exist.getImagenurl());
-	        config.setNombre(exist.getNombre());
-	        config.setTipo(exist.getTipo());
+	        config.setImagennombre(exist.getImagennombre());
+	        config.setImagentipo(exist.getImagentipo());
 	    }
 
 	    result.put("updated", serv.guardar(config));
@@ -121,8 +121,8 @@ public class ConfiguracionController {
 	    if (config.getImagenurl() != null && !config.getImagenurl().isEmpty()) {
 	        serv.eliminarImagen(config.getImagenurl());
 	        config.setImagenurl(null);
-	        config.setNombre(null);
-	        config.setTipo(null);
+	        config.setImagennombre(null);
+	        config.setImagentipo(null);
 	        serv.guardar(config);
 	    }
 

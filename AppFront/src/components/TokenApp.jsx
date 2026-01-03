@@ -5,6 +5,8 @@ import Header from '../Header';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { DateHourFormat } from '../utils/DateHourFormat.js';
+import Loading from '../layouts/Loading.jsx';
+import Delete from '../layouts/Delete.jsx';
 
 export const TokenApp = ({ userLog }) => {
 
@@ -14,6 +16,7 @@ export const TokenApp = ({ userLog }) => {
     const [totalItems, setTotalItems] = useState(0);
     const [tokenAEliminar, setTokenAEliminar] = useState(null);
     const [tokenAGuardar, setTokenAGuardar] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -71,9 +74,11 @@ export const TokenApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarTokenFn = async (id) => {
+        setLoading(true);
         await deleteToken(id);
         await AddAccess('Eliminar', id, userLog, "Tokens");
         recuperarTokens();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -86,11 +91,13 @@ export const TokenApp = ({ userLog }) => {
     };
 
     const guardarFn = async () => {
+        setLoading(true);
 
         const nuevoToken = await saveToken(userLog?.id);
         await AddAccess('Insertar', nuevoToken.saved.id, userLog, "Tokens");
         setTokenAGuardar(null);
         recuperarTokens();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -173,34 +180,11 @@ export const TokenApp = ({ userLog }) => {
     return (
         <>
 
+            {loading && (
+                <Loading />
+            )}
             {tokenAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el token?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(tokenAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setTokenAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <Delete setEliminar={setTokenAEliminar} title={'token'} gen={true} confirmar={confirmarEliminacion} id={tokenAEliminar.id} />
             )}
 
             {tokenAGuardar && (

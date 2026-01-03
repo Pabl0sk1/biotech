@@ -9,6 +9,8 @@ import { HourFormat } from '../utils/DateHourFormat.js';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Loading from '../layouts/Loading.jsx';
+import Delete from '../layouts/Delete.jsx';
 
 export const TurnoApp = ({ userLog }) => {
 
@@ -23,6 +25,7 @@ export const TurnoApp = ({ userLog }) => {
     const [turnoAEliminar, setTurnoAEliminar] = useState(null);
     const [turnoAVisualizar, setTurnoAVisualizar] = useState(null);
     const [detalleNoEliminar, setDetalleNoEliminar] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -117,9 +120,11 @@ export const TurnoApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarTurnoFn = async (id) => {
+        setLoading(true);
         await deleteShift(id);
         await AddAccess('Eliminar', id, userLog, "Turnos");
         recuperarTurnos();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -132,6 +137,7 @@ export const TurnoApp = ({ userLog }) => {
     };
 
     const guardarFn = async (turnoAGuardar) => {
+        setLoading(true);
 
         const nuevosDias = turnoAGuardar.turnodia.filter(d => {
             if (d.id === null) return true;
@@ -149,6 +155,7 @@ export const TurnoApp = ({ userLog }) => {
         setDetallesAEliminar([]);
         setTurnoAGuardar(null);
         recuperarTurnos();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -233,55 +240,11 @@ export const TurnoApp = ({ userLog }) => {
     return (
         <>
 
-            {turnoAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el turno?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(turnoAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setTurnoAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
-            {detalleNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-4 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-5 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-clipboard-x-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El turno debe tener al menos un día marcado</p>
-                                </div>
-                                <button
-                                    onClick={() => setDetalleNoEliminar(false)}
-                                    className="btn btn-danger text-black mt-3 fw-bold">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {turnoAEliminar && (
+                <Delete setEliminar={setTurnoAEliminar} title={'turno'} gen={true} confirmar={confirmarEliminacion} id={turnoAEliminar.id} />
             )}
 
             {turnoAVisualizar && (
@@ -432,10 +395,11 @@ export const TurnoApp = ({ userLog }) => {
                                                     value={turnoAGuardar.descripcion ?? ''}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                     autoFocus
+                                                    maxLength={150}
                                                     required
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>

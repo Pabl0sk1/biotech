@@ -1,6 +1,7 @@
 package com.back.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +12,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import com.back.config.RestQueryErp;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Cartera;
+import com.back.entity.Entidad;
 import com.back.repository.CarteraRepository;
+import com.back.repository.EntidadRepository;
 import jakarta.annotation.PostConstruct;
 
 @Service
@@ -21,6 +25,15 @@ public class CarteraService {
 
 	@Autowired
 	CarteraRepository rep;
+	
+	@Autowired
+	EntidadRepository repEntidad;
+	
+	private final RestQueryErp rest;
+	
+	public CarteraService(RestQueryErp rest) {
+        this.rest = rest;
+    }
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
@@ -102,6 +115,36 @@ public class CarteraService {
 			throw new RuntimeException("No se encontro el cartera con ID: " + id);
 		}
 
+	}
+	
+	public void actualizarErp() {
+		List<Map<String, Object>> dataList = rest.fetchAll("OE71", "", "", "");
+		
+		for (Map<String, Object> item : dataList) {
+			
+			try {
+		        Integer erpId = (Integer) item.get("id");
+		        Integer vendedorId = (Integer) item.get("Vendedor_id");
+		        String nombre = (String) item.get("Descripcion_cb");
+		        String region = (String) item.get("Region_txt");
+		        
+		        Entidad vendedor = null;
+		        if (vendedorId != null) vendedor = repEntidad.findByErpid(vendedorId).orElse(null);
+		        
+		        Cartera data = rep.findByErpid(erpId).orElse(new Cartera());
+		        data.setErpid(erpId);
+		        data.setEntidad(vendedor);
+		        data.setNombre(nombre);
+		        data.setRegion(region);
+	
+		        rep.save(data);
+		        
+			} catch (Exception e) {
+		        System.err.println("Error procesando item: " + item);
+		        e.printStackTrace();
+		    }
+	    }
+		
 	}
 	
 }

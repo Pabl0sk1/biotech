@@ -8,7 +8,6 @@ import { HostLocation } from './utils/HostLocation';
 export const Configuracion = ({ userLog }) => {
 
     const [entidadError, setEntidadError] = useState(false);
-    const [correoError, setCorreoError] = useState(false);
     const [cerrarConfig, setCerrarConfig] = useState(false);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
     const [imagenFile, setImagenFile] = useState(null);
@@ -21,11 +20,12 @@ export const Configuracion = ({ userLog }) => {
         entidad: "",
         correo: "",
         nrotelefono: "",
+        nrodoc: "",
         colorpri: "",
         colorsec: "",
         colorter: "",
-        nombre: "",
-        tipo: "",
+        imagennombre: "",
+        imagentipo: "",
         imagenurl: ""
     });
 
@@ -87,12 +87,6 @@ export const Configuracion = ({ userLog }) => {
         } else {
             setEntidadError(false);
         }
-        if (!config.correo) {
-            setCorreoError(true);
-            sw = 1;
-        } else {
-            setCorreoError(false);
-        }
 
         if (sw == 1) {
             event.stopPropagation();
@@ -137,8 +131,8 @@ export const Configuracion = ({ userLog }) => {
         setEliminarImagen(false);
         setConfig(prev => ({
             ...prev,
-            nombre: file.name,
-            tipo: file.type
+            imagennombre: file.name,
+            imagentipo: file.type
         }));
         const reader = new FileReader();
 
@@ -215,7 +209,7 @@ export const Configuracion = ({ userLog }) => {
                                                         setImagenFile(null);
                                                         setImagenSeleccionada(null);
                                                         setEliminarImagen(true);
-                                                        setConfig({ ...config, nombre: "", tipo: "", imagenurl: "" });
+                                                        setConfig({ ...config, imagennombre: "", imagentipo: "", imagenurl: "" });
                                                     }}
                                                 >
                                                     <i className="bi bi-x-lg"></i>
@@ -255,14 +249,14 @@ export const Configuracion = ({ userLog }) => {
                                                 name="entidad"
                                                 placeholder="Nombre de la entidad"
                                                 className={`modern-input ${entidadError ? 'error' : ''}`}
-                                                value={config.entidad}
+                                                value={config.entidad || ''}
                                                 onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                maxLength={30}
+                                                maxLength={150}
                                             />
                                             {entidadError && (
                                                 <div className="error-message">
                                                     <i className="bi bi-exclamation-triangle-fill"></i>
-                                                    La entidad es obligatoria (máx. 30 caracteres)
+                                                    La entidad es obligatoria (máx. 150 caracteres)
                                                 </div>
                                             )}
                                         </div>
@@ -270,43 +264,55 @@ export const Configuracion = ({ userLog }) => {
 
                                     <div className="col-md-6">
                                         <div className="modern-input-group">
+                                            <label htmlFor="nrodoc" className="modern-label">
+                                                <i className="bi bi-envelope me-2"></i>Número de Documento
+                                            </label>
+                                            <input
+                                                type="email"
+                                                id="nrodoc"
+                                                name="nrodoc"
+                                                placeholder="Ej: 12345678"
+                                                className="modern-input"
+                                                value={config.nrodoc || ''}
+                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                                maxLength={30}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="modern-input-group">
+                                            <label htmlFor="nrotelefono" className="modern-label">
+                                                <i className="bi bi-telephone me-2"></i>Número de Teléfono
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                id="nrotelefono"
+                                                name="nrotelefono"
+                                                placeholder="+595 21 123 456"
+                                                className="modern-input"
+                                                value={config.nrotelefono || ''}
+                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                                maxLength={30}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="modern-input-group">
                                             <label htmlFor="correo" className="modern-label">
-                                                <i className="bi bi-envelope me-2"></i>Correo Electrónico *
+                                                <i className="bi bi-envelope me-2"></i>Correo Electrónico
                                             </label>
                                             <input
                                                 type="email"
                                                 id="correo"
                                                 name="correo"
                                                 placeholder="correo@empresa.com"
-                                                className={`modern-input ${correoError ? 'error' : ''}`}
-                                                value={config.correo}
+                                                className="modern-input"
+                                                value={config.correo || ''}
                                                 onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
                                                 maxLength={30}
                                             />
-                                            {correoError && (
-                                                <div className="error-message">
-                                                    <i className="bi bi-exclamation-triangle-fill"></i>
-                                                    El correo es obligatorio (máx. 30 caracteres)
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="modern-input-group">
-                                    <label htmlFor="nrotelefono" className="modern-label">
-                                        <i className="bi bi-telephone me-2"></i>Teléfono
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        id="nrotelefono"
-                                        name="nrotelefono"
-                                        placeholder="+595 21 123 456"
-                                        className="modern-input"
-                                        value={config.nrotelefono}
-                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                        maxLength={20}
-                                    />
                                 </div>
 
                                 {/* Color Section */}

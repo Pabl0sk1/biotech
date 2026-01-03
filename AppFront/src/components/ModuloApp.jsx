@@ -4,6 +4,9 @@ import { getPermission } from '../services/permiso.service.js';
 import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
+import Delete from '../layouts/Delete.jsx';
 
 export const ModuloApp = ({ userLog }) => {
 
@@ -15,6 +18,7 @@ export const ModuloApp = ({ userLog }) => {
     const [moduloAEliminar, setModuloAEliminar] = useState(null);
     const [moduloNoEliminar, setModuloNoEliminar] = useState(null);
     const [moduloAVisualizar, setModuloAVisualizar] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
@@ -81,9 +85,11 @@ export const ModuloApp = ({ userLog }) => {
     }, [query]);
 
     const eliminarModuloFn = async (id) => {
+        setLoading(true);
         await deleteModule(id);
         await AddAccess('Eliminar', id, userLog, "Modulos");
         recuperarModulos();
+        setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
@@ -98,6 +104,7 @@ export const ModuloApp = ({ userLog }) => {
     };
 
     const guardarFn = async (moduloAGuardar) => {
+        setLoading(true);
 
         if (moduloAGuardar.id) {
             await updateModule(moduloAGuardar.id, moduloAGuardar);
@@ -108,6 +115,7 @@ export const ModuloApp = ({ userLog }) => {
         }
         setModuloAGuardar(null);
         recuperarModulos();
+        setLoading(false);
     };
 
     const nextPage = () => {
@@ -179,55 +187,14 @@ export const ModuloApp = ({ userLog }) => {
     return (
         <>
 
-            {moduloAEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-question-circle" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>¿Estás seguro de que deseas eliminar el modulo?</p>
-                                </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => confirmarEliminacion(moduloAEliminar.id)}
-                                        className="btn btn-success text-black me-4 fw-bold"
-                                    >
-                                        <i className="bi bi-trash-fill me-2"></i>Eliminar
-                                    </button>
-                                    <button
-                                        onClick={() => setModuloAEliminar(null)}
-                                        className="btn btn-danger text-black ms-4 fw-bold"
-                                    >
-                                        <i className="bi bi-x-lg me-2"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+            {loading && (
+                <Loading />
             )}
-
+            {moduloAEliminar && (
+                <Delete setEliminar={setModuloAEliminar} title={'modulo'} gen={true} confirmar={confirmarEliminacion} id={moduloAEliminar.id} />
+            )}
             {moduloNoEliminar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
-                                <div className="fw-bolder d-flex flex-column align-items-center">
-                                    <i className="bi bi-database-fill" style={{ fontSize: '7rem' }}></i>
-                                    <p className='fs-5'>El modulo está siendo referenciado en otra tabla</p>
-                                </div>
-                                <button
-                                    onClick={() => setModuloNoEliminar(null)}
-                                    className="btn btn-danger mt-3 fw-bold text-black">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <NotDelete setNoEliminar={setModuloNoEliminar} title={'modulo'} gen={true} />
             )}
 
             {moduloAVisualizar && (

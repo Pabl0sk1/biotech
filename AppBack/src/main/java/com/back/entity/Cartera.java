@@ -30,7 +30,6 @@ public class Cartera {
 	@SequenceGenerator(name = "cartera_sec", sequenceName = "carteras_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "entidad_id")
 	private Entidad entidad;
@@ -38,13 +37,13 @@ public class Cartera {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String nombre;
 	
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String region;
 	
 	private Integer erpid;

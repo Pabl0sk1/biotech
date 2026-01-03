@@ -31,10 +31,12 @@ public class Tributacion {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String tributacion;
 	
 	private Integer iva;
+	
+	private Integer erpid;
 	
 	public Tributacion(Integer id) {
 		super();

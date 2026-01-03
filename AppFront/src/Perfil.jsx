@@ -12,8 +12,6 @@ export const Perfil = ({ userLog, setUserLog }) => {
     const [nombreUsuarioMsj, setNombreUsuarioMsj] = useState('');
     const [nombreUsuarioError, setNombreUsuarioError] = useState(false);
     const [nombreError, setNombreError] = useState(false);
-    const [apellidoError, setApellidoError] = useState(false);
-    const [correoError, setCorreoError] = useState(false);
     const [cerrarPerfil, setCerrarPerfil] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
@@ -85,14 +83,17 @@ export const Perfil = ({ userLog, setUserLog }) => {
         setIsLoading(true);
         const form = event.currentTarget;
 
+        let apellido = "";
+        if (data.apellido) apellido = ", " + data.apellido;
+
         const newData = {
             ...data,
-            nomape: data.nombre + ", " + data.apellido,
+            nomape: data.nombre + apellido,
         };
 
         let sw = 0;
         if (!newData.nombreusuario) {
-            setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 20 caracteres.');
+            setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 50 caracteres.');
             setNombreUsuarioError(true);
             sw = 1;
         } else {
@@ -106,24 +107,11 @@ export const Perfil = ({ userLog, setUserLog }) => {
                 setNombreUsuarioError(false);
             }
         }
-
         if (!newData.nombre) {
             setNombreError(true);
             sw = 1;
         } else {
             setNombreError(false);
-        }
-        if (!newData.apellido) {
-            setApellidoError(true);
-            sw = 1;
-        } else {
-            setApellidoError(false);
-        }
-        if (!newData.correo) {
-            setCorreoError(true);
-            sw = 1;
-        } else {
-            setCorreoError(false);
         }
 
         if (sw == 1) {
@@ -296,7 +284,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             className={`modern-input ${nombreUsuarioError ? 'error' : ''}`}
                                             value={data.nombreusuario}
                                             onChange={(event) => setData({ ...data, [event.target.name]: event.target.value.toUpperCase() })}
-                                            maxLength={20}
+                                            maxLength={50}
                                         />
                                         {nombreUsuarioError && (
                                             <div className="error-message">
@@ -328,12 +316,12 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                                     className={`modern-input ${nombreError ? 'error' : ''}`}
                                                     value={data.nombre || ''}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
                                                 {nombreError && (
                                                     <div className="error-message">
                                                         <i className="bi bi-exclamation-triangle-fill"></i>
-                                                        El nombre es obligatorio (máx. 50 caracteres)
+                                                        El nombre es obligatorio (máx. 150 caracteres)
                                                     </div>
                                                 )}
                                             </div>
@@ -342,24 +330,18 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                         <div className="col-md-6">
                                             <div className="modern-input-group">
                                                 <label htmlFor="apellido" className="modern-label">
-                                                    <i className="bi bi-card-text me-2"></i>Apellido <span className="required-field">*</span>
+                                                    <i className="bi bi-card-text me-2"></i>Apellido
                                                 </label>
                                                 <input
                                                     type="text"
                                                     id="apellido"
                                                     name="apellido"
                                                     placeholder="Ingresa tu apellido"
-                                                    className={`modern-input ${apellidoError ? 'error' : ''}`}
+                                                    className="modern-input"
                                                     value={data.apellido || ''}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={50}
+                                                    maxLength={150}
                                                 />
-                                                {apellidoError && (
-                                                    <div className="error-message">
-                                                        <i className="bi bi-exclamation-triangle-fill"></i>
-                                                        El apellido es obligatorio (máx. 50 caracteres)
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
 
@@ -376,7 +358,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                                     className="modern-input"
                                                     value={data.nrodoc}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
+                                                    maxLength={30}
                                                 />
                                             </div>
                                         </div>
@@ -411,24 +393,18 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                         <div className="col-md-6">
                                             <div className="modern-input-group">
                                                 <label htmlFor="correo" className="modern-label">
-                                                    <i className="bi bi-envelope me-2"></i>Correo Electrónico <span className="required-field">*</span>
+                                                    <i className="bi bi-envelope me-2"></i>Correo Electrónico
                                                 </label>
                                                 <input
                                                     type="email"
                                                     id="correo"
                                                     name="correo"
                                                     placeholder="usuario@ejemplo.com"
-                                                    className={`modern-input ${correoError ? 'error' : ''}`}
+                                                    className="modern-input"
                                                     value={data.correo}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                                     maxLength={30}
                                                 />
-                                                {correoError && (
-                                                    <div className="error-message">
-                                                        <i className="bi bi-exclamation-triangle-fill"></i>
-                                                        El correo es obligatorio (máx. 30 caracteres)
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
 
@@ -445,7 +421,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                                     className="modern-input"
                                                     value={data.nrotelefono}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={15}
+                                                    maxLength={30}
                                                 />
                                             </div>
                                         </div>
@@ -463,10 +439,10 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             style={{ height: '90px' }}
                                             value={data.direccion}
                                             onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                            maxLength={100}
+                                            maxLength={150}
                                         />
                                         <div style={{ fontSize: '12px', color: '#6b7280', textAlign: 'right', marginTop: '4px' }}>
-                                            {data.direccion?.length || 0}/100 caracteres
+                                            {data.direccion?.length || 0}/150 caracteres
                                         </div>
                                     </div>
                                 </div>

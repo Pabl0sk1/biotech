@@ -1,6 +1,7 @@
 package com.back.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +12,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import com.back.config.RestQueryErp;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.GrupoProducto;
+import com.back.entity.Moneda;
 import com.back.entity.SubgrupoProducto;
+import com.back.entity.Tributacion;
 import com.back.repository.GrupoProductoRepository;
+import com.back.repository.MonedaRepository;
 import com.back.repository.SubgrupoProductoRepository;
+import com.back.repository.TributacionRepository;
 import jakarta.annotation.PostConstruct;
 
 @Service
@@ -25,13 +31,25 @@ public class GrupoProductoService {
 	GrupoProductoRepository rep;
 	
 	@Autowired
-	SubgrupoProductoRepository repD1;
+	SubgrupoProductoRepository repSubgrupoProducto;
+	
+	@Autowired
+	MonedaRepository repMoneda;
+	
+	@Autowired
+	TributacionRepository repTributacion;
+	
+	private final RestQueryErp rest;
+	
+	public GrupoProductoService(RestQueryErp rest) {
+        this.rest = rest;
+    }
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
 	@PostConstruct
     public void init() {
-		detailRegistry.put("subgroups", repD1);
+		detailRegistry.put("subgroups", repSubgrupoProducto);
     }
 	
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
@@ -98,7 +116,7 @@ public class GrupoProductoService {
 	}
 	
 	public void eliminarSubgrupo(Integer id) {
-		repD1.deleteById(id);
+		repSubgrupoProducto.deleteById(id);
 	}
 
 	public GrupoProducto buscarPorId(Integer id) {
@@ -115,7 +133,7 @@ public class GrupoProductoService {
 	
 	public SubgrupoProducto buscarPorIdSubgrupo(Integer id) {
 		
-		Optional<SubgrupoProducto> subgrupo = repD1.findById(id);
+		Optional<SubgrupoProducto> subgrupo = repSubgrupoProducto.findById(id);
 		
 		if (subgrupo.isPresent()) {
 			return subgrupo.get();
@@ -123,6 +141,64 @@ public class GrupoProductoService {
 			throw new RuntimeException("No se encontro el subgrupo con ID: " + id);
 		}
 
+	}
+	
+	public void actualizarErp() {
+		List<Map<String, Object>> dataListGrupo = rest.fetchAll("OB32", "", "", "");
+		
+		for (Map<String, Object> item : dataListGrupo) {
+			
+			try {
+		        Integer erpId = (Integer) item.get("id");
+		        Integer monedaId = (Integer) item.get("Moneda_id");
+		        Integer tributacionId = (Integer) item.get("Tributacion_id");
+		        String descripcion = (String) item.get("Descripcion_cb");
+		        
+		        Moneda moneda = null;
+		        if (monedaId != null) moneda = repMoneda.findByErpid(monedaId).orElse(null);
+		        
+		        Tributacion tributacion = null;
+		        if (tributacionId != null) tributacion = repTributacion.findByErpid(tributacionId).orElse(null);
+		        
+		        GrupoProducto data = rep.findByErpid(erpId).orElse(new GrupoProducto());
+		        data.setErpid(erpId);
+		        data.setMoneda(moneda);
+		        data.setTributacion(tributacion);
+		        data.setGrupoproducto(descripcion);
+		        
+		        rep.save(data);
+		        
+			} catch (Exception e) {
+		        System.err.println("Error procesando item: " + item);
+		        e.printStackTrace();
+		    }
+	    }
+		
+		List<Map<String, Object>> dataListSubgrupo = rest.fetchAll("OB32", "", "", "Producto_subgrupo");
+		
+		for (Map<String, Object> item : dataListSubgrupo) {
+			
+			try {
+		        Integer erpId = (Integer) item.get("id");
+		        Integer grupoId = (Integer) item.get("Producto_grupo_id");
+		        String descripcion = (String) item.get("Descripcion");
+		        
+		        GrupoProducto grupoproducto = null;
+		        if (grupoId != null) grupoproducto = rep.findByErpid(grupoId).orElse(null);
+		        
+		        SubgrupoProducto data = repSubgrupoProducto.findByErpid(erpId).orElse(new SubgrupoProducto());
+		        data.setErpid(erpId);
+		        data.setGrupoproducto(grupoproducto);
+		        data.setSubgrupoproducto(descripcion);
+		        
+		        repSubgrupoProducto.save(data);
+		        
+			} catch (Exception e) {
+		        System.err.println("Error procesando item: " + item);
+		        e.printStackTrace();
+		    }
+	    }
+		
 	}
 	
 }

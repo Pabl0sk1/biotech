@@ -31,8 +31,11 @@ public class Medida {
 	@NotNull
 	@NotEmpty
 	@NotBlank
-	@Size(max = 50)
+	@Size(max = 150)
 	private String medida;
+	
+	@Size(max = 20)
+	private String abreviatura;
 	
 	private Integer erpid;
 	

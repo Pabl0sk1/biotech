@@ -1,6 +1,7 @@
 package com.back.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
+import com.back.config.RestQueryErp;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Moneda;
 import com.back.repository.MonedaRepository;
@@ -21,6 +23,12 @@ public class MonedaService {
 
 	@Autowired
 	MonedaRepository rep;
+	
+	private final RestQueryErp rest;
+	
+	public MonedaService(RestQueryErp rest) {
+        this.rest = rest;
+    }
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
@@ -102,6 +110,33 @@ public class MonedaService {
 			throw new RuntimeException("No se encontro la moneda con ID: " + id);
 		}
 
+	}
+	
+	public void actualizarErp() {
+		List<Map<String, Object>> dataList = rest.fetchAll("OX51", "", "", "");
+		
+		for (Map<String, Object> item : dataList) {
+			
+			try {
+		        Integer erpId = (Integer) item.get("id");
+		        String descripcion = (String) item.get("Descripcion_cb");
+		        String simbolo = (String) item.get("Simbolo");
+		        String codiso = (String) item.get("Codigo_iso");
+		        
+		        Moneda data = rep.findByErpid(erpId).orElse(new Moneda());
+		        data.setErpid(erpId);
+		        data.setMoneda(descripcion);
+		        data.setSimbolo(simbolo);
+		        data.setCodiso(codiso);
+	
+		        rep.save(data);
+		        
+			} catch (Exception e) {
+		        System.err.println("Error procesando item: " + item);
+		        e.printStackTrace();
+		    }
+	    }
+		
 	}
 	
 }
