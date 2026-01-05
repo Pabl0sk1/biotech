@@ -652,7 +652,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     name="estado"
                                                     id='estado'
                                                     value={entidadAGuardar.estado ? entidadAGuardar.estado : ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
+                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
                                                     disabled={!entidadAGuardar.id}
                                                     required
                                                 >
