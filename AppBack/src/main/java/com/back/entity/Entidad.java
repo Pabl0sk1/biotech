@@ -96,7 +96,7 @@ public class Entidad {
 	private Boolean activo = true;
 	
 	@Builder.Default
-	private Boolean horaextra = true;
+	private Boolean horaextra = false;
 	
 	private Integer erpid;
 	
