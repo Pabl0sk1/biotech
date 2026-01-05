@@ -115,6 +115,7 @@ export const CargoApp = ({ userLog }) => {
     }
 
     const guardarFn = async (cargoAGuardar) => {
+        setCargoAGuardar(null);
         setLoading(true);
 
         if (cargoAGuardar.id) {
@@ -124,7 +125,6 @@ export const CargoApp = ({ userLog }) => {
             const nuevoCargo = await savePosition(cargoAGuardar);
             await AddAccess('Insertar', nuevoCargo.saved.id, userLog, "Cargos");
         }
-        setCargoAGuardar(null);
         recuperarCargos();
         setLoading(false);
     };

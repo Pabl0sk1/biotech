@@ -192,6 +192,7 @@ export const EntidadApp = ({ userLog }) => {
     }
 
     const guardarFn = async (entidadAGuardar) => {
+        setEntidadAGuardar(null);
         setLoading(true);
 
         let activo = true;
@@ -213,7 +214,6 @@ export const EntidadApp = ({ userLog }) => {
             const nuevoEntidad = await saveEntity(entidadActualizado);
             await AddAccess('Insertar', nuevoEntidad.saved.id, userLog, "Entidades");
         }
-        setEntidadAGuardar(null);
         recuperarEntidades();
         setLoading(false);
     };

@@ -116,6 +116,7 @@ export const TributacionApp = ({ userLog }) => {
     }
 
     const guardarFn = async (tributacionAGuardar) => {
+        setTributacionAGuardar(null);
         setLoading(true);
 
         if (tributacionAGuardar.id) {
@@ -125,7 +126,6 @@ export const TributacionApp = ({ userLog }) => {
             const nuevoTributacion = await saveTaxation(tributacionAGuardar);
             await AddAccess('Insertar', nuevoTributacion.saved.id, userLog, "Tributaciones");
         }
-        setTributacionAGuardar(null);
         recuperarTributaciones();
         setLoading(false);
     };

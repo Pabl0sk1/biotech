@@ -115,6 +115,7 @@ export const PrincipioActivoApp = ({ userLog }) => {
     }
 
     const guardarFn = async (principioactivoAGuardar) => {
+        setPrincipioActivoAGuardar(null);
         setLoading(true);
 
         if (principioactivoAGuardar.id) {
@@ -124,7 +125,6 @@ export const PrincipioActivoApp = ({ userLog }) => {
             const nuevoPrincipioActivo = await saveAsset(principioactivoAGuardar);
             await AddAccess('Insertar', nuevoPrincipioActivo.saved.id, userLog, "Principio Activos");
         }
-        setPrincipioActivoAGuardar(null);
         recuperarPrincipioActivos();
         setLoading(false);
     };

@@ -104,6 +104,7 @@ export const ModuloApp = ({ userLog }) => {
     };
 
     const guardarFn = async (moduloAGuardar) => {
+        setModuloAGuardar(null);
         setLoading(true);
 
         if (moduloAGuardar.id) {
@@ -113,7 +114,6 @@ export const ModuloApp = ({ userLog }) => {
             const nuevoModulo = await saveModule(moduloAGuardar);
             await AddAccess('Insertar', nuevoModulo.saved.id, userLog, "Modulos");
         }
-        setModuloAGuardar(null);
         recuperarModulos();
         setLoading(false);
     };

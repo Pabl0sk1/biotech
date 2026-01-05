@@ -91,11 +91,11 @@ export const TokenApp = ({ userLog }) => {
     };
 
     const guardarFn = async () => {
+        setTokenAGuardar(null);
         setLoading(true);
 
         const nuevoToken = await saveToken(userLog?.id);
         await AddAccess('Insertar', nuevoToken.saved.id, userLog, "Tokens");
-        setTokenAGuardar(null);
         recuperarTokens();
         setLoading(false);
     };

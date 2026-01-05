@@ -103,6 +103,7 @@ export const ClaseApp = ({ userLog }) => {
     };
 
     const guardarFn = async (claseAGuardar) => {
+        setClaseAGuardar(null);
         setLoading(true);
 
         if (claseAGuardar.id) {
@@ -112,7 +113,6 @@ export const ClaseApp = ({ userLog }) => {
             const nuevoClase = await saveProductType(claseAGuardar);
             await AddAccess('Insertar', nuevoClase.saved.id, userLog, "Clases");
         }
-        setClaseAGuardar(null);
         recuperarClases();
         setLoading(false);
     };

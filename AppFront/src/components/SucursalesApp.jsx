@@ -116,6 +116,7 @@ export const SucursalApp = ({ userLog }) => {
     }
 
     const guardarFn = async (sucursalAGuardar) => {
+        setSucursalAGuardar(null);
         setLoading(true);
 
         if (sucursalAGuardar.id) {
@@ -125,7 +126,6 @@ export const SucursalApp = ({ userLog }) => {
             const nuevoSucursal = await saveBranch(sucursalAGuardar);
             await AddAccess('Insertar', nuevoSucursal.saved.id, userLog, "Sucursales");
         }
-        setSucursalAGuardar(null);
         recuperarSucursales();
         setLoading(false);
     };

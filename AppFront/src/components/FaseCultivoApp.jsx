@@ -115,6 +115,7 @@ export const FaseCultivoApp = ({ userLog }) => {
     }
 
     const guardarFn = async (fasecultivoAGuardar) => {
+        setFaseCultivoAGuardar(null);
         setLoading(true);
 
         if (fasecultivoAGuardar.id) {
@@ -124,7 +125,6 @@ export const FaseCultivoApp = ({ userLog }) => {
             const nuevoFaseCultivo = await saveCrop(fasecultivoAGuardar);
             await AddAccess('Insertar', nuevoFaseCultivo.saved.id, userLog, "Fase de Cultivos");
         }
-        setFaseCultivoAGuardar(null);
         recuperarFaseCultivos();
         setLoading(false);
     };

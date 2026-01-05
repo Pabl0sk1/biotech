@@ -141,6 +141,7 @@ export const CarteraApp = ({ userLog }) => {
     }
 
     const guardarFn = async (carteraAGuardar) => {
+        setCarteraAGuardar(null);
         setLoading(true);
 
         if (carteraAGuardar.id) {
@@ -150,7 +151,6 @@ export const CarteraApp = ({ userLog }) => {
             const nuevoCartera = await saveWallet(carteraAGuardar);
             await AddAccess('Insertar', nuevoCartera.saved.id, userLog, "Carteras");
         }
-        setCarteraAGuardar(null);
         recuperarCarteras();
         setLoading(false);
     };

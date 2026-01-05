@@ -144,6 +144,7 @@ export const PermisoApp = ({ userLog }) => {
     };
 
     const guardarFn = async (permisoAGuardar) => {
+        setPermisoAGuardar(null);
         setLoading(true);
 
         if (permisoAGuardar.id) {
@@ -153,7 +154,6 @@ export const PermisoApp = ({ userLog }) => {
             const nuevoPermiso = await savePermission(permisoAGuardar);
             await AddAccess('Insertar', nuevoPermiso.saved.id, userLog, "Permisos");
         }
-        setPermisoAGuardar(null);
         recuperarPermisos();
         setLoading(false);
     };

@@ -103,6 +103,7 @@ export const ModalidadApp = ({ userLog }) => {
     };
 
     const guardarFn = async (modalidadAGuardar) => {
+        setModalidadAGuardar(null);
         setLoading(true);
 
         if (modalidadAGuardar.id) {
@@ -112,7 +113,6 @@ export const ModalidadApp = ({ userLog }) => {
             const nuevoModalidad = await saveSchedule(modalidadAGuardar);
             await AddAccess('Insertar', nuevoModalidad.saved.id, userLog, "Modalidades");
         }
-        setModalidadAGuardar(null);
         recuperarModalidades();
         setLoading(false);
     };

@@ -104,6 +104,7 @@ export const RolApp = ({ userLog }) => {
     };
 
     const guardarFn = async (rolAGuardar) => {
+        setRolAGuardar(null);
         setLoading(true);
 
         if (rolAGuardar.id) {
@@ -113,7 +114,6 @@ export const RolApp = ({ userLog }) => {
             const nuevoRol = await saveRole(rolAGuardar);
             await AddAccess('Insertar', nuevoRol.saved.id, userLog, "Roles");
         }
-        setRolAGuardar(null);
         recuperarRoles();
         setLoading(false);
     };

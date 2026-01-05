@@ -116,6 +116,7 @@ export const ZafraApp = ({ userLog }) => {
     }
 
     const guardarFn = async (zafraAGuardar) => {
+        setZafraAGuardar(null);
         setLoading(true);
 
         if (zafraAGuardar.id) {
@@ -125,7 +126,6 @@ export const ZafraApp = ({ userLog }) => {
             const nuevoZafra = await saveHarvest(zafraAGuardar);
             await AddAccess('Insertar', nuevoZafra.saved.id, userLog, "Zafras");
         }
-        setZafraAGuardar(null);
         recuperarZafras();
         setLoading(false);
     };

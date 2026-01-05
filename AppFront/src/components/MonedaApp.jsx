@@ -117,6 +117,7 @@ export const MonedaApp = ({ userLog }) => {
     }
 
     const guardarFn = async (monedaAGuardar) => {
+        setMonedaAGuardar(null);
         setLoading(true);
 
         if (monedaAGuardar.id) {
@@ -126,7 +127,6 @@ export const MonedaApp = ({ userLog }) => {
             const nuevoMoneda = await saveCurrency(monedaAGuardar);
             await AddAccess('Insertar', nuevoMoneda.saved.id, userLog, "Monedas");
         }
-        setMonedaAGuardar(null);
         recuperarMonedas();
         setLoading(false);
     };

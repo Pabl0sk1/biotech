@@ -103,6 +103,7 @@ export const CategoriaApp = ({ userLog }) => {
     };
 
     const guardarFn = async (categoriaAGuardar) => {
+        setCategoriaAGuardar(null);
         setLoading(true);
 
         if (categoriaAGuardar.id) {
@@ -112,7 +113,6 @@ export const CategoriaApp = ({ userLog }) => {
             const nuevoCategoria = await saveEntityType(categoriaAGuardar);
             await AddAccess('Insertar', nuevoCategoria.saved.id, userLog, "Categorias");
         }
-        setCategoriaAGuardar(null);
         recuperarCategorias();
         setLoading(false);
     };

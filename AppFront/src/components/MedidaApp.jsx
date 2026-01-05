@@ -116,6 +116,7 @@ export const MedidaApp = ({ userLog }) => {
     }
 
     const guardarFn = async (medidaAGuardar) => {
+        setMedidaAGuardar(null);
         setLoading(true);
 
         if (medidaAGuardar.id) {
@@ -125,7 +126,6 @@ export const MedidaApp = ({ userLog }) => {
             const nuevoMedida = await saveMeasure(medidaAGuardar);
             await AddAccess('Insertar', nuevoMedida.saved.id, userLog, "Medidas");
         }
-        setMedidaAGuardar(null);
         recuperarMedidas();
         setLoading(false);
     };

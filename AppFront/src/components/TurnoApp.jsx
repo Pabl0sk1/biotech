@@ -137,6 +137,7 @@ export const TurnoApp = ({ userLog }) => {
     };
 
     const guardarFn = async (turnoAGuardar) => {
+        setTurnoAGuardar(null);
         setLoading(true);
 
         const nuevosDias = turnoAGuardar.turnodia.filter(d => {
@@ -153,7 +154,6 @@ export const TurnoApp = ({ userLog }) => {
             await AddAccess('Insertar', nuevaTurno.saved.id, userLog, "Turnos");
         }
         setDetallesAEliminar([]);
-        setTurnoAGuardar(null);
         recuperarTurnos();
         setLoading(false);
     };

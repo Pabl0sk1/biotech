@@ -162,6 +162,7 @@ export const UsuarioApp = ({ userLog }) => {
     };
 
     const guardarFn = async (usuarioAGuardar) => {
+        setUsuarioAGuardar(null);
         setLoading(true);
 
         let activo = true;
@@ -183,7 +184,6 @@ export const UsuarioApp = ({ userLog }) => {
             const nuevoUsuario = await saveUser(usuarioActualizado);
             await AddAccess('Insertar', nuevoUsuario.saved.id, userLog, "Usuarios");
         }
-        setUsuarioAGuardar(null);
         recuperarUsuarios();
         setLoading(false);
     };
