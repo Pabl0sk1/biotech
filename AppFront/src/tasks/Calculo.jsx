@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getEntity } from '../services/entidad.service';
+import { getBranch } from '../services/sucursal.service';
 import { getShift } from '../services/turno.service';
 import { generarExcel } from './ArchivoExcel';
 import Header from '../Header';
@@ -20,6 +21,8 @@ export const Calculo = ({ userLog }) => {
     const [csvStatus, setCsvStatus] = useState('');
     const [turnos, setTurnos] = useState([]);
     const [funcionarios, setFuncionarios] = useState([]);
+    const [sucursales, setSucursales] = useState([]);
+    const [selectedSucursal, setSelectedSucursal] = useState(null);
     const sigLinea = useRef({});
     const [selectedFuncionarios, setSelectedFuncionarios] = useState([]);
 
@@ -669,8 +672,14 @@ export const Calculo = ({ userLog }) => {
         }));
     };
 
+    const recuperarSucursales = async () => {
+        const response = await getBranch();
+        setSucursales(response.items);
+    }
+
     const recuperarFuncionarios = async () => {
-        const response = await getEntity('', '', '', 'tipoentidad.id:eq:1');
+        const suc = selectedSucursal ? `;sucursal.id:eq:${selectedSucursal.id}` : '';
+        const response = await getEntity('', '', '', `categorias:contains:Funcionario;estado:eq:Activo;horaextra:eq:true${suc}`);
         setFuncionarios(response.items);
         const fechasDelMes = obtenerFechasDelMes();
 
@@ -697,6 +706,11 @@ export const Calculo = ({ userLog }) => {
 
     useEffect(() => {
         recuperarFuncionarios();
+    }, [selectedSucursal]);
+
+    useEffect(() => {
+        recuperarFuncionarios();
+        recuperarSucursales();
         recuperarTurnos();
     }, []);
 
@@ -837,48 +851,59 @@ export const Calculo = ({ userLog }) => {
                                     )}
                                 </div>
 
-                                {/* Sección de gestión de feriados */}
+                                {/* Sección de selección de sucursal */}
                                 <div className="modern-input-group">
                                     <label className="modern-label">
-                                        <i className="bi bi-calendar-day me-2"></i>Gestión de Feriados
+                                        <i className="bi bi-building me-2"></i>Seleccionar Sucursal
                                     </label>
-                                    {/* Campo para agregar nuevos feriados */}
-                                    <div className="input-group mb-3 z-0">
-                                        <input
-                                            type="date"
-                                            className="modern-input form-control mw-100"
-                                            value={nuevaFechaFeriado}
-                                            onChange={(e) => setNuevaFechaFeriado(e.target.value)}
-                                            style={{ maxWidth: '200px' }}
-                                        />
+                                    <div className="dropdown mb-3">
                                         <button
+                                            className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
                                             type="button"
-                                            className="modern-button btn-primary"
-                                            onClick={agregarFeriado}
-                                            disabled={!nuevaFechaFeriado}
+                                            data-bs-toggle="dropdown"
                                         >
-                                            <i className="bi bi-plus-circle me-2"></i>
+                                            {selectedSucursal
+                                                ? selectedSucursal.sucursal
+                                                : "Todas las sucursales"
+                                            }
                                         </button>
-                                    </div>
-                                    {/* Lista de feriados */}
-                                    {data.listaferiados.length > 0 && (
-                                        <div className='alert alert-danger p-2 m-0 rounded-2 d-flex align-items-center justify-content-center text-center'>
-                                            <div className="d-flex flex-wrap gap-2 justify-content-center">
-                                                {data.listaferiados.map((fechaFeriado, index) => (
-                                                    <div key={index} className="badge bg-danger fs-6 d-flex align-items-center">
-                                                        <span className="me-2">{formatearFecha(fechaFeriado)}</span>
+                                        <ul className="dropdown-menu p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                            {/* Opción para todas las sucursales */}
+                                            <li>
+                                                <button
+                                                    className={`dropdown-item ${!selectedSucursal ? 'active' : ''}`}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setSelectedSucursal(null);
+                                                        setSelectedFuncionarios([]);
+                                                    }}
+                                                >
+                                                    <i className="bi bi-buildings me-2"></i>
+                                                    Todas las sucursales
+                                                </button>
+                                            </li>
+                                            <li><hr className="dropdown-divider" /></li>
+
+                                            {/* Lista de sucursales */}
+                                            {sucursales
+                                                .filter(sucursal => !['000-GENERAL', '009-LOTEAMIENTO MBARACAYU'].includes(sucursal.sucursal))
+                                                .map(sucursal => (
+                                                    <li key={sucursal.id}>
                                                         <button
-                                                            type="button"
-                                                            className="btn-close btn-close-white"
-                                                            aria-label="Eliminar feriado"
-                                                            onClick={() => eliminarFeriado(fechaFeriado)}
-                                                            style={{ fontSize: '0.7em' }}
-                                                        ></button>
-                                                    </div>
+                                                            className={`dropdown-item ${selectedSucursal?.id === sucursal.id ? 'active' : ''}`}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setSelectedSucursal(sucursal);
+                                                                setSelectedFuncionarios([]);
+                                                            }}
+                                                        >
+                                                            <i className="bi bi-building me-2"></i>
+                                                            {sucursal.sucursal}
+                                                        </button>
+                                                    </li>
                                                 ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 {/* Sección de selección de funcionarios */}
@@ -914,7 +939,8 @@ export const Calculo = ({ userLog }) => {
                                                 >
                                                     {selectedFuncionarios.length === funcionarios.length
                                                         ? "Desmarcar todos"
-                                                        : "Seleccionar todos"}
+                                                        : "Seleccionar todos"
+                                                    }
                                                 </button>
                                             </li>
 

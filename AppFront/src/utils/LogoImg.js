@@ -6,7 +6,7 @@ export const LogoImg = async () => {
 
     return {
         entidad: result.entidad,
-        tipo: result.tipo.split('/')[1],
+        tipo: result.imagentipo.split('/')[1],
         imagen: result.imagenurl
     };
 };

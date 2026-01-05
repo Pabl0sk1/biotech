@@ -10,7 +10,6 @@ import { NumericFormat } from 'react-number-format';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
-import { DateHourFormat } from '../utils/DateHourFormat.js';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
@@ -18,6 +17,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
+import { TruncDots } from '../utils/TruncDots.js';
 
 export const EntidadApp = ({ userLog }) => {
 
@@ -285,6 +285,10 @@ export const EntidadApp = ({ userLog }) => {
         }
     };
 
+    const obtenerClaseEstado = (activo) => {
+        return activo ? 'text-bg-success' : 'text-bg-danger';
+    };
+
     const getCategoriasSeleccionadas = () => {
         if (entidadAGuardar.categorias.length == 0) return [];
 
@@ -401,6 +405,17 @@ export const EntidadApp = ({ userLog }) => {
                                             value={entidadAVisualizar.estado || ''}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={entidadAVisualizar.erpid || ''}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0'>
@@ -467,17 +482,16 @@ export const EntidadApp = ({ userLog }) => {
                                             value={entidadAVisualizar.categorias || ''}
                                             readOnly
                                         />
-                                        <div hidden={!userLog?.id == 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={entidadAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
+                                        <label htmlFor="horaextra" className="form-label m-0 mb-2 me-2 d-flex">Hora Extra</label>
+                                        <input
+                                            type="checkbox"
+                                            id="horaextra"
+                                            name="horaextra"
+                                            className="form-check-input"
+                                            style={{ width: '60px', height: '30px' }}
+                                            checked={entidadAVisualizar.horaextra || ''}
+                                            readOnly
+                                        />
                                     </div>
                                 </div>
                                 <button onClick={() => setEntidadAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
@@ -650,6 +664,17 @@ export const EntidadApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
                                                 </div>
                                             </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    value={entidadAGuardar.erpid || ''}
+                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}
                                         <div className='col ms-5 ps-0'>
@@ -773,15 +798,19 @@ export const EntidadApp = ({ userLog }) => {
                                                     required={true}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="horaextra" className="form-label m-0 mb-2 me-2 d-flex">Hora Extra</label>
                                                 <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control border-input w-100"
-                                                    value={entidadAGuardar.erpid || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
+                                                    type="checkbox"
+                                                    id="horaextra"
+                                                    name="horaextra"
+                                                    className="form-check-input"
+                                                    style={{ width: '60px', height: '30px' }}
+                                                    checked={entidadAGuardar.horaextra || ''}
+                                                    onChange={(e) => {
+                                                        const check = e.target.checked;
+                                                        setEntidadAGuardar({ ...entidadAGuardar, [e.target.name]: check });
+                                                    }}
                                                 />
                                             </div>
                                         </div>
@@ -923,19 +952,45 @@ export const EntidadApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("fechanacimiento")} className="sortable-header">
-                                            Fecha de Nacimiento
-                                            <i className={`bi ${getSortIcon("fechanacimiento")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("categorias")} className="sortable-header">
+                                            Categoría
+                                            <i className={`bi ${getSortIcon("categorias")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["fechanacimiento"] ?? {};
+                                                    const previo = filtrosAplicados["categorias"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "fechanacimiento",
-                                                        type: "date",
+                                                        field: "categorias",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("estado")} className="sortable-header">
+                                            Estado
+                                            <i className={`bi ${getSortIcon("estado")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["estado"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "estado",
+                                                        type: "string",
                                                         visible: true,
                                                         op: previo.op,
                                                         value: previo.value,
@@ -955,7 +1010,7 @@ export const EntidadApp = ({ userLog }) => {
                                 <tbody>
                                     {entidades.length === 0 ? (
                                         <tr>
-                                            <td colSpan="6" className="text-center py-3 text-muted fs-3 fw-bold">
+                                            <td colSpan="7" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
                                             </td>
                                         </tr>
@@ -975,10 +1030,15 @@ export const EntidadApp = ({ userLog }) => {
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.nomape}</td>
+                                                    <td className='text-start' style={{ width: '300px' }}>{TruncDots(v.nomape)}</td>
                                                     <td>{v.sucursal?.sucursal}</td>
                                                     <td className='text-end'>{v.nrodoc}</td>
-                                                    <td>{DateHourFormat(v.fechanacimiento, 0)}</td>
+                                                    <td>{v.categorias}</td>
+                                                    <td style={{ width: '140px' }}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
+                                                            {v.estado}
+                                                        </p>
+                                                    </td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {

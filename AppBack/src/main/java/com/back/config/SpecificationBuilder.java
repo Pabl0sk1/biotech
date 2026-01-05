@@ -186,6 +186,16 @@ public class SpecificationBuilder {
         if (fieldType.equals(Float.class) || fieldType.equals(float.class)) {
             return Float.valueOf(value);
         }
+        if (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class)) {
+            String v = value.trim().toLowerCase();
+            if (v.equals("true") || v.equals("1") || v.equals("si") || v.equals("yes")) {
+                return true;
+            }
+            if (v.equals("false") || v.equals("0") || v.equals("no")) {
+                return false;
+            }
+            throw new IllegalArgumentException("Valor booleano inválido: " + value);
+        }
         if (fieldType.equals(LocalDate.class)) {
             return LocalDate.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         }

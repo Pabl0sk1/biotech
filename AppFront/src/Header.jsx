@@ -30,7 +30,7 @@ export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebar
 
                     <small className="text-muted">{userLog?.nombreusuario}</small>
                 </div>
-                <Link to="https://biotech.biosafrasgroup.com.py/docs" className='p-0 me-2'>
+                <Link to="https://biotech.biosafrasgroup.com.py/docs" className='p-0 me-2' target='_blank'>
                     <img
                         className='logo-img-bar px-2'
                         src="/biotech/api.svg"
