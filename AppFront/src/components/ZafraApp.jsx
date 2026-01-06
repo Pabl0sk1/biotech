@@ -333,6 +333,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     id="erpid"
                                                     name="erpid"
                                                     className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
                                                     value={zafraAGuardar.erpid || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
                                                 />

@@ -30,7 +30,6 @@ public class Producto {
 	@SequenceGenerator(name = "producto_sec", sequenceName = "productos_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "entidad_id")
 	private Entidad entidad;
@@ -40,12 +39,10 @@ public class Producto {
 	@JoinColumn(name = "nombrecomercial_id")
 	private NombreComercial nombrecomercial;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "principioactivo_id")
 	private PrincipioActivo principioactivo;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "fasecultivo_id")
 	private FaseCultivo fasecultivo;

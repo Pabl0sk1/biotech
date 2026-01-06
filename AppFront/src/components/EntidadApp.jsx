@@ -178,7 +178,7 @@ export const EntidadApp = ({ userLog }) => {
 
     const handleEliminarEntidad = async (entidad) => {
         const rel = await getWallet('', '', '', `entidad.id:eq:${entidad.id}`);
-        const rel2 = await getProduct('', '', '', `entidad.id:eq:${entidad.id}`)
+        const rel2 = await getProduct('', '', '', `entidad.id:eq:${entidad.id}`);
         if (rel.items.length > 0 || rel2.items.length > 0) setEntidadNoEliminar(entidad);
         else setEntidadAEliminar(entidad);
     };
@@ -671,6 +671,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     id="erpid"
                                                     name="erpid"
                                                     className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
                                                     value={entidadAGuardar.erpid || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -1030,7 +1031,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start' style={{ width: '300px' }}>{TruncDots(v.nomape)}</td>
+                                                    <td className='text-start'>{TruncDots(v.nomape, 35)}</td>
                                                     <td>{v.sucursal?.sucursal}</td>
                                                     <td className='text-end'>{v.nrodoc}</td>
                                                     <td>{v.categorias}</td>
@@ -1125,7 +1126,7 @@ export const EntidadApp = ({ userLog }) => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 };

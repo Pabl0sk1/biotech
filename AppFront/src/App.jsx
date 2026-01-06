@@ -29,6 +29,9 @@ import { TributacionApp } from './components/TributacionApp.jsx';
 import { CategoriaApp } from './components/CategoriaApp.jsx';
 import { ClaseApp } from './components/ClaseApp.jsx';
 import { PrincipioActivoApp } from './components/PrincipioActivoApp.jsx';
+import { GrupoProductoApp } from './components/GrupoProductoApp.jsx';
+import { NombreComercialApp } from './components/NombreComercialApp.jsx';
+import { ProductoApp } from './components/ProductoApp.jsx';
 import { getConfig } from "./services/config.service";
 import { getPermission } from './services/permiso.service.js';
 
@@ -107,6 +110,11 @@ function App() {
             <EntidadApp userLog={userLog} />
           </ProtectedRoute>
         } />
+        <Route path={UrlLocal + "/cadastres/products"} element={
+          <ProtectedRoute moduloVar="ca02" permisos={permisos}>
+            <ProductoApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
 
         {/* Configuraciones - Generales */}
         <Route path={UrlLocal + "/config/general/crops"} element={
@@ -171,7 +179,17 @@ function App() {
             <CarteraApp userLog={userLog} />
           </ProtectedRoute>
         } />
+        <Route path={UrlLocal + "/config/commercial/tradenames"} element={
+          <ProtectedRoute moduloVar="cm02" permisos={permisos}>
+            <NombreComercialApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
         {/* Configuraciones - Productos */}
+        <Route path={UrlLocal + "/config/product/productgroups"} element={
+          <ProtectedRoute moduloVar="pr01" permisos={permisos}>
+            <GrupoProductoApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
         <Route path={UrlLocal + "/config/product/measures"} element={
           <ProtectedRoute moduloVar="pr02" permisos={permisos}>
             <MedidaApp userLog={userLog} />

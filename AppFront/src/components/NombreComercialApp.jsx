@@ -1,30 +1,34 @@
 import { useState, useEffect } from 'react';
-import { getShift, saveShift, updateShift, deleteShift } from '../services/turno.service.js';
-import { getSchedule } from '../services/tipoturno.service.js';
+import { getCommercial, saveCommercial, updateCommercial, deleteCommercial, updateErpCommercial } from '../services/nombrecomercial.service.js';
+import { getMeasure } from '../services/medida.service.js';
+import { getProductGroup } from '../services/grupoproducto.service.js';
+import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from "../FiltroModal.jsx";
-import { HourFormat } from '../utils/DateHourFormat.js';
+import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
-export const TurnoApp = ({ userLog }) => {
+export const NombreComercialApp = ({ userLog }) => {
 
     const navigate = useNavigate();
-    const [turnos, setTurnos] = useState([]);
-    const [modalidades, setModalidades] = useState([]);
-    const [detallesAEliminar, setDetallesAEliminar] = useState([]);
+    const [nombrecomerciales, setNombreComerciales] = useState([]);
+    const [medidas, setMedidas] = useState([]);
+    const [subgrupos, setSubgrupos] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [turnoAGuardar, setTurnoAGuardar] = useState(null);
-    const [turnoAEliminar, setTurnoAEliminar] = useState(null);
-    const [turnoAVisualizar, setTurnoAVisualizar] = useState(null);
-    const [detalleNoEliminar, setDetalleNoEliminar] = useState(false);
+    const [nombrecomercialAGuardar, setNombreComercialAGuardar] = useState(null);
+    const [nombrecomercialAEliminar, setNombreComercialAEliminar] = useState(null);
+    const [nombrecomercialNoEliminar, setNombreComercialNoEliminar] = useState(null);
+    const [nombrecomercialAVisualizar, setNombreComercialAVisualizar] = useState(null);
+    const [nombrecomercialErp, setNombreComercialErp] = useState(null);
     const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
@@ -35,12 +39,15 @@ export const TurnoApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearModalidad, setPuedeCrearModalidad] = useState(false);
+    const [puedeCrearSubgrupo, setPuedeCrearSubgrupo] = useState(false);
+    const [puedeCrearMedida, setPuedeCrearMedida] = useState(false);
 
     useEffect(() => {
         const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['rh02'], userLog?.tipousuario?.id);
-            setPuedeCrearModalidad(ok1);
+            const ok1 = await tienePermisoRuta(['pr01'], userLog?.tipousuario?.id);
+            setPuedeCrearSubgrupo(ok1);
+            const ok2 = await tienePermisoRuta(['pr02'], userLog?.tipousuario?.id);
+            setPuedeCrearMedida(ok2);
         };
 
         if (userLog?.tipousuario?.id) {
@@ -51,21 +58,18 @@ export const TurnoApp = ({ userLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                if (detalleNoEliminar) {
-                    setDetalleNoEliminar(false);
-                } else {
-                    setDetallesAEliminar([]);
-                    setTurnoAEliminar(null);
-                    setTurnoAVisualizar(null);
-                    setTurnoAGuardar(null);
-                }
+                setNombreComercialAEliminar(null);
+                setNombreComercialNoEliminar(null);
+                setNombreComercialAVisualizar(null);
+                setNombreComercialAGuardar(null);
+                setNombreComercialErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, [detalleNoEliminar]);
+    }, []);
 
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
@@ -82,79 +86,84 @@ export const TurnoApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        tipoturno: null,
-        descripcion: "",
-        horaent: "00:00",
-        horasal: "00:00",
-        horades: "00:00",
-        thoras: 0,
-        extporcen: 0,
-        turnodia: []
+        subgrupoproducto: null,
+        medida: null,
+        nombrecomercial: "",
+        erpid: 0
     };
 
-    const recuperarTurnos = () => {
+    const recuperarNombreComerciales = () => {
         setQuery(q => ({ ...q }));
+    };
+
+    const recuperarSubgrupos = async () => {
+        const response = await getProductGroup('', '', '', '', 'subgroups');
+        setSubgrupos(response.items);
     }
 
-    const recuperarModalidades = async () => {
-        const response = await getSchedule();
-        setModalidades(response.items);
+    const recuperarMedidas = async () => {
+        const response = await getMeasure();
+        setMedidas(response.items);
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh03`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:cm02`);
         setPermiso(response.items[0]);
     }
 
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
-            const response = await getShift(query.page, query.size, query.order, filtrosFinal);
-            setTurnos(response.items);
+            const response = await getCommercial(query.page, query.size, query.order, filtrosFinal);
+            setNombreComerciales(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarModalidades();
+            recuperarSubgrupos();
+            recuperarMedidas();
             permisoUsuario();
         };
         load();
     }, [query]);
 
-    const eliminarTurnoFn = async (id) => {
+    const eliminarNombreComercialFn = async (id) => {
         setLoading(true);
-        await deleteShift(id);
-        await AddAccess('Eliminar', id, userLog, "Turnos");
-        recuperarTurnos();
+        await deleteCommercial(id);
+        await AddAccess('Eliminar', id, userLog, "Nombres Comerciales");
+        recuperarNombreComerciales();
         setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarTurnoFn(id);
-        setTurnoAEliminar(null);
+        eliminarNombreComercialFn(id);
+        setNombreComercialAEliminar(null);
     }
 
-    const handleEliminarTurno = async (turno) => {
-        setTurnoAEliminar(turno);
+    const handleEliminarNombreComercial = async (nombrecomercial) => {
+        const rel = await getProduct('', '', '', `nombrecomercial.nombrecomercial.id:eq:${nombrecomercial.id}`);
+        if (rel.items.length > 0) setNombreComercialNoEliminar(nombrecomercial);
+        else setNombreComercialAEliminar(nombrecomercial);
     };
 
-    const guardarFn = async (turnoAGuardar) => {
-        setTurnoAGuardar(null);
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setNombreComercialErp(null);
+        await updateErpCommercial();
+        recuperarNombreComerciales();
+        setLoading(false);
+    }
+
+    const guardarFn = async (nombrecomercialAGuardar) => {
+        setNombreComercialAGuardar(null);
         setLoading(true);
 
-        const nuevosDias = turnoAGuardar.turnodia.filter(d => {
-            if (d.id === null) return true;
-            return !detallesAEliminar.includes(d.id);
-        });
-        const turnoActualizado = { ...turnoAGuardar, turnodia: nuevosDias };
-
-        if (turnoAGuardar.id) {
-            await updateShift(turnoActualizado.id, turnoActualizado);
-            await AddAccess('Modificar', turnoActualizado.id, userLog, "Turnos");
+        if (nombrecomercialAGuardar.id) {
+            await updateCommercial(nombrecomercialAGuardar.id, nombrecomercialAGuardar);
+            await AddAccess('Modificar', nombrecomercialAGuardar.id, userLog, "Nombres Comerciales");
         } else {
-            const nuevaTurno = await saveShift(turnoActualizado);
-            await AddAccess('Insertar', nuevaTurno.saved.id, userLog, "Turnos");
+            const nuevoNombreComercial = await saveCommercial(nombrecomercialAGuardar);
+            await AddAccess('Insertar', nuevoNombreComercial.saved.id, userLog, "Nombres Comerciales");
         }
-        setDetallesAEliminar([]);
-        recuperarTurnos();
+        recuperarNombreComerciales();
         setLoading(false);
     };
 
@@ -209,20 +218,16 @@ export const TurnoApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         let sw = 0;
-        if (!turnoAGuardar.turnodia.length) {
-            sw = 1;
-            setDetalleNoEliminar(true);
-        }
-        if (!turnoAGuardar.tipoturno) sw = 1;
+        if (!nombrecomercialAGuardar.nombrecomercial || !nombrecomercialAGuardar.medida || !nombrecomercialAGuardar.subgrupoproducto) sw = 1;
 
-        if (sw == 1) {
+        if (sw === 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
             return;
         }
 
         if (form.checkValidity()) {
-            guardarFn({ ...turnoAGuardar });
+            guardarFn({ ...nombrecomercialAGuardar });
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -232,9 +237,9 @@ export const TurnoApp = ({ userLog }) => {
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
         setFiltrosAplicados({});
-    }
+    };
 
-    const rows = [...turnos];
+    const rows = [...nombrecomerciales];
     while (rows.length < query.size) rows.push(null);
 
     return (
@@ -243,11 +248,17 @@ export const TurnoApp = ({ userLog }) => {
             {loading && (
                 <Loading />
             )}
-            {turnoAEliminar && (
-                <Delete setEliminar={setTurnoAEliminar} title={'turno'} gen={true} confirmar={confirmarEliminacion} id={turnoAEliminar.id} />
+            {nombrecomercialErp && (
+                <ImportErp setErp={setNombreComercialErp} title={'nombres comerciales'} fun={importarDatosERP} />
+            )}
+            {nombrecomercialAEliminar && (
+                <Delete setEliminar={setNombreComercialAEliminar} title={'nombre comercial'} gen={true} confirmar={confirmarEliminacion} id={nombrecomercialAEliminar.id} />
+            )}
+            {nombrecomercialNoEliminar && (
+                <NotDelete setNoEliminar={setNombreComercialNoEliminar} title={'nombre comercial'} gen={true} />
             )}
 
-            {turnoAVisualizar && (
+            {nombrecomercialAVisualizar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -256,111 +267,50 @@ export const TurnoApp = ({ userLog }) => {
                                 <div className="row mb-3 fw-semibold text-start">
                                     {/*Columna 1 de visualizar*/}
                                     <div className='col me-5 pe-0'>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="descripcion" className="form-label m-0 mb-2">Descripción</label>
-                                            <input
-                                                type="text"
-                                                id="descripcion"
-                                                name="descripcion"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.descripcion || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horaent" className="form-label m-0 mb-2">Horarío de Entrada</label>
-                                            <input
-                                                type="time"
-                                                id="horaent"
-                                                name="horaent"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horaent || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horades" className="form-label m-0 mb-2">Tiempo de Descanso</label>
-                                            <input
-                                                type="time"
-                                                id="horades"
-                                                name="horades"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horades || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="extporcen" className="form-label m-0 mb-2">Porcentaje</label>
-                                            <input
-                                                type="number"
-                                                id="extporcen"
-                                                name="extporcen"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.extporcen || ''}
-                                                readOnly
-                                            />
-                                        </div>
+                                        <label htmlFor="nombrecomercial" className="form-label m-0 mb-2">Descripción</label>
+                                        <input
+                                            type="text"
+                                            id="nombrecomercial"
+                                            name="nombrecomercial"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={nombrecomercialAVisualizar.nombrecomercial || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="subgrupo" className="form-label m-0 mb-2">Subgrupo de Producto</label>
+                                        <input
+                                            type="text"
+                                            id="subgrupo"
+                                            name="subgrupo"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={nombrecomercialAVisualizar.subgrupoproducto?.subgrupoproducto || ''}
+                                            readOnly
+                                        />
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0'>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
-                                            <input
-                                                type="text"
-                                                id="tipoturno"
-                                                name="tipoturno"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.tipoturno.tipo || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horasal" className="form-label m-0 mb-2">Horarío de Salida</label>
-                                            <input
-                                                type="time"
-                                                id="horasal"
-                                                name="horasal"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horasal || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
+                                        <label htmlFor="medida" className="form-label m-0 mb-2">Medida</label>
+                                        <input
+                                            type="text"
+                                            id="medida"
+                                            name="medida"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={nombrecomercialAVisualizar.medida?.medida || ''}
+                                            readOnly
+                                        />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                             <input
                                                 type="number"
-                                                id="thoras"
-                                                name="thoras"
+                                                id="erpid"
+                                                name="erpid"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.thoras || ''}
+                                                value={nombrecomercialAVisualizar.erpid || ''}
                                                 readOnly
                                             />
                                         </div>
                                     </div>
                                 </div>
-                                <div className="form-group bg-success mb-3 rounded-3 text-center w-100">
-                                    <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
-                                    <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
-                                        {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
-                                            const estaMarcado = turnoAVisualizar.turnodia?.some((d) => d.dia === dia);
-                                            return (
-                                                <div className="form-check" key={dia}>
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        id={dia}
-                                                        checked={estaMarcado}
-                                                        readOnly
-                                                    />
-                                                    <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
-                                                        {dia}
-                                                    </label>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                                <button onClick={() => setTurnoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
+                                <button onClick={() => setNombreComercialAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -369,7 +319,7 @@ export const TurnoApp = ({ userLog }) => {
                 </>
             )}
 
-            {turnoAGuardar && (
+            {nombrecomercialAGuardar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -384,182 +334,115 @@ export const TurnoApp = ({ userLog }) => {
                                     <div className="row mb-3 fw-semibold text-start">
                                         {/*Columna 1 de visualizar*/}
                                         <div className='col me-5 pe-0'>
-                                            <div className="form-group mb-1">
-                                                <label htmlFor="descripcion" className="form-label m-0 mb-2">Descripción</label>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="nombrecomercial" className="form-label m-0 mb-2">Descripción</label>
                                                 <input
                                                     type="text"
-                                                    id="descripcion"
-                                                    name="descripcion"
+                                                    id="nombrecomercial"
+                                                    name="nombrecomercial"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.descripcion || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    value={nombrecomercialAGuardar.nombrecomercial || ''}
+                                                    onChange={(event) => setNombreComercialAGuardar({ ...nombrecomercialAGuardar, [event.target.name]: event.target.value })}
+                                                    required
                                                     autoFocus
                                                     maxLength={150}
-                                                    required
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="horaent" className="form-label m-0 mb-2">Horarío de Entrada</label>
-                                                <input
-                                                    type="time"
-                                                    id="horaent"
-                                                    name="horaent"
-                                                    className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horaent || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horades" className="form-label m-0 mb-2">Tiempo de Descanso</label>
-                                                <input
-                                                    type="time"
-                                                    id="horades"
-                                                    name="horades"
-                                                    className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horades || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="extporcen" className="form-label m-0 mb-2">Porcentaje</label>
-                                                <input
-                                                    type="number"
-                                                    id="extporcen"
-                                                    name="extporcen"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={turnoAGuardar.extporcen || ''}
-                                                    min={0}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                <label htmlFor="subgrupo" className="form-label m-0 mb-2">Subgrupo de Producto</label>
+                                                <i style={{ cursor: puedeCrearSubgrupo ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSubgrupo ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={async () => {
+                                                        if (puedeCrearSubgrupo) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Grupos de Productos')
+                                                            navigate('/home/config/product/productgroups')
+                                                        };
+                                                    }}>
+                                                </i>
+                                                <AutocompleteSelect
+                                                    options={subgrupos}
+                                                    value={nombrecomercialAGuardar.subgrupoproducto}
+                                                    getLabel={(v) => v.subgrupoproducto}
+                                                    searchFields={[
+                                                        v => v.subgrupoproducto
+                                                    ]}
+                                                    onChange={(v) =>
+                                                        setNombreComercialAGuardar({
+                                                            ...nombrecomercialAGuardar,
+                                                            subgrupoproducto: v
+                                                        })
+                                                    }
                                                 />
                                             </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}
                                         <div className='col ms-5 ps-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
-                                                <i style={{ cursor: puedeCrearModalidad ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModalidad ? 'text-success' : 'text-success-emphasis'}`}
+                                                <label htmlFor="medida" className="form-label m-0 mb-2">Medida</label>
+                                                <i style={{ cursor: puedeCrearMedida ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearMedida ? 'text-success' : 'text-success-emphasis'}`}
                                                     onClick={async () => {
-                                                        if (puedeCrearModalidad) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Modalidades')
-                                                            navigate('/home/config/rrhh/schedules')
+                                                        if (puedeCrearMedida) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Medidas')
+                                                            navigate('/home/config/product/measures')
                                                         };
                                                     }}>
                                                 </i>
                                                 <AutocompleteSelect
-                                                    options={modalidades}
-                                                    value={turnoAGuardar.tipoturno}
-                                                    getLabel={(v) => v.tipo}
+                                                    options={medidas}
+                                                    value={nombrecomercialAGuardar.medida}
+                                                    getLabel={(v) => v.medida}
                                                     searchFields={[
-                                                        v => v.tipo
+                                                        v => v.medida
                                                     ]}
                                                     onChange={(v) =>
-                                                        setTurnoAGuardar({
-                                                            ...turnoAGuardar,
-                                                            tipoturno: v
+                                                        setNombreComercialAGuardar({
+                                                            ...nombrecomercialAGuardar,
+                                                            medida: v
                                                         })
                                                     }
                                                     required={true}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horasal" className="form-label m-0 mb-2">Horarío de Salida</label>
-                                                <input
-                                                    type="time"
-                                                    id="horasal"
-                                                    name="horasal"
-                                                    className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horasal || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                                 <input
                                                     type="number"
-                                                    id="thoras"
-                                                    name="thoras"
+                                                    id="erpid"
+                                                    name="erpid"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.thoras || ''}
-                                                    min={0}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    value={nombrecomercialAGuardar.erpid || ''}
+                                                    onChange={(event) => setNombreComercialAGuardar({ ...nombrecomercialAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="form-group bg-success mb-3 rounded-3 text-center w-100">
-                                        <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
-                                        <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
-                                            {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
-                                                const estaMarcado = turnoAGuardar.turnodia?.some((d) => d.dia === dia);
-                                                return (
-                                                    <div className="form-check" key={dia}>
-                                                        <input
-                                                            className="form-check-input"
-                                                            type="checkbox"
-                                                            id={dia}
-                                                            checked={estaMarcado}
-                                                            onChange={(e) => {
-                                                                const estaChequeado = e.target.checked;
-                                                                const turnosActuales = turnoAGuardar.turnodia || [];
-                                                                if (estaChequeado) {
-                                                                    const yaExiste = turnosActuales.some((d) => d.dia === dia);
-                                                                    if (!yaExiste) {
-                                                                        const nuevosDias = [...turnosActuales, { id: null, dia }];
-                                                                        setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
-                                                                    }
-                                                                } else {
-                                                                    const detalleEliminado = turnosActuales.find((d) => d.dia === dia);
-                                                                    const nuevosDias = turnosActuales.filter((d) => d.dia !== dia);
-                                                                    setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
-                                                                    if (detalleEliminado?.id != null) {
-                                                                        setDetallesAEliminar((prev) => [...prev, detalleEliminado.id]);
-                                                                    }
-                                                                }
-                                                            }}
-                                                        />
-                                                        <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
-                                                            {dia}
-                                                        </label>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                    <div className='mt-4'>
+                                    <div className='mt-3'>
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => {
-                                            setTurnoAGuardar(null);
-                                            setDetallesAEliminar([]);
-                                        }}
-                                            className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => setNombreComercialAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    </div >
+                    </div>
                 </>
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'TURNOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'NOMBRES COMERCIALES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Turnos
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Nombres de Comerciales
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -598,18 +481,18 @@ export const TurnoApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("descripcion")} className="sortable-header">
+                                        <th onClick={() => toggleOrder("nombrecomercial")} className="sortable-header">
                                             Descripción
-                                            <i className={`bi ${getSortIcon("descripcion")} ms-2`}></i>
+                                            <i className={`bi ${getSortIcon("nombrecomercial")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["descripcion"] ?? {};
+                                                    const previo = filtrosAplicados["nombrecomercial"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "descripcion",
+                                                        field: "nombrecomercial",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -624,18 +507,18 @@ export const TurnoApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("tipoturno.tipo")} className="sortable-header">
-                                            Modalidad
-                                            <i className={`bi ${getSortIcon("tipoturno.tipo")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("subgrupoproducto.subgrupoproducto")} className="sortable-header">
+                                            Subgrupo de Producto
+                                            <i className={`bi ${getSortIcon("subgrupoproducto.subgrupoproducto")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["tipoturno.tipo"] ?? {};
+                                                    const previo = filtrosAplicados["subgrupoproducto.subgrupoproducto"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "tipoturno.tipo",
+                                                        field: "subgrupoproducto.subgrupoproducto",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -650,13 +533,37 @@ export const TurnoApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th>Horarío de Entrada</th>
-                                        <th>Horarío de Salida</th>
+                                        <th onClick={() => toggleOrder("medida.medida")} className="sortable-header">
+                                            Medida
+                                            <i className={`bi ${getSortIcon("medida.medida")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["medida.medida"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "medida.medida",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {turnos.length === 0 ? (
+                                    {nombrecomerciales.length === 0 ? (
                                         <tr>
                                             <td colSpan="5" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
@@ -673,20 +580,19 @@ export const TurnoApp = ({ userLog }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) setTurnoAGuardar(v);
+                                                        if (puedeEditar) setNombreComercialAGuardar(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.descripcion}</td>
-                                                    <td className='text-start'>{v.tipoturno.tipo}</td>
-                                                    <td>{HourFormat(v.horaent)}</td>
-                                                    <td>{HourFormat(v.horasal)}</td>
+                                                    <td className='text-start'>{v.nombrecomercial}</td>
+                                                    <td>{v.subgrupoproducto?.subgrupoproducto}</td>
+                                                    <td>{v.medida?.medida}</td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarTurno(v);
+                                                                if (puedeEliminar) handleEliminarNombreComercial(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
@@ -697,8 +603,8 @@ export const TurnoApp = ({ userLog }) => {
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Turnos");
-                                                                    setTurnoAVisualizar(v);
+                                                                    await AddAccess('Visualizar', v.id, userLog, "NombreComerciales");
+                                                                    setNombreComercialAVisualizar(v);
                                                                 }
                                                             }}
                                                             className="btn border-0 ms-2 p-0"
@@ -715,11 +621,14 @@ export const TurnoApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setTurnoAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
+                            <button onClick={() => setNombreComercialAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setNombreComercialErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>
@@ -763,9 +672,9 @@ export const TurnoApp = ({ userLog }) => {
                                 </ul>
                             </nav>
                         </div>
-                    </div >
-                </div >
-            </div >
+                    </div>
+                </div>
+            </div>
         </>
     );
-}
+};

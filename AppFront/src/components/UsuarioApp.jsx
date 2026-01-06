@@ -733,7 +733,6 @@ export const UsuarioApp = ({ userLog }) => {
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="direccion" className="form-label m-0 mb-2">Dirección</label>
                                                 <textarea
-                                                    type="text"
                                                     id="direccion"
                                                     name="direccion"
                                                     className="form-control border-input w-100"

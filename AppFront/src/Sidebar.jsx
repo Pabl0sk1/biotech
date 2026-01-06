@@ -125,7 +125,7 @@ const Sidebar = ({
         <div
             className={`sidebar-modern z-0 ${isSidebarVisible ? 'sidebar-visible' : 'sidebar-hidden'}`}
             style={{
-                width: '280px',
+                width: '320px',
                 minHeight: '100vh',
                 background: 'linear-gradient(180deg, #1a1d29 0%, #2d3748 100%)',
                 position: 'fixed',
@@ -246,6 +246,26 @@ const Sidebar = ({
                                         }}
                                     >
                                         Entidades<div className='recurso'>CA01</div>
+                                    </Link>
+                                )}
+                                {permisos.catastros.productos && (
+                                    <Link
+                                        to={UrlLocal + '/cadastres/products'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Productos')}
+                                        onMouseEnter={() => setHoveredItem('productos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'productos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '5px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        Productos<div className='recurso'>CA02</div>
                                     </Link>
                                 )}
                             </div>
@@ -511,6 +531,46 @@ const Sidebar = ({
                                         }}
                                     >
                                         Carteras<div className='recurso'>CM01</div>
+                                    </Link>
+                                )}
+                                {permisos.configuraciones.comerciales.nombrecomerciales && (
+                                    <Link
+                                        to={UrlLocal + '/config/commercial/tradenames'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Nombres Comerciales')}
+                                        onMouseEnter={() => setHoveredItem('nombrecomerciales')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'nombrecomerciales'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '5px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        Nombres Comerciales<div className='recurso'>CM02</div>
+                                    </Link>
+                                )}
+                                {permisos.configuraciones.productos.grupoproductos && (
+                                    <Link
+                                        to={UrlLocal + '/config/product/productgroups'}
+                                        onClick={async () => await AddAccess('Consultar', 0, userLog, 'Grupos de Productos')}
+                                        onMouseEnter={() => setHoveredItem('grupoproductos')}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        style={{
+                                            ...subMenuItemStyle(hoveredItem === 'grupoproductos'),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '5px 52px',
+                                            color: 'rgba(255, 255, 255, 0.8)',
+                                            textDecoration: 'none',
+                                            fontSize: '13px',
+                                        }}
+                                    >
+                                        Grupo de Productos<div className='recurso'>PR01</div>
                                     </Link>
                                 )}
                                 {permisos.configuraciones.productos.medidas && (

@@ -35,7 +35,6 @@ public class GrupoProducto {
 	@SequenceGenerator(name = "grupoproducto_sec", sequenceName = "grupoproductos_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "tributacion_id")
 	private Tributacion tributacion;
@@ -55,7 +54,6 @@ public class GrupoProducto {
 	
 	@OneToMany(mappedBy = "grupoproducto", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	@JsonManagedReference
-	@Size(min = 1)
 	public List<SubgrupoProducto> subgrupoproducto;
 	
 	public GrupoProducto(Integer id) {

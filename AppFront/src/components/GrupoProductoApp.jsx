@@ -1,30 +1,34 @@
 import { useState, useEffect } from 'react';
-import { getShift, saveShift, updateShift, deleteShift } from '../services/turno.service.js';
-import { getSchedule } from '../services/tipoturno.service.js';
+import { getProductGroup, saveProductGroup, updateProductGroup, deleteProductGroup, updateErpProductGroup } from '../services/grupoproducto.service.js';
+import { getCurrency } from '../services/moneda.service.js';
+import { getTaxation } from '../services/tributaciones.service.js';
+import { getCommercial } from '../services/nombrecomercial.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from "../FiltroModal.jsx";
-import { HourFormat } from '../utils/DateHourFormat.js';
+import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from '../layouts/Loading.jsx';
+import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
+import ImportErp from '../layouts/ImportErp.jsx';
 
-export const TurnoApp = ({ userLog }) => {
+export const GrupoProductoApp = ({ userLog }) => {
 
     const navigate = useNavigate();
-    const [turnos, setTurnos] = useState([]);
-    const [modalidades, setModalidades] = useState([]);
-    const [detallesAEliminar, setDetallesAEliminar] = useState([]);
+    const [grupoproductos, setGrupoProductos] = useState([]);
+    const [monedas, setMonedas] = useState([]);
+    const [tributaciones, setTributaciones] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [turnoAGuardar, setTurnoAGuardar] = useState(null);
-    const [turnoAEliminar, setTurnoAEliminar] = useState(null);
-    const [turnoAVisualizar, setTurnoAVisualizar] = useState(null);
-    const [detalleNoEliminar, setDetalleNoEliminar] = useState(false);
+    const [grupoproductoAGuardar, setGrupoProductoAGuardar] = useState(null);
+    const [grupoproductoAEliminar, setGrupoProductoAEliminar] = useState(null);
+    const [grupoproductoNoEliminar, setGrupoProductoNoEliminar] = useState(null);
+    const [grupoproductoAVisualizar, setGrupoProductoAVisualizar] = useState(null);
+    const [grupoproductoErp, setGrupoProductoErp] = useState(null);
     const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
@@ -35,12 +39,15 @@ export const TurnoApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearModalidad, setPuedeCrearModalidad] = useState(false);
+    const [puedeCrearTributacion, setPuedeCrearTributacion] = useState(false);
+    const [puedeCrearMoneda, setPuedeCrearMoneda] = useState(false);
 
     useEffect(() => {
         const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['rh02'], userLog?.tipousuario?.id);
-            setPuedeCrearModalidad(ok1);
+            const ok1 = await tienePermisoRuta(['gr04'], userLog?.tipousuario?.id);
+            setPuedeCrearTributacion(ok1);
+            const ok2 = await tienePermisoRuta(['gr02'], userLog?.tipousuario?.id);
+            setPuedeCrearMoneda(ok2);
         };
 
         if (userLog?.tipousuario?.id) {
@@ -51,21 +58,18 @@ export const TurnoApp = ({ userLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                if (detalleNoEliminar) {
-                    setDetalleNoEliminar(false);
-                } else {
-                    setDetallesAEliminar([]);
-                    setTurnoAEliminar(null);
-                    setTurnoAVisualizar(null);
-                    setTurnoAGuardar(null);
-                }
+                setGrupoProductoAEliminar(null);
+                setGrupoProductoNoEliminar(null);
+                setGrupoProductoAVisualizar(null);
+                setGrupoProductoAGuardar(null);
+                setGrupoProductoErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, [detalleNoEliminar]);
+    }, []);
 
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
@@ -82,79 +86,85 @@ export const TurnoApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        tipoturno: null,
-        descripcion: "",
-        horaent: "00:00",
-        horasal: "00:00",
-        horades: "00:00",
-        thoras: 0,
-        extporcen: 0,
-        turnodia: []
+        tributacion: null,
+        moneda: null,
+        grupoproducto: "",
+        erpid: 0,
+        subgrupoproducto: []
     };
 
-    const recuperarTurnos = () => {
+    const recuperarGrupoProductos = () => {
         setQuery(q => ({ ...q }));
+    };
+
+    const recuperarTributaciones = async () => {
+        const response = await getTaxation();
+        setTributaciones(response.items);
     }
 
-    const recuperarModalidades = async () => {
-        const response = await getSchedule();
-        setModalidades(response.items);
+    const recuperarMonedas = async () => {
+        const response = await getCurrency();
+        setMonedas(response.items);
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh03`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:pr01`);
         setPermiso(response.items[0]);
     }
 
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
-            const response = await getShift(query.page, query.size, query.order, filtrosFinal);
-            setTurnos(response.items);
+            const response = await getProductGroup(query.page, query.size, query.order, filtrosFinal);
+            setGrupoProductos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarModalidades();
+            recuperarTributaciones();
+            recuperarMonedas();
             permisoUsuario();
         };
         load();
     }, [query]);
 
-    const eliminarTurnoFn = async (id) => {
+    const eliminarGrupoProductoFn = async (id) => {
         setLoading(true);
-        await deleteShift(id);
-        await AddAccess('Eliminar', id, userLog, "Turnos");
-        recuperarTurnos();
+        await deleteProductGroup(id);
+        await AddAccess('Eliminar', id, userLog, "Grupos de Productos");
+        recuperarGrupoProductos();
         setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarTurnoFn(id);
-        setTurnoAEliminar(null);
+        eliminarGrupoProductoFn(id);
+        setGrupoProductoAEliminar(null);
     }
 
-    const handleEliminarTurno = async (turno) => {
-        setTurnoAEliminar(turno);
+    const handleEliminarGrupoProducto = async (grupoproducto) => {
+        const rel = await getCommercial('', '', '', `subgrupoproducto.grupoproducto.id:eq:${grupoproducto.id}`);
+        if (rel.items.length > 0) setGrupoProductoNoEliminar(grupoproducto);
+        else setGrupoProductoAEliminar(grupoproducto);
     };
 
-    const guardarFn = async (turnoAGuardar) => {
-        setTurnoAGuardar(null);
+    const importarDatosERP = async () => {
+        setLoading(true);
+        setGrupoProductoErp(null);
+        await updateErpProductGroup();
+        recuperarGrupoProductos();
+        setLoading(false);
+    }
+
+    const guardarFn = async (grupoproductoAGuardar) => {
+        setGrupoProductoAGuardar(null);
         setLoading(true);
 
-        const nuevosDias = turnoAGuardar.turnodia.filter(d => {
-            if (d.id === null) return true;
-            return !detallesAEliminar.includes(d.id);
-        });
-        const turnoActualizado = { ...turnoAGuardar, turnodia: nuevosDias };
-
-        if (turnoAGuardar.id) {
-            await updateShift(turnoActualizado.id, turnoActualizado);
-            await AddAccess('Modificar', turnoActualizado.id, userLog, "Turnos");
+        if (grupoproductoAGuardar.id) {
+            await updateProductGroup(grupoproductoAGuardar.id, grupoproductoAGuardar);
+            await AddAccess('Modificar', grupoproductoAGuardar.id, userLog, "Grupos de Productos");
         } else {
-            const nuevaTurno = await saveShift(turnoActualizado);
-            await AddAccess('Insertar', nuevaTurno.saved.id, userLog, "Turnos");
+            const nuevoGrupoProducto = await saveProductGroup(grupoproductoAGuardar);
+            await AddAccess('Insertar', nuevoGrupoProducto.saved.id, userLog, "Grupos de Productos");
         }
-        setDetallesAEliminar([]);
-        recuperarTurnos();
+        recuperarGrupoProductos();
         setLoading(false);
     };
 
@@ -209,20 +219,16 @@ export const TurnoApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         let sw = 0;
-        if (!turnoAGuardar.turnodia.length) {
-            sw = 1;
-            setDetalleNoEliminar(true);
-        }
-        if (!turnoAGuardar.tipoturno) sw = 1;
+        if (!grupoproductoAGuardar.grupoproducto || !grupoproductoAGuardar.moneda) sw = 1;
 
-        if (sw == 1) {
+        if (sw === 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
             return;
         }
 
         if (form.checkValidity()) {
-            guardarFn({ ...turnoAGuardar });
+            guardarFn({ ...grupoproductoAGuardar });
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -232,9 +238,9 @@ export const TurnoApp = ({ userLog }) => {
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
         setFiltrosAplicados({});
-    }
+    };
 
-    const rows = [...turnos];
+    const rows = [...grupoproductos];
     while (rows.length < query.size) rows.push(null);
 
     return (
@@ -243,11 +249,17 @@ export const TurnoApp = ({ userLog }) => {
             {loading && (
                 <Loading />
             )}
-            {turnoAEliminar && (
-                <Delete setEliminar={setTurnoAEliminar} title={'turno'} gen={true} confirmar={confirmarEliminacion} id={turnoAEliminar.id} />
+            {grupoproductoErp && (
+                <ImportErp setErp={setGrupoProductoErp} title={'grupos de productos'} fun={importarDatosERP} />
+            )}
+            {grupoproductoAEliminar && (
+                <Delete setEliminar={setGrupoProductoAEliminar} title={'grupo de producto'} gen={true} confirmar={confirmarEliminacion} id={grupoproductoAEliminar.id} />
+            )}
+            {grupoproductoNoEliminar && (
+                <NotDelete setNoEliminar={setGrupoProductoNoEliminar} title={'grupo de producto'} gen={true} />
             )}
 
-            {turnoAVisualizar && (
+            {grupoproductoAVisualizar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -256,111 +268,50 @@ export const TurnoApp = ({ userLog }) => {
                                 <div className="row mb-3 fw-semibold text-start">
                                     {/*Columna 1 de visualizar*/}
                                     <div className='col me-5 pe-0'>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="descripcion" className="form-label m-0 mb-2">Descripción</label>
-                                            <input
-                                                type="text"
-                                                id="descripcion"
-                                                name="descripcion"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.descripcion || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horaent" className="form-label m-0 mb-2">Horarío de Entrada</label>
-                                            <input
-                                                type="time"
-                                                id="horaent"
-                                                name="horaent"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horaent || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horades" className="form-label m-0 mb-2">Tiempo de Descanso</label>
-                                            <input
-                                                type="time"
-                                                id="horades"
-                                                name="horades"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horades || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="extporcen" className="form-label m-0 mb-2">Porcentaje</label>
-                                            <input
-                                                type="number"
-                                                id="extporcen"
-                                                name="extporcen"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.extporcen || ''}
-                                                readOnly
-                                            />
-                                        </div>
+                                        <label htmlFor="grupoproducto" className="form-label m-0 mb-2">Descripción</label>
+                                        <input
+                                            type="text"
+                                            id="grupoproducto"
+                                            name="grupoproducto"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={grupoproductoAVisualizar.grupoproducto || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="tributacion" className="form-label m-0 mb-2">Tributación</label>
+                                        <input
+                                            type="text"
+                                            id="tributacion"
+                                            name="tributacion"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={grupoproductoAVisualizar.tributacion?.tributacion || ''}
+                                            readOnly
+                                        />
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0'>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
-                                            <input
-                                                type="text"
-                                                id="tipoturno"
-                                                name="tipoturno"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.tipoturno.tipo || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horasal" className="form-label m-0 mb-2">Horarío de Salida</label>
-                                            <input
-                                                type="time"
-                                                id="horasal"
-                                                name="horasal"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horasal || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
+                                        <label htmlFor="moneda" className="form-label m-0 mb-2">Moneda</label>
+                                        <input
+                                            type="text"
+                                            id="moneda"
+                                            name="moneda"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={grupoproductoAVisualizar.moneda?.moneda || ''}
+                                            readOnly
+                                        />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                             <input
                                                 type="number"
-                                                id="thoras"
-                                                name="thoras"
+                                                id="erpid"
+                                                name="erpid"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.thoras || ''}
+                                                value={grupoproductoAVisualizar.erpid || ''}
                                                 readOnly
                                             />
                                         </div>
                                     </div>
                                 </div>
-                                <div className="form-group bg-success mb-3 rounded-3 text-center w-100">
-                                    <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
-                                    <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
-                                        {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
-                                            const estaMarcado = turnoAVisualizar.turnodia?.some((d) => d.dia === dia);
-                                            return (
-                                                <div className="form-check" key={dia}>
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        id={dia}
-                                                        checked={estaMarcado}
-                                                        readOnly
-                                                    />
-                                                    <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
-                                                        {dia}
-                                                    </label>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                                <button onClick={() => setTurnoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
+                                <button onClick={() => setGrupoProductoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -369,7 +320,7 @@ export const TurnoApp = ({ userLog }) => {
                 </>
             )}
 
-            {turnoAGuardar && (
+            {grupoproductoAGuardar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -384,182 +335,115 @@ export const TurnoApp = ({ userLog }) => {
                                     <div className="row mb-3 fw-semibold text-start">
                                         {/*Columna 1 de visualizar*/}
                                         <div className='col me-5 pe-0'>
-                                            <div className="form-group mb-1">
-                                                <label htmlFor="descripcion" className="form-label m-0 mb-2">Descripción</label>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="grupoproducto" className="form-label m-0 mb-2">Descripción</label>
                                                 <input
                                                     type="text"
-                                                    id="descripcion"
-                                                    name="descripcion"
+                                                    id="grupoproducto"
+                                                    name="grupoproducto"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.descripcion || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    value={grupoproductoAGuardar.grupoproducto || ''}
+                                                    onChange={(event) => setGrupoProductoAGuardar({ ...grupoproductoAGuardar, [event.target.name]: event.target.value })}
+                                                    required
                                                     autoFocus
                                                     maxLength={150}
-                                                    required
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="horaent" className="form-label m-0 mb-2">Horarío de Entrada</label>
-                                                <input
-                                                    type="time"
-                                                    id="horaent"
-                                                    name="horaent"
-                                                    className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horaent || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horades" className="form-label m-0 mb-2">Tiempo de Descanso</label>
-                                                <input
-                                                    type="time"
-                                                    id="horades"
-                                                    name="horades"
-                                                    className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horades || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="extporcen" className="form-label m-0 mb-2">Porcentaje</label>
-                                                <input
-                                                    type="number"
-                                                    id="extporcen"
-                                                    name="extporcen"
-                                                    className="form-control border-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={turnoAGuardar.extporcen || ''}
-                                                    min={0}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                <label htmlFor="tributacion" className="form-label m-0 mb-2">Tributacion</label>
+                                                <i style={{ cursor: puedeCrearTributacion ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearTributacion ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={async () => {
+                                                        if (puedeCrearTributacion) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Tributaciones')
+                                                            navigate('/home/config/general/taxations')
+                                                        };
+                                                    }}>
+                                                </i>
+                                                <AutocompleteSelect
+                                                    options={tributaciones}
+                                                    value={grupoproductoAGuardar.tributacion}
+                                                    getLabel={(v) => v.tributacion}
+                                                    searchFields={[
+                                                        v => v.tributacion
+                                                    ]}
+                                                    onChange={(v) =>
+                                                        setGrupoProductoAGuardar({
+                                                            ...grupoproductoAGuardar,
+                                                            tributacion: v
+                                                        })
+                                                    }
                                                 />
                                             </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}
                                         <div className='col ms-5 ps-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
-                                                <i style={{ cursor: puedeCrearModalidad ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModalidad ? 'text-success' : 'text-success-emphasis'}`}
+                                                <label htmlFor="moneda" className="form-label m-0 mb-2">Moneda</label>
+                                                <i style={{ cursor: puedeCrearMoneda ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearMoneda ? 'text-success' : 'text-success-emphasis'}`}
                                                     onClick={async () => {
-                                                        if (puedeCrearModalidad) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Modalidades')
-                                                            navigate('/home/config/rrhh/schedules')
+                                                        if (puedeCrearMoneda) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Monedas')
+                                                            navigate('/home/config/general/currencies')
                                                         };
                                                     }}>
                                                 </i>
                                                 <AutocompleteSelect
-                                                    options={modalidades}
-                                                    value={turnoAGuardar.tipoturno}
-                                                    getLabel={(v) => v.tipo}
+                                                    options={monedas}
+                                                    value={grupoproductoAGuardar.moneda}
+                                                    getLabel={(v) => v.moneda}
                                                     searchFields={[
-                                                        v => v.tipo
+                                                        v => v.moneda
                                                     ]}
                                                     onChange={(v) =>
-                                                        setTurnoAGuardar({
-                                                            ...turnoAGuardar,
-                                                            tipoturno: v
+                                                        setGrupoProductoAGuardar({
+                                                            ...grupoproductoAGuardar,
+                                                            moneda: v
                                                         })
                                                     }
                                                     required={true}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horasal" className="form-label m-0 mb-2">Horarío de Salida</label>
-                                                <input
-                                                    type="time"
-                                                    id="horasal"
-                                                    name="horasal"
-                                                    className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horasal || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                                 <input
                                                     type="number"
-                                                    id="thoras"
-                                                    name="thoras"
+                                                    id="erpid"
+                                                    name="erpid"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.thoras || ''}
-                                                    min={0}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
+                                                    value={grupoproductoAGuardar.erpid || ''}
+                                                    onChange={(event) => setGrupoProductoAGuardar({ ...grupoproductoAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="form-group bg-success mb-3 rounded-3 text-center w-100">
-                                        <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
-                                        <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
-                                            {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
-                                                const estaMarcado = turnoAGuardar.turnodia?.some((d) => d.dia === dia);
-                                                return (
-                                                    <div className="form-check" key={dia}>
-                                                        <input
-                                                            className="form-check-input"
-                                                            type="checkbox"
-                                                            id={dia}
-                                                            checked={estaMarcado}
-                                                            onChange={(e) => {
-                                                                const estaChequeado = e.target.checked;
-                                                                const turnosActuales = turnoAGuardar.turnodia || [];
-                                                                if (estaChequeado) {
-                                                                    const yaExiste = turnosActuales.some((d) => d.dia === dia);
-                                                                    if (!yaExiste) {
-                                                                        const nuevosDias = [...turnosActuales, { id: null, dia }];
-                                                                        setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
-                                                                    }
-                                                                } else {
-                                                                    const detalleEliminado = turnosActuales.find((d) => d.dia === dia);
-                                                                    const nuevosDias = turnosActuales.filter((d) => d.dia !== dia);
-                                                                    setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
-                                                                    if (detalleEliminado?.id != null) {
-                                                                        setDetallesAEliminar((prev) => [...prev, detalleEliminado.id]);
-                                                                    }
-                                                                }
-                                                            }}
-                                                        />
-                                                        <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
-                                                            {dia}
-                                                        </label>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                    <div className='mt-4'>
+                                    <div className='mt-3'>
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => {
-                                            setTurnoAGuardar(null);
-                                            setDetallesAEliminar([]);
-                                        }}
-                                            className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => setGrupoProductoAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    </div >
+                    </div>
                 </>
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'TURNOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'GRUPOS DE PRODUCTOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Turnos
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Grupos de Productos
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -598,18 +482,18 @@ export const TurnoApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("descripcion")} className="sortable-header">
+                                        <th onClick={() => toggleOrder("grupoproducto")} className="sortable-header">
                                             Descripción
-                                            <i className={`bi ${getSortIcon("descripcion")} ms-2`}></i>
+                                            <i className={`bi ${getSortIcon("grupoproducto")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["descripcion"] ?? {};
+                                                    const previo = filtrosAplicados["grupoproducto"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "descripcion",
+                                                        field: "grupoproducto",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -624,18 +508,18 @@ export const TurnoApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("tipoturno.tipo")} className="sortable-header">
-                                            Modalidad
-                                            <i className={`bi ${getSortIcon("tipoturno.tipo")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("moneda.moneda")} className="sortable-header">
+                                            Moneda
+                                            <i className={`bi ${getSortIcon("moneda.moneda")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["tipoturno.tipo"] ?? {};
+                                                    const previo = filtrosAplicados["moneda.moneda"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "tipoturno.tipo",
+                                                        field: "moneda.moneda",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -650,13 +534,37 @@ export const TurnoApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th>Horarío de Entrada</th>
-                                        <th>Horarío de Salida</th>
+                                        <th onClick={() => toggleOrder("tributacion.tributacion")} className="sortable-header">
+                                            Tributación
+                                            <i className={`bi ${getSortIcon("tributacion.tributacion")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["tributacion.tributacion"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "tributacion.tributacion",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {turnos.length === 0 ? (
+                                    {grupoproductos.length === 0 ? (
                                         <tr>
                                             <td colSpan="5" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
@@ -673,20 +581,19 @@ export const TurnoApp = ({ userLog }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) setTurnoAGuardar(v);
+                                                        if (puedeEditar) setGrupoProductoAGuardar(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.descripcion}</td>
-                                                    <td className='text-start'>{v.tipoturno.tipo}</td>
-                                                    <td>{HourFormat(v.horaent)}</td>
-                                                    <td>{HourFormat(v.horasal)}</td>
+                                                    <td className='text-start'>{v.grupoproducto}</td>
+                                                    <td>{v.moneda?.moneda}</td>
+                                                    <td>{v.tributacion?.tributacion}</td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarTurno(v);
+                                                                if (puedeEliminar) handleEliminarGrupoProducto(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
@@ -697,8 +604,8 @@ export const TurnoApp = ({ userLog }) => {
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Turnos");
-                                                                    setTurnoAVisualizar(v);
+                                                                    await AddAccess('Visualizar', v.id, userLog, "GrupoProductos");
+                                                                    setGrupoProductoAVisualizar(v);
                                                                 }
                                                             }}
                                                             className="btn border-0 ms-2 p-0"
@@ -715,11 +622,14 @@ export const TurnoApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setTurnoAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
+                            <button onClick={() => setGrupoProductoAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button onClick={() => setGrupoProductoErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
+                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>
@@ -763,9 +673,9 @@ export const TurnoApp = ({ userLog }) => {
                                 </ul>
                             </nav>
                         </div>
-                    </div >
-                </div >
-            </div >
+                    </div>
+                </div>
+            </div>
         </>
     );
-}
+};
