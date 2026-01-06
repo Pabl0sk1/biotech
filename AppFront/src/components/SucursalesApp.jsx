@@ -226,7 +226,7 @@ export const SucursalApp = ({ userLog }) => {
                                             id="sucursal"
                                             name="sucursal"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={sucursalAVisualizar.sucursal}
+                                            value={sucursalAVisualizar.sucursal || ''}
                                             readOnly
                                         />
                                         <div hidden={!userLog?.id == 1}>
@@ -236,7 +236,7 @@ export const SucursalApp = ({ userLog }) => {
                                                 id="erpid"
                                                 name="erpid"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={sucursalAVisualizar.erpid}
+                                                value={sucursalAVisualizar.erpid || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -273,7 +273,7 @@ export const SucursalApp = ({ userLog }) => {
                                                     name="sucursal"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={sucursalAGuardar.sucursal}
+                                                    value={sucursalAGuardar.sucursal || ''}
                                                     onChange={(event) => setSucursalAGuardar({ ...sucursalAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
@@ -291,7 +291,7 @@ export const SucursalApp = ({ userLog }) => {
                                                     name="erpid"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={sucursalAGuardar.erpid}
+                                                    value={sucursalAGuardar.erpid || ''}
                                                     onChange={(event) => setSucursalAGuardar({ ...sucursalAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>

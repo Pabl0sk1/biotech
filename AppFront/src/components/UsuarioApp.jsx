@@ -353,7 +353,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="nombreusuario"
                                             name="nombreusuario"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nombreusuario}
+                                            value={usuarioAVisualizar.nombreusuario || ''}
                                             readOnly
                                         />
                                         <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
@@ -362,7 +362,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="nombre"
                                             name="nombre"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nombre}
+                                            value={usuarioAVisualizar.nombre || ''}
                                             readOnly
                                         />
                                         <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
@@ -371,7 +371,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="nrodoc"
                                             name="nrodoc"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nrodoc}
+                                            value={usuarioAVisualizar.nrodoc || ''}
                                             readOnly
                                         />
                                         <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
@@ -380,7 +380,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="correo"
                                             name="correo"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.correo}
+                                            value={usuarioAVisualizar.correo || ''}
                                             readOnly
                                         />
                                         <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
@@ -401,7 +401,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="tipousuario"
                                             name="tipousuario"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.tipousuario.tipousuario}
+                                            value={usuarioAVisualizar.tipousuario.tipousuario || ''}
                                             readOnly
                                         />
                                         <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
@@ -419,7 +419,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="nrotelefono"
                                             name="nrotelefono"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nrotelefono}
+                                            value={usuarioAVisualizar.nrotelefono || ''}
                                             readOnly
                                         />
                                         <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
@@ -437,7 +437,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             id="estado"
                                             name="estado"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.estado}
+                                            value={usuarioAVisualizar.estado || ''}
                                             readOnly
                                         />
                                     </div>
@@ -450,7 +450,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             name="direccion"
                                             className="form-control border-input w-100 border-black mb-3"
                                             style={{ resize: 'none', height: '295px' }}
-                                            value={usuarioAVisualizar.direccion}
+                                            value={usuarioAVisualizar.direccion || ''}
                                             readOnly>
                                         </textarea>
                                         <label htmlFor="vermapa" className="form-label m-0 mb-2 me-2 d-flex">Ver Mapa</label>
@@ -460,7 +460,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             name="vermapa"
                                             className="form-check-input"
                                             style={{ width: '60px', height: '30px' }}
-                                            checked={usuarioAVisualizar.vermapa}
+                                            checked={usuarioAVisualizar.vermapa || ''}
                                             readOnly
                                         />
                                     </div>
@@ -497,7 +497,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     name="nombreusuario"
                                                     className={`form-control border-input w-100 ${nombreUsuarioError ? 'is-invalid' : ''}`}
                                                     placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nombreusuario}
+                                                    value={usuarioAGuardar.nombreusuario || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value.toUpperCase() })}
                                                     required
                                                     autoFocus
@@ -515,7 +515,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     name="nombre"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nombre}
+                                                    value={usuarioAGuardar.nombre || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     maxLength={150}
@@ -532,7 +532,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     name="nrodoc"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nrodoc}
+                                                    value={usuarioAGuardar.nrodoc || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={30}
                                                 />
@@ -545,7 +545,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     name="correo"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={usuarioAGuardar.correo}
+                                                    value={usuarioAGuardar.correo || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={30}
                                                 />
@@ -587,7 +587,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                             name="contrasena"
                                                             className="form-control border-input w-100 pe-5"
                                                             placeholder="Escribe..."
-                                                            value={usuarioAGuardar.contrasena}
+                                                            value={usuarioAGuardar.contrasena || ''}
                                                             onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                             required
                                                             autoComplete='off'
@@ -660,7 +660,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     name="nrotelefono"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nrotelefono}
+                                                    value={usuarioAGuardar.nrotelefono || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={30}
                                                 />
@@ -706,7 +706,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                             name="repetircontrasena"
                                                             className="form-control border-input w-100 pe-5"
                                                             placeholder="Escribe..."
-                                                            value={repeatPassword}
+                                                            value={repeatPassword || ''}
                                                             onChange={(event) => setRepeatPassword(event.target.value)}
                                                             autoComplete='new-password'
                                                             maxLength={30}
@@ -739,7 +739,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
                                                     style={{ resize: 'none', height: '260px' }}
-                                                    value={usuarioAGuardar.direccion}
+                                                    value={usuarioAGuardar.direccion || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={150}>
                                                 </textarea>
@@ -752,7 +752,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     name="vermapa"
                                                     className="form-check-input"
                                                     style={{ width: '60px', height: '30px' }}
-                                                    checked={usuarioAGuardar.vermapa}
+                                                    checked={usuarioAGuardar.vermapa || ''}
                                                     onChange={(e) => {
                                                         const check = e.target.checked;
                                                         setUsuarioAGuardar({ ...usuarioAGuardar, [e.target.name]: check });

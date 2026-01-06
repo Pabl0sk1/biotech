@@ -163,7 +163,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             id="usuario"
                                             name="usuario"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.usuario.nombreusuario}
+                                            value={auditoriaAVisualizar.usuario.nombreusuario || ''}
                                             readOnly
                                         />
                                         <label htmlFor="modulo" className="form-label m-0 mb-2">Módulo</label>
@@ -172,7 +172,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             id="modulo"
                                             name="modulo"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.programa}
+                                            value={auditoriaAVisualizar.programa || ''}
                                             readOnly
                                         />
                                         <label htmlFor="codregistro" className="form-label m-0 mb-2">Cód. Registro</label>
@@ -181,7 +181,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             id="codregistro"
                                             name="codregistro"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.codregistro}
+                                            value={auditoriaAVisualizar.codregistro || ''}
                                             readOnly
                                         />
                                     </div>
@@ -193,7 +193,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             id="fechahora"
                                             name="fechahora"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.fechahora}
+                                            value={auditoriaAVisualizar.fechahora || ''}
                                             lang='es-ES'
                                             step={60}
                                             readOnly
@@ -204,7 +204,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             id="operacion"
                                             name="operacion"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={auditoriaAVisualizar.operacion}
+                                            value={auditoriaAVisualizar.operacion || ''}
                                             readOnly
                                         />
                                     </div>

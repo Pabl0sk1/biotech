@@ -226,7 +226,7 @@ export const MedidaApp = ({ userLog }) => {
                                             id="medida"
                                             name="medida"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={medidaAVisualizar.medida}
+                                            value={medidaAVisualizar.medida || ''}
                                             readOnly
                                         />
                                         <div hidden={!userLog?.id == 1}>
@@ -236,7 +236,7 @@ export const MedidaApp = ({ userLog }) => {
                                                 id="erpid"
                                                 name="erpid"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={medidaAVisualizar.erpid}
+                                                value={medidaAVisualizar.erpid || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -248,7 +248,7 @@ export const MedidaApp = ({ userLog }) => {
                                             id="abreviatura"
                                             name="abreviatura"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={medidaAVisualizar.abreviatura}
+                                            value={medidaAVisualizar.abreviatura || ''}
                                             readOnly
                                         />
                                     </div>
@@ -284,7 +284,7 @@ export const MedidaApp = ({ userLog }) => {
                                                     name="medida"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={medidaAGuardar.medida}
+                                                    value={medidaAGuardar.medida || ''}
                                                     onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
@@ -302,7 +302,7 @@ export const MedidaApp = ({ userLog }) => {
                                                     name="erpid"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={medidaAGuardar.erpid}
+                                                    value={medidaAGuardar.erpid || ''}
                                                     onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
@@ -316,7 +316,7 @@ export const MedidaApp = ({ userLog }) => {
                                                     name="abreviatura"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={medidaAGuardar.abreviatura}
+                                                    value={medidaAGuardar.abreviatura || ''}
                                                     onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={20}
                                                 />

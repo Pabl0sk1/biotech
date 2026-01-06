@@ -369,7 +369,7 @@ export const CarteraApp = ({ userLog }) => {
                                                     name="region"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={carteraAGuardar.region}
+                                                    value={carteraAGuardar.region || ''}
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     maxLength={150}
@@ -386,7 +386,7 @@ export const CarteraApp = ({ userLog }) => {
                                                     name="erpid"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={carteraAGuardar.erpid}
+                                                    value={carteraAGuardar.erpid || ''}
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>

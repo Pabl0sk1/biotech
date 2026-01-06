@@ -227,7 +227,7 @@ export const ZafraApp = ({ userLog }) => {
                                             id="descripcion"
                                             name="descripcion"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={zafraAVisualizar.descripcion}
+                                            value={zafraAVisualizar.descripcion || ''}
                                             readOnly
                                         />
                                         <label htmlFor="fechainicio" className="form-label m-0 mb-2">Fecha de Inicio</label>
@@ -305,7 +305,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     name="descripcion"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={zafraAGuardar.descripcion}
+                                                    value={zafraAGuardar.descripcion || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
@@ -348,7 +348,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     name="cultura"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={zafraAGuardar.cultura}
+                                                    value={zafraAGuardar.cultura || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={150}
                                                 />

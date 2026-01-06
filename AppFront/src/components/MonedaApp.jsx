@@ -227,7 +227,7 @@ export const MonedaApp = ({ userLog }) => {
                                             id="moneda"
                                             name="moneda"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={monedaAVisualizar.moneda}
+                                            value={monedaAVisualizar.moneda || ''}
                                             readOnly
                                         />
                                         <label htmlFor="simbolo" className="form-label m-0 mb-2">Símbolo</label>
@@ -236,7 +236,7 @@ export const MonedaApp = ({ userLog }) => {
                                             id="simbolo"
                                             name="simbolo"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={monedaAVisualizar.simbolo}
+                                            value={monedaAVisualizar.simbolo || ''}
                                             readOnly
                                         />
                                     </div>
@@ -247,7 +247,7 @@ export const MonedaApp = ({ userLog }) => {
                                             id="codiso"
                                             name="codiso"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={monedaAVisualizar.codiso}
+                                            value={monedaAVisualizar.codiso || ''}
                                             readOnly
                                         />
                                         <div hidden={!userLog?.id == 1}>
@@ -257,7 +257,7 @@ export const MonedaApp = ({ userLog }) => {
                                                 id="erpid"
                                                 name="erpid"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={monedaAVisualizar.erpid}
+                                                value={monedaAVisualizar.erpid || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -294,7 +294,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     name="moneda"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={monedaAGuardar.moneda}
+                                                    value={monedaAGuardar.moneda || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
@@ -312,7 +312,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     name="simbolo"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={monedaAGuardar.simbolo}
+                                                    value={monedaAGuardar.simbolo || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={20}
                                                 />
@@ -327,7 +327,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     name="codiso"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={monedaAGuardar.codiso}
+                                                    value={monedaAGuardar.codiso || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={20}
                                                 />
@@ -340,7 +340,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     name="erpid"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={monedaAGuardar.erpid}
+                                                    value={monedaAGuardar.erpid || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>

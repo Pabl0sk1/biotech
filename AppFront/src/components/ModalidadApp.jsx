@@ -210,7 +210,7 @@ export const ModalidadApp = ({ userLog }) => {
                                             id="tipo"
                                             name="tipo"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={modalidadAVisualizar.tipo}
+                                            value={modalidadAVisualizar.tipo || ''}
                                             readOnly
                                         />
                                     </div>
@@ -246,7 +246,7 @@ export const ModalidadApp = ({ userLog }) => {
                                                     name="tipo"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={modalidadAGuardar.tipo}
+                                                    value={modalidadAGuardar.tipo || ''}
                                                     onChange={(event) => setModalidadAGuardar({ ...modalidadAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus

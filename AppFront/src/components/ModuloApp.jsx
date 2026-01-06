@@ -211,7 +211,7 @@ export const ModuloApp = ({ userLog }) => {
                                             id="moduloes"
                                             name="moduloes"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={moduloAVisualizar.moduloes}
+                                            value={moduloAVisualizar.moduloes || ''}
                                             readOnly
                                         />
                                         <label htmlFor="var" className="form-label m-0 mb-2">Variable</label>
@@ -220,7 +220,7 @@ export const ModuloApp = ({ userLog }) => {
                                             id="var"
                                             name="var"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={moduloAVisualizar.var}
+                                            value={moduloAVisualizar.var || ''}
                                             readOnly
                                         />
                                     </div>
@@ -231,7 +231,7 @@ export const ModuloApp = ({ userLog }) => {
                                             id="moduloen"
                                             name="moduloen"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={moduloAVisualizar.moduloen}
+                                            value={moduloAVisualizar.moduloen || ''}
                                             readOnly
                                         />
                                     </div>
@@ -267,7 +267,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     name="moduloes"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={moduloAGuardar.moduloes}
+                                                    value={moduloAGuardar.moduloes || ''}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
@@ -285,7 +285,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     name="var"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={moduloAGuardar.var}
+                                                    value={moduloAGuardar.var || ''}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     maxLength={50}
@@ -304,7 +304,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     name="moduloen"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={moduloAGuardar.moduloen}
+                                                    value={moduloAGuardar.moduloen || ''}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     maxLength={50}

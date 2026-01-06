@@ -225,7 +225,7 @@ export const CargoApp = ({ userLog }) => {
                                             id="cargo"
                                             name="cargo"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={cargoAVisualizar.cargo}
+                                            value={cargoAVisualizar.cargo || ''}
                                             readOnly
                                         />
                                         <div hidden={!userLog?.id == 1}>
@@ -235,7 +235,7 @@ export const CargoApp = ({ userLog }) => {
                                                 id="erpid"
                                                 name="erpid"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={cargoAVisualizar.erpid}
+                                                value={cargoAVisualizar.erpid || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -272,7 +272,7 @@ export const CargoApp = ({ userLog }) => {
                                                     name="cargo"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={cargoAGuardar.cargo}
+                                                    value={cargoAGuardar.cargo || ''}
                                                     onChange={(event) => setCargoAGuardar({ ...cargoAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
@@ -290,7 +290,7 @@ export const CargoApp = ({ userLog }) => {
                                                     name="erpid"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={cargoAGuardar.erpid}
+                                                    value={cargoAGuardar.erpid || ''}
                                                     onChange={(event) => setCargoAGuardar({ ...cargoAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>

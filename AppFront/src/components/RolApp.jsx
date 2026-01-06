@@ -211,7 +211,7 @@ export const RolApp = ({ userLog }) => {
                                             id="tipousuario"
                                             name="tipousuario"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={rolAVisualizar.tipousuario}
+                                            value={rolAVisualizar.tipousuario || ''}
                                             readOnly
                                         />
                                     </div>
@@ -247,7 +247,7 @@ export const RolApp = ({ userLog }) => {
                                                     name="tipousuario"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={rolAGuardar.tipousuario}
+                                                    value={rolAGuardar.tipousuario || ''}
                                                     onChange={(event) => setRolAGuardar({ ...rolAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus

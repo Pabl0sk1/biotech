@@ -263,7 +263,7 @@ export const TurnoApp = ({ userLog }) => {
                                                 id="descripcion"
                                                 name="descripcion"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.descripcion}
+                                                value={turnoAVisualizar.descripcion || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -274,7 +274,7 @@ export const TurnoApp = ({ userLog }) => {
                                                 id="horaent"
                                                 name="horaent"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horaent}
+                                                value={turnoAVisualizar.horaent || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -285,7 +285,7 @@ export const TurnoApp = ({ userLog }) => {
                                                 id="horades"
                                                 name="horades"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horades}
+                                                value={turnoAVisualizar.horades || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -296,7 +296,7 @@ export const TurnoApp = ({ userLog }) => {
                                                 id="extporcen"
                                                 name="extporcen"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.extporcen}
+                                                value={turnoAVisualizar.extporcen || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -310,7 +310,7 @@ export const TurnoApp = ({ userLog }) => {
                                                 id="tipoturno"
                                                 name="tipoturno"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.tipoturno.tipo}
+                                                value={turnoAVisualizar.tipoturno.tipo || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -321,7 +321,7 @@ export const TurnoApp = ({ userLog }) => {
                                                 id="horasal"
                                                 name="horasal"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horasal}
+                                                value={turnoAVisualizar.horasal || ''}
                                                 readOnly
                                             />
                                         </div>
@@ -332,15 +332,15 @@ export const TurnoApp = ({ userLog }) => {
                                                 id="thoras"
                                                 name="thoras"
                                                 className="form-control border-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.thoras}
+                                                value={turnoAVisualizar.thoras || ''}
                                                 readOnly
                                             />
                                         </div>
                                     </div>
                                 </div>
                                 <div className="form-group bg-success mb-3 rounded-3 text-center" style={{ width: "682px" }}>
-                                    <label className="form-label m-0 p-3 fw-bold fs-5 text-warning-success">Días del Turno</label>
-                                    <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3">
+                                    <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
+                                    <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
                                         {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
                                             const estaMarcado = turnoAVisualizar.turnodia?.some((d) => d.dia === dia);
                                             return (
@@ -352,7 +352,7 @@ export const TurnoApp = ({ userLog }) => {
                                                         checked={estaMarcado}
                                                         readOnly
                                                     />
-                                                    <label className="form-check-label fw-semibold" htmlFor={dia}>
+                                                    <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
                                                         {dia}
                                                     </label>
                                                 </div>
@@ -392,7 +392,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     name="descripcion"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.descripcion ?? ''}
+                                                    value={turnoAGuardar.descripcion || ''}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                     autoFocus
                                                     maxLength={150}
@@ -409,7 +409,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     id="horaent"
                                                     name="horaent"
                                                     className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horaent || '00:00'}
+                                                    value={turnoAGuardar.horaent || ''}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                 />
@@ -421,7 +421,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     id="horades"
                                                     name="horades"
                                                     className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horades || '00:00'}
+                                                    value={turnoAGuardar.horades || ''}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                 />
@@ -434,7 +434,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     name="extporcen"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.extporcen ?? ''}
+                                                    value={turnoAGuardar.extporcen || ''}
                                                     min={0}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -476,7 +476,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     id="horasal"
                                                     name="horasal"
                                                     className="form-control border-input w-100"
-                                                    value={turnoAGuardar.horasal || '00:00'}
+                                                    value={turnoAGuardar.horasal || ''}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                 />
@@ -489,7 +489,7 @@ export const TurnoApp = ({ userLog }) => {
                                                     name="thoras"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={turnoAGuardar.thoras ?? ''}
+                                                    value={turnoAGuardar.thoras || ''}
                                                     min={0}
                                                     onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -498,7 +498,7 @@ export const TurnoApp = ({ userLog }) => {
                                     </div>
                                     <div className="form-group bg-success mb-3 rounded-3 text-center" style={{ width: "682px" }}>
                                         <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
-                                        <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3">
+                                        <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
                                             {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
                                                 const estaMarcado = turnoAGuardar.turnodia?.some((d) => d.dia === dia);
                                                 return (
@@ -527,7 +527,7 @@ export const TurnoApp = ({ userLog }) => {
                                                                 }
                                                             }}
                                                         />
-                                                        <label className="form-check-label fw-semibold" htmlFor={dia}>
+                                                        <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
                                                             {dia}
                                                         </label>
                                                     </div>

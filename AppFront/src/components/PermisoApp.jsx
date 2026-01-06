@@ -214,7 +214,7 @@ export const PermisoApp = ({ userLog }) => {
 
         let sw = 0;
         if (!permisoAGuardar.tipousuario || !permisoAGuardar.modulo) sw = 1;
-        if (verificarPermisoDuplicado(permisoAGuardar)) {
+        else if (verificarPermisoDuplicado(permisoAGuardar)) {
             setPermisoAGuardar(null);
             setPermisoDuplicado(true);
             sw = 1;
