@@ -4,8 +4,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -30,9 +28,7 @@ public class Cartera {
 	@SequenceGenerator(name = "cartera_sec", sequenceName = "carteras_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@ManyToOne
-	@JoinColumn(name = "entidad_id")
-	private Entidad entidad;
+	private Integer entidadid;
 	
 	@NotNull
 	@NotEmpty

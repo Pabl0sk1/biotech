@@ -80,7 +80,7 @@ export const CarteraApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        entidad: null,
+        entidadid: 0,
         nombre: "",
         region: "",
         erpid: 0
@@ -255,13 +255,13 @@ export const CarteraApp = ({ userLog }) => {
                                             value={carteraAVisualizar.nombre || ''}
                                             readOnly
                                         />
-                                        <label htmlFor="entidad" className="form-label m-0 mb-2">Vendedor</label>
+                                        <label htmlFor="entidadid" className="form-label m-0 mb-2">Entidad ID</label>
                                         <input
-                                            type="text"
-                                            id="entidad"
-                                            name="entidad"
+                                            type="number"
+                                            id="entidadid"
+                                            name="entidadid"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.entidad?.nomape || ''}
+                                            value={carteraAVisualizar.entidadid || ''}
                                             readOnly
                                         />
                                     </div>
@@ -332,7 +332,7 @@ export const CarteraApp = ({ userLog }) => {
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="entidad" className="form-label m-0 mb-2">Vendedor</label>
+                                                <label htmlFor="entidadid" className="form-label m-0 mb-2">Entidad ID</label>
                                                 <i style={{ cursor: puedeCrearEntidad ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearEntidad ? 'text-success' : 'text-success-emphasis'}`}
                                                     onClick={async () => {
@@ -342,20 +342,14 @@ export const CarteraApp = ({ userLog }) => {
                                                         }
                                                     }}>
                                                 </i>
-                                                <AutocompleteSelect
-                                                    options={vendedores}
-                                                    value={carteraAGuardar.entidad}
-                                                    getLabel={(v) => v.nomape}
-                                                    searchFields={[
-                                                        v => v.nomape,
-                                                        v => v.nrodoc
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setCarteraAGuardar({
-                                                            ...carteraAGuardar,
-                                                            entidad: v
-                                                        })
-                                                    }
+                                                <input
+                                                    type="number"
+                                                    id="entidadid"
+                                                    name="entidadid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={carteraAGuardar.entidadid || ''}
+                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
                                         </div>
@@ -451,34 +445,8 @@ export const CarteraApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("entidad.nomape")} className="sortable-header">
-                                            Vendedor
-                                            <i className={`bi ${getSortIcon("entidad.nomape")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["entidad.nomape"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "entidad.nomape",
-                                                        type: "string",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
                                         <th onClick={() => toggleOrder("nombre")} className="sortable-header">
-                                            Nombre
+                                            Vendedor
                                             <i className={`bi ${getSortIcon("nombre")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
@@ -535,7 +503,7 @@ export const CarteraApp = ({ userLog }) => {
                                 <tbody>
                                     {carteras.length === 0 ? (
                                         <tr>
-                                            <td colSpan="5" className="text-center py-3 text-muted fs-3 fw-bold">
+                                            <td colSpan="4" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
                                             </td>
                                         </tr>
@@ -555,7 +523,6 @@ export const CarteraApp = ({ userLog }) => {
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.entidad?.nomape}</td>
                                                     <td className='text-start'>{v.nombre}</td>
                                                     <td>{v.region}</td>
                                                     <td style={{ width: '100px' }}>

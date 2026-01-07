@@ -1126,7 +1126,7 @@ export const EntidadApp = ({ userLog }) => {
                         </div>
                     </div>
                 </div>
-            </div >
+            </div>
         </>
     );
 };

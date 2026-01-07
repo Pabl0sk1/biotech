@@ -15,9 +15,7 @@ import org.springframework.stereotype.Service;
 import com.back.config.RestQueryErp;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Cartera;
-import com.back.entity.Entidad;
 import com.back.repository.CarteraRepository;
-import com.back.repository.EntidadRepository;
 import jakarta.annotation.PostConstruct;
 
 @Service
@@ -25,9 +23,6 @@ public class CarteraService {
 
 	@Autowired
 	CarteraRepository rep;
-	
-	@Autowired
-	EntidadRepository repEntidad;
 	
 	private final RestQueryErp rest;
 	
@@ -123,17 +118,16 @@ public class CarteraService {
 		for (Map<String, Object> item : dataList) {
 			
 			try {
+				Map<String, Object> dataName = rest.formatName(item.get("Vendedor_txt"));
+				
 		        Integer erpId = (Integer) item.get("id");
 		        Integer vendedorId = (Integer) item.get("Vendedor_id");
-		        String nombre = (String) item.get("Descripcion_cb");
+		        String nombre = (String) dataName.get("nomape");
 		        String region = (String) item.get("Region_txt");
-		        
-		        Entidad vendedor = null;
-		        if (vendedorId != null) vendedor = repEntidad.findByErpid(vendedorId).orElse(null);
 		        
 		        Cartera data = rep.findByErpid(erpId).orElse(new Cartera());
 		        data.setErpid(erpId);
-		        data.setEntidad(vendedor);
+		        data.setEntidadid(vendedorId);
 		        data.setNombre(nombre);
 		        data.setRegion(region);
 	
