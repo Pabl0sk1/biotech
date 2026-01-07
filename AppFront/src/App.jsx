@@ -1,19 +1,20 @@
 import './App.css';
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import ProtectedRoute from './ProtectedRoute.jsx';
 import Login from './Login.jsx';
 import Menu from './Menu';
-import ProtectedRoute from './ProtectedRoute.jsx';
 import CambiarContrasena from './CambiarContrasena.jsx';
 import Perfil from './Perfil.jsx';
 import Configuracion from './Configuracion.jsx';
+import Calculo from './tasks/Calculo.jsx'
+import Planeamiento from './tasks/Planeamiento.jsx';
+import Error from './Error.jsx';
+import Dashboard from './Dashboard.jsx';
 import { UsuarioApp } from './components/UsuarioApp.jsx';
 import { AuditoriaApp } from './components/AuditoriaApp.jsx';
 import { RolApp } from './components/RolApp.jsx';
 import { TurnoApp } from './components/TurnoApp.jsx';
-import { Error } from './Error.jsx';
-import Calculo from './tasks/Calculo.jsx'
-import Planeamiento from './tasks/Planeamiento.jsx';
 import { CargoApp } from './components/CargoApp.jsx';
 import { ModalidadApp } from './components/ModalidadApp.jsx';
 import { TokenApp } from './components/TokenApp.jsx';
@@ -103,6 +104,13 @@ function App() {
         {/* Menu principal */}
         <Route path={UrlLocal} element={
           <Menu userLog={userLog} setUserLog={setUserLog} />
+        } />
+
+        {/* Dashboard */}
+        <Route path={UrlLocal + "/dashboard"} element={
+          <ProtectedRoute moduloVar="dh01" permisos={permisos}>
+            <Dashboard userLog={userLog} />
+          </ProtectedRoute>
         } />
 
         {/* Principal - Comercial */}

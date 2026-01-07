@@ -79,6 +79,9 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
                     menus: tieneAccesoModulo(['sc07'], result),
                     contrasenha: tieneAccesoModulo(['sc09'], result),
                 },
+                panel: {
+                    ok: tieneAccesoModulo(['dh01'], result),
+                },
                 empresa: {
                     ok: tieneAccesoModulo(['sc10'], result),
                 },
@@ -481,6 +484,20 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
 
                     {/* Separador */}
                     <div className="sidebar-separator"></div>
+
+                    {/* Panel Grafico */}
+                    {permisos.panel?.ok && (
+                        <Link
+                            to={UrlLocal + '/dashboard'}
+                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Dashboard')}
+                            className="menu-item-single"
+                        >
+                            <div className="menu-icon colorSecundario">
+                                <i className="bi bi-bar-chart-line text-black"></i>
+                            </div>
+                            <span className="menu-label">Dashboard</span>
+                        </Link>
+                    )}
 
                     {/* Empresa */}
                     {permisos.empresa?.ok && (

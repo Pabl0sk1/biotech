@@ -5,7 +5,7 @@ const generarExcel = async (data) => {
     const ExcelJS = (await import('exceljs')).default;
 
     const { cantdias, fechadesde, fechahasta, listafuncionarios } = data;
-    console.log(listafuncionarios)
+
     // Crear imagen
     const logo = await LogoImg();
 
