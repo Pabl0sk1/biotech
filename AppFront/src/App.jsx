@@ -12,7 +12,8 @@ import { AuditoriaApp } from './components/AuditoriaApp.jsx';
 import { RolApp } from './components/RolApp.jsx';
 import { TurnoApp } from './components/TurnoApp.jsx';
 import { Error } from './Error.jsx';
-import { Calculo } from './tasks/Calculo.jsx'
+import Calculo from './tasks/Calculo.jsx'
+import Planeamiento from './tasks/Planeamiento.jsx';
 import { CargoApp } from './components/CargoApp.jsx';
 import { ModalidadApp } from './components/ModalidadApp.jsx';
 import { TokenApp } from './components/TokenApp.jsx';
@@ -104,6 +105,19 @@ function App() {
           <Menu userLog={userLog} setUserLog={setUserLog} />
         } />
 
+        {/* Principal - Comercial */}
+        <Route path={UrlLocal + "/main/commercial/planning"} element={
+          <ProtectedRoute moduloVar="cm03" permisos={permisos}>
+            <Planeamiento userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        {/* Principal - RRHH */}
+        <Route path={UrlLocal + "/main/rrhh/calcext"} element={
+          <ProtectedRoute moduloVar="rh04" permisos={permisos}>
+            <Calculo userLog={userLog} />
+          </ProtectedRoute>
+        } />
+
         {/* Catastros */}
         <Route path={UrlLocal + "/cadastres/entities"} element={
           <ProtectedRoute moduloVar="ca01" permisos={permisos}>
@@ -166,11 +180,6 @@ function App() {
         <Route path={UrlLocal + "/config/rrhh/shifts"} element={
           <ProtectedRoute moduloVar="rh03" permisos={permisos}>
             <TurnoApp userLog={userLog} />
-          </ProtectedRoute>
-        } />
-        <Route path={UrlLocal + "/config/rrhh/calcext"} element={
-          <ProtectedRoute moduloVar="rh04" permisos={permisos}>
-            <Calculo userLog={userLog} />
           </ProtectedRoute>
         } />
         {/* Configuraciones - Comercial */}
