@@ -504,7 +504,7 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
                         <Link
                             to={UrlLocal + '/company'}
                             onClick={async () => await AddAccess('Modificar', 0, userLog, 'Empresa')}
-                            className="menu-item-single"
+                            className="menu-item-single mb-4"
                         >
                             <div className="menu-icon colorSecundario">
                                 <i className="bi bi-building text-black"></i>

@@ -394,6 +394,7 @@ export const PermisoApp = ({ userLog }) => {
                                                             modulo: v
                                                         })
                                                     }
+                                                    autofocus={true}
                                                     required={true}
                                                 />
                                             </div>

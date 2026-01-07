@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react';
+import { AddAccess } from './utils/AddAccess.js';
+import { HostLocation } from './utils/HostLocation';
+import { getConfig } from './services/config.service.js';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
-import { AddAccess } from './utils/AddAccess.js';
 
 export const Menu = ({ userLog, setUserLog }) => {
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+    const [logo, setLogo] = useState(null);
+
+    const recuperarConfig = async () => {
+        const response = await getConfig();
+
+        const BACKEND_URL = HostLocation(1);
+        if (response.items[0].imagenurl) setLogo(BACKEND_URL + "/biotech" + response.items[0].imagenurl);
+    }
 
     useEffect(() => {
         let timeoutId;
@@ -45,6 +55,8 @@ export const Menu = ({ userLog, setUserLog }) => {
             activityListeners.push(event);
         });
         resetTimer();
+
+        recuperarConfig();
 
         return () => {
             activityListeners.forEach(event =>
@@ -120,6 +132,9 @@ export const Menu = ({ userLog, setUserLog }) => {
                     isSidebarVisible={isSidebarVisible}
                     handleLogoutClick={handleLogoutClick}
                 />
+                <div className='logoMenu'>
+                    <img src={logo} alt="Logo Empresa" />
+                </div>
             </div>
         </>
     )

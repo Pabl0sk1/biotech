@@ -8,7 +8,8 @@ export default function AutocompleteSelect({
     searchFields = [],
     multiple = false,
     disabled = false,
-    required = false
+    required = false,
+    autofocus = false
 }) {
     const [inputValue, setInputValue] = useState('');
     const [open, setOpen] = useState(false);
@@ -99,6 +100,7 @@ export default function AutocompleteSelect({
                     setOpen(false);
                     setInputValue('');
                 }, 150)}
+                autoFocus={autofocus}
                 required={required}
             />
             <div className="invalid-feedback text-danger text-start">
