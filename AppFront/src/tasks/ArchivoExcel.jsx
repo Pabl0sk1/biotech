@@ -5,7 +5,7 @@ const generarExcel = async (data) => {
     const ExcelJS = (await import('exceljs')).default;
 
     const { cantdias, fechadesde, fechahasta, listafuncionarios } = data;
-
+    console.log(listafuncionarios)
     // Crear imagen
     const logo = await LogoImg();
 
@@ -115,8 +115,8 @@ const generarExcel = async (data) => {
 
     // Procesar cada funcionario
     listafuncionarios.forEach((funcionario) => {
-        const nombreCompleto = (`${funcionario.nomape}`).toUpperCase();
-        const cargoLab = funcionario.cargo.cargo.toUpperCase();
+        const nombreCompleto = (`${funcionario.nomape}`).toUpperCase() || '';
+        const cargoLab = funcionario.cargo?.cargo.toUpperCase() || 'Sin cargo asignado';
 
         // Crear worksheet
         let nombreHoja = (`${firstChar(funcionario.nombre)} ${firstChar(funcionario.apellido)}`).toUpperCase();
