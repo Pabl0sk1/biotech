@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { AddAccess } from './utils/AddAccess.js';
 import { getMenu } from './services/menu.service.js';
 import { HostLocation } from './utils/HostLocation';
@@ -17,7 +17,7 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
 
         const loadPermisos = async () => {
             const id = userLog?.tipousuario?.id;
-            const response = await getPermission('', '', '', `tipousuario.id:eq:${id}`);
+            const response = await getPermission('', '', '', `tipousuario.id:eq:${id};puedeconsultar:eq:true`);
             const result = response.items;
 
             setPermisos({
@@ -360,10 +360,15 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
         }
     ];
 
-    const getSubmenuPosition = (index) => {
-        const headerHeight = 130;
-        const itemHeight = 72;
-        return headerHeight + (index * itemHeight);
+    const visibleMenus = useMemo(() => {
+        return menuConfig.filter(menu => menu.permission);
+    }, [menuConfig, permisos]);
+
+    const getSubmenuPosition = (menuId) => {
+        const headerHeight = 40;
+        const itemHeight = 0;
+        const visualIndex = visibleMenus.findIndex(menu => menu.id === menuId);
+        return headerHeight + (visualIndex * itemHeight);
     };
 
     const hasNestedChildren = (items) => {
@@ -417,7 +422,7 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
                                 {/* Submenu flotante */}
                                 <div
                                     className="submenu-floating"
-                                    style={{ top: `${getSubmenuPosition(index)}px` }}
+                                    style={{ top: `${getSubmenuPosition(menu.id)}px` }}
                                 >
                                     <div className="submenu-content">
                                         {hasNested ? (

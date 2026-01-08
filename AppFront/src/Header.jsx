@@ -1,49 +1,81 @@
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
-export const Header = ({ userLog, title = "Inicio", onToggleSidebar, showSidebarButton = true, icon = "list-task" }) => {
+export const Header = ({
+    userLog,
+    title = "Inicio",
+    onToggleSidebar,
+    showSidebarButton = true,
+    icon = "list-task"
+}) => {
     const navigate = useNavigate();
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm position-fixed top-0 w-100 px-3 py-1 z-1 border-bottom border-success border-4">
-            {/* Sección izquierda: botón y título */}
-            <div className="d-flex align-items-center">
-                {showSidebarButton && (
-                    <button
-                        className="btn btn-light me-1 d-flex align-items-center justify-content-center"
-                        style={{ width: '30px', height: '30px', padding: 0 }}
-                        onClick={onToggleSidebar ? onToggleSidebar : () => navigate(-1)}
-                    >
-                        <i className={`bi bi-${icon} fs-5`}></i>
-                    </button>
-                )}
-                <h5 className="m-0 fw-bold">{title}</h5>
-            </div>
-
-            {/* Sección derecha: info usuario y logo */}
-            <div className="d-flex align-items-center ms-auto">
-                <div className="d-flex flex-column text-end me-3">
-                    <span className="fw-semibold text-success">
-                        <i className="bi bi-person-circle me-1"></i>
-                        {userLog?.tipousuario?.tipousuario}
-                    </span>
-
-                    <small className="text-muted">{userLog?.nombreusuario}</small>
+        <nav className="modern-header">
+            <div className="header-container">
+                {/* Sección izquierda */}
+                <div className="header-left">
+                    {showSidebarButton && (
+                        <button
+                            className="sidebar-toggle-btn"
+                            onClick={onToggleSidebar ? onToggleSidebar : () => navigate(-1)}
+                            aria-label="Toggle sidebar"
+                        >
+                            <i className={`bi bi-${icon}`}></i>
+                        </button>
+                    )}
+                    <div className="header-title-wrapper">
+                        <i className="bi bi-circle-fill title-indicator"></i>
+                        <h5 className="header-title">{title}</h5>
+                    </div>
                 </div>
-                <Link to="https://biotech.biosafrasgroup.com.py/docs" className='p-0 me-2' target='_blank'>
-                    <img
-                        className='logo-img-bar px-2'
-                        src="/biotech/api.svg"
-                        alt="API"
-                    />
-                </Link>
-                <Link to="/home" className='p-0 me-2'>
-                    <img
-                        className='logo-img-bar px-2'
-                        src="/biotech/logo2.svg"
-                        alt="Biotech"
-                    />
-                </Link>
+
+                {/* Sección derecha */}
+                <div className="header-right">
+                    {/* Info del usuario */}
+                    <div className="user-info">
+                        <div className="user-avatar">
+                            <i className="bi bi-person-circle"></i>
+                        </div>
+                        <div className="user-details">
+                            <span className="user-role">
+                                {userLog?.tipousuario?.tipousuario}
+                            </span>
+                            <span className="user-name">{userLog?.nombreusuario}</span>
+                        </div>
+                    </div>
+
+                    {/* Separador */}
+                    <div className="header-divider"></div>
+
+                    {/* Enlaces de acción */}
+                    <div className="header-actions">
+                        <Link
+                            to="https://biotech.biosafrasgroup.com.py/docs"
+                            className="header-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Documentación API"
+                        >
+                            <img
+                                className="header-logo"
+                                src="/biotech/api.svg"
+                                alt="API"
+                            />
+                        </Link>
+                        <Link
+                            to="/home"
+                            className="header-link"
+                            title="Inicio"
+                        >
+                            <img
+                                className="header-logo"
+                                src="/biotech/logo2.svg"
+                                alt="Biotech"
+                            />
+                        </Link>
+                    </div>
+                </div>
             </div>
         </nav>
     );
