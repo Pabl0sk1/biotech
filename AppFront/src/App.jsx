@@ -34,6 +34,7 @@ import { PrincipioActivoApp } from './components/PrincipioActivoApp.jsx';
 import { GrupoProductoApp } from './components/GrupoProductoApp.jsx';
 import { NombreComercialApp } from './components/NombreComercialApp.jsx';
 import { ProductoApp } from './components/ProductoApp.jsx';
+import { MenuApp } from './components/MenuApp.jsx';
 import { getConfig } from "./services/config.service";
 import { getPermission } from './services/permiso.service.js';
 
@@ -252,6 +253,11 @@ function App() {
         <Route path={UrlLocal + "/security/users"} element={
           <ProtectedRoute moduloVar="sc06" permisos={permisos}>
             <UsuarioApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/security/menus"} element={
+          <ProtectedRoute moduloVar="sc06" permisos={permisos}>
+            <MenuApp userLog={userLog} />
           </ProtectedRoute>
         } />
         <Route path={UrlLocal + "/profile"} element={

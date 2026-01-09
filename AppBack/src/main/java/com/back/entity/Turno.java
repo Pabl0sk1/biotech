@@ -63,7 +63,7 @@ public class Turno {
 	private Integer extporcen;
 	
 	@OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	@JsonManagedReference
+	@JsonManagedReference("turno-dia")
 	@Size(min = 1)
 	public List<TurnoDia> turnodia;
 	

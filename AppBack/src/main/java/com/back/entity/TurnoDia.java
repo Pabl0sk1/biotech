@@ -34,7 +34,7 @@ public class TurnoDia {
 	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "turno_id")
-	@JsonBackReference
+	@JsonBackReference("turno-dia")
 	private Turno turno;
 	
 	@NotNull

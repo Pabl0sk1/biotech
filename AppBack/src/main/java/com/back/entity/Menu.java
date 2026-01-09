@@ -56,12 +56,12 @@ public class Menu {
 	
 	private String recursos;
 	
-	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	@JsonManagedReference
+	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonManagedReference("menu-submenu")
 	public List<Submenu> submenus;
 	
-	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	@JsonManagedReference
+	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonManagedReference("menu-programa")
 	public List<Programa> programas;
 	
 	public Menu(Integer id) {

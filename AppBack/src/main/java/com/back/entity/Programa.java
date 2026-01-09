@@ -31,12 +31,12 @@ public class Programa {
 	
 	@ManyToOne
 	@JoinColumn(name = "menu_id")
-	@JsonBackReference
+	@JsonBackReference("menu-programa")
 	private Menu menu;
 	
 	@ManyToOne
 	@JoinColumn(name = "submenu_id")
-	@JsonBackReference
+	@JsonBackReference("submenu-programa")
 	private Submenu submenu;
 	
 	@NotNull

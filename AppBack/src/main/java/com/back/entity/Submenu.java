@@ -36,10 +36,9 @@ public class Submenu {
 	@SequenceGenerator(name = "submenu_sec", sequenceName = "submenus_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "menu_id")
-	@JsonBackReference
+	@JsonBackReference("menu-submenu")
 	private Menu menu;
 	
 	@NotNull
@@ -56,8 +55,8 @@ public class Submenu {
 	
 	private String recursos;
 	
-	@OneToMany(mappedBy = "submenu", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	@JsonManagedReference
+	@OneToMany(mappedBy = "submenu", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonManagedReference("submenu-programa")
 	public List<Programa> programas;
 	
 	public Submenu(Integer id) {

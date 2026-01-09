@@ -1,29 +1,23 @@
 import { useState, useEffect } from 'react';
-import { getWallet, saveWallet, updateWallet, deleteWallet, updateErpWallet } from '../services/cartera.service.js';
-import { getEntity } from '../services/entidad.service.js';
+import { getMenu, saveMenu, updateMenu, deleteMenu } from '../services/menu.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { useNavigate } from 'react-router-dom';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
-import ImportErp from '../layouts/ImportErp.jsx';
 
-export const CarteraApp = ({ userLog }) => {
+export const MenuApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
-    const [carteras, setCarteras] = useState([]);
+    const [menus, setMenus] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [carteraAGuardar, setCarteraAGuardar] = useState(null);
-    const [carteraAEliminar, setCarteraAEliminar] = useState(null);
-    const [carteraNoEliminar, setCarteraNoEliminar] = useState(null);
-    const [carteraAVisualizar, setCarteraAVisualizar] = useState(null);
-    const [carteraErp, setCarteraErp] = useState(null);
+    const [menuAGuardar, setMenuAGuardar] = useState(null);
+    const [menuAEliminar, setMenuAEliminar] = useState(null);
+    const [menuNoEliminar, setMenuNoEliminar] = useState(null);
+    const [menuAVisualizar, setMenuAVisualizar] = useState(null);
     const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
@@ -34,27 +28,13 @@ export const CarteraApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearEntidad, setPuedeCrearEntidad] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['ca01'], userLog?.tipousuario?.id);
-            setPuedeCrearEntidad(ok1);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setCarteraAEliminar(null);
-                setCarteraNoEliminar(null);
-                setCarteraAVisualizar(null);
-                setCarteraAGuardar(null);
-                setCarteraErp(null);
+                setMenuAEliminar(null);
+                setMenuNoEliminar(null);
+                setMenuAVisualizar(null);
+                setMenuAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -78,26 +58,30 @@ export const CarteraApp = ({ userLog }) => {
 
     const selected = {
         id: null,
-        entidadid: 0,
-        nombre: "",
-        region: "",
-        erpid: 0
+        menu: "",
+        icono: "",
+        unico: false,
+        activo: true,
+        orden: 1,
+        recursos: "",
+        submenus: [],
+        programas: []
     };
 
-    const recuperarCarteras = () => {
+    const recuperarMenus = () => {
         setQuery(q => ({ ...q }));
     }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:cm01`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc07`);
         setPermiso(response.items[0]);
     }
 
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
-            const response = await getWallet(query.page, query.size, query.order, filtrosFinal);
-            setCarteras(response.items);
+            const response = await getMenu(query.page, query.size, query.order, filtrosFinal);
+            setMenus(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
             permisoUsuario();
@@ -105,45 +89,37 @@ export const CarteraApp = ({ userLog }) => {
         load();
     }, [query]);
 
-    const eliminarCarteraFn = async (id) => {
+    const eliminarMenuFn = async (id) => {
         setLoading(true);
-        await deleteWallet(id);
-        await AddAccess('Eliminar', id, userLog, "Carteras");
-        recuperarCarteras();
+        await deleteMenu(id);
+        await AddAccess('Eliminar', id, userLog, "Menus");
+        recuperarMenus();
         setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarCarteraFn(id);
-        setCarteraAEliminar(null);
+        eliminarMenuFn(id);
+        setMenuAEliminar(null);
     }
 
-    const handleEliminarCartera = async (cartera) => {
-        const rel = await getEntity('', '', '', `cartera.id:eq:${cartera?.id}`);
-        if (rel.items.length > 0) setCarteraNoEliminar(cartera);
-        else setCarteraAEliminar(cartera);
+    const handleEliminarMenu = async (menu) => {
+        // const rel = await getProduct('', '', '', `tipoproducto.id:eq:${menu?.id}`);
+        // if (rel.items.length > 0) setMenuNoEliminar(menu);
+        setMenuAEliminar(menu);
     };
 
-    const importarDatosERP = async () => {
-        setLoading(true);
-        setCarteraErp(null);
-        await updateErpWallet();
-        recuperarCarteras();
-        setLoading(false);
-    }
-
-    const guardarFn = async (carteraAGuardar) => {
-        setCarteraAGuardar(null);
+    const guardarFn = async (menuAGuardar) => {
+        setMenuAGuardar(null);
         setLoading(true);
 
-        if (carteraAGuardar.id) {
-            await updateWallet(carteraAGuardar.id, carteraAGuardar);
-            await AddAccess('Modificar', carteraAGuardar.id, userLog, "Carteras");
+        if (menuAGuardar.id) {
+            await updateMenu(menuAGuardar.id, menuAGuardar);
+            await AddAccess('Modificar', menuAGuardar.id, userLog, "Menus");
         } else {
-            const nuevoCartera = await saveWallet(carteraAGuardar);
-            await AddAccess('Insertar', nuevoCartera.saved.id, userLog, "Carteras");
+            const nuevoMenu = await saveMenu(menuAGuardar);
+            await AddAccess('Insertar', nuevoMenu.saved.id, userLog, "Menus");
         }
-        recuperarCarteras();
+        recuperarMenus();
         setLoading(false);
     };
 
@@ -198,7 +174,7 @@ export const CarteraApp = ({ userLog }) => {
         const form = event.currentTarget;
 
         if (form.checkValidity()) {
-            guardarFn({ ...carteraAGuardar });
+            guardarFn({ ...menuAGuardar });
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
@@ -210,7 +186,7 @@ export const CarteraApp = ({ userLog }) => {
         setFiltrosAplicados({});
     }
 
-    const rows = [...carteras];
+    const rows = [...menus];
     while (rows.length < query.size) rows.push(null);
 
     return (
@@ -219,69 +195,82 @@ export const CarteraApp = ({ userLog }) => {
             {loading && (
                 <Loading />
             )}
-            {carteraErp && (
-                <ImportErp setErp={setCarteraErp} title={'carteras'} fun={importarDatosERP} />
+            {menuAEliminar && (
+                <Delete setEliminar={setMenuAEliminar} title={'menu'} gen={true} confirmar={confirmarEliminacion} id={menuAEliminar.id} />
             )}
-            {carteraAEliminar && (
-                <Delete setEliminar={setCarteraAEliminar} title={'cartera'} gen={false} confirmar={confirmarEliminacion} id={carteraAEliminar.id} />
-            )}
-            {carteraNoEliminar && (
-                <NotDelete setNoEliminar={setCarteraNoEliminar} title={'cartera'} gen={false} />
+            {menuNoEliminar && (
+                <NotDelete setNoEliminar={setMenuNoEliminar} title={'menu'} gen={true} />
             )}
 
-            {carteraAVisualizar && (
+            {menuAVisualizar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
                         <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
                                 <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
+                                    <div className='col me-5 pe-5'>
+                                        <label htmlFor="menu" className="form-label m-0 mb-2">Descripción</label>
                                         <input
                                             type="text"
-                                            id="nombre"
-                                            name="nombre"
+                                            id="menu"
+                                            name="menu"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.nombre || ''}
+                                            value={menuAVisualizar.menu || ''}
                                             readOnly
                                         />
-                                        <label htmlFor="entidadid" className="form-label m-0 mb-2">Entidad ID</label>
+                                        <label htmlFor="recursos" className="form-label m-0 mb-2">Recursos</label>
+                                        <input
+                                            type="text"
+                                            id="recursos"
+                                            name="recursos"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={menuAVisualizar.recursos || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="activo" className="form-label m-0 mb-2 me-2 d-flex">Activo</label>
+                                        <input
+                                            type="checkbox"
+                                            id="activo"
+                                            name="activo"
+                                            className="form-check-input"
+                                            style={{ width: '60px', height: '30px' }}
+                                            checked={menuAVisualizar.activo || ''}
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div className='col ms-5 ps-5'>
+                                        <label htmlFor="icono" className="form-label m-0 mb-2">Icono</label>
+                                        <input
+                                            type="text"
+                                            id="icono"
+                                            name="icono"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={menuAVisualizar.icono || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="orden" className="form-label m-0 mb-2">Orden</label>
                                         <input
                                             type="number"
-                                            id="entidadid"
-                                            name="entidadid"
+                                            id="orden"
+                                            name="orden"
                                             className="form-control border-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.entidadid || ''}
+                                            value={menuAVisualizar.orden || ''}
                                             readOnly
                                         />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="region" className="form-label m-0 mb-2">Región</label>
+                                        <label htmlFor="unico" className="form-label m-0 mb-2 me-2 d-flex">Único</label>
                                         <input
-                                            type="email"
-                                            id="region"
-                                            name="region"
-                                            className="form-control border-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.region || ''}
+                                            type="checkbox"
+                                            id="unico"
+                                            name="unico"
+                                            className="form-check-input"
+                                            style={{ width: '60px', height: '30px' }}
+                                            checked={menuAVisualizar.unico || ''}
                                             readOnly
                                         />
-                                        <div hidden={!userLog?.id == 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={carteraAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setCarteraAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
+                                <button onClick={() => setMenuAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
                                     <i className="bi bi-x-lg me-2"></i>Cerrar
                                 </button>
                             </div>
@@ -290,7 +279,7 @@ export const CarteraApp = ({ userLog }) => {
                 </>
             )}
 
-            {carteraAGuardar && (
+            {menuAGuardar && (
                 <>
                     <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
                     <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
@@ -303,77 +292,93 @@ export const CarteraApp = ({ userLog }) => {
                                     noValidate
                                 >
                                     <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
+                                        <div className='col me-5 pe-5'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
+                                                <label htmlFor="menu" className="form-label m-0 mb-2">Descripción</label>
                                                 <input
                                                     type="text"
-                                                    id="nombre"
-                                                    name="nombre"
+                                                    id="menu"
+                                                    name="menu"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={carteraAGuardar.nombre || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
+                                                    value={menuAGuardar.menu || ''}
+                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
                                                     required
                                                     autoFocus
-                                                    maxLength={150}
+                                                    maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 150 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="entidadid" className="form-label m-0 mb-2">Entidad ID</label>
-                                                <i style={{ cursor: puedeCrearEntidad ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearEntidad ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearEntidad) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Entidades')
-                                                            navigate('/home/cadastres/entities');
-                                                        }
-                                                    }}>
-                                                </i>
+                                                <label htmlFor="recursos" className="form-label m-0 mb-2">Recursos</label>
                                                 <input
-                                                    type="number"
-                                                    id="entidadid"
-                                                    name="entidadid"
+                                                    type="text"
+                                                    id="recursos"
+                                                    name="recursos"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={carteraAGuardar.entidadid || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
+                                                    value={menuAGuardar.recursos || ''}
+                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={255}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="activo" className="form-label m-0 mb-2 me-2 d-flex">Activo</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="activo"
+                                                    name="activo"
+                                                    className="form-check-input"
+                                                    style={{ width: '60px', height: '30px' }}
+                                                    checked={menuAGuardar.activo || ''}
+                                                    onChange={(e) => {
+                                                        const check = e.target.checked;
+                                                        setMenuAGuardar({ ...menuAGuardar, [e.target.name]: check });
+                                                    }}
                                                 />
                                             </div>
                                         </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
+                                        <div className='col ms-5 ps-5'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="region" className="form-label m-0 mb-2">Región</label>
+                                                <label htmlFor="icono" className="form-label m-0 mb-2">Icono</label>
                                                 <input
                                                     type="text"
-                                                    id="region"
-                                                    name="region"
+                                                    id="icono"
+                                                    name="icono"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={carteraAGuardar.region || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={150}
+                                                    value={menuAGuardar.icono || ''}
+                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
+                                                    maxLength={30}
                                                 />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La región es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="orden" className="form-label m-0 mb-2">Orden</label>
                                                 <input
                                                     type="number"
-                                                    id="erpid"
-                                                    name="erpid"
+                                                    id="orden"
+                                                    name="orden"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={carteraAGuardar.erpid || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
+                                                    value={menuAGuardar.orden || ''}
+                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="unico" className="form-label m-0 mb-2 me-2 d-flex">Único</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="unico"
+                                                    name="unico"
+                                                    className="form-check-input"
+                                                    style={{ width: '60px', height: '30px' }}
+                                                    checked={menuAGuardar.unico || ''}
+                                                    onChange={(e) => {
+                                                        const check = e.target.checked;
+                                                        setMenuAGuardar({ ...menuAGuardar, [e.target.name]: check });
+                                                    }}
                                                 />
                                             </div>
                                         </div>
@@ -382,7 +387,7 @@ export const CarteraApp = ({ userLog }) => {
                                         <button type='submit' className="btn btn-success text-black me-4 fw-bold">
                                             <i className='bi bi-floppy-fill me-2'></i>Guardar
                                         </button>
-                                        <button onClick={() => setCarteraAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
+                                        <button onClick={() => setMenuAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
                                             <i className="bi bi-x-lg me-2"></i>Cancelar
                                         </button>
                                     </div>
@@ -394,11 +399,11 @@ export const CarteraApp = ({ userLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'CARTERAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'MENUS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Carteras
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Menus
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -437,18 +442,18 @@ export const CarteraApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("nombre")} className="sortable-header">
-                                            Vendedor
-                                            <i className={`bi ${getSortIcon("nombre")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("menu")} className="sortable-header">
+                                            Descripción
+                                            <i className={`bi ${getSortIcon("menu")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["nombre"] ?? {};
+                                                    const previo = filtrosAplicados["menu"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "nombre",
+                                                        field: "menu",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -463,19 +468,19 @@ export const CarteraApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("region")} className="sortable-header">
-                                            Región
-                                            <i className={`bi ${getSortIcon("region")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("orden")} className="sortable-header">
+                                            Orden
+                                            <i className={`bi ${getSortIcon("orden")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["region"] ?? {};
+                                                    const previo = filtrosAplicados["orden"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "region",
-                                                        type: "string",
+                                                        field: "orden",
+                                                        type: "number",
                                                         visible: true,
                                                         op: previo.op,
                                                         value: previo.value,
@@ -493,7 +498,7 @@ export const CarteraApp = ({ userLog }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {carteras.length === 0 ? (
+                                    {menus.length === 0 ? (
                                         <tr>
                                             <td colSpan="4" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
@@ -510,18 +515,18 @@ export const CarteraApp = ({ userLog }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) setCarteraAGuardar(v);
+                                                        if (puedeEditar) setMenuAGuardar(v);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.nombre}</td>
-                                                    <td>{v.region}</td>
+                                                    <td className='text-start'>{v.menu}</td>
+                                                    <td>{v.orden}</td>
                                                     <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarCartera(v);
+                                                                if (puedeEliminar) handleEliminarMenu(v);
                                                             }}
                                                             className="btn border-0 me-2 p-0"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
@@ -532,8 +537,8 @@ export const CarteraApp = ({ userLog }) => {
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Carteras");
-                                                                    setCarteraAVisualizar(v);
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Menus");
+                                                                    setMenuAVisualizar(v);
                                                                 }
                                                             }}
                                                             className="btn border-0 ms-2 p-0"
@@ -550,14 +555,11 @@ export const CarteraApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setCarteraAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
+                            <button onClick={() => setMenuAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
                                 <i className="bi bi-arrow-repeat"></i>
-                            </button>
-                            <button onClick={() => setCarteraErp(true)} className="btn btn-secondary fw-bold ms-2 me-2">
-                                <i className="bi bi-cloud-check"></i>
                             </button>
                             <div className="d-flex align-items-center ms-5">
                                 <label className="me-2 fw-semibold">Tamaño</label>
