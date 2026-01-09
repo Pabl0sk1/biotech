@@ -10,370 +10,36 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
     const UrlLocal = '/home';
 
     const [avatar, setAvatar] = useState(null);
-    const [permisos, setPermisos] = useState({});
+    const [menus, setMenus] = useState([]);
+    const [permisos, setPermisos] = useState([]);
+    const [menuPerfil, setMenuPerfil] = useState({});
+    const [permisoPerfil, setPermisoPerfil] = useState(false);
 
     useEffect(() => {
         if (!userLog?.tipousuario?.id) return;
+        const idRol = userLog?.tipousuario?.id;
 
-        const loadPermisos = async () => {
-            const id = userLog?.tipousuario?.id;
-            const response = await getPermission('', '', '', `tipousuario.id:eq:${id};puedeconsultar:eq:true`);
-            const result = response.items;
-
-            setPermisos({
-                perfil: {
-                    ok: tieneAccesoModulo(['sc08'], result),
-                },
-                principal: {
-                    comercial: {
-                        ok: tieneAccesoModulo(['cm03'], result),
-                        planeamiento: tieneAccesoModulo(['cm03'], result),
-                    },
-                    rrhh: {
-                        ok: tieneAccesoModulo(['rh04'], result),
-                        horasextras: tieneAccesoModulo(['rh04'], result),
-                    }
-                },
-                catastros: {
-                    ok: tieneAccesoModulo(['ca01', 'ca02'], result),
-                    entidades: tieneAccesoModulo(['ca01'], result),
-                    productos: tieneAccesoModulo(['ca02'], result),
-                },
-                configuraciones: {
-                    generales: {
-                        ok: tieneAccesoModulo(['gr01', 'gr02', 'gr03', 'gr04', 'gr05', 'gr06'], result),
-                        fasecultivos: tieneAccesoModulo(['gr01'], result),
-                        monedas: tieneAccesoModulo(['gr02'], result),
-                        sucursales: tieneAccesoModulo(['gr03'], result),
-                        tributaciones: tieneAccesoModulo(['gr04'], result),
-                        zafras: tieneAccesoModulo(['gr05'], result),
-                        categorias: tieneAccesoModulo(['gr06'], result),
-                    },
-                    rrhh: {
-                        ok: tieneAccesoModulo(['rh01', 'rh02', 'rh03'], result),
-                        cargos: tieneAccesoModulo(['rh01'], result),
-                        modalidades: tieneAccesoModulo(['rh02'], result),
-                        turnos: tieneAccesoModulo(['rh03'], result),
-                    },
-                    comerciales: {
-                        ok: tieneAccesoModulo(['cm01', 'cm02'], result),
-                        carteras: tieneAccesoModulo(['cm01'], result),
-                        nombrecomerciales: tieneAccesoModulo(['cm02'], result),
-                    },
-                    productos: {
-                        ok: tieneAccesoModulo(['pr01', 'pr02', 'pr03', 'pr04'], result),
-                        grupoproductos: tieneAccesoModulo(['pr01'], result),
-                        medidas: tieneAccesoModulo(['pr02'], result),
-                        principioactivos: tieneAccesoModulo(['pr03'], result),
-                        clases: tieneAccesoModulo(['pr04'], result),
-                    }
-                },
-                seguridad: {
-                    ok: tieneAccesoModulo(['sc01', 'sc02', 'sc03', 'sc04', 'sc05', 'sc06', 'sc07', 'sc09'], result),
-                    accesos: tieneAccesoModulo(['sc01'], result),
-                    modulos: tieneAccesoModulo(['sc02'], result),
-                    roles: tieneAccesoModulo(['sc03'], result),
-                    tokens: tieneAccesoModulo(['sc04'], result),
-                    permisos: tieneAccesoModulo(['sc05'], result),
-                    usuarios: tieneAccesoModulo(['sc06'], result),
-                    menus: tieneAccesoModulo(['sc07'], result),
-                    contrasenha: tieneAccesoModulo(['sc09'], result),
-                },
-                panel: {
-                    ok: tieneAccesoModulo(['dh01'], result),
-                },
-                empresa: {
-                    ok: tieneAccesoModulo(['sc10'], result),
-                },
-            });
-        };
-
-        loadPermisos();
-    }, [userLog]);
-
-    useEffect(() => {
         const load = async () => {
-            const response = await getMenu();
+            const response = await getMenu('', '', 'orden,asc', 'activo:eq:true');
+            setMenus(response.items);
+            const response2 = await getMenu('', '', '', 'id:eq:4');
+            setMenuPerfil(response2.items[0].programas[0]);
         }
         load();
+
+        const loadPermisos = async () => {
+            const response = await getPermission('', '', '', `tipousuario.id:eq:${idRol};puedeconsultar:eq:true`);
+            setPermisos(response.items);
+            const response2 = await getPermission('', '', '', `tipousuario.id:eq:${idRol};puedeconsultar:eq:true;modulo.var:eq:sc08`);
+            setPermisoPerfil(response2.items[0] ? true : false);
+        }
+        loadPermisos();
 
         const BACKEND_URL = HostLocation(1);
         if (userLog?.imagenurl) setAvatar(BACKEND_URL + "/biotech" + userLog?.imagenurl);
     }, []);
 
-    const menuConfig = [
-        {
-            id: 'principal',
-            label: 'Principal',
-            icon: 'bi-house',
-            permission:
-                permisos.principal?.comercial?.ok ||
-                permisos.principal?.rrhh?.ok,
-            items: [
-                {
-                    label: 'Comercial',
-                    permission: permisos.principal?.comercial?.ok,
-                    children: [
-                        {
-                            label: 'Planeamiento',
-                            path: '/main/commercial/planning',
-                            code: 'CM03',
-                            permission: permisos.principal?.comercial?.planeamiento,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Planeamiento')
-                        }
-                    ]
-                },
-                {
-                    label: 'RRHH',
-                    permission: permisos.principal?.rrhh?.ok,
-                    children: [
-                        {
-                            label: 'Horas Extras',
-                            path: '/main/rrhh/calcext',
-                            code: 'RH04',
-                            permission: permisos.principal?.rrhh?.horasextras,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Horas Extras')
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            id: 'catastros',
-            label: 'Catastros',
-            icon: 'bi-box',
-            permission: permisos.catastros?.ok,
-            items: [
-                {
-                    label: 'Entidades',
-                    path: '/cadastres/entities',
-                    code: 'CA01',
-                    permission: permisos.catastros?.entidades,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Entidades')
-                },
-                {
-                    label: 'Productos',
-                    path: '/cadastres/products',
-                    code: 'CA02',
-                    permission: permisos.catastros?.productos,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Productos')
-                }
-            ]
-        },
-        {
-            id: 'configuraciones',
-            label: 'Configuración',
-            icon: 'bi-gear',
-            permission:
-                permisos.configuraciones?.generales?.ok ||
-                permisos.configuraciones?.rrhh?.ok ||
-                permisos.configuraciones?.comerciales?.ok ||
-                permisos.configuraciones?.productos?.ok,
-            items: [
-                {
-                    label: 'General',
-                    permission: permisos.configuraciones?.generales?.ok,
-                    children: [
-                        {
-                            label: 'Fases de Cultivos',
-                            path: '/config/general/crops',
-                            code: 'GR01',
-                            permission: permisos.configuraciones?.generales?.fasecultivos,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Fases de Cultivos')
-                        },
-                        {
-                            label: 'Monedas',
-                            path: '/config/general/currencies',
-                            code: 'GR02',
-                            permission: permisos.configuraciones?.generales?.monedas,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Monedas')
-                        },
-                        {
-                            label: 'Sucursales',
-                            path: '/config/general/branchs',
-                            code: 'GR03',
-                            permission: permisos.configuraciones?.generales?.sucursales,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Sucursales')
-                        },
-                        {
-                            label: 'Tributaciones',
-                            path: '/config/general/taxations',
-                            code: 'GR04',
-                            permission: permisos.configuraciones?.generales?.tributaciones,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Tributaciones')
-                        },
-                        {
-                            label: 'Zafras',
-                            path: '/config/general/harvests',
-                            code: 'GR05',
-                            permission: permisos.configuraciones?.generales?.zafras,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Zafras')
-                        },
-                        {
-                            label: 'Categorías',
-                            path: '/config/general/categories',
-                            code: 'GR06',
-                            permission: permisos.configuraciones?.generales?.categorias,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Categorías')
-                        }
-                    ]
-                },
-                {
-                    label: 'RRHH',
-                    permission: permisos.configuraciones?.rrhh?.ok,
-                    children: [
-                        {
-                            label: 'Cargos',
-                            path: '/config/rrhh/positions',
-                            code: 'RH01',
-                            permission: permisos.configuraciones?.rrhh?.cargos,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Cargos')
-                        },
-                        {
-                            label: 'Modalidades',
-                            path: '/config/rrhh/schedules',
-                            code: 'RH02',
-                            permission: permisos.configuraciones?.rrhh?.modalidades,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Modalidades')
-                        },
-                        {
-                            label: 'Turnos',
-                            path: '/config/rrhh/shifts',
-                            code: 'RH03',
-                            permission: permisos.configuraciones?.rrhh?.turnos,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Turnos')
-                        }
-                    ]
-                },
-                {
-                    label: 'Comercial',
-                    permission: permisos.configuraciones?.comerciales?.ok,
-                    children: [
-                        {
-                            label: 'Carteras',
-                            path: '/config/commercial/wallets',
-                            code: 'CM01',
-                            permission: permisos.configuraciones?.comerciales?.carteras,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Carteras')
-                        },
-                        {
-                            label: 'Nombres Comerciales',
-                            path: '/config/commercial/tradenames',
-                            code: 'CM02',
-                            permission: permisos.configuraciones?.comerciales?.nombrecomerciales,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Nombres Comerciales')
-                        }
-                    ]
-                },
-                {
-                    label: 'Producto',
-                    permission: permisos.configuraciones?.productos?.ok,
-                    children: [
-                        {
-                            label: 'Grupos de Productos',
-                            path: '/config/product/productgroups',
-                            code: 'PR01',
-                            permission: permisos.configuraciones?.productos?.grupoproductos,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Grupos de Productos')
-                        },
-                        {
-                            label: 'Medidas',
-                            path: '/config/product/measures',
-                            code: 'PR02',
-                            permission: permisos.configuraciones?.productos?.medidas,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Medidas')
-                        },
-                        {
-                            label: 'Principios Activos',
-                            path: '/config/product/assets',
-                            code: 'PR03',
-                            permission: permisos.configuraciones?.productos?.principioactivos,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Principios Activos')
-                        },
-                        {
-                            label: 'Clases',
-                            path: '/config/product/classes',
-                            code: 'PR04',
-                            permission: permisos.configuraciones?.productos?.clases,
-                            onClick: () => AddAccess('Consultar', 0, userLog, 'Clases')
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            id: 'seguridad',
-            label: 'Seguridad',
-            icon: 'bi-shield-lock',
-            permission: permisos.seguridad?.ok,
-            items: [
-                {
-                    label: 'Accesos',
-                    path: '/security/access',
-                    code: 'SC01',
-                    permission: permisos.seguridad?.accesos,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Accesos')
-                },
-                {
-                    label: 'Modulos',
-                    path: '/security/modules',
-                    code: 'SC02',
-                    permission: permisos.seguridad?.modulos,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Modulos')
-                },
-                {
-                    label: 'Roles',
-                    path: '/security/roles',
-                    code: 'SC03',
-                    permission: permisos.seguridad?.roles,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Roles')
-                },
-                {
-                    label: 'Tokens',
-                    path: '/security/tokens',
-                    code: 'SC04',
-                    permission: permisos.seguridad?.tokens,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Tokens')
-                },
-                {
-                    label: 'Permisos',
-                    path: '/security/permissions',
-                    code: 'SC05',
-                    permission: permisos.seguridad?.permisos,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Permisos')
-                },
-                {
-                    label: 'Usuarios',
-                    path: '/security/users',
-                    code: 'SC06',
-                    permission: permisos.seguridad?.usuarios,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Usuarios')
-                },
-                {
-                    label: 'Contraseña',
-                    path: '/security/changepassword',
-                    code: 'SC09',
-                    permission: permisos.seguridad?.contrasenha,
-                    onClick: () => AddAccess('Consultar', 0, userLog, 'Contraseña')
-                }
-            ]
-        }
-    ];
-
-    const visibleMenus = useMemo(() => {
-        return menuConfig.filter(menu => menu.permission);
-    }, [menuConfig, permisos]);
-
-    const getSubmenuPosition = (menuId) => {
-        const headerHeight = 40;
-        const itemHeight = 0;
-        const visualIndex = visibleMenus.findIndex(menu => menu.id === menuId);
-        return headerHeight + (visualIndex * itemHeight);
-    };
-
-    const hasNestedChildren = (items) => {
-        return items.some(item => item.children && item.children.length > 0);
-    };
+    const parseRecursos = (r) => r?.split(',').map(x => x.trim().toLowerCase()) ?? [];
 
     return (
         <div className={`sidebar-modern ${isSidebarVisible ? 'sidebar-visible' : 'sidebar-hidden'}`}>
@@ -381,11 +47,11 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
             <div className="sidebar-header">
                 <Link
                     className="sidebar-avatar"
-                    to={permisos.perfil?.ok ? UrlLocal + '/profile' : ''}
-                    onClick={() => {
-                        if (permisos.perfil?.ok) AddAccess('Modificar', 0, userLog, 'Perfil');
+                    to={permisoPerfil ? UrlLocal + menuPerfil.ruta : ''}
+                    onClick={async () => {
+                        await AddAccess('Modificar', 0, userLog, menuPerfil.nombre);
                     }}
-                    style={{ cursor: permisos.perfil?.ok ? 'pointer' : 'default' }}
+                    style={{ cursor: permisoPerfil ? 'pointer' : 'default' }}
                 >
                     {avatar ? (
                         <img
@@ -403,120 +69,111 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
             </div>
 
             {/* Contenido del menú */}
-            <div className="sidebar-content">
-                <nav>
-                    {menuConfig.map((menu, index) => {
-                        if (!menu.permission) return null;
-
-                        const hasNested = hasNestedChildren(menu.items);
+            <div className="sidebar-content" >
+                <nav className='mb-4'>
+                    {menus.map((m) => {
+                        if (!tieneAccesoModulo(parseRecursos(m.recursos), permisos)) return null;
 
                         return (
-                            <div key={menu.id} className="menu-item">
-                                <button className="menu-item-button">
-                                    <div className={`menu-icon colorSecundario`}>
-                                        <i className={`bi ${menu.icon} text-black`}></i>
-                                    </div>
-                                    <span className="menu-label">{menu.label}</span>
-                                </button>
+                            <div key={m.id} className="menu-item">
+                                {m && !m.unico ? (
+                                    <>
+                                        <button className="menu-item-button">
+                                            <div className={`menu-icon colorSecundario`}>
+                                                <i className={`bi ${m.icono} text-black`}></i>
+                                            </div>
+                                            <span className="menu-label">{m.menu}</span>
+                                        </button>
 
-                                {/* Submenu flotante */}
-                                <div
-                                    className="submenu-floating"
-                                    style={{ top: `${getSubmenuPosition(menu.id)}px` }}
-                                >
-                                    <div className="submenu-content">
-                                        {hasNested ? (
-                                            // Menú con submenús anidados (mostrar secciones)
-                                            menu.items.map((section) => {
-                                                if (!section.permission) return null;
+                                        {/* Submenu flotante */}
+                                        <div className="submenu-floating">
+                                            <div className="submenu-content">
+                                                {m.submenus && m.submenus.length > 0 ? (
+                                                    // Menú con submenús anidados (mostrar secciones)
+                                                    m.submenus.filter(s => s.activo).sort((a, b) => a.orden - b.orden).map((s) => {
+                                                        if (!tieneAccesoModulo(parseRecursos(m.recursos), permisos)) return null;
 
-                                                return (
-                                                    <div key={section.label} className="submenu-section-wrapper">
-                                                        <div className="submenu-section-item">
-                                                            {section.label}
-                                                        </div>
+                                                        return (
+                                                            <div key={s.submenu} className="submenu-section-wrapper">
+                                                                <div className="submenu-section-item">
+                                                                    {s.submenu}
+                                                                </div>
 
-                                                        {/* Submenu de rutas (aparece a la derecha) */}
-                                                        <div className="submenu-routes">
-                                                            <div className="submenu-routes-content">
-                                                                {section.children?.map((item) => {
-                                                                    if (!item.permission) return null;
+                                                                {/* Submenu de rutas (aparece a la derecha) */}
+                                                                <div className="submenu-routes">
+                                                                    <div className="submenu-routes-content">
+                                                                        {s.programas.filter(p => p.activo).sort((a, b) => a.orden - b.orden).map((p) => {
+                                                                            if (!tieneAccesoModulo([p?.modulo?.var?.toLowerCase()], permisos)) return null;
 
-                                                                    return (
-                                                                        <Link
-                                                                            key={item.code}
-                                                                            to={UrlLocal + item.path}
-                                                                            onClick={async () => {
-                                                                                if (item.onClick) await item.onClick();
-                                                                            }}
-                                                                            className="submenu-route-link"
-                                                                        >
-                                                                            <span>{item.label}</span>
-                                                                            <div className="recurso">{item.code}</div>
-                                                                        </Link>
-                                                                    );
-                                                                })}
+                                                                            return (
+                                                                                <Link
+                                                                                    key={p.modulo.var}
+                                                                                    to={UrlLocal + p.ruta}
+                                                                                    onClick={async () => {
+                                                                                        if (p.id != 8 && p.id != 3) await AddAccess('Consultar', 0, userLog, p.nombre);
+                                                                                        else if (p.id == 3) await AddAccess('Modificar', 0, userLog, p.nombre);
+                                                                                    }}
+                                                                                    className="submenu-route-link"
+                                                                                >
+                                                                                    <span>{p.nombre}</span>
+                                                                                    <div className="recurso">{p.modulo.var}</div>
+                                                                                </Link>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        ) : (
-                                            // Menú sin submenús (mostrar rutas directamente)
-                                            menu.items.map((item) => {
-                                                if (!item.permission) return null;
+                                                        );
+                                                    })
+                                                ) : (
+                                                    // Menú sin submenús (mostrar rutas directamente)
+                                                    m.programas.filter(p => p.activo && p.id != 4).sort((a, b) => a.orden - b.orden).map((p) => {
+                                                        if (!tieneAccesoModulo([p?.modulo?.var?.toLowerCase()], permisos)) return null;
 
-                                                return (
-                                                    <Link
-                                                        key={item.code}
-                                                        to={UrlLocal + item.path}
-                                                        onClick={async () => {
-                                                            if (item.onClick) await item.onClick();
-                                                        }}
-                                                        className="submenu-direct-link"
-                                                    >
-                                                        <span>{item.label}</span>
-                                                        <div className="recurso">{item.code}</div>
-                                                    </Link>
-                                                );
-                                            })
-                                        )}
-                                    </div>
-                                </div>
+                                                        return (
+                                                            <Link
+                                                                key={p.modulo.var}
+                                                                to={UrlLocal + p.ruta}
+                                                                onClick={async () => {
+                                                                    if (p.id != 8 && p.id != 3) await AddAccess('Consultar', 0, userLog, p.nombre);
+                                                                    else if (p.id == 3) await AddAccess('Modificar', 0, userLog, p.nombre);
+                                                                }}
+                                                                className="submenu-direct-link"
+                                                            >
+                                                                <span>{p.nombre}</span>
+                                                                <div className="recurso">{p.modulo.var}</div>
+                                                            </Link>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    m.programas.filter(p => p.activo && p.id != 4).sort((a, b) => a.orden - b.orden).map((p) => {
+                                        if (!tieneAccesoModulo([p?.modulo?.var?.toLowerCase()], permisos)) return null;
+
+                                        return (
+                                            <Link
+                                                key={p.modulo.var}
+                                                to={UrlLocal + p.ruta}
+                                                onClick={async () => {
+                                                    if (p.id != 8 && p.id != 3) await AddAccess('Consultar', 0, userLog, p.nombre);
+                                                    else if (p.id == 3) await AddAccess('Modificar', 0, userLog, p.nombre);
+                                                }}
+                                                className="menu-item-single"
+                                            >
+                                                <div className="menu-icon colorSecundario">
+                                                    <i className={`bi ${m.icono} text-black`}></i>
+                                                </div>
+                                                <span className="menu-label">{m.menu}</span>
+                                            </Link>
+                                        )
+                                    })
+                                )}
                             </div>
                         );
                     })}
-
-                    {/* Separador */}
-                    <div className="sidebar-separator"></div>
-
-                    {/* Panel Grafico */}
-                    {permisos.panel?.ok && (
-                        <Link
-                            to={UrlLocal + '/dashboard'}
-                            onClick={async () => await AddAccess('Consultar', 0, userLog, 'Dashboard')}
-                            className="menu-item-single"
-                        >
-                            <div className="menu-icon colorSecundario">
-                                <i className="bi bi-bar-chart-line text-black"></i>
-                            </div>
-                            <span className="menu-label">Dashboard</span>
-                        </Link>
-                    )}
-
-                    {/* Empresa */}
-                    {permisos.empresa?.ok && (
-                        <Link
-                            to={UrlLocal + '/company'}
-                            onClick={async () => await AddAccess('Modificar', 0, userLog, 'Empresa')}
-                            className="menu-item-single mb-4"
-                        >
-                            <div className="menu-icon colorSecundario">
-                                <i className="bi bi-building text-black"></i>
-                            </div>
-                            <span className="menu-label">Empresa</span>
-                        </Link>
-                    )}
                 </nav>
             </div>
 
@@ -527,7 +184,7 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
                     <span>Salir</span>
                 </button>
             </div>
-        </div>
+        </div >
     );
 };
 

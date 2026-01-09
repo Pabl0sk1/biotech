@@ -29,7 +29,11 @@ public class Programa {
 	@SequenceGenerator(name = "programa_sec", sequenceName = "programas_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@NotNull
+	@ManyToOne
+	@JoinColumn(name = "menu_id")
+	@JsonBackReference
+	private Menu menu;
+	
 	@ManyToOne
 	@JoinColumn(name = "submenu_id")
 	@JsonBackReference
@@ -45,6 +49,12 @@ public class Programa {
 	
 	@Size(max = 50)
 	private String ruta;
+	
+	@NotNull
+	@Builder.Default
+	private Boolean activo = true;
+	
+	private Integer orden;
 	
 	public Programa(Integer id) {
 		super();

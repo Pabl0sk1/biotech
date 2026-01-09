@@ -45,9 +45,25 @@ public class Menu {
 	@Size(max = 30)
 	private String icono;
 	
+	@NotNull
+	@Builder.Default
+	private Boolean unico = false;
+	
+	@NotNull
+	@Builder.Default
+	private Boolean activo = true;
+	
+	private Integer orden;
+	
+	private String recursos;
+	
 	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	@JsonManagedReference
-	public List<Submenu> submenu;
+	public List<Submenu> submenus;
+	
+	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+	@JsonManagedReference
+	public List<Programa> programas;
 	
 	public Menu(Integer id) {
 		super();

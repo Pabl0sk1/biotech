@@ -45,12 +45,20 @@ public class Submenu {
 	@NotNull
 	@NotBlank
 	@NotEmpty
-	@Size(max = 30)
+	@Size(max = 50)
 	private String submenu;
+	
+	@NotNull
+	@Builder.Default
+	private Boolean activo = true;
+	
+	private Integer orden;
+	
+	private String recursos;
 	
 	@OneToMany(mappedBy = "submenu", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	@JsonManagedReference
-	public List<Programa> programa;
+	public List<Programa> programas;
 	
 	public Submenu(Integer id) {
 		super();

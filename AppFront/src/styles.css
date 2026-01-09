@@ -1328,11 +1328,12 @@ input[type="number"] {
 .submenu-floating {
   position: fixed;
   left: 80px;
+  top: 0;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   min-width: 200px;
   height: 100vh;
-  padding-top: 20px;
+  padding-top: 60px;
   opacity: 0;
   visibility: hidden;
   transform: translateX(-10px);
@@ -1402,7 +1403,7 @@ input[type="number"] {
   padding: 0;
   min-width: 200px;
   height: 100vh;
-  padding-top: 20px;
+  padding-top: 65px;
   opacity: 0;
   visibility: hidden;
   transform: translateX(-10px);
