@@ -39,8 +39,6 @@ public class Menu {
 	@Size(max = 50)
 	private String menu;
 	
-	@NotEmpty
-	@NotBlank
 	@Size(max = 30)
 	private String icono;
 	
