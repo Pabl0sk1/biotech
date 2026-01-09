@@ -177,7 +177,7 @@ export const EntidadApp = ({ userLog }) => {
     }
 
     const handleEliminarEntidad = async (entidad) => {
-        const rel = await getWallet('', '', '', `entidad.id:eq:${entidad.id}`);
+        const rel = await getWallet('', '', '', `entidadid:eq:${entidad.id}`);
         const rel2 = await getProduct('', '', '', `entidad.id:eq:${entidad.id}`);
         if (rel.items.length > 0 || rel2.items.length > 0) setEntidadNoEliminar(entidad);
         else setEntidadAEliminar(entidad);
