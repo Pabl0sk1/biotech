@@ -194,7 +194,6 @@ public class ProductoService {
 			        data.setActivo(activo);
 			        data.setCostogerencial(costogerencial);
 			        data.setPrecio(precio);
-			        data.setIncluirplan(false);
 			        
 			        rep.save(data);
 			        
