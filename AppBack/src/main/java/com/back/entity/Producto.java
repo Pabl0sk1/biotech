@@ -54,6 +54,10 @@ public class Producto {
 	
 	private Double dosisporhec;
 	
+	private Double costogerencial;
+	
+	private Double precio;
+	
 	@NotNull
 	@NotEmpty
 	@NotBlank
@@ -64,6 +68,9 @@ public class Producto {
 	@NotNull
 	@Builder.Default
 	private Boolean activo = true;
+	
+	@Builder.Default
+	private Boolean incluirplan = false;
 	
 	@Size(max = 150)
 	private String obs;

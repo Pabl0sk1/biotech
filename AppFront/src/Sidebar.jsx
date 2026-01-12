@@ -97,6 +97,7 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
                                                             <div key={s.submenu} className="submenu-section-wrapper">
                                                                 <div className="submenu-section-item">
                                                                     {s.submenu}
+                                                                    <i className='bi bi-arrow-right-short'></i>
                                                                 </div>
 
                                                                 {/* Submenu de rutas (aparece a la derecha) */}

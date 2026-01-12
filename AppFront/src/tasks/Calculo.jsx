@@ -1241,14 +1241,7 @@ export const Calculo = ({ userLog }) => {
                                         </div>
                                     ))}
                             </div>
-                            <div style={{
-                                background: '#f9fafb',
-                                padding: '24px 32px',
-                                borderTop: '1px solid #e5e7eb',
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                                gap: '12px'
-                            }}>
+                            <div className='div-report-button'>
                                 <button type='submit' className="btn btn-primary border-0 btn-lg" disabled={selectedFuncionarios.length == 0}>
                                     <i className="bi bi-printer-fill me-2"></i>Generar
                                 </button>

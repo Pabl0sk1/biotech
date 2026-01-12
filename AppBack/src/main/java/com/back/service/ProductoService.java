@@ -145,6 +145,7 @@ public class ProductoService {
 			List<Map<String, Object>> dataList = rest.fetchAll(r, "", "", "");
 			
 			for (Map<String, Object> item : dataList) {
+				List<Map<String, Object>> precios = null;
 				
 				try {
 			        Integer erpId = (Integer) item.get("id");
@@ -153,13 +154,20 @@ public class ProductoService {
 			        Integer principioactivoId = (Integer) item.get("Principio_activo_id");
 			        Integer fasecultivoId = (Integer) item.get("Fase_cultivo_id");
 			        Double dosisporhec = (Double) item.get("Dosis");
+			        Double costogerencial = (Double) item.get("Costo_gerencial_ro");
 			        String estado = (String) item.get("Producto_status");
 			        Boolean activo = "Activo".equalsIgnoreCase(estado);
+			        Double precio = null;
 			        
 			        Entidad proveedor = null;
 			        if (r.equals("BP51")) {
 			        	proveedorId = (Integer) item.get("Proveedor_id");
 			        	if (proveedorId != null) proveedor = repEntidad.findByErpid(proveedorId).orElse(null);
+			        }
+			        
+			        if (r.equals("BP51") || r.equals("BP61") || r.equals("BP64")) {
+			        	precios = rest.fetchAll("BP51", "Producto_id", erpId.toString(), "Precio");
+			        	if (!precios.isEmpty()) precio = rest.parseDouble(precios.getFirst().get("P_normal"));
 			        }
 			        
 			        NombreComercial nombrecomercial = null;
@@ -184,6 +192,9 @@ public class ProductoService {
 			        data.setDosisporhec(dosisporhec);
 			        data.setEstado(estado);
 			        data.setActivo(activo);
+			        data.setCostogerencial(costogerencial);
+			        data.setPrecio(precio);
+			        data.setIncluirplan(false);
 			        
 			        rep.save(data);
 			        

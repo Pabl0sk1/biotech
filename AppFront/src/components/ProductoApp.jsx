@@ -353,6 +353,28 @@ export const ProductoApp = ({ userLog }) => {
                                             value={productoAVisualizar.estado || ''}
                                             readOnly
                                         />
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="costogerencial" className="form-label m-0 mb-2">Costo Gerencial</label>
+                                            <input
+                                                type="number"
+                                                id="costogerencial"
+                                                name="costogerencial"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={productoAVisualizar.costogerencial || ''}
+                                                readOnly
+                                            />
+                                        </div>
+                                        <div hidden={!userLog?.id == 1}>
+                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <input
+                                                type="number"
+                                                id="erpid"
+                                                name="erpid"
+                                                className="form-control border-input w-100 border-black mb-3"
+                                                value={productoAVisualizar.erpid || ''}
+                                                readOnly
+                                            />
+                                        </div>
                                     </div>
                                     {/*Columna 2 de visualizar*/}
                                     <div className='col ms-5 ps-0 pe-0 me-5'>
@@ -383,17 +405,25 @@ export const ProductoApp = ({ userLog }) => {
                                             value={productoAVisualizar.dosisporhec || ''}
                                             readOnly
                                         />
-                                        <div hidden={!userLog?.id == 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
-                                                value={productoAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
+                                        <label htmlFor="precio" className="form-label m-0 mb-2">Precio</label>
+                                        <input
+                                            type="number"
+                                            id="precio"
+                                            name="precio"
+                                            className="form-control border-input w-100 border-black mb-3"
+                                            value={productoAVisualizar.precio || ''}
+                                            readOnly
+                                        />
+                                        <label htmlFor="incluirplan" className="form-label m-0 mb-2 me-2 d-flex">Incluir Planeamiento</label>
+                                        <input
+                                            type="checkbox"
+                                            id="incluirplan"
+                                            name="incluirplan"
+                                            className="form-check-input"
+                                            style={{ width: '60px', height: '30px' }}
+                                            checked={productoAVisualizar.incluirplan || ''}
+                                            readOnly
+                                        />
                                     </div>
                                     <div className='col ms-5 ps-0'>
                                         <div className='form-group mb-1'>
@@ -532,6 +562,30 @@ export const ProductoApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
                                                 </div>
                                             </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="costogerencial" className="form-label m-0 mb-2">Costo Gerencial</label>
+                                                <input
+                                                    type="number"
+                                                    id="costogerencial"
+                                                    name="costogerencial"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={productoAGuardar.costogerencial || ''}
+                                                    onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                                <input
+                                                    type="number"
+                                                    id="erpid"
+                                                    name="erpid"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={productoAGuardar.erpid || ''}
+                                                    onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                         {/*Columna 2 de visualizar*/}
                                         <div className='col ms-5 ps-0 pe-0 me-5'>
@@ -563,10 +617,10 @@ export const ProductoApp = ({ userLog }) => {
                                             </div>
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="clase" className="form-label m-0 mb-2">Clase</label>
-                                                <i style={{ cursor: puedeCrearEntidad ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearEntidad ? 'text-success' : 'text-success-emphasis'}`}
+                                                <i style={{ cursor: puedeCrearClase ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearClase ? 'text-success' : 'text-success-emphasis'}`}
                                                     onClick={async () => {
-                                                        if (puedeCrearEntidad) {
+                                                        if (puedeCrearClase) {
                                                             await AddAccess('Consultar', 0, userLog, 'Clases')
                                                             navigate('/home/config/product/classes')
                                                         };
@@ -588,16 +642,43 @@ export const ProductoApp = ({ userLog }) => {
                                                     required={true}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="dosisporhec" className="form-label m-0 mb-2">Dosis p/h</label>
                                                 <input
                                                     type="number"
-                                                    id="erpid"
-                                                    name="erpid"
+                                                    id="dosisporhec"
+                                                    name="dosisporhec"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    value={productoAGuardar.erpid || ''}
+                                                    value={productoAGuardar.dosisporhec || ''}
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="precio" className="form-label m-0 mb-2">Precio</label>
+                                                <input
+                                                    type="number"
+                                                    id="precio"
+                                                    name="precio"
+                                                    className="form-control border-input w-100"
+                                                    placeholder="Escribe..."
+                                                    value={productoAGuardar.precio || ''}
+                                                    onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
+                                                />
+                                            </div>
+                                            <div className='form-group mb-1'>
+                                                <label htmlFor="incluirplan" className="form-label m-0 mb-2 me-2 d-flex">Incluir Planeamiento</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="incluirplan"
+                                                    name="incluirplan"
+                                                    className="form-check-input"
+                                                    style={{ width: '60px', height: '30px' }}
+                                                    checked={productoAGuardar.incluirplan || ''}
+                                                    onChange={(e) => {
+                                                        const check = e.target.checked;
+                                                        setProductoAGuardar({ ...productoAGuardar, [e.target.name]: check });
+                                                    }}
                                                 />
                                             </div>
                                         </div>
@@ -610,7 +691,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     name="obs"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    style={{ resize: 'none', height: '290px' }}
+                                                    style={{ resize: 'none', height: '330px' }}
                                                     value={productoAGuardar.obs || ''}
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={150}>

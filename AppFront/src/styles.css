@@ -1376,7 +1376,6 @@ input[type="number"] {
 }
 
 .submenu-section-item::after {
-  content: "›";
   font-size: 18px;
   color: rgba(255, 255, 255, 0.5);
   transition: all 0.2s ease;
@@ -1872,4 +1871,13 @@ input[type="number"] {
   .title-indicator {
     display: none;
   }
+}
+
+.div-report-button {
+  display: flex;
+  justify-content: flex-end;
+  background: #f9fafb;
+  padding: 24px 32px;
+  border-top: 1px solid #e5e7eb;
+  gap: 12px;
 }
