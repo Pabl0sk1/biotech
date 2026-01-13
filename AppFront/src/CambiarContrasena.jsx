@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUser, changePassword } from "./services/usuario.service";
+import { GeneratePass } from './utils/GeneratePass';
 import Header from "./Header";
 
 export const CambiarContrasena = ({ userLog, setUserLog }) => {
@@ -49,6 +50,18 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
             }, false);
         });
     }, []);
+
+    const generarContrasena = () => {
+        const pass = GeneratePass();
+
+        setFormData({
+            ...formData,
+            contrasenaNueva: pass,
+            contrasenaRepetida: pass
+        });
+        setNewPass('');
+        setRepeatPass('');
+    }
 
     const confirmarEscape = () => {
         setCerrarPass(false);
@@ -190,7 +203,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                             <div className="form-body">
                                 {/* Contraseña actual */}
                                 <div className="modern-input-group">
-                                    <label htmlFor="contrasenaActual" className="modern-label">
+                                    <label htmlFor="contrasenaActual" className="modern-label text-start">
                                         <i className="bi bi-lock me-2"></i>Contraseña Actual
                                     </label>
                                     <div className="password-input-container">
@@ -222,9 +235,25 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
 
                                 {/* Nueva contraseña */}
                                 <div className="modern-input-group">
-                                    <label htmlFor="contrasenaNueva" className="modern-label">
-                                        <i className="bi bi-key me-2"></i>Nueva Contraseña
-                                    </label>
+                                    <div className="d-flex align-items-center justify-content-between mb-2">
+                                        <label htmlFor="contrasenaNueva" className="modern-label m-0">
+                                            <i className="bi bi-key me-2"></i>Nueva Contraseña
+                                        </label>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-success"
+                                            onClick={generarContrasena}
+                                            title="Generar contraseña segura"
+                                            style={{
+                                                borderRadius: '8px',
+                                                fontSize: '13px',
+                                                padding: '4px 12px',
+                                                fontWeight: '600'
+                                            }}
+                                        >
+                                            <i className="bi bi-key-fill me-1"></i>Generar
+                                        </button>
+                                    </div>
                                     <div className="password-input-container">
                                         <input
                                             type={showPasswordNueva ? "text" : "password"}
@@ -254,7 +283,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
 
                                 {/* Confirmar contraseña */}
                                 <div className="modern-input-group">
-                                    <label htmlFor="contrasenaRepetida" className="modern-label">
+                                    <label htmlFor="contrasenaRepetida" className="modern-label text-start">
                                         <i className="bi bi-check-circle me-2"></i>Confirmar Contraseña
                                     </label>
                                     <div className="password-input-container">
