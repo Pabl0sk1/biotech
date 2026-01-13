@@ -691,7 +691,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     name="obs"
                                                     className="form-control border-input w-100"
                                                     placeholder="Escribe..."
-                                                    style={{ resize: 'none', height: '330px' }}
+                                                    style={{ resize: 'none', height: '260px' }}
                                                     value={productoAGuardar.obs || ''}
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
                                                     maxLength={150}>

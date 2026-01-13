@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "./services/usuario.service";
 import { AddAccess } from "./utils/AddAccess.js";
+import { updateUser } from "./services/usuario.service";
 
 export const Login = ({ setUserLog }) => {
 
@@ -39,12 +40,18 @@ export const Login = ({ setUserLog }) => {
                     expiresAt: expirationTime
                 };
 
+                const usuario = {
+                    ...usuarioEncontrado,
+                    online: true
+                }
+
                 localStorage.setItem('session', JSON.stringify(sessionData));
-                sessionStorage.setItem('usuario', JSON.stringify(usuarioEncontrado));
+                sessionStorage.setItem('usuario', JSON.stringify(usuario));
 
                 await AddAccess('Iniciar Sesión', 0, response.user, "Login");
+                await updateUser(usuario.id, usuario);
 
-                setUserLog(usuarioEncontrado);
+                setUserLog(usuario);
                 navigate("biotech/home");
             } else {
                 setError("Nombre de usuario o contraseña incorrectos.");

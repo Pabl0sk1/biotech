@@ -92,6 +92,9 @@ public class Usuario {
 	@Builder.Default
 	private Boolean activo = true;
 	
+	@Builder.Default
+	private Boolean online = false;
+	
 	@NotNull
 	@Builder.Default
 	private Boolean vermapa = false;

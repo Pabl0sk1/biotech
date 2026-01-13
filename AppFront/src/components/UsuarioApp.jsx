@@ -104,6 +104,7 @@ export const UsuarioApp = ({ userLog }) => {
         direccion: "",
         estado: "Activo",
         activo: true,
+        online: false,
         vermapa: false,
         fechanacimiento: "",
         imagentipo: "",
@@ -949,13 +950,14 @@ export const UsuarioApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
+                                        <th>ON</th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {usuarios.length === 0 ? (
                                         <tr>
-                                            <td colSpan="7" className="text-center py-3 text-muted fs-3 fw-bold">
+                                            <td colSpan="8" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
                                             </td>
                                         </tr>
@@ -983,6 +985,9 @@ export const UsuarioApp = ({ userLog }) => {
                                                         <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
                                                             {v.estado}
                                                         </p>
+                                                    </td>
+                                                    <td className='p-0'>
+                                                        <span className={`bi bi-circle-fill ${v.online ? 'text-success' : 'text-danger'}`}></span>
                                                     </td>
                                                     <td style={{ width: '100px' }}>
                                                         <button

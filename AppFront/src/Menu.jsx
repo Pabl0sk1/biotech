@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AddAccess } from './utils/AddAccess.js';
 import { HostLocation } from './utils/HostLocation';
 import { getConfig } from './services/config.service.js';
+import { updateUser } from './services/usuario.service.js';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 
@@ -76,7 +77,14 @@ export const Menu = ({ userLog, setUserLog }) => {
         localStorage.removeItem('session');
         sessionStorage.removeItem('usuario');
 
+        const usuario = {
+            ...userLog,
+            online: false
+        }
+
         await AddAccess('Cerrar Sesión', 0, userLog, 'Login');
+        await updateUser(usuario.id, usuario);
+
         setUserLog(null);
         window.location.href = '/biotech/login';
     };
