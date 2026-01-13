@@ -7,6 +7,7 @@ import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { GeneratePass } from '../utils/GeneratePass.js';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from '../layouts/Loading.jsx';
@@ -188,6 +189,16 @@ export const UsuarioApp = ({ userLog }) => {
         recuperarUsuarios();
         setLoading(false);
     };
+
+    const generarContrasena = () => {
+        const pass = GeneratePass();
+        setUsuarioAGuardar({ ...usuarioAGuardar, contrasena: pass });
+        setRepeatPassword(pass);
+        setNewPassMsj('');
+        setNewPassError(false);
+        setRepeatPassMsj('');
+        setRepeatPassError(false);
+    }
 
     const nextPage = () => {
         if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
@@ -578,38 +589,46 @@ export const UsuarioApp = ({ userLog }) => {
                                                     required={true}
                                                 />
                                             </div>
-                                            {usuarioAGuardar.id === null && (
-                                                <div className='form-group mb-1'>
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <div className="d-flex align-items-center justify-content-between">
                                                     <label htmlFor="contrasena" className="form-label m-0 mb-2">Contraseña</label>
-                                                    <div className="d-flex align-items-center position-relative">
-                                                        <input
-                                                            type={showPasswordNueva ? "text" : "password"}
-                                                            id="contrasena"
-                                                            name="contrasena"
-                                                            className="form-control border-input w-100 pe-5"
-                                                            placeholder="Escribe..."
-                                                            value={usuarioAGuardar.contrasena || ''}
-                                                            onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                            required
-                                                            autoComplete='off'
-                                                            maxLength={30}
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-light btn-eye"
-                                                            style={{ marginTop: '7px' }}
-                                                            onClick={() => setShowPasswordNueva(!showPasswordNueva)}
-                                                        >
-                                                            {showPasswordNueva ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                                                        </button>
-                                                    </div>
-                                                    {newPassError && (
-                                                        <div className="text-danger text-start mt-1" style={{ fontSize: '14px' }}>
-                                                            <i className="bi bi-exclamation-triangle-fill me-2"></i>{newPassMsj}
-                                                        </div>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-success mb-2"
+                                                        onClick={generarContrasena}
+                                                        title="Generar contraseña segura"
+                                                    >
+                                                        <i className="bi bi-key-fill me-1"></i>Generar
+                                                    </button>
                                                 </div>
-                                            )}
+                                                <div className="d-flex align-items-center position-relative">
+                                                    <input
+                                                        type={showPasswordNueva ? "text" : "password"}
+                                                        id="contrasena"
+                                                        name="contrasena"
+                                                        className="form-control border-input w-100 pe-5"
+                                                        placeholder="Escribe..."
+                                                        value={usuarioAGuardar.contrasena || ''}
+                                                        onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
+                                                        required={usuarioAGuardar.contrasena}
+                                                        autoComplete='off'
+                                                        maxLength={30}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-light btn-eye"
+                                                        style={{ marginTop: '7px' }}
+                                                        onClick={() => setShowPasswordNueva(!showPasswordNueva)}
+                                                    >
+                                                        {showPasswordNueva ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
+                                                    </button>
+                                                </div>
+                                                {newPassError && (
+                                                    <div className="text-danger text-start mt-1" style={{ fontSize: '14px' }}>
+                                                        <i className="bi bi-exclamation-triangle-fill me-2"></i>{newPassMsj}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         {/*Columna 2 de guardar*/}
                                         <div className='col ms-5 me-5 p-0'>
@@ -697,37 +716,35 @@ export const UsuarioApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
                                                 </div>
                                             </div>
-                                            {usuarioAGuardar.id === null && (
-                                                <div className='form-group mb-1'>
-                                                    <label htmlFor="repetircontrasena" className="form-label m-0 mb-2">Repetir Contraseña</label>
-                                                    <div className="d-flex align-items-center position-relative">
-                                                        <input
-                                                            type={showPasswordRepetir ? "text" : "password"}
-                                                            id="repetircontrasena"
-                                                            name="repetircontrasena"
-                                                            className="form-control border-input w-100 pe-5"
-                                                            placeholder="Escribe..."
-                                                            value={repeatPassword || ''}
-                                                            onChange={(event) => setRepeatPassword(event.target.value)}
-                                                            autoComplete='new-password'
-                                                            maxLength={30}
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-light btn-eye"
-                                                            style={{ marginTop: '7px' }}
-                                                            onClick={() => setShowPasswordRepetir(!showPasswordRepetir)}
-                                                        >
-                                                            {showPasswordRepetir ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                                                        </button>
-                                                    </div>
-                                                    {repeatPassError && (
-                                                        <div className="text-danger text-start mt-1" style={{ fontSize: '14px' }}>
-                                                            <i className="bi bi-exclamation-triangle-fill me-2"></i>{repeatPassMsj}
-                                                        </div>
-                                                    )}
+                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                                <label htmlFor="repetircontrasena" className="form-label m-0 mb-2">Repetir Contraseña</label>
+                                                <div className="d-flex align-items-center position-relative">
+                                                    <input
+                                                        type={showPasswordRepetir ? "text" : "password"}
+                                                        id="repetircontrasena"
+                                                        name="repetircontrasena"
+                                                        className="form-control border-input w-100 pe-5"
+                                                        placeholder="Escribe..."
+                                                        value={repeatPassword || ''}
+                                                        onChange={(event) => setRepeatPassword(event.target.value)}
+                                                        autoComplete='new-password'
+                                                        maxLength={30}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-light btn-eye"
+                                                        style={{ marginTop: '7px' }}
+                                                        onClick={() => setShowPasswordRepetir(!showPasswordRepetir)}
+                                                    >
+                                                        {showPasswordRepetir ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
+                                                    </button>
                                                 </div>
-                                            )}
+                                                {repeatPassError && (
+                                                    <div className="text-danger text-start mt-1" style={{ fontSize: '14px' }}>
+                                                        <i className="bi bi-exclamation-triangle-fill me-2"></i>{repeatPassMsj}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         {/*Columna 3 de visualizar*/}
                                         <div className='col ps-0'>
