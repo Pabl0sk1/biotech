@@ -829,6 +829,50 @@ export const Calculo = ({ userLog }) => {
                                     />
                                 </div>
 
+                                {/* Sección de gestión de feriados */}
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
+                                        <i className="bi bi-calendar-day me-2"></i>Gestión de Feriados
+                                    </label>
+                                    {/* Campo para agregar nuevos feriados */}
+                                    <div className="input-group mb-3 z-0">
+                                        <input
+                                            type="date"
+                                            className="modern-input form-control mw-100"
+                                            value={nuevaFechaFeriado}
+                                            onChange={(e) => setNuevaFechaFeriado(e.target.value)}
+                                            style={{ maxWidth: '200px' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="modern-button btn-primary"
+                                            onClick={agregarFeriado}
+                                            disabled={!nuevaFechaFeriado}
+                                        >
+                                            <i className="bi bi-plus-circle me-2"></i>
+                                        </button>
+                                    </div>
+                                    {/* Lista de feriados */}
+                                    {data.listaferiados.length > 0 && (
+                                        <div className='alert alert-danger p-2 m-0 rounded-2 d-flex align-items-center justify-content-center text-center'>
+                                            <div className="d-flex flex-wrap gap-2 justify-content-center">
+                                                {data.listaferiados.map((fechaFeriado, index) => (
+                                                    <div key={index} className="badge bg-danger fs-6 d-flex align-items-center">
+                                                        <span className="me-2">{formatearFecha(fechaFeriado)}</span>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-close btn-close-white"
+                                                            aria-label="Eliminar feriado"
+                                                            onClick={() => eliminarFeriado(fechaFeriado)}
+                                                            style={{ fontSize: '0.7em' }}
+                                                        ></button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Sección de carga de CSV */}
                                 <div className="modern-input-group">
                                     <label className="modern-label">
