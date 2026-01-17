@@ -282,7 +282,7 @@ export const Data = () => {
                                 <i className="bi bi-clipboard-data"></i>
                             </div>
                             <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Planeamiento
+                                Planeamientos
                             </h2>
                             <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
                                 Realizar el registro del planeamiento

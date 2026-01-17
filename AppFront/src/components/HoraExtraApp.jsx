@@ -84,6 +84,7 @@ export const HoraExtraApp = ({ userLog }) => {
     }
 
     useEffect(() => {
+        setLoading(true);
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
             const response = await getReport(query.page, query.size, query.order, 'tipoinforme.id:eq:1;' + filtrosFinal);
@@ -99,6 +100,7 @@ export const HoraExtraApp = ({ userLog }) => {
             setTipo(tp.items[0]);
         }
         cargarTipo();
+        setLoading(false);
     }, [query]);
 
     const eliminarHoraExtraFn = async (id) => {
