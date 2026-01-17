@@ -99,7 +99,7 @@ public class NombreComercialService {
         if (entity.equals(NombreComercial.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Nombre comercial no soportado");
     }
 
 	public NombreComercial guardar(NombreComercial nombrecomercial) {

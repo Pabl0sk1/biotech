@@ -86,7 +86,7 @@ public class TurnoService {
         if (entity.equals(Turno.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Turno no soportado");
     }
 
 	public Turno guardar(Turno turno) {

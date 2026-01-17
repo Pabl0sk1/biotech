@@ -1,28 +1,29 @@
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getUser, updateUser, updateUserImage, deleteUserImage } from "./services/usuario.service";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import { HostLocation } from './utils/HostLocation';
+import Loading from "./layouts/Loading";
+import Close from "./layouts/Close";
 
 export const Perfil = ({ userLog, setUserLog }) => {
 
+    const navigate = useNavigate();
     const [usuarios, setUsuarios] = useState([]);
     const [data, setData] = useState(userLog);
     const [nombreUsuarioMsj, setNombreUsuarioMsj] = useState('');
     const [nombreUsuarioError, setNombreUsuarioError] = useState(false);
     const [nombreError, setNombreError] = useState(false);
-    const [cerrarPerfil, setCerrarPerfil] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [close, setClose] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
     const [imagenFile, setImagenFile] = useState(null);
     const [eliminarImagen, setEliminarImagen] = useState(false);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                if (cerrarPerfil) {
+                if (close) {
                     confirmarEscape();
                 }
             }
@@ -31,7 +32,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, [cerrarPerfil]);
+    }, [close]);
 
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
@@ -47,8 +48,8 @@ export const Perfil = ({ userLog, setUserLog }) => {
     }, []);
 
     const confirmarEscape = () => {
-        setCerrarPerfil(false);
-        navigate(-1);
+        setClose(false);
+        if (!nombreUsuarioError && !nombreError) navigate(-1);
     };
 
     const recuperarUsuarios = async () => {
@@ -80,8 +81,8 @@ export const Perfil = ({ userLog, setUserLog }) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setIsLoading(true);
         const form = event.currentTarget;
+        setLoading(true);
 
         let apellido = "";
         if (data.apellido) apellido = ", " + data.apellido;
@@ -110,14 +111,12 @@ export const Perfil = ({ userLog, setUserLog }) => {
         if (!newData.nombre) {
             setNombreError(true);
             sw = 1;
-        } else {
-            setNombreError(false);
-        }
+        } else setNombreError(false);
 
         if (sw == 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
-            setIsLoading(false);
+            setLoading(false);
             return;
         }
 
@@ -141,12 +140,13 @@ export const Perfil = ({ userLog, setUserLog }) => {
             }
 
             await actualizaruserLog();
-            setCerrarPerfil(true);
+
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
         }
-        setIsLoading(false);
+        setLoading(false);
+        setClose(true);
     };
 
     const handleImageChange = (event) => {
@@ -174,25 +174,11 @@ export const Perfil = ({ userLog, setUserLog }) => {
     return (
         <>
 
-            {cerrarPerfil && (
-                <div className="success-modal">
-                    <div className="success-content">
-                        <div className="success-icon">
-                            <i className="bi bi-check-circle-fill"></i>
-                        </div>
-                        <h3 style={{ color: '#1f2937', marginBottom: '8px' }}>¡Perfil Actualizado!</h3>
-                        <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-                            Tus datos se han guardado correctamente
-                        </p>
-                        <button
-                            onClick={confirmarEscape}
-                            className="modern-button btn-primary"
-                        >
-                            <i className="bi bi-check-lg"></i>
-                            Continuar
-                        </button>
-                    </div>
-                </div>
+            {loading && (
+                <Loading />
+            )}
+            {close && (
+                <Close confirmar={confirmarEscape} title={'Perfil'} gen={true} />
             )}
 
             <div className="modern-container colorPrimario">
@@ -265,16 +251,15 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                     />
                                 </div>
 
+                                <h3 className="section-title">
+                                    <i className="bi bi-shield-check input-icon"></i>
+                                    Información de Cuenta
+                                </h3>
                                 {/* Sección de Información de Cuenta */}
                                 <div className="form-section">
-                                    <h3 className="section-title">
-                                        <i className="bi bi-shield-check input-icon"></i>
-                                        Información de Cuenta
-                                    </h3>
-
                                     <div className="modern-input-group">
                                         <label htmlFor="nombreusuario" className="modern-label">
-                                            <i className="bi bi-person-badge me-2"></i>Nombre de Usuario <span className="required-field">*</span>
+                                            <i className="bi bi-person-badge me-2"></i>Nombre de Usuario *
                                         </label>
                                         <input
                                             type="text"
@@ -295,18 +280,17 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                     </div>
                                 </div>
 
+                                <h3 className="section-title">
+                                    <i className="bi bi-person input-icon"></i>
+                                    Información Personal
+                                </h3>
                                 {/* Sección de Información Personal */}
                                 <div className="form-section">
-                                    <h3 className="section-title">
-                                        <i className="bi bi-person input-icon"></i>
-                                        Información Personal
-                                    </h3>
-
                                     <div className="row">
                                         <div className="col-md-6">
                                             <div className="modern-input-group">
                                                 <label htmlFor="nombre" className="modern-label">
-                                                    <i className="bi bi-card-text me-2"></i>Nombre <span className="required-field">*</span>
+                                                    <i className="bi bi-card-text me-2"></i>Nombre *
                                                 </label>
                                                 <input
                                                     type="text"
@@ -366,13 +350,12 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                         <div className="col-md-6">
                                             <div className="modern-input-group">
                                                 <label htmlFor="fechanacimiento" className="modern-label">
-                                                    <i className="bi bi-credit-card me-2"></i>Fecha de Nacimiento
+                                                    <i className="bi bi-calendar me-2"></i>Fecha de Nacimiento
                                                 </label>
                                                 <input
                                                     type="date"
                                                     id="fechanacimiento"
                                                     name="fechanacimiento"
-                                                    placeholder="Ej: 12345678"
                                                     className="modern-input"
                                                     value={data.fechanacimiento || ''}
                                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
@@ -382,13 +365,12 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                     </div>
                                 </div>
 
+                                <h3 className="section-title">
+                                    <i className="bi bi-telephone input-icon"></i>
+                                    Información de Contacto
+                                </h3>
                                 {/* Sección de Contacto */}
                                 <div className="form-section">
-                                    <h3 className="section-title">
-                                        <i className="bi bi-telephone input-icon"></i>
-                                        Información de Contacto
-                                    </h3>
-
                                     <div className="row">
                                         <div className="col-md-6">
                                             <div className="modern-input-group">
@@ -449,32 +431,9 @@ export const Perfil = ({ userLog, setUserLog }) => {
                             </div>
 
                             {/* Botones de acción */}
-                            <div style={{
-                                background: '#f9fafb',
-                                padding: '24px 32px',
-                                borderTop: '1px solid #e5e7eb',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                gap: '12px'
-                            }}>
-                                <Link
-                                    className="modern-button btn-secondary"
-                                    to={-1}
-                                >
-                                    <i className="bi bi-x-lg"></i>
-                                    Cancelar
-                                </Link>
-                                <button
-                                    type="submit"
-                                    className="modern-button btn-primary"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? (
-                                        <div className="spinner"></div>
-                                    ) : (
-                                        <i className="bi bi-check-lg"></i>
-                                    )}
-                                    {isLoading ? 'Guardando...' : 'Guardar'}
+                            <div className="div-report-button">
+                                <button type="submit" className="modern-button btn-primary">
+                                    <i className="bi bi-check-lg"></i>Guardar
                                 </button>
                             </div>
                         </form>

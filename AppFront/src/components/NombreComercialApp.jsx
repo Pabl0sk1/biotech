@@ -139,7 +139,7 @@ export const NombreComercialApp = ({ userLog }) => {
     }
 
     const handleEliminarNombreComercial = async (nombrecomercial) => {
-        const rel = await getProduct('', '', '', `nombrecomercial.nombrecomercial.id:eq:${nombrecomercial.id}`);
+        const rel = await getProduct('', '', '', `nombrecomercial.id:eq:${nombrecomercial.id}`);
         if (rel.items.length > 0) setNombreComercialNoEliminar(nombrecomercial);
         else setNombreComercialAEliminar(nombrecomercial);
     };

@@ -89,7 +89,7 @@ public class SucursalService {
         if (entity.equals(Sucursal.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Sucursal no soportada");
     }
 
 	public Sucursal guardar(Sucursal sucursal) {

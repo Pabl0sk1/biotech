@@ -1,6 +1,6 @@
 import { saveAccess, getNetworkInfo } from '../services/auditoria.service.js';
 
-const obtenerFechaHora = () => {
+export const obtenerFechaHora = () => {
     const localDate = new Date();
 
     const dia = String(localDate.getDate()).padStart(2, '0');

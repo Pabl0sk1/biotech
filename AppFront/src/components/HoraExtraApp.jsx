@@ -1,22 +1,27 @@
-import { useEffect, useState } from "react";
-import { getToken, saveToken, deleteToken } from '../services/token.service.js';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getReport, deleteReport } from '../services/informe.service.js';
+import { getReportType } from '../services/tipoinforme.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header';
+import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from '../FiltroModal.jsx';
+import { FiltroModal } from "../FiltroModal.jsx";
 import { DateHourFormat } from '../utils/DateHourFormat.js';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
-import SaveModal from "../layouts/SaveModal.jsx";
+import SaveModal from '../layouts/SaveModal.jsx';
+import { generarExcel } from '../tasks/ArchivoExcel.jsx';
 
-export const TokenApp = ({ userLog }) => {
+export const HoraExtraApp = ({ userLog }) => {
 
-    const [tokens, setTokens] = useState([]);
+    const navigate = useNavigate();
+    const [horasextras, setHorasExtras] = useState([]);
+    const [tipo, setTipo] = useState({});
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [tokenAEliminar, setTokenAEliminar] = useState(null);
-    const [tokenAGuardar, setTokenAGuardar] = useState(null);
+    const [horaextraAGuardar, setHoraExtraAGuardar] = useState(null);
+    const [horaextraAEliminar, setHoraExtraAEliminar] = useState(null);
     const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
@@ -30,8 +35,8 @@ export const TokenApp = ({ userLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setTokenAEliminar(null);
-                setTokenAGuardar(null);
+                setHoraExtraAEliminar(null);
+                setHoraExtraAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -53,52 +58,77 @@ export const TokenApp = ({ userLog }) => {
         });
     }, []);
 
-    const recuperarTokens = () => {
+    const selected = {
+        id: null,
+        usuario: { ...userLog },
+        tipoinforme: { ...tipo },
+        descripcion: "",
+        data: null,
+        fechacreacion: new Date(),
+        fechaactualizacion: new Date(),
+        estado: "Borrador"
+    }
+
+    const generarArchivo = (data) => {
+        const dataParsed = JSON.parse(data);
+        generarExcel(dataParsed);
+    }
+
+    const recuperarHorasExtras = () => {
         setQuery(q => ({ ...q }));
-    };
+    }
 
     const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc04`);
+        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh04`);
         setPermiso(response.items[0]);
     }
 
     useEffect(() => {
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
-            const response = await getToken(query.page, query.size, query.order, filtrosFinal);
-            setTokens(response.items);
+            const response = await getReport(query.page, query.size, query.order, 'tipoinforme.id:eq:1;' + filtrosFinal);
+            setHorasExtras(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
             permisoUsuario();
         };
         load();
+
+        const cargarTipo = async () => {
+            const tp = await getReportType('', '', '', 'id:eq:1');
+            setTipo(tp.items[0]);
+        }
+        cargarTipo();
     }, [query]);
 
-    const eliminarTokenFn = async (id) => {
+    const eliminarHoraExtraFn = async (id) => {
         setLoading(true);
-        await deleteToken(id);
-        await AddAccess('Eliminar', id, userLog, "Tokens");
-        recuperarTokens();
+        await deleteReport(id);
+        await AddAccess('Eliminar', id, userLog, "Horas Extras");
+        recuperarHorasExtras();
         setLoading(false);
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarTokenFn(id);
-        setTokenAEliminar(null);
+        eliminarHoraExtraFn(id);
+        setHoraExtraAEliminar(null);
     }
 
-    const handleEliminarToken = async (token) => {
-        setTokenAEliminar(token);
+    const handleEliminarHoraExtra = async (horaextra) => {
+        // const rel = await getProduct('', '', '', `tipoproducto.id:eq:${horaextra?.id}`);
+        // if (rel.items.length > 0) setHoraExtraNoEliminar(horaextra);
+        setHoraExtraAEliminar(horaextra);
     };
 
-    const guardarFn = async () => {
-        setTokenAGuardar(null);
-        setLoading(true);
-
-        const nuevoToken = await saveToken(userLog?.id);
-        await AddAccess('Insertar', nuevoToken.saved.id, userLog, "Tokens");
-        recuperarTokens();
-        setLoading(false);
+    const guardarFn = async (datos, modoEdicion) => {
+        setHoraExtraAGuardar(null);
+        if (datos?.id) navigate(`/home/main/rrhh/calcext/${datos.id}`, {
+            state: { userLog, datos, modoEdicion }
+        });
+        else navigate(`/home/main/rrhh/calcext/${selected.id}`, {
+            state: { userLog, datos: selected, modoEdicion: true }
+        });
+        recuperarHorasExtras();
     };
 
     const nextPage = () => {
@@ -147,27 +177,8 @@ export const TokenApp = ({ userLog }) => {
         return filtro;
     };
 
-    const ocultarToken = (cadena, id, estado) => {
-        if (userLog?.id === 1 || userLog?.id === id) {
-            return (
-                <p className={`${estado ? '' : 'text-decoration-line-through'} m-0`}>
-                    {cadena}
-                </p>
-            );
-        } else {
-            const hiddenCount = cadena.length;
-            return (
-                <>
-                    {Array.from({ length: hiddenCount }).map((_, i) => (
-                        <i key={i} className="bi bi-asterisk text-muted ms-1" style={{ fontSize: '7px' }}></i>
-                    ))}
-                </>
-            );
-        }
-    }
-
-    const obtenerClaseEstado = (activo) => {
-        return activo ? 'text-bg-success' : 'text-bg-danger';
+    const obtenerClaseEstado = (estado) => {
+        return estado == 'Aprobado' ? 'text-bg-success' : 'text-bg-danger';
     };
 
     const refrescar = () => {
@@ -175,7 +186,7 @@ export const TokenApp = ({ userLog }) => {
         setFiltrosAplicados({});
     }
 
-    const rows = [...tokens];
+    const rows = [...horasextras];
     while (rows.length < query.size) rows.push(null);
 
     return (
@@ -184,19 +195,19 @@ export const TokenApp = ({ userLog }) => {
             {loading && (
                 <Loading />
             )}
-            {tokenAEliminar && (
-                <Delete setEliminar={setTokenAEliminar} title={'token'} gen={true} confirmar={confirmarEliminacion} id={tokenAEliminar.id} />
+            {horaextraAEliminar && (
+                <Delete setEliminar={setHoraExtraAEliminar} title={'hora extra'} gen={false} confirmar={confirmarEliminacion} id={horaextraAEliminar.id} />
             )}
-            {tokenAGuardar && (
-                <SaveModal setGuardar={setTokenAGuardar} title={'token'} gen={true} fun={guardarFn} />
+            {horaextraAGuardar && (
+                <SaveModal setGuardar={setHoraExtraAGuardar} title={'hora extra'} gen={false} fun={guardarFn} />
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'TOKENS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
-                        <p className="extend-header text-black border-bottom border-1 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Tokens
+                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Horas Extras
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -235,19 +246,18 @@ export const TokenApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th>Token</th>
-                                        <th onClick={() => toggleOrder("usuario.nombreusuario")} className="sortable-header">
-                                            Usuario
-                                            <i className={`bi ${getSortIcon("usuario.nombreusuario")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("descripcion")} className="sortable-header">
+                                            Descripción
+                                            <i className={`bi ${getSortIcon("descripcion")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["usuario.nombreusuario"] ?? {};
+                                                    const previo = filtrosAplicados["descripcion"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "usuario.nombreusuario",
+                                                        field: "descripcion",
                                                         type: "string",
                                                         visible: true,
                                                         op: previo.op,
@@ -288,18 +298,18 @@ export const TokenApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
-                                        <th onClick={() => toggleOrder("fechaexpiracion")} className="sortable-header">
-                                            Fecha de Expiración
-                                            <i className={`bi ${getSortIcon("fechaexpiracion")} ms-2`}></i>
+                                        <th onClick={() => toggleOrder("fechaactualizacion")} className="sortable-header">
+                                            Fecha de Actualización
+                                            <i className={`bi ${getSortIcon("fechaactualizacion")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["fechaexpiracion"] ?? {};
+                                                    const previo = filtrosAplicados["fechaactualizacion"] ?? {};
                                                     setFiltroActivo({
-                                                        field: "fechaexpiracion",
+                                                        field: "fechaactualizacion",
                                                         type: "date",
                                                         visible: true,
                                                         op: previo.op,
@@ -344,40 +354,73 @@ export const TokenApp = ({ userLog }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {tokens.length === 0 ? (
+                                    {horasextras.length === 0 ? (
                                         <tr>
-                                            <td colSpan="7" className="text-center py-3 text-muted fs-3 fw-bold">
+                                            <td colSpan="6" className="text-center py-3 text-muted fs-3 fw-bold">
                                                 No hay registros
                                             </td>
                                         </tr>
                                     ) : (
                                         rows.filter(v => v).map((v, index) => {
-                                            const puedeEliminar = permiso?.puedeeliminar && v.id !== 1;
+                                            const puedeEditar = permiso?.puedeeditar && (v.estado == 'Borrador' || userLog?.id == 1);
+                                            const puedeEliminar = permiso?.puedeeliminar && (v.estado == 'Borrador' || userLog?.id == 1);
+                                            const puedeVer = permiso?.puedever;
+                                            const puedeInforme = v.estado == 'Aprobado';
                                             return (
                                                 <tr
                                                     className="text-center align-middle"
                                                     key={v ? v.id : `empty-${index}`}
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        if (puedeEditar) await guardarFn(v, true);
+                                                    }}
+                                                    style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{ocultarToken(v.token, v.usuario.id, v.activo)}</td>
-                                                    <td>{v.usuario.nombreusuario}</td>
+                                                    <td className='text-start'>{v.descripcion}</td>
                                                     <td>{DateHourFormat(v.fechacreacion, 0)}</td>
-                                                    <td>{DateHourFormat(v.fechaexpiracion, 0)}</td>
+                                                    <td>{DateHourFormat(v.fechaactualizacion, 0)}</td>
                                                     <td style={{ width: '140px' }}>
-                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.estado)} m-0 rounded-2 border border-black`}>
                                                             {v.estado}
                                                         </p>
                                                     </td>
-                                                    <td style={{ width: '80px' }}>
+                                                    <td style={{ width: '100px' }}>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarToken(v);
+                                                                if (puedeEliminar) handleEliminarHoraExtra(v);
                                                             }}
-                                                            className="btn border-0 p-0"
+                                                            className="btn border-0 me-2 p-0"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
                                                         >
                                                             <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (puedeVer) {
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Horas Extras");
+                                                                    await guardarFn(v, false);
+                                                                }
+                                                            }}
+                                                            className="btn border-0 ms-2 me-2 p-0"
+                                                            style={{ cursor: puedeVer ? 'pointer' : 'default' }}
+                                                        >
+                                                            <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (puedeInforme) {
+                                                                    await AddAccess('Informe', v.id, userLog, "Horas Extras");
+                                                                    generarArchivo(v.data);
+                                                                }
+                                                            }}
+                                                            className="btn border-0 ms-2 p-0"
+                                                            style={{ cursor: puedeInforme ? 'pointer' : 'default' }}
+                                                        >
+                                                            <i className={`bi bi-file-earmark-text-fill ${puedeInforme ? 'text-secondary' : 'text-secondary-emphasis'}`}></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -388,7 +431,7 @@ export const TokenApp = ({ userLog }) => {
                             </table>
                         </div>
                         <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setTokenAGuardar(true)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
+                            <button onClick={() => setHoraExtraAGuardar(true)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
                                 <i className="bi bi-plus-circle"></i>
                             </button>
                             <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
@@ -436,9 +479,9 @@ export const TokenApp = ({ userLog }) => {
                                 </ul>
                             </nav>
                         </div>
-                    </div >
-                </div >
-            </div >
+                    </div>
+                </div>
+            </div>
         </>
     );
-}
+};

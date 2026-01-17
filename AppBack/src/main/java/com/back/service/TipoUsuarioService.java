@@ -81,7 +81,7 @@ public class TipoUsuarioService {
         if (entity.equals(TipoUsuario.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Tipo de usuario no soportado");
     }
 
 	public TipoUsuario guardar(TipoUsuario tipousuario) {

@@ -115,7 +115,7 @@ public class ProductoService {
         if (entity.equals(Producto.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Producto no soportado");
     }
 
 	public Producto guardar(Producto producto) {

@@ -91,7 +91,7 @@ const Sidebar = ({ userLog, isSidebarVisible, handleLogoutClick }) => {
                                                 {m.submenus && m.submenus.length > 0 ? (
                                                     // Menú con submenús anidados (mostrar secciones)
                                                     m.submenus.filter(s => s.activo).sort((a, b) => a.orden - b.orden).map((s) => {
-                                                        if (!tieneAccesoModulo(parseRecursos(m.recursos), permisos)) return null;
+                                                        if (!tieneAccesoModulo(parseRecursos(s.recursos), permisos)) return null;
 
                                                         return (
                                                             <div key={s.submenu} className="submenu-section-wrapper">

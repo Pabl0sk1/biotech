@@ -90,7 +90,7 @@ public class ZafraService {
         if (entity.equals(Zafra.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Zafra no soportada");
     }
 
 	public Zafra guardar(Zafra zafra) {

@@ -81,7 +81,7 @@ public class PermisoService {
         if (entity.equals(Permiso.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Permiso no soportado");
     }
 
 	public Permiso guardar(Permiso permiso) {

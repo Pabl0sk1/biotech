@@ -86,7 +86,7 @@ public class MenuService {
         if (entity.equals(Menu.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Menu no soportado");
     }
 
 	public Menu guardar(Menu menu) {

@@ -407,12 +407,13 @@ input[type="number"] {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #10b981;
   color: white;
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
 }
 
 .btn-primary:hover {
+  background: #10b981;
   transform: translateY(-2px);
   color: black;
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
@@ -425,10 +426,23 @@ input[type="number"] {
 }
 
 .btn-secondary:hover {
-  background: #4b5563;
+  background: #6b7280;
   transform: translateY(-2px);
   color: black;
   box-shadow: 0 6px 20px rgba(107, 114, 128, 0.5);
+}
+
+.btn-ternary {
+  background: #e03535;
+  color: white;
+  box-shadow: 0 4px 15px rgba(230, 120, 120, 0.4);
+}
+
+.btn-ternary:hover {
+  background: #e03535;
+  transform: translateY(-2px);
+  color: black;
+  box-shadow: 0 6px 20px rgba(230, 120, 120, 0.5);
 }
 
 .error-message {
@@ -472,7 +486,7 @@ input[type="number"] {
   border-radius: 20px;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  max-width: 400px;
+  max-width: 450px;
   width: 90%;
   animation: scaleIn 0.3s ease;
 }
@@ -583,13 +597,15 @@ input[type="number"] {
   margin-bottom: 16px;
 }
 
+.danger-icon {
+  color: #b91018;
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
 .input-icon {
   color: #6b7280;
   font-size: 18px;
-}
-
-.required-field {
-  color: #ef4444;
 }
 
 .requirement-item {
@@ -1875,9 +1891,9 @@ input[type="number"] {
 
 .div-report-button {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   background: #f9fafb;
   padding: 24px 32px;
   border-top: 1px solid #e5e7eb;
-  gap: 12px;
+  gap: 30px;
 }

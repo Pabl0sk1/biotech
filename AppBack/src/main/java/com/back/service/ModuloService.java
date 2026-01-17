@@ -81,7 +81,7 @@ public class ModuloService {
         if (entity.equals(Modulo.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Modulo no soportado");
     }
 
 	public Modulo guardar(Modulo modulo) {

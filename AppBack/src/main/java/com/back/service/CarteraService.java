@@ -89,7 +89,7 @@ public class CarteraService {
         if (entity.equals(Cartera.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Cartera no soportada");
     }
 
 	public Cartera guardar(Cartera cartera) {

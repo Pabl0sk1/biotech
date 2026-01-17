@@ -83,7 +83,7 @@ public class TokenService {
         if (entity.equals(Token.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Token no soportado");
     }
 
 	public Token guardar(Token token) {

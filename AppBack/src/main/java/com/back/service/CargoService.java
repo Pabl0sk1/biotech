@@ -89,7 +89,7 @@ public class CargoService {
         if (entity.equals(Cargo.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Cargo no soportado");
     }
 
 	public Cargo guardar(Cargo cargo) {

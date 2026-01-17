@@ -89,7 +89,7 @@ public class FaseCultivoService {
         if (entity.equals(FaseCultivo.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Fase de cultivo no soportado");
     }
 
 	public FaseCultivo guardar(FaseCultivo fasecultivo) {

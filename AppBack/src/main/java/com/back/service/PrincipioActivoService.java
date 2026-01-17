@@ -89,7 +89,7 @@ public class PrincipioActivoService {
         if (entity.equals(PrincipioActivo.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Principio activo no soportado");
     }
 
 	public PrincipioActivo guardar(PrincipioActivo principioactivo) {

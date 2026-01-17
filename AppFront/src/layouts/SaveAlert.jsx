@@ -1,17 +1,17 @@
 
-export const Duplicate = ({ setDuplicado, title, gen }) => {
+export const SaveAlert = ({ setClose }) => {
     return (
         <>
             <div className="success-modal">
                 <div className="success-content">
                     <div className="danger-icon">
-                        <i className="bi bi-database-fill-slash"></i>
+                        <i className="bi bi-x-circle-fill"></i>
                     </div>
-                    <h3 style={{ color: '#1f2937', marginBottom: '8px' }}>¡Registro Duplicado!</h3>
+                    <h3 style={{ color: '#1f2937', marginBottom: '8px' }}>¡Formulario Incompleto!</h3>
                     <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-                        {gen ? 'El' : 'La'} {title} ya existe
+                        Faltan completar datos para guardar el registro
                     </p>
-                    <button onClick={() => setDuplicado(null)} className="modern-button btn-ternary">
+                    <button onClick={() => setClose(null)} className="modern-button btn-ternary">
                         <i className="bi bi-x-lg"></i>Cerrar
                     </button>
                 </div>
@@ -20,4 +20,4 @@ export const Duplicate = ({ setDuplicado, title, gen }) => {
     )
 }
 
-export default Duplicate;
+export default SaveAlert;

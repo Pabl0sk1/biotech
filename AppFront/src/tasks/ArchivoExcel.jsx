@@ -232,14 +232,14 @@ const generarExcel = async (data) => {
             let sal = detalle.horasal || '00:00';
             let htotal = detalle.htotal || '00:00';
             let descanso = detalle.horades || '00:00';
-            let total = detalle.total || 0;
-            let horasn = detalle.hn || 0;
-            let horasnn = detalle.hnn || 0;
-            let horasnmd = detalle.hnmd || 0;
-            let horasnmn = detalle.hnmn || 0;
-            let horasen = detalle.hen || 0;
-            let horasent = detalle.hent || 0;
-            let horasextras = detalle.hextras || 0;
+            let total = Number(detalle.total) || 0;
+            let horasn = Number(detalle.hn) || 0;
+            let horasnn = Number(detalle.hnn) || 0;
+            let horasnmd = Number(detalle.hnmd) || 0;
+            let horasnmn = Number(detalle.hnmn) || 0;
+            let horasen = Number(detalle.hen) || 0;
+            let horasent = Number(detalle.hent) || 0;
+            let horasextras = Number(detalle.hextras) || 0;
 
             // Agregar datos a la fila
             const rowData = [

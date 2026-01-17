@@ -81,7 +81,7 @@ public class AuditoriaService {
         if (entity.equals(Auditoria.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Auditoria no soportada");
     }
 
 	public Auditoria guardar(Auditoria auditoria) {

@@ -89,7 +89,7 @@ public class TributacionService {
         if (entity.equals(Tributacion.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Tributacion no soportada");
     }
 
 	public Tributacion guardar(Tributacion tributacion) {

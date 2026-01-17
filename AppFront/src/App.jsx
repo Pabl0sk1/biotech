@@ -7,7 +7,7 @@ import Menu from './Menu';
 import CambiarContrasena from './CambiarContrasena.jsx';
 import Perfil from './Perfil.jsx';
 import Configuracion from './Configuracion.jsx';
-import Calculo from './tasks/Calculo.jsx'
+import HoraExtra from './tasks/HoraExtra.jsx';
 import Planeamiento from './tasks/Planeamiento.jsx';
 import Error from './Error.jsx';
 import Dashboard from './Dashboard.jsx';
@@ -37,6 +37,9 @@ import { ProductoApp } from './components/ProductoApp.jsx';
 import { MenuApp } from './components/MenuApp.jsx';
 import { getConfig } from "./services/config.service";
 import { getPermission } from './services/permiso.service.js';
+import { EscenarioApp } from './components/EscenarioApp.jsx';
+import { HoraExtraApp } from './components/HoraExtraApp.jsx';
+import { PlaneamientoApp } from './components/PlaneamientoApp.jsx';
 
 function App() {
   const UrlLocal = '/home';
@@ -117,13 +120,23 @@ function App() {
         {/* Principal - Comercial */}
         <Route path={UrlLocal + "/main/commercial/planning"} element={
           <ProtectedRoute moduloVar="cm03" permisos={permisos}>
-            <Planeamiento userLog={userLog} />
+            <PlaneamientoApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/main/commercial/planning/:id"} element={
+          <ProtectedRoute moduloVar="cm03" permisos={permisos}>
+            <Planeamiento />
           </ProtectedRoute>
         } />
         {/* Principal - RRHH */}
         <Route path={UrlLocal + "/main/rrhh/calcext"} element={
           <ProtectedRoute moduloVar="rh04" permisos={permisos}>
-            <Calculo userLog={userLog} />
+            <HoraExtraApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/main/rrhh/calcext/:id"} element={
+          <ProtectedRoute moduloVar="rh04" permisos={permisos}>
+            <HoraExtra />
           </ProtectedRoute>
         } />
 
@@ -173,6 +186,11 @@ function App() {
         <Route path={UrlLocal + "/config/general/categories"} element={
           <ProtectedRoute moduloVar="gr06" permisos={permisos}>
             <CategoriaApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/config/general/scenarios"} element={
+          <ProtectedRoute moduloVar="gr07" permisos={permisos}>
+            <EscenarioApp userLog={userLog} />
           </ProtectedRoute>
         } />
         {/* Configuraciones - RRHH */}

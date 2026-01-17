@@ -1,20 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { saveReport, updateReport } from '../services/informe.service.js';
 import { getEntity } from '../services/entidad.service';
 import { getBranch } from '../services/sucursal.service';
 import { getShift } from '../services/turno.service';
+import { AddAccess } from '../utils/AddAccess.js';
 import { generarExcel } from './ArchivoExcel';
 import Header from '../Header';
+import Loading from "../layouts/Loading";
+import Close from "../layouts/Close";
+import SaveAlert from '../layouts/SaveAlert.jsx';
 
-export const Calculo = ({ userLog }) => {
+export const HoraExtra = () => {
 
     const initial = {
         fechadesde: "",
         fechahasta: "",
         cantdias: 0,
+        sucursal: null,
         listafuncionarios: [],
         listaferiados: []
     };
 
+    const navigate = useNavigate();
+    const { state } = useLocation();
+    const userLog = state?.userLog;
+    const modoEdicion = state?.modoEdicion;
+    const [datos, setDatos] = useState(state?.datos);
     const [data, setData] = useState(initial);
     const [isOpen, setIsOpen] = useState({});
     const [nuevaFechaFeriado, setNuevaFechaFeriado] = useState('');
@@ -23,8 +35,46 @@ export const Calculo = ({ userLog }) => {
     const [funcionarios, setFuncionarios] = useState([]);
     const [sucursales, setSucursales] = useState([]);
     const [selectedSucursal, setSelectedSucursal] = useState(null);
+    const [sucursalCambiadaPorUsuario, setSucursalCambiadaPorUsuario] = useState(false);
     const sigLinea = useRef({});
     const [selectedFuncionarios, setSelectedFuncionarios] = useState([]);
+    const [close, setClose] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [saveAlert, setSaveAlert] = useState(false);
+    const [descError, setDescError] = useState(false);
+
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                if (close) {
+                    confirmarEscape();
+                }
+                setSaveAlert(null);
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, [close]);
+
+    useEffect(() => {
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, []);
+
+    const confirmarEscape = () => {
+        setClose(false);
+        if (!descError) navigate(-1);
+    };
 
     const obtenerFechasDelMes = () => {
         const ahora = new Date();
@@ -74,6 +124,28 @@ export const Calculo = ({ userLog }) => {
         const [dia, mes, anio] = fecha.split('/');
         return `${anio}-${mes}-${dia}`;
     }
+
+    const formatearFechaParaInput = (fecha) => {
+        if (!fecha) return '';
+
+        // Si ya está en formato correcto (YYYY-MM-DD), retornarla
+        if (typeof fecha === 'string') {
+            return fecha;
+        }
+
+        // Convertir a objeto Date
+        const date = new Date(fecha);
+
+        // Verificar si la fecha es válida
+        if (isNaN(date.getTime())) return '';
+
+        // Formatear a YYYY-MM-DD
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    };
 
     const obtenerDiaSemana = (fecha) => {
         if (!fecha) return '';
@@ -555,7 +627,7 @@ export const Calculo = ({ userLog }) => {
             const funcionariosActualizados = actualizarDetallesFuncionarios(
                 nuevoData.fechadesde,
                 nuevoData.fechahasta,
-                data.listafuncionarios.map(f => ({ ...f, detalles: undefined })) // Remover detalles anteriores
+                data.listafuncionarios.map(f => ({ ...f, detalles: undefined }))
             );
 
             // Aplicar feriados a los nuevos detalles
@@ -695,7 +767,8 @@ export const Calculo = ({ userLog }) => {
             fechahasta: fechasDelMes.fechahasta,
             cantdias: fechasDelMes.cantdias,
             listafuncionarios: funcionariosConDetalles,
-            listaferiados: []
+            listaferiados: [],
+            sucursal: selectedSucursal
         });
     }
 
@@ -705,13 +778,65 @@ export const Calculo = ({ userLog }) => {
     }
 
     useEffect(() => {
-        recuperarFuncionarios();
+        const cargarDatosInforme = async () => {
+            if (datos?.data) {
+                try {
+                    // Solo parsear si es un string
+                    if (typeof datos.data === 'string') {
+                        const dataParsed = JSON.parse(datos.data);
+                        setData(dataParsed);
+
+                        // Establecer los funcionarios seleccionados
+                        if (dataParsed.listafuncionarios && dataParsed.listafuncionarios.length > 0) {
+                            const idsSeleccionados = dataParsed.listafuncionarios.map(f => f.id);
+                            setSelectedFuncionarios(idsSeleccionados);
+
+                            // Buscar y establecer la sucursal del primer funcionario
+                            const primerFuncionario = dataParsed.listafuncionarios[0];
+                            if (primerFuncionario.sucursal) {
+                                const sucursalEncontrada = sucursales.find(
+                                    s => s.id === primerFuncionario.sucursal.id
+                                );
+                                if (sucursalEncontrada) {
+                                    setSelectedSucursal(sucursalEncontrada);
+                                }
+                            }
+
+                            setFuncionarios(dataParsed.listafuncionarios);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al parsear datos del informe:', error);
+                }
+            }
+        };
+
+        // Solo cargar datos si ya se han cargado las sucursales
+        // Y solo si estamos en modo edición y datos.data es un string (no un objeto ya parseado)
+        if (sucursales.length > 0 && datos?.data && typeof datos.data === 'string') {
+            cargarDatosInforme();
+        }
+    }, [datos?.data, sucursales]);
+
+    useEffect(() => {
+        if (!datos?.data || sucursalCambiadaPorUsuario) {
+            recuperarFuncionarios();
+            if (sucursalCambiadaPorUsuario) {
+                setSucursalCambiadaPorUsuario(false);
+            }
+        }
     }, [selectedSucursal]);
 
     useEffect(() => {
-        recuperarFuncionarios();
-        recuperarSucursales();
-        recuperarTurnos();
+        const inicializar = async () => {
+            await recuperarSucursales();
+            await recuperarTurnos();
+            if (!datos?.data) {
+                await recuperarFuncionarios();
+            }
+        };
+
+        inicializar();
     }, []);
 
     // Función para actualizar un detalle específico de un funcionario
@@ -750,29 +875,60 @@ export const Calculo = ({ userLog }) => {
         }
     };
 
-    const handleSubmit = (event) => {
+    const generarArchivo = () => {
+        if (selectedFuncionarios.length > 0) generarExcel(data);
+    }
+
+    const handleSubmit = async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
+        setLoading(true);
 
         const funcionariosFiltrados = data.listafuncionarios.filter(f =>
             selectedFuncionarios.includes(f.id)
         );
 
-        const dataFiltrada = { ...data, listafuncionarios: funcionariosFiltrados };
+        const dataFiltrada = { ...data, listafuncionarios: funcionariosFiltrados, sucursal: selectedSucursal };
 
         let sw = 0;
         if (!data.fechadesde || !data.fechahasta || data.fechadesde > data.fechahasta) sw = 1;
+        if (!datos.descripcion) {
+            setDescError(true);
+            sw = 1;
+        } else setDescError(false);
+        if (dataFiltrada.listafuncionarios.length == 0) {
+            setSaveAlert(true);
+            sw = 1;
+        }
 
         if (sw == 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
+            setLoading(false);
             return;
         }
 
         if (form.checkValidity()) {
-            if (dataFiltrada.listafuncionarios.length) generarExcel(dataFiltrada);
+
+            const newDatos = {
+                ...datos,
+                data: JSON.stringify(dataFiltrada),
+                fechaactualizacion: new Date(),
+                usuario: userLog
+            }
+
+            if (newDatos.id) {
+                await updateReport(newDatos.id, newDatos);
+                await AddAccess('Modificar', newDatos.id, userLog, "Horas Extras");
+            } else {
+                const nuevo = await saveReport(newDatos);
+                await AddAccess('Insertar', nuevo.saved.id, userLog, "Horas Extras");
+            }
+
             form.classList.remove('was-validated');
         } else form.classList.add('was-validated');
+        setLoading(false);
+        setClose(true);
     }
 
     const handleSelectFuncionario = (id) => {
@@ -784,6 +940,17 @@ export const Calculo = ({ userLog }) => {
 
     return (
         <>
+
+            {loading && (
+                <Loading />
+            )}
+            {close && (
+                <Close confirmar={confirmarEscape} title={'Hora extra'} gen={false} />
+            )}
+            {saveAlert && (
+                <SaveAlert setClose={setSaveAlert} />
+            )}
+
             <div className="modern-container colorPrimario">
                 <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
@@ -794,10 +961,10 @@ export const Calculo = ({ userLog }) => {
                                 <i className="bi bi-clipboard-data"></i>
                             </div>
                             <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Reportes
+                                Horas Extras
                             </h2>
                             <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
-                                Realizar reporte de horas extras
+                                Realizar el registro de la hora extra
                             </p>
                         </div>
                         <form
@@ -807,6 +974,81 @@ export const Calculo = ({ userLog }) => {
                             noValidate
                         >
                             <div className="form-body">
+                                {/* Sección de Información de Cuenta */}
+                                <h3 className="section-title">
+                                    <i className="bi bi-shield-check input-icon"></i>
+                                    Datos del Registro
+                                </h3>
+                                <div className="form-section">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="descripcion" className="modern-label">
+                                            <i className="bi bi-card-text me-2"></i>Descripción *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="descripcion"
+                                            name="descripcion"
+                                            placeholder="Ingresa una descripcion"
+                                            className={`modern-input ${descError ? 'error' : ''}`}
+                                            value={datos.descripcion}
+                                            onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
+                                            maxLength={150}
+                                            disabled={!modoEdicion}
+                                        />
+                                        {descError && (
+                                            <div className="error-message">
+                                                <i className="bi bi-exclamation-triangle-fill"></i>
+                                                La descripción es obligatoria (máx. 150 caracteres)
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="row">
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="estado" className="modern-label">
+                                                    <i className="bi bi-check2-square me-2"></i>Estado
+                                                </label>
+                                                <select
+                                                    className="modern-input"
+                                                    id="estado"
+                                                    name="estado"
+                                                    value={datos.estado ? datos.estado : ''}
+                                                    onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
+                                                    disabled={!datos.id || !modoEdicion}
+                                                    required
+                                                >
+                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
+                                                    <option key={1} value={'Aprobado'}>Aprobado</option>
+                                                    <option key={2} value={'Borrador'}>Borrador</option>
+                                                </select>
+                                                <div className="invalid-feedback text-danger text-start">
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="modern-input-group">
+                                                <label htmlFor="fechacreacion" className="modern-label">
+                                                    <i className="bi bi-calendar me-2"></i>Fecha de Creación
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    id="fechacreacion"
+                                                    name="fechacreacion"
+                                                    className="modern-input"
+                                                    value={formatearFechaParaInput(datos.fechacreacion)}
+                                                    disabled
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h3 className="section-title">
+                                    <i className="bi bi-shield-check input-icon"></i>
+                                    Generación de Datos
+                                </h3>
                                 <div className="modern-input-group">
                                     <label className="modern-label">
                                         <i className="bi bi-calendar me-2"></i>Fecha desde-hasta
@@ -818,6 +1060,7 @@ export const Calculo = ({ userLog }) => {
                                         className="modern-input mb-3"
                                         value={data.fechadesde}
                                         onChange={handleFechaChange}
+                                        disabled={!modoEdicion}
                                     />
                                     <input
                                         type="date"
@@ -826,6 +1069,7 @@ export const Calculo = ({ userLog }) => {
                                         className="modern-input"
                                         value={data.fechahasta}
                                         onChange={handleFechaChange}
+                                        disabled={!modoEdicion}
                                     />
                                 </div>
 
@@ -838,16 +1082,17 @@ export const Calculo = ({ userLog }) => {
                                     <div className="input-group mb-3 z-0">
                                         <input
                                             type="date"
-                                            className="modern-input form-control mw-100"
+                                            className="modern-input form-control mw-100 bg-white"
                                             value={nuevaFechaFeriado}
                                             onChange={(e) => setNuevaFechaFeriado(e.target.value)}
                                             style={{ maxWidth: '200px' }}
+                                            disabled={!modoEdicion}
                                         />
                                         <button
                                             type="button"
                                             className="modern-button btn-primary"
                                             onClick={agregarFeriado}
-                                            disabled={!nuevaFechaFeriado}
+                                            disabled={!nuevaFechaFeriado || !modoEdicion}
                                         >
                                             <i className="bi bi-plus-circle me-2"></i>
                                         </button>
@@ -865,32 +1110,11 @@ export const Calculo = ({ userLog }) => {
                                                             aria-label="Eliminar feriado"
                                                             onClick={() => eliminarFeriado(fechaFeriado)}
                                                             style={{ fontSize: '0.7em' }}
+                                                            disabled={!modoEdicion}
                                                         ></button>
                                                     </div>
                                                 ))}
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Sección de carga de CSV */}
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Asistencias desde CSV
-                                    </label>
-                                    <div className="input-group mb-3 z-0">
-                                        <input
-                                            type="file"
-                                            className="modern-input form-control mw-100"
-                                            accept=".csv"
-                                            onChange={handleCSVUpload}
-                                            onClick={limpiarCSV}
-                                            id="csvFile"
-                                        />
-                                    </div>
-                                    {csvStatus && (
-                                        <div className={`alert ${csvStatus.includes('✅') ? 'alert-success' : 'alert-danger'} p-2 m-0 text-black`}>
-                                            <small>{csvStatus}</small>
                                         </div>
                                     )}
                                 </div>
@@ -905,6 +1129,7 @@ export const Calculo = ({ userLog }) => {
                                             className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
                                             type="button"
                                             data-bs-toggle="dropdown"
+                                            disabled={!modoEdicion}
                                         >
                                             {selectedSucursal
                                                 ? selectedSucursal.sucursal
@@ -920,6 +1145,7 @@ export const Calculo = ({ userLog }) => {
                                                         e.preventDefault();
                                                         setSelectedSucursal(null);
                                                         setSelectedFuncionarios([]);
+                                                        setSucursalCambiadaPorUsuario(true);
                                                     }}
                                                 >
                                                     <i className="bi bi-buildings me-2"></i>
@@ -939,6 +1165,7 @@ export const Calculo = ({ userLog }) => {
                                                                 e.preventDefault();
                                                                 setSelectedSucursal(sucursal);
                                                                 setSelectedFuncionarios([]);
+                                                                setSucursalCambiadaPorUsuario(true);
                                                             }}
                                                         >
                                                             <i className="bi bi-building me-2"></i>
@@ -980,6 +1207,7 @@ export const Calculo = ({ userLog }) => {
                                                             setSelectedFuncionarios(funcionarios.map(f => f.id));
                                                         }
                                                     }}
+                                                    disabled={!modoEdicion}
                                                 >
                                                     {selectedFuncionarios.length === funcionarios.length
                                                         ? "Desmarcar todos"
@@ -999,8 +1227,9 @@ export const Calculo = ({ userLog }) => {
                                                             id={`func-${f.id}`}
                                                             checked={selectedFuncionarios.includes(f.id)}
                                                             onChange={() => handleSelectFuncionario(f.id)}
+                                                            disabled={!modoEdicion}
                                                         />
-                                                        <label className="form-check-label" htmlFor={`func-${f.id}`}>
+                                                        <label className="form-check-label text-black" htmlFor={`func-${f.id}`}>
                                                             {f.nomape}
                                                         </label>
                                                     </div>
@@ -1008,6 +1237,29 @@ export const Calculo = ({ userLog }) => {
                                             ))}
                                         </ul>
                                     </div>
+                                </div>
+
+                                {/* Sección de carga de CSV */}
+                                <div className="modern-input-group">
+                                    <label className="modern-label">
+                                        <i className="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Asistencias desde CSV
+                                    </label>
+                                    <div className="input-group mb-3 z-0">
+                                        <input
+                                            type="file"
+                                            className="modern-input form-control mw-100 bg-white"
+                                            accept=".csv"
+                                            onChange={handleCSVUpload}
+                                            onClick={limpiarCSV}
+                                            id="csvFile"
+                                            disabled={!modoEdicion}
+                                        />
+                                    </div>
+                                    {csvStatus && (
+                                        <div className={`alert ${csvStatus.includes('✅') ? 'alert-success' : 'alert-danger'} p-2 m-0 text-black`}>
+                                            <small>{csvStatus}</small>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {selectedFuncionarios.length > 0 && data.listafuncionarios
@@ -1093,6 +1345,7 @@ export const Calculo = ({ userLog }) => {
                                                                         sigLinea.current[fc.id][fechaIndex] = el;
                                                                     }}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
@@ -1124,6 +1377,7 @@ export const Calculo = ({ userLog }) => {
                                                                         actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
                                                                     }}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
@@ -1134,6 +1388,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.htotal || '00:00'}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
@@ -1144,6 +1399,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.horades || '00:00'}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
 
@@ -1156,6 +1412,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.total || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
@@ -1166,6 +1423,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.hn || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hn', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
@@ -1176,6 +1434,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.hnn || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnn', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
@@ -1186,6 +1445,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.hnmd || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmd', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
@@ -1196,6 +1456,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.hnmn || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmn', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
@@ -1206,6 +1467,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.hen || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hen', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
@@ -1216,6 +1478,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.hent || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hent', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
@@ -1226,6 +1489,7 @@ export const Calculo = ({ userLog }) => {
                                                                     value={detalle.hextras || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', e.target.value)}
                                                                     onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                    disabled={!modoEdicion}
                                                                 />
                                                             </td>
 
@@ -1246,6 +1510,7 @@ export const Calculo = ({ userLog }) => {
                                                                             } else determinarHoras(detalle.turno, fc.id, fechaIndex, detalle.total);
                                                                         }}
                                                                         onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                        disabled={!modoEdicion}
                                                                     />
                                                                 </div>
                                                             </td>
@@ -1262,14 +1527,12 @@ export const Calculo = ({ userLog }) => {
                                                                             fijarHoraEntrada(fc.id, fechaIndex, detalle.turno, detalle.horasal, detalle.dia);
                                                                         }}
                                                                         onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                        disabled={detalle.extra}
+                                                                        disabled={detalle.extra || !modoEdicion}
                                                                     />
                                                                 </div>
                                                             </td>
 
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`}
-                                                                hidden={![1].includes(userLog?.tipousuario?.id)}
-                                                                style={{ width: '60px' }}>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={!userLog?.id == 1} style={{ width: '60px' }}>
                                                                 <input
                                                                     type="text"
                                                                     className='form-control border-black text-center'
@@ -1286,8 +1549,11 @@ export const Calculo = ({ userLog }) => {
                                     ))}
                             </div>
                             <div className='div-report-button'>
-                                <button type='submit' className="btn btn-primary border-0 btn-lg" disabled={selectedFuncionarios.length == 0}>
-                                    <i className="bi bi-printer-fill me-2"></i>Generar
+                                <button type='button' onClick={() => generarArchivo()} className="modern-button btn-secondary">
+                                    <i className="bi bi-printer-fill"></i>Generar
+                                </button>
+                                <button type='submit' className="modern-button btn-primary">
+                                    <i className="bi bi-check-lg"></i>Guardar
                                 </button>
                             </div>
                         </form>
@@ -1298,4 +1564,4 @@ export const Calculo = ({ userLog }) => {
     );
 }
 
-export default Calculo;
+export default HoraExtra;

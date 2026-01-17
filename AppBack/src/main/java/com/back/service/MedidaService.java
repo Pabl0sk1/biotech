@@ -89,7 +89,7 @@ public class MedidaService {
         if (entity.equals(Medida.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Medida no soportada");
     }
 
 	public Medida guardar(Medida medida) {

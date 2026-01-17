@@ -5,6 +5,7 @@ import { getConfig } from './services/config.service.js';
 import { updateUser } from './services/usuario.service.js';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
+import LogoutModal from './layouts/LogoutModal.jsx';
 
 export const Menu = ({ userLog, setUserLog }) => {
 
@@ -21,12 +22,27 @@ export const Menu = ({ userLog, setUserLog }) => {
 
     useEffect(() => {
         let timeoutId;
+        let checkIntervalId;
         let activityListeners = [];
+
+        // Verificar si la sesión ya expiró al cargar
+        const checkSession = () => {
+            const sessionData = localStorage.getItem('session');
+            if (sessionData) {
+                const { expiresAt } = JSON.parse(sessionData);
+                if (Date.now() >= expiresAt) {
+                    logoutByInactivity();
+                    return false;
+                }
+            }
+            return true;
+        };
+
         const resetTimer = () => {
             const sessionData = localStorage.getItem('session');
             if (sessionData) {
                 const { user } = JSON.parse(sessionData);
-                const newExpiration = Date.now() + 60 * 60 * 1000;
+                const newExpiration = Date.now() + 60 * 60 * 1000; // 1 hora
 
                 localStorage.setItem('session', JSON.stringify({
                     user,
@@ -46,6 +62,11 @@ export const Menu = ({ userLog, setUserLog }) => {
             window.location.href = '/biotech/login';
         };
 
+        // Verificar sesión al cargar
+        if (!checkSession()) {
+            return; // Si ya expiró, no continuar
+        }
+
         const events = [
             'mousemove', 'keydown', 'click', 'scroll',
             'touchstart', 'touchmove', 'wheel'
@@ -55,8 +76,11 @@ export const Menu = ({ userLog, setUserLog }) => {
             window.addEventListener(event, resetTimer);
             activityListeners.push(event);
         });
-        resetTimer();
 
+        // Verificar cada minuto si la sesión expiró (para pestañas inactivas)
+        checkIntervalId = setInterval(checkSession, 60000);
+
+        resetTimer();
         recuperarConfig();
 
         return () => {
@@ -64,6 +88,7 @@ export const Menu = ({ userLog, setUserLog }) => {
                 window.removeEventListener(event, resetTimer)
             );
             clearTimeout(timeoutId);
+            clearInterval(checkIntervalId);
         };
     }, []);
 
@@ -109,28 +134,7 @@ export const Menu = ({ userLog, setUserLog }) => {
         <>
 
             {showLogoutModal && (
-                <>
-                    <div className="modal-overlay"></div>
-                    <div className="logout-modal">
-                        <div className="logout-card">
-                            <i className="bi bi-box-arrow-right logout-icon"></i>
-                            <h2 className="logout-title">¿Seguro que querés cerrar sesión?</h2>
-                            <p className="logout-subtitle">
-                                Tu sesión actual será finalizada y tendrás que volver a iniciar sesión.
-                            </p>
-
-                            <div className="logout-actions">
-                                <button className="btn-logout-confirm" onClick={confirmLogout}>
-                                    <i className="bi bi-check2-circle me-2"></i> Sí, cerrar
-                                </button>
-
-                                <button className="btn-logout-cancel" onClick={() => setShowLogoutModal(false)}>
-                                    <i className="bi bi-x-circle me-2"></i> Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <LogoutModal confirm={confirmLogout} setClose={setShowLogoutModal} />
             )}
 
             <div className="position-fixed top-0 start-0 w-100 vh-100">

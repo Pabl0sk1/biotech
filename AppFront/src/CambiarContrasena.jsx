@@ -1,16 +1,18 @@
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUser, changePassword } from "./services/usuario.service";
 import { GeneratePass } from './utils/GeneratePass';
 import Header from "./Header";
+import Close from "./layouts/Close";
+import Loading from "./layouts/Loading";
 
 export const CambiarContrasena = ({ userLog, setUserLog }) => {
 
+    const navigate = useNavigate();
     const [showPasswordActual, setShowPasswordActual] = useState(false);
     const [showPasswordNueva, setShowPasswordNueva] = useState(false);
     const [showPasswordRepetir, setShowPasswordRepetir] = useState(false);
-    const [cerrarPass, setCerrarPass] = useState(false);
+    const [close, setClose] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [newPass, setNewPass] = useState("");
@@ -20,13 +22,12 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
         contrasenaNueva: "",
         contrasenaRepetida: ""
     });
-    const navigate = useNavigate();
 
     //Cancelar con tecla de escape
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                if (cerrarPass) {
+                if (close) {
                     confirmarEscape();
                 }
             }
@@ -35,7 +36,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, [cerrarPass]);
+    }, [close]);
 
     //Validación personalizada de formulario
     useEffect(() => {
@@ -51,6 +52,11 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
         });
     }, []);
 
+    const confirmarEscape = () => {
+        setClose(false);
+        if (!error && !newPass && !repeatPass) navigate(-1);
+    };
+
     const generarContrasena = () => {
         const pass = GeneratePass();
 
@@ -62,11 +68,6 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
         setNewPass('');
         setRepeatPass('');
     }
-
-    const confirmarEscape = () => {
-        setCerrarPass(false);
-        navigate(-1);
-    };
 
     const actualizaruserLog = async () => {
         const response = await getUser();
@@ -94,13 +95,13 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
-
-        let sw = 0;
+        setLoading(true);
 
         setError("");
         setNewPass("");
         setRepeatPass("");
 
+        let sw = 0;
         if (!formData.contrasenaActual) {
             setError("Debe introducir la contraseña actual.");
             sw = 1;
@@ -123,12 +124,15 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
             sw = 1;
         }
 
-        if (sw == 1) return;
+        if (sw == 1) {
+            event.stopPropagation();
+            form.classList.add('was-validated');
+            setLoading(false);
+            return;
+        }
 
         if (form.checkValidity()) {
             try {
-                setLoading(true);
-
                 const response = await changePassword(userLog?.id, {
                     contrasenaActual: formData.contrasenaActual,
                     contrasenaNueva: formData.contrasenaNueva
@@ -136,7 +140,6 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
 
                 if (response.ok) {
                     await actualizaruserLog();
-                    setCerrarPass(true);
                     form.reset();
                     setFormData({
                         contrasenaActual: "",
@@ -155,35 +158,22 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
         } else {
             form.classList.add('was-validated');
         }
+        setLoading(false);
+        setClose(true);
     };
 
     return (
         <>
 
-            {cerrarPass && (
-                <div className="success-modal">
-                    <div className="success-content">
-                        <div className="success-icon">
-                            <i className="bi bi-check-circle-fill"></i>
-                        </div>
-                        <h3 style={{ color: '#1f2937', marginBottom: '8px' }}>¡Contraseña Actualizada!</h3>
-                        <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-                            Tu contraseña se ha cambiado correctamente
-                        </p>
-                        <button
-                            onClick={confirmarEscape}
-                            className="modern-button btn-primary"
-                        >
-                            <i className="bi bi-check-lg"></i>
-                            Continuar
-                        </button>
-                    </div>
-                </div>
+            {loading && (
+                <Loading />
+            )}
+            {close && (
+                <Close confirmar={confirmarEscape} title={'Contraseña'} gen={false} />
             )}
 
             <div className="modern-container colorPrimario">
                 <Header userLog={userLog} title={'CONTRASEÑA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header de seguridad */}
@@ -333,33 +323,10 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                                 </div>
                             </div>
 
-                            {/* Botones de acción */}
-                            <div style={{
-                                background: '#f9fafb',
-                                padding: '24px 32px',
-                                borderTop: '1px solid #e5e7eb',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                gap: '12px'
-                            }}>
-                                <Link
-                                    className="modern-button btn-secondary"
-                                    to={-1}
-                                >
-                                    <i className="bi bi-x-lg"></i>
-                                    Cancelar
-                                </Link>
-                                <button
-                                    type="submit"
-                                    className="modern-button btn-primary"
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <div className="spinner"></div>
-                                    ) : (
-                                        <i className="bi bi-check-lg"></i>
-                                    )}
-                                    {loading ? 'Cambiando...' : 'Guardar'}
+                            {/* Form Actions */}
+                            <div className="div-report-button">
+                                <button type="submit" className="modern-button btn-primary">
+                                    <i className="bi bi-check-lg"></i>Guardar
                                 </button>
                             </div>
                         </form>

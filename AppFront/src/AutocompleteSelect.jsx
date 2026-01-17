@@ -9,7 +9,8 @@ export default function AutocompleteSelect({
     multiple = false,
     disabled = false,
     required = false,
-    autofocus = false
+    autofocus = false,
+    className = ""
 }) {
     const [inputValue, setInputValue] = useState('');
     const [open, setOpen] = useState(false);
@@ -80,7 +81,7 @@ export default function AutocompleteSelect({
         <div className="position-relative">
             <input
                 type="text"
-                className="form-control border-input w-100"
+                className={`${className ? className : ' form-control border-input w-100'}`}
                 placeholder="Buscar..."
                 disabled={disabled}
                 value={displayValue()}

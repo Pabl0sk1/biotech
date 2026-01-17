@@ -87,7 +87,7 @@ public class ConfiguracionService {
         if (entity.equals(Configuracion.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Configuracion no soportada");
     }
 	
 	public Configuracion guardar(Configuracion config) {

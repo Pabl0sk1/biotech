@@ -1,19 +1,20 @@
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getConfig, updateConfig, deleteImage } from "./services/config.service";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import { HostLocation } from './utils/HostLocation';
+import Loading from "./layouts/Loading";
+import Close from "./layouts/Close";
 
 export const Configuracion = ({ userLog }) => {
 
+    const navigate = useNavigate();
     const [entidadError, setEntidadError] = useState(false);
-    const [cerrarConfig, setCerrarConfig] = useState(false);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
     const [imagenFile, setImagenFile] = useState(null);
     const [eliminarImagen, setEliminarImagen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+    const [close, setClose] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [config, setConfig] = useState({
         id: 0,
@@ -33,7 +34,7 @@ export const Configuracion = ({ userLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                if (cerrarConfig) {
+                if (close) {
                     confirmarEscape();
                 }
             }
@@ -42,7 +43,7 @@ export const Configuracion = ({ userLog }) => {
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, [cerrarConfig]);
+    }, [close]);
 
     //Validación personalizada de formulario
     useEffect(() => {
@@ -59,8 +60,8 @@ export const Configuracion = ({ userLog }) => {
     }, []);
 
     const confirmarEscape = () => {
-        setCerrarConfig(false);
-        navigate(-1);
+        setClose(false);
+        if (!entidadError) navigate(-1);
     };
 
     const recuperarConfig = async () => {
@@ -77,21 +78,19 @@ export const Configuracion = ({ userLog }) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setIsLoading(true);
         const form = event.currentTarget;
+        setLoading(true);
 
         let sw = 0;
         if (!config.entidad) {
             setEntidadError(true);
             sw = 1;
-        } else {
-            setEntidadError(false);
-        }
+        } else setEntidadError(false);
 
         if (sw == 1) {
             event.stopPropagation();
             form.classList.add('was-validated');
-            setIsLoading(false);
+            setLoading(false);
             return;
         }
 
@@ -116,12 +115,13 @@ export const Configuracion = ({ userLog }) => {
             document.documentElement.style.setProperty('--color-primario', config.colorpri);
             document.documentElement.style.setProperty('--color-secundario', config.colorsec);
             document.documentElement.style.setProperty('--color-ternario', config.colorter);
-            setCerrarConfig(true);
+
             form.classList.remove('was-validated');
         } else {
             form.classList.add('was-validated');
         }
-        setIsLoading(false);
+        setLoading(false);
+        setClose(true);
     };
 
     const handleImageChange = (event) => {
@@ -145,25 +145,11 @@ export const Configuracion = ({ userLog }) => {
     return (
         <>
 
-            {cerrarConfig && (
-                <div className="success-modal">
-                    <div className="success-content">
-                        <div className="success-icon">
-                            <i className="bi bi-check-circle-fill"></i>
-                        </div>
-                        <h3 style={{ color: '#1f2937', marginBottom: '8px' }}>¡Configuración Guardada!</h3>
-                        <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-                            Los cambios se han aplicado correctamente
-                        </p>
-                        <button
-                            onClick={confirmarEscape}
-                            className="modern-button btn-primary"
-                        >
-                            <i className="bi bi-check-lg"></i>
-                            Continuar
-                        </button>
-                    </div>
-                </div>
+            {loading && (
+                <Loading />
+            )}
+            {close && (
+                <Close confirmar={confirmarEscape} title={'Empresa'} gen={false} />
             )}
 
             <div className="modern-container colorPrimario">
@@ -265,7 +251,7 @@ export const Configuracion = ({ userLog }) => {
                                     <div className="col-md-6">
                                         <div className="modern-input-group">
                                             <label htmlFor="nrodoc" className="modern-label">
-                                                <i className="bi bi-envelope me-2"></i>Número de Documento
+                                                <i className="bi bi-credit-card me-2"></i>Número de Documento
                                             </label>
                                             <input
                                                 type="email"
@@ -282,7 +268,7 @@ export const Configuracion = ({ userLog }) => {
                                     <div className="col-md-6">
                                         <div className="modern-input-group">
                                             <label htmlFor="nrotelefono" className="modern-label">
-                                                <i className="bi bi-telephone me-2"></i>Número de Teléfono
+                                                <i className="bi bi-phone me-2"></i>Número de Teléfono
                                             </label>
                                             <input
                                                 type="tel"
@@ -408,32 +394,9 @@ export const Configuracion = ({ userLog }) => {
                             </div>
 
                             {/* Form Actions */}
-                            <div style={{
-                                background: '#f9fafb',
-                                padding: '24px 32px',
-                                borderTop: '1px solid #e5e7eb',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                gap: '12px'
-                            }}>
-                                <Link
-                                    className="modern-button btn-secondary"
-                                    to={-1}
-                                >
-                                    <i className="bi bi-x-lg"></i>
-                                    Cancelar
-                                </Link>
-                                <button
-                                    type="submit"
-                                    className="modern-button btn-primary"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? (
-                                        <div className="spinner"></div>
-                                    ) : (
-                                        <i className="bi bi-check-lg"></i>
-                                    )}
-                                    {isLoading ? 'Guardando...' : 'Guardar'}
+                            <div className="div-report-button">
+                                <button type="submit" className="modern-button btn-primary">
+                                    <i className="bi bi-check-lg"></i>Guardar
                                 </button>
                             </div>
                         </form>

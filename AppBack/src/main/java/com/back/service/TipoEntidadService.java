@@ -81,7 +81,7 @@ public class TipoEntidadService {
         if (entity.equals(TipoEntidad.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
-        throw new RuntimeException("Entidad no soportada");
+        throw new RuntimeException("Tipo de entidad no soportada");
     }
 
 	public TipoEntidad guardar(TipoEntidad tipoentidad) {

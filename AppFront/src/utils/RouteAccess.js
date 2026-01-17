@@ -20,7 +20,9 @@ export const tieneAccesoModulo = (modulos, lista) => {
         modulos.map(m => m.toLowerCase().trim())
     );
 
-    return lista.some(p =>
+    const tieneAcceso = lista.some(p =>
         setModulos.has(p.modulo.var.toLowerCase().trim())
     );
+
+    return tieneAcceso;
 };
