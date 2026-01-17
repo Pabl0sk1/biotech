@@ -277,7 +277,7 @@ export const HoraExtra = () => {
             if (campos[0] == 'ID') {
                 const idx = parseInt(campos[1]);
                 // console.log(idx);
-                if (idx) funcionarioActual = funcionarios.find(f => idx == f.codigo);
+                if (idx) funcionarioActual = funcionarios.find(f => idx == f.codzktime);
                 continue;
             }
 

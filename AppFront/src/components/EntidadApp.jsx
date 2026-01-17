@@ -706,14 +706,14 @@ export const EntidadApp = ({ userLog }) => {
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="codigo" className="form-label m-0 mb-2">Código ZKTime</label>
+                                                <label htmlFor="codzktime" className="form-label m-0 mb-2">Código ZKTime</label>
                                                 <NumericFormat
                                                     type="text"
-                                                    id="codigo"
-                                                    name="codigo"
+                                                    id="codzktime"
+                                                    name="codzktime"
                                                     className="form-control border-input w-100"
                                                     displayType="input"
-                                                    value={entidadAGuardar.codigo === 0 ? 0 : entidadAGuardar.codigo || ''}
+                                                    value={entidadAGuardar.codzktime === 0 ? 0 : entidadAGuardar.codzktime || ''}
                                                     placeholder='Escribe...'
                                                     min={0}
                                                     onChange={(event) => {

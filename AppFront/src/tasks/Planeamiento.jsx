@@ -282,10 +282,10 @@ export const Data = () => {
                                 <i className="bi bi-clipboard-data"></i>
                             </div>
                             <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Datas
+                                Planeamiento
                             </h2>
                             <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
-                                Realizar el registro del data
+                                Realizar el registro del planeamiento
                             </p>
                         </div>
                         <form
@@ -456,10 +456,10 @@ export const Data = () => {
                                     <div key={vd.uid} className="mb-2">
 
                                         {/* VENDEDOR */}
-                                        <button type='button' className="btn rounded-0 btn-success w-100"
+                                        <button type='button' className="btn rounded-0 btn-success w-100 fw-bold text-dark"
                                             onClick={() => toggle(vd.uid)}>
                                             {vd.nomape}
-                                            <i className={`bi float-end ${open[vd.uid] ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                            <i className={`bi float-end ${open[vd.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
                                         </button>
 
                                         {open[vd.uid] && (
@@ -468,10 +468,10 @@ export const Data = () => {
                                                     <div key={zf.uid} className="p-2 mb-2">
 
                                                         {/* ZAFRA */}
-                                                        <button type='button' className="btn rounded-0 btn-warning w-100"
+                                                        <button type='button' className="btn rounded-0 btn-warning w-100 fw-medium"
                                                             onClick={() => toggle(zf.uid)}>
                                                             Zafra: {zf.zafra}
-                                                            <i className={`bi float-end ${open[zf.uid] ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                            <i className={`bi float-end ${open[zf.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
                                                         </button>
 
                                                         {open[zf.uid] && (
@@ -482,7 +482,7 @@ export const Data = () => {
                                                                         {/* CLIENTE */}
                                                                         <button
                                                                             type='button'
-                                                                            className="btn rounded-0 btn-info w-100 d-flex justify-content-between align-items-center"
+                                                                            className="btn rounded-0 btn-info w-100 fw-medium d-flex justify-content-between align-items-center"
                                                                             onClick={() => toggle(ct.uid)}
                                                                         >
                                                                             <span>{ct.nomape}</span>
@@ -505,7 +505,7 @@ export const Data = () => {
                                                                                     disabled={!modoEdicion}
                                                                                     style={{ width: '120px' }}
                                                                                 />
-                                                                                <i className={`bi ${open[ct.uid] ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
+                                                                                <i className={`bi ${open[ct.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
                                                                             </div>
                                                                         </button>
 
@@ -513,7 +513,7 @@ export const Data = () => {
                                                                         {open[ct.uid] && (
                                                                             <div className="bg-info-subtle p-2">
                                                                                 <table className="table table-sm table-bordered table-hover m-0">
-                                                                                    <thead className="table-dark text-center">
+                                                                                    <thead className="table-dark text-center align-middle">
                                                                                         <tr>
                                                                                             <th>Grupo</th>
                                                                                             <th>Producto</th>
@@ -521,10 +521,10 @@ export const Data = () => {
                                                                                             <th>Dosis Ajustada</th>
                                                                                             <th>Vol. Potencial</th>
                                                                                             <th>Vol. Planeado</th>
-                                                                                            <th>% Participación</th>
+                                                                                            <th>% Participación de Producto</th>
                                                                                             <th>Precio Medio</th>
                                                                                             <th>Área Planeada</th>
-                                                                                            <th>Planeados</th>
+                                                                                            <th>Precio Planeado</th>
                                                                                         </tr>
                                                                                     </thead>
                                                                                     <tbody>
