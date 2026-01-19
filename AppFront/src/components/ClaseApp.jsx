@@ -5,6 +5,7 @@ import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
+import { ListControls } from '../ListControls.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -115,14 +116,6 @@ export const ClaseApp = ({ userLog }) => {
         }
         recuperarClases();
         setLoading(false);
-    };
-
-    const nextPage = () => {
-        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
-    };
-
-    const prevPage = () => {
-        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
     };
 
     const toggleOrder = (field) => {
@@ -424,55 +417,18 @@ export const ClaseApp = ({ userLog }) => {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="border-top border-2 border-black pt-2 pb-2 ps-3 pe-3 m-0 user-select-none d-flex align-items-center">
-                            <button onClick={() => setClaseAGuardar(selected)} className="btn btn-secondary fw-bold me-2" disabled={!permiso?.puedeagregar}>
-                                <i className="bi bi-plus-circle"></i>
-                            </button>
-                            <button onClick={() => refrescar()} className="btn btn-secondary fw-bold ms-2 me-2">
-                                <i className="bi bi-arrow-repeat"></i>
-                            </button>
-                            <div className="d-flex align-items-center ms-5">
-                                <label className="me-2 fw-semibold">Tamaño</label>
-                                <select
-                                    className="form-select form-select-sm border-black"
-                                    value={query.size}
-                                    onChange={(e) => {
-                                        const newSize = Number(e.target.value);
-                                        setQuery(q => ({
-                                            ...q,
-                                            page: 0,
-                                            size: newSize
-                                        }));
-                                    }}
-                                >
-                                    <option value={5}>5</option>
-                                    <option value={10}>10</option>
-                                    <option value={30}>30</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
-                            </div>
-                            <div className="d-flex align-items-center ms-5">
-                                <label className="me-2 fw-semibold">Total</label>{totalItems}
-                            </div>
-                            <nav aria-label="page navigation" className='user-select-none ms-auto'>
-                                <ul className="pagination m-0">
-                                    <li className={`page-item ${query.page == 0 ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${query.page == 0 ? 'rounded-end-0 border-black' : 'text-bg-light rounded-end-0 border-black'}`} onClick={() => prevPage()}>
-                                            <i className="bi bi-arrow-left"></i>
-                                        </button>
-                                    </li>
-                                    <li className="page-item disabled">
-                                        <button className="page-link text-bg-secondary rounded-0 fw-bold border-black">{query.page + 1} de {totalPages ? totalPages : 1}</button>
-                                    </li>
-                                    <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
-                                        <button className={`page-link ${query.page + 1 >= totalPages ? 'rounded-start-0 border-black' : 'text-bg-light rounded-start-0 border-black'}`} onClick={() => nextPage()}>
-                                            <i className="bi bi-arrow-right"></i>
-                                        </button>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
+                        <ListControls
+                            query={query}
+                            setQuery={setQuery}
+                            totalPages={totalPages}
+                            totalItems={totalItems}
+                            onAdd={() => setClaseAGuardar(selected)}
+                            onRefresh={refrescar}
+                            canAdd={permiso?.puedeagregar}
+                            showErpButton={false}
+                            showAddButton={true}
+                            addData={selected}
+                        />
                     </div>
                 </div>
             </div>
