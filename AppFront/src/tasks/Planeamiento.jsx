@@ -123,6 +123,7 @@ export const Data = () => {
             apellido: c.apellido,
             nrodoc: c.nrodoc,
             areacultivo: 0,
+            totalplaneados: 0,
             productos: productos.map(p => ({
                 uid: uid(),
                 grupoproducto: p.nombrecomercial?.subgrupoproducto?.grupoproducto?.grupoproducto,
@@ -144,6 +145,7 @@ export const Data = () => {
             .map(z => ({
                 uid: uid(),
                 zafra: z.descripcion,
+                totalplaneados: 0,
                 clientes: clientesConProductos
             }));
 
@@ -151,7 +153,8 @@ export const Data = () => {
         const vendedorConZafras = {
             ...vendedor,
             uid: uid(),
-            zafras: zafrasConClientes
+            zafras: zafrasConClientes,
+            totalplaneados: 0
         };
 
         setData(prev => {
@@ -169,6 +172,28 @@ export const Data = () => {
 
         // Limpiar selección
         setVendedorSeleccionado(null);
+    };
+
+    const calcularTotalCliente = (cliente) => {
+        if (!cliente.productos) return 0;
+        return cliente.productos.reduce((sum, pr) => {
+            const planeados = pr.volplaneado * pr.precio;
+            return sum + planeados;
+        }, 0);
+    };
+
+    const calcularTotalZafra = (zafra) => {
+        if (!zafra.clientes) return 0;
+        return zafra.clientes.reduce((sum, ct) => {
+            return sum + calcularTotalCliente(ct);
+        }, 0);
+    };
+
+    const calcularTotalVendedor = (vendedor) => {
+        if (!vendedor.zafras) return 0;
+        return vendedor.zafras.reduce((sum, zf) => {
+            return sum + calcularTotalZafra(zf);
+        }, 0);
     };
 
     const actualizarAreaCliente = (vendedorUid, zfUid, ctUid, valor) => {
@@ -452,162 +477,189 @@ export const Data = () => {
                                     />
                                 </div>
 
-                                {data.vendedores && data.vendedores.map(vd => (
-                                    <div key={vd.uid} className="mb-2">
+                                {data.vendedores && data.vendedores.map(vd => {
+                                    const totalVendedor = calcularTotalVendedor(vd);
 
-                                        {/* VENDEDOR */}
-                                        <button type='button' className="btn rounded-0 btn-success w-100 fw-bold text-dark"
-                                            onClick={() => toggle(vd.uid)}>
-                                            {vd.nomape}
-                                            <i className={`bi float-end ${open[vd.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
-                                        </button>
+                                    return (
+                                        <div key={vd.uid} className="mb-2">
 
-                                        {open[vd.uid] && (
-                                            <div className="bg-success-subtle">
-                                                {vd.zafras && vd.zafras.map(zf => (
-                                                    <div key={zf.uid} className="p-2 mb-2">
-
-                                                        {/* ZAFRA */}
-                                                        <button type='button' className="btn rounded-0 btn-warning w-100 fw-medium"
-                                                            onClick={() => toggle(zf.uid)}>
-                                                            Zafra: {zf.zafra}
-                                                            <i className={`bi float-end ${open[zf.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
-                                                        </button>
-
-                                                        {open[zf.uid] && (
-                                                            <div className="bg-warning-subtle p-2">
-                                                                {zf.clientes && zf.clientes.map(ct => (
-                                                                    <div key={ct.uid} className="mb-2">
-
-                                                                        {/* CLIENTE */}
-                                                                        <button
-                                                                            type='button'
-                                                                            className="btn rounded-0 btn-info w-100 fw-medium d-flex justify-content-between align-items-center"
-                                                                            onClick={() => toggle(ct.uid)}
-                                                                        >
-                                                                            <span>{ct.nomape}</span>
-                                                                            <div className="d-flex align-items-center gap-2">
-                                                                                <input
-                                                                                    type="number"
-                                                                                    className="form-control form-control-sm"
-                                                                                    placeholder="Área cultivo"
-                                                                                    value={ct.areacultivo}
-                                                                                    onChange={e => {
-                                                                                        e.stopPropagation(); // Evitar que se cierre/abra al editar
-                                                                                        actualizarAreaCliente(
-                                                                                            vd.uid,
-                                                                                            zf.uid,
-                                                                                            ct.uid,
-                                                                                            Number(e.target.value)
-                                                                                        );
-                                                                                    }}
-                                                                                    onClick={e => e.stopPropagation()} // Evitar que se cierre/abra al hacer click
-                                                                                    disabled={!modoEdicion}
-                                                                                    style={{ width: '120px' }}
-                                                                                />
-                                                                                <i className={`bi ${open[ct.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
-                                                                            </div>
-                                                                        </button>
-
-                                                                        {/* TABLA DE PRODUCTOS */}
-                                                                        {open[ct.uid] && (
-                                                                            <div className="bg-info-subtle p-2">
-                                                                                <table className="table table-sm table-bordered table-hover m-0">
-                                                                                    <thead className="table-dark text-center align-middle">
-                                                                                        <tr>
-                                                                                            <th>Grupo</th>
-                                                                                            <th>Producto</th>
-                                                                                            <th>Principio Activo</th>
-                                                                                            <th>Dosis Ajustada</th>
-                                                                                            <th>Vol. Potencial</th>
-                                                                                            <th>Vol. Planeado</th>
-                                                                                            <th>% Participación de Producto</th>
-                                                                                            <th>Precio Medio</th>
-                                                                                            <th>Área Planeada</th>
-                                                                                            <th>Precio Planeado</th>
-                                                                                        </tr>
-                                                                                    </thead>
-                                                                                    <tbody>
-                                                                                        {ct.productos && ct.productos.map(pr => {
-                                                                                            const volpotencial = pr.dosis * ct.areacultivo;
-                                                                                            const porcenparti = volpotencial ? pr.volplaneado / volpotencial : 0;
-                                                                                            const areaplaneada = porcenparti * ct.areacultivo;
-                                                                                            const planeados = pr.volplaneado * pr.precio;
-
-                                                                                            return (
-                                                                                                <tr key={pr.uid}>
-                                                                                                    <td>{pr.grupoproducto}</td>
-                                                                                                    <td>{pr.nombre}</td>
-                                                                                                    <td>{pr.principioactivo}</td>
-                                                                                                    <td>
-                                                                                                        <input
-                                                                                                            type="number"
-                                                                                                            className="form-control form-control-sm"
-                                                                                                            value={pr.dosis}
-                                                                                                            onChange={e => actualizarProducto(
-                                                                                                                vd.uid,
-                                                                                                                zf.uid,
-                                                                                                                ct.uid,
-                                                                                                                pr.uid,
-                                                                                                                'dosis',
-                                                                                                                Number(e.target.value)
-                                                                                                            )}
-                                                                                                            disabled={!modoEdicion}
-                                                                                                        />
-                                                                                                    </td>
-                                                                                                    <td className="text-end">{volpotencial.toFixed(2)}</td>
-                                                                                                    <td>
-                                                                                                        <input
-                                                                                                            type="number"
-                                                                                                            className="form-control form-control-sm"
-                                                                                                            value={pr.volplaneado}
-                                                                                                            onChange={e => actualizarProducto(
-                                                                                                                vd.uid,
-                                                                                                                zf.uid,
-                                                                                                                ct.uid,
-                                                                                                                pr.uid,
-                                                                                                                'volplaneado',
-                                                                                                                Number(e.target.value)
-                                                                                                            )}
-                                                                                                            disabled={!modoEdicion}
-                                                                                                        />
-                                                                                                    </td>
-                                                                                                    <td className="text-end">{(porcenparti * 100).toFixed(2)}%</td>
-                                                                                                    <td>
-                                                                                                        <input
-                                                                                                            type="number"
-                                                                                                            className="form-control form-control-sm"
-                                                                                                            value={pr.precio}
-                                                                                                            onChange={e => actualizarProducto(
-                                                                                                                vd.uid,
-                                                                                                                zf.uid,
-                                                                                                                ct.uid,
-                                                                                                                pr.uid,
-                                                                                                                'precio',
-                                                                                                                Number(e.target.value)
-                                                                                                            )}
-                                                                                                            disabled={!modoEdicion}
-                                                                                                        />
-                                                                                                    </td>
-                                                                                                    <td className='text-end'>{areaplaneada.toFixed(2)}</td>
-                                                                                                    <td className='text-end'>{planeados.toFixed(2)}</td>
-                                                                                                </tr>
-                                                                                            );
-                                                                                        })}
-                                                                                    </tbody>
-                                                                                </table>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                            {/* VENDEDOR */}
+                                            <div className="text-end pe-2 pb-1">
+                                                <small className="badge bg-success text-dark fw-bold">
+                                                    Total Vendedor: $ {totalVendedor.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
+                                                </small>
                                             </div>
-                                        )}
-                                    </div>
-                                ))}
+                                            <button type='button' className="btn rounded-0 btn-success w-100 fw-bold text-dark"
+                                                onClick={() => toggle(vd.uid)}>
+                                                {vd.nomape}
+                                                <i className={`bi float-end ${open[vd.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                            </button>
+
+                                            {open[vd.uid] && (
+                                                <div className="bg-success-subtle">
+                                                    {vd.zafras && vd.zafras.map(zf => {
+                                                        const totalZafra = calcularTotalZafra(zf);
+
+                                                        return (
+                                                            <div key={zf.uid} className="p-2 mb-2">
+
+                                                                {/* ZAFRA */}
+                                                                <div className="text-end pe-2 pb-1">
+                                                                    <small className="badge bg-warning text-dark fw-bold">
+                                                                        Total Zafra: $ {totalZafra.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
+                                                                    </small>
+                                                                </div>
+                                                                <button type='button' className="btn rounded-0 btn-warning w-100 fw-medium"
+                                                                    onClick={() => toggle(zf.uid)}>
+                                                                    {zf.zafra}
+                                                                    <i className={`bi float-end ${open[zf.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                                                </button>
+
+                                                                {open[zf.uid] && (
+                                                                    <div className="bg-warning-subtle p-2">
+                                                                        {zf.clientes && zf.clientes.map(ct => {
+                                                                            const totalCliente = calcularTotalCliente(ct);
+
+                                                                            return (
+                                                                                <div key={ct.uid} className="mb-2">
+
+                                                                                    {/* CLIENTE */}
+                                                                                    <div className="text-end pe-2 pb-1">
+                                                                                        <small className="badge bg-info text-dark fw-bold">
+                                                                                            Total Cliente: $ {totalCliente.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
+                                                                                        </small>
+                                                                                    </div>
+                                                                                    <button
+                                                                                        type='button'
+                                                                                        className="btn rounded-0 btn-info w-100 fw-medium d-flex justify-content-between align-items-center"
+                                                                                        onClick={() => toggle(ct.uid)}
+                                                                                    >
+                                                                                        <span>{ct.nomape}</span>
+                                                                                        <div className="d-flex align-items-center gap-2">
+                                                                                            <input
+                                                                                                type="number"
+                                                                                                className="form-control form-control-sm"
+                                                                                                placeholder="Área cultivo"
+                                                                                                value={ct.areacultivo}
+                                                                                                onChange={e => {
+                                                                                                    e.stopPropagation(); // Evitar que se cierre/abra al editar
+                                                                                                    actualizarAreaCliente(
+                                                                                                        vd.uid,
+                                                                                                        zf.uid,
+                                                                                                        ct.uid,
+                                                                                                        Number(e.target.value)
+                                                                                                    );
+                                                                                                }}
+                                                                                                onClick={e => e.stopPropagation()} // Evitar que se cierre/abra al hacer click
+                                                                                                disabled={!modoEdicion}
+                                                                                                style={{ width: '120px' }}
+                                                                                            />
+                                                                                            <i className={`bi ${open[ct.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                                                                        </div>
+                                                                                    </button>
+
+                                                                                    {/* TABLA DE PRODUCTOS */}
+                                                                                    {open[ct.uid] && (
+                                                                                        <div className="bg-info-subtle p-2">
+                                                                                            <table className="table table-sm table-bordered table-hover m-0">
+                                                                                                <thead className="table-dark text-center align-middle">
+                                                                                                    <tr>
+                                                                                                        <th>Grupo</th>
+                                                                                                        <th>Producto</th>
+                                                                                                        <th>Principio Activo</th>
+                                                                                                        <th>Dosis Ajustada</th>
+                                                                                                        <th>Vol. Potencial</th>
+                                                                                                        <th>Vol. Planeado</th>
+                                                                                                        <th>% Participación de Producto</th>
+                                                                                                        <th>Precio Medio</th>
+                                                                                                        <th>Área Planeada</th>
+                                                                                                        <th>Precio Planeado</th>
+                                                                                                    </tr>
+                                                                                                </thead>
+                                                                                                <tbody>
+                                                                                                    {ct.productos && ct.productos.map(pr => {
+                                                                                                        const volpotencial = pr.dosis * ct.areacultivo;
+                                                                                                        const porcenparti = volpotencial ? pr.volplaneado / volpotencial : 0;
+                                                                                                        const areaplaneada = porcenparti * ct.areacultivo;
+                                                                                                        const planeados = pr.volplaneado * pr.precio;
+
+                                                                                                        return (
+                                                                                                            <tr key={pr.uid}>
+                                                                                                                <td>{pr.grupoproducto}</td>
+                                                                                                                <td>{pr.nombre}</td>
+                                                                                                                <td>{pr.principioactivo}</td>
+                                                                                                                <td>
+                                                                                                                    <input
+                                                                                                                        type="number"
+                                                                                                                        className="form-control form-control-sm"
+                                                                                                                        value={pr.dosis}
+                                                                                                                        onChange={e => actualizarProducto(
+                                                                                                                            vd.uid,
+                                                                                                                            zf.uid,
+                                                                                                                            ct.uid,
+                                                                                                                            pr.uid,
+                                                                                                                            'dosis',
+                                                                                                                            Number(e.target.value)
+                                                                                                                        )}
+                                                                                                                        disabled={!modoEdicion}
+                                                                                                                    />
+                                                                                                                </td>
+                                                                                                                <td className="text-end">{volpotencial.toFixed(2)}</td>
+                                                                                                                <td>
+                                                                                                                    <input
+                                                                                                                        type="number"
+                                                                                                                        className="form-control form-control-sm"
+                                                                                                                        value={pr.volplaneado}
+                                                                                                                        onChange={e => actualizarProducto(
+                                                                                                                            vd.uid,
+                                                                                                                            zf.uid,
+                                                                                                                            ct.uid,
+                                                                                                                            pr.uid,
+                                                                                                                            'volplaneado',
+                                                                                                                            Number(e.target.value)
+                                                                                                                        )}
+                                                                                                                        disabled={!modoEdicion}
+                                                                                                                    />
+                                                                                                                </td>
+                                                                                                                <td className="text-end">{(porcenparti * 100).toFixed(2)}%</td>
+                                                                                                                <td>
+                                                                                                                    <input
+                                                                                                                        type="number"
+                                                                                                                        className="form-control form-control-sm"
+                                                                                                                        value={pr.precio}
+                                                                                                                        onChange={e => actualizarProducto(
+                                                                                                                            vd.uid,
+                                                                                                                            zf.uid,
+                                                                                                                            ct.uid,
+                                                                                                                            pr.uid,
+                                                                                                                            'precio',
+                                                                                                                            Number(e.target.value)
+                                                                                                                        )}
+                                                                                                                        disabled={!modoEdicion}
+                                                                                                                    />
+                                                                                                                </td>
+                                                                                                                <td className='text-end'>{areaplaneada.toFixed(2)}</td>
+                                                                                                                <td className='text-end'>{planeados.toFixed(2)}</td>
+                                                                                                            </tr>
+                                                                                                        );
+                                                                                                    })}
+                                                                                                </tbody>
+                                                                                            </table>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            )
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
                             </div>
                             <div className='div-report-button'>
                                 <button type='submit' className="modern-button btn-primary">
