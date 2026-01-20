@@ -28,6 +28,12 @@ export const FiltroModal = ({
         }));
     };
 
+    const filtroTxt = (txt) => {
+        const pt = txt.split('.');
+        const ultimo = pt[pt.length - 1];
+        return ultimo || '';
+    }
+
     return (
         <>
             <div
@@ -44,7 +50,28 @@ export const FiltroModal = ({
                     zIndex: 21
                 }}
             >
-                <h6 className="fw-bold mb-2">Filtro: {filtroActivo.field}</h6>
+                <h6 className="fw-bold mb-2 d-flex align-items-center justify-content-between">
+                    <span>
+                        Filtro: <span className="fw-semibold text-success">{filtroTxt(filtroActivo.field)}</span>
+                    </span>
+                    {/* Icono de borrador */}
+                    <i
+                        className="bi bi-eraser-fill text-danger"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                            // Limpiar filtro del campo
+                            setQuery(q => ({
+                                ...q,
+                                page: 0,
+                                filter: q.filter.filter(x => !x.startsWith(filtroActivo.field + ":"))
+                            }));
+                            // Limpiar el estado del filtro activo y aplicado
+                            setFiltroActivo(f => ({ ...f, op: "eq", value: "", value1: "", value2: "" }));
+                            setFiltrosAplicados(prev => ({ ...prev, [filtroActivo.field]: undefined }));
+                        }}
+                        title="Borrar filtro"
+                    ></i>
+                </h6>
 
                 {filtroActivo.type === "string" && (
                     <>

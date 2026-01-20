@@ -7,6 +7,7 @@ import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
 import { GeneratePass } from '../utils/GeneratePass.js';
 import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
@@ -299,10 +300,6 @@ export const UsuarioApp = ({ userLog }) => {
         } else {
             form.classList.add('was-validated');
         }
-    };
-
-    const obtenerClaseEstado = (activo) => {
-        return activo ? 'text-bg-success' : 'text-bg-danger';
     };
 
     const verificarNombreUsuarioExistente = (nombreUsuario, id) => {
@@ -992,7 +989,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     <td>{v.tipousuario.tipousuario}</td>
                                                     <td>{v.sucursal.sucursal}</td>
                                                     <td style={{ width: '140px' }}>
-                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstadoReg(v.activo)} m-0 rounded-2 border border-black`}>
                                                             {v.estado}
                                                         </p>
                                                     </td>

@@ -6,6 +6,7 @@ export default function AutocompleteSelect({
     onChange,
     getLabel,
     searchFields = [],
+    size = 5,
     multiple = false,
     disabled = false,
     required = false,
@@ -30,7 +31,7 @@ export default function AutocompleteSelect({
             return (getLabel(o) ?? '').toLowerCase().includes(normalizedInput);
         }
         return searchFields.some(fn => (fn(o) ?? '').toString().toLowerCase().includes(normalizedInput));
-    }).slice(0, 5);
+    }).slice(0, size);
 
     const selectItem = (item) => {
         if (!multiple) {

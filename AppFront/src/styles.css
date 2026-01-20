@@ -54,7 +54,9 @@
   border-radius: 8px;
   font-size: 0.9rem;
   background: #f9fafb;
-  transition: border 0.2s, box-shadow 0.2s;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
 }
 .modern-table-input:focus {
   border-color: var(--color-ternario);
@@ -1176,7 +1178,8 @@ input[type="number"] {
   object-fit: contain;
   opacity: 0.85;
   filter: grayscale(100%);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12),
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.12),
     inset 0 0 0 1px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }

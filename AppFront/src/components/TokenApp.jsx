@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { getToken, saveToken, deleteToken } from '../services/token.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from '../FiltroModal.jsx';
+import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
 import { DateHourFormat } from '../utils/DateHourFormat.js';
+import { FiltroModal } from '../FiltroModal.jsx';
 import { ListControls } from '../ListControls.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
 import SaveModal from "../layouts/SaveModal.jsx";
+import Header from '../Header';
 
 export const TokenApp = ({ userLog }) => {
 
@@ -158,10 +159,6 @@ export const TokenApp = ({ userLog }) => {
             );
         }
     }
-
-    const obtenerClaseEstado = (activo) => {
-        return activo ? 'text-bg-success' : 'text-bg-danger';
-    };
 
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
@@ -357,7 +354,7 @@ export const TokenApp = ({ userLog }) => {
                                                     <td>{DateHourFormat(v.fechacreacion, 0)}</td>
                                                     <td>{DateHourFormat(v.fechaexpiracion, 0)}</td>
                                                     <td style={{ width: '140px' }}>
-                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstadoReg(v.activo)} m-0 rounded-2 border border-black`}>
                                                             {v.estado}
                                                         </p>
                                                     </td>

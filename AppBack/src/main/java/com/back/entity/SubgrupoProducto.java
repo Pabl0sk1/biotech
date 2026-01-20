@@ -43,6 +43,9 @@ public class SubgrupoProducto {
 	@Size(max = 150)
 	private String subgrupoproducto;
 	
+	@Size(max = 150)
+	private String grupoproductotxt;
+	
 	private Integer erpid;
 	
 	public SubgrupoProducto(Integer id) {

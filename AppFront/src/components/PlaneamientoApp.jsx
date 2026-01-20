@@ -5,8 +5,9 @@ import { getReportType } from '../services/tipoinforme.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from "../FiltroModal.jsx";
 import { DateHourFormat } from '../utils/DateHourFormat.js';
+import { obtenerClaseEstadoInf } from '../utils/StatusBadge.js';
+import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -164,10 +165,6 @@ export const PlaneamientoApp = ({ userLog }) => {
         }
 
         return filtro;
-    };
-
-    const obtenerClaseEstado = (estado) => {
-        return estado == 'Aprobado' ? 'text-bg-success' : 'text-bg-danger';
     };
 
     const refrescar = () => {
@@ -369,7 +366,7 @@ export const PlaneamientoApp = ({ userLog }) => {
                                                     <td>{DateHourFormat(v.fechacreacion, 0)}</td>
                                                     <td>{DateHourFormat(v.fechaactualizacion, 0)}</td>
                                                     <td style={{ width: '140px' }}>
-                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.estado)} m-0 rounded-2 border border-black`}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstadoInf(v.estado)} m-0 rounded-2 border border-black`}>
                                                             {v.estado}
                                                         </p>
                                                     </td>

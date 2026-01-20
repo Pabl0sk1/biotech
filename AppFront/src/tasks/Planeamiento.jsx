@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { saveReport, updateReport } from '../services/informe.service.js';
-import { getEntity } from '../services/entidad.service';
-import { getProduct } from '../services/producto.service';
-import { getHarvest } from '../services/zafra.service';
+import { getEntity } from '../services/entidad.service.js';
+import { getProduct } from '../services/producto.service.js';
+import { getProductGroup } from '../services/grupoproducto.service.js';
+import { getHarvest } from '../services/zafra.service.js';
 import { AddAccess } from '../utils/AddAccess.js';
 import Header from '../Header';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from "../layouts/Loading";
 import Close from "../layouts/Close";
 
-export const Data = () => {
+export const Planeamiento = () => {
 
     const initial = {
         zafras: [],
@@ -27,6 +28,7 @@ export const Data = () => {
     const [vendedores, setVendedores] = useState([]);
     const [vendedorSeleccionado, setVendedorSeleccionado] = useState(null);
     const [productos, setProductos] = useState([]);
+    const [subgrupos, setSubgrupos] = useState([]);
     const [zafras, setZafras] = useState([]);
     const [selectedZafras, setSelectedZafras] = useState([]);
     const [open, setOpen] = useState({});
@@ -56,15 +58,23 @@ export const Data = () => {
 
     useEffect(() => {
         const load = async () => {
-            const cli = await getEntity('', '', '', 'categorias:contains:Cliente;activo:eq:true');
-            const ven = await getEntity('', '', '', 'categorias:contains:Vendedor;activo:eq:true');
-            const pro = await getProduct('', '', '', 'activo:eq:true;incluirplan:eq:true');
             const zaf = await getHarvest();
+            const ven = await getEntity('', '', '', 'categorias:contains:Vendedor;activo:eq:true');
+            const cli = await getEntity('', '', '', 'categorias:contains:Cliente;activo:eq:true');
+            const pro = await getProduct('', '', 'nombrecomercial.subgrupoproducto.subgrupoproducto,asc', 'activo:eq:true;incluirplan:eq:true');
+            const sub = await getProductGroup('', '', 'subgrupoproducto,asc', '', 'subgroups');
 
-            setClientes(cli.items.filter(v => v.cartera));
-            setVendedores(ven.items);
-            setProductos(pro.items);
+            const subgrupos = sub.items.filter(s =>
+                pro.items.some(p =>
+                    s.id === p.nombrecomercial?.subgrupoproducto?.id
+                )
+            );
+
             setZafras(zaf.items);
+            setVendedores(ven.items);
+            setClientes(cli.items.filter(v => v.cartera));
+            setProductos(pro.items);
+            setSubgrupos(subgrupos);
         };
         load();
 
@@ -74,12 +84,24 @@ export const Data = () => {
                     ? JSON.parse(datos.data)
                     : datos.data;
                 setData(dataParsed);
+
+                // Restaurar zafras seleccionadas
+                if (Array.isArray(dataParsed.zafras)) {
+                    setSelectedZafras(dataParsed.zafras);
+                }
             } catch (error) {
                 console.error('Error al parsear datos del informe:', error);
-                setData([]);
+                setData(initial);
             }
         }
     }, [datos]);
+
+    useEffect(() => {
+        setData(prev => ({
+            ...prev,
+            zafras: selectedZafras
+        }));
+    }, [selectedZafras]);
 
     const formatearFechaParaInput = (fecha) => {
         if (!fecha) return '';
@@ -115,21 +137,17 @@ export const Data = () => {
         // Obtener clientes del vendedor
         const clientesList = clientesPorVendedor(vendedor.erpid);
 
-        // Mapear clientes para agregar campos necesarios y productos
-        const clientesConProductos = clientesList.map(c => ({
+        // Mapear grupos de productos para los clientes
+        const subgrupoConProductos = subgrupos.map(s => ({
             uid: uid(),
-            nomape: c.nomape,
-            nombre: c.nombre,
-            apellido: c.apellido,
-            nrodoc: c.nrodoc,
-            areacultivo: 0,
+            grupo: s.grupoproductotxt,
+            subgrupo: s.subgrupoproducto,
             totalplaneados: 0,
-            productos: productos.map(p => ({
+            productos: productos.filter(p => p.nombrecomercial?.subgrupoproducto?.id == s.id).map(p => ({
                 uid: uid(),
-                grupoproducto: p.nombrecomercial?.subgrupoproducto?.grupoproducto?.grupoproducto,
                 nombre: p.nombrecomercial?.nombrecomercial,
                 principioactivo: p.principioactivo?.principioactivo,
-                dosis: p.dosis || 0,
+                dosis: p.dosisporhec || 0,
                 volpotencial: 0,
                 volplaneado: 0,
                 porcenparti: 0,
@@ -139,6 +157,18 @@ export const Data = () => {
             }))
         }));
 
+        // Mapear clientes para agregar campos necesarios y productos
+        const clientesConSubgrupos = clientesList.map(c => ({
+            uid: uid(),
+            nomape: c.nomape,
+            nombre: c.nombre,
+            apellido: c.apellido,
+            nrodoc: c.nrodoc,
+            areacultivo: '',
+            totalplaneados: 0,
+            subgrupos: subgrupoConProductos
+        }));
+
         // Mapear zafras para agregar clientes
         const zafrasConClientes = zafras
             .filter(z => selectedZafras.includes(z.id))
@@ -146,15 +176,15 @@ export const Data = () => {
                 uid: uid(),
                 zafra: z.descripcion,
                 totalplaneados: 0,
-                clientes: clientesConProductos
+                clientes: clientesConSubgrupos
             }));
 
         // Armar el vendedor con sus zafras adentro
         const vendedorConZafras = {
             ...vendedor,
             uid: uid(),
-            zafras: zafrasConClientes,
-            totalplaneados: 0
+            totalplaneados: 0,
+            zafras: zafrasConClientes
         };
 
         setData(prev => {
@@ -174,11 +204,18 @@ export const Data = () => {
         setVendedorSeleccionado(null);
     };
 
-    const calcularTotalCliente = (cliente) => {
-        if (!cliente.productos) return 0;
-        return cliente.productos.reduce((sum, pr) => {
+    const calcularTotalSubgrupo = (subgrupo) => {
+        if (!subgrupo.productos) return 0;
+        return subgrupo.productos.reduce((sum, pr) => {
             const planeados = pr.volplaneado * pr.precio;
             return sum + planeados;
+        }, 0);
+    }
+
+    const calcularTotalCliente = (cliente) => {
+        if (!cliente.subgrupos) return 0;
+        return cliente.subgrupos.reduce((sum, sg) => {
+            return sum + calcularTotalSubgrupo(sg);
         }, 0);
     };
 
@@ -196,47 +233,96 @@ export const Data = () => {
         }, 0);
     };
 
+    // Modifica actualizarAreaCliente para recalcular totales después de actualizar:
     const actualizarAreaCliente = (vendedorUid, zfUid, ctUid, valor) => {
-        setData(prev => ({
-            ...prev,
-            vendedores: prev.vendedores.map(vend =>
-                vend.uid !== vendedorUid ? vend : {
+        setData(prev => {
+            const newData = {
+                ...prev,
+                vendedores: prev.vendedores.map(vend =>
+                    vend.uid !== vendedorUid ? vend : {
+                        ...vend,
+                        zafras: vend.zafras.map(zf =>
+                            zf.uid !== zfUid ? zf : {
+                                ...zf,
+                                clientes: zf.clientes.map(ct =>
+                                    ct.uid !== ctUid ? ct : { ...ct, areacultivo: valor }
+                                )
+                            }
+                        )
+                    }
+                )
+            };
+
+            // Recalcular totales en el nuevo estado
+            return {
+                ...newData,
+                vendedores: newData.vendedores.map(vend => ({
                     ...vend,
-                    zafras: vend.zafras.map(zf =>
-                        zf.uid !== zfUid ? zf : {
-                            ...zf,
-                            clientes: zf.clientes.map(ct =>
-                                ct.uid !== ctUid ? ct : { ...ct, areacultivo: valor }
-                            )
-                        }
-                    )
-                }
-            )
-        }));
+                    totalplaneados: calcularTotalVendedor(vend),
+                    zafras: vend.zafras.map(zf => ({
+                        ...zf,
+                        totalplaneados: calcularTotalZafra(zf),
+                        clientes: zf.clientes.map(ct => ({
+                            ...ct,
+                            totalplaneados: calcularTotalCliente(ct)
+                        }))
+                    }))
+                }))
+            };
+        });
     };
 
-    const actualizarProducto = (vendedorUid, zfUid, ctUid, prUid, campo, valor) => {
-        setData(prev => ({
-            ...prev,
-            vendedores: prev.vendedores.map(vend =>
-                vend.uid !== vendedorUid ? vend : {
+    // Modifica actualizarProducto para recalcular totales después de actualizar:
+    const actualizarProducto = (vendedorUid, zfUid, ctUid, sgUid, prUid, campo, valor) => {
+        setData(prev => {
+            const newData = {
+                ...prev,
+                vendedores: prev.vendedores.map(vend =>
+                    vend.uid !== vendedorUid ? vend : {
+                        ...vend,
+                        zafras: vend.zafras.map(zf =>
+                            zf.uid !== zfUid ? zf : {
+                                ...zf,
+                                clientes: zf.clientes.map(ct =>
+                                    ct.uid !== ctUid ? ct : {
+                                        ...ct,
+                                        subgrupos: ct.subgrupos.map(sg =>
+                                            sg.uid !== sgUid ? sg : {
+                                                ...sg,
+                                                productos: sg.productos.map(pr =>
+                                                    pr.uid !== prUid ? pr : { ...pr, [campo]: valor }
+                                                )
+                                            }
+                                        )
+                                    }
+                                )
+                            }
+                        )
+                    }
+                )
+            };
+
+            // Recalcular totales en el nuevo estado
+            return {
+                ...newData,
+                vendedores: newData.vendedores.map(vend => ({
                     ...vend,
-                    zafras: vend.zafras.map(zf =>
-                        zf.uid !== zfUid ? zf : {
-                            ...zf,
-                            clientes: zf.clientes.map(ct =>
-                                ct.uid !== ctUid ? ct : {
-                                    ...ct,
-                                    productos: ct.productos.map(pr =>
-                                        pr.uid !== prUid ? pr : { ...pr, [campo]: valor }
-                                    )
-                                }
-                            )
-                        }
-                    )
-                }
-            )
-        }));
+                    totalplaneados: calcularTotalVendedor(vend),
+                    zafras: vend.zafras.map(zf => ({
+                        ...zf,
+                        totalplaneados: calcularTotalZafra(zf),
+                        clientes: zf.clientes.map(ct => ({
+                            ...ct,
+                            totalplaneados: calcularTotalCliente(ct),
+                            subgrupos: ct.subgrupos.map(sg => ({
+                                ...sg,
+                                totalplaneados: calcularTotalSubgrupo(sg)
+                            }))
+                        }))
+                    }))
+                }))
+            };
+        });
     };
 
     const handleSelectZafra = (id) => {
@@ -405,7 +491,6 @@ export const Data = () => {
                                             className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
                                             type="button"
                                             data-bs-toggle="dropdown"
-                                            disabled={!modoEdicion}
                                         >
                                             {selectedZafras.length > 0
                                                 ? `${selectedZafras.length} Seleccionados`
@@ -445,6 +530,7 @@ export const Data = () => {
                                                             id={`zaf-${z.id}`}
                                                             checked={selectedZafras.includes(z.id)}
                                                             onChange={() => handleSelectZafra(z.id)}
+                                                            disabled={!modoEdicion}
                                                         />
                                                         <label className="form-check-label" htmlFor={`func-${z.id}`}>
                                                             {z.descripcion}
@@ -467,6 +553,7 @@ export const Data = () => {
                                             v => v.nomape,
                                             v => v.nrodoc
                                         ]}
+                                        size={3}
                                         onChange={(v) => {
                                             setVendedorSeleccionado(v);
                                             if (!v) return;
@@ -538,19 +625,21 @@ export const Data = () => {
                                                                                         <div className="d-flex align-items-center gap-2">
                                                                                             <input
                                                                                                 type="number"
+                                                                                                min={0}
                                                                                                 className="form-control form-control-sm"
-                                                                                                placeholder="Área cultivo"
-                                                                                                value={ct.areacultivo}
+                                                                                                placeholder="Área de Cultivo"
+                                                                                                value={ct.areacultivo ?? ''}
                                                                                                 onChange={e => {
-                                                                                                    e.stopPropagation(); // Evitar que se cierre/abra al editar
+                                                                                                    e.stopPropagation();
+                                                                                                    const value = e.target.value;
                                                                                                     actualizarAreaCliente(
                                                                                                         vd.uid,
                                                                                                         zf.uid,
                                                                                                         ct.uid,
-                                                                                                        Number(e.target.value)
+                                                                                                        value === '' ? '' : Math.max(0, Number(value))
                                                                                                     );
                                                                                                 }}
-                                                                                                onClick={e => e.stopPropagation()} // Evitar que se cierre/abra al hacer click
+                                                                                                onClick={e => e.stopPropagation()}
                                                                                                 disabled={!modoEdicion}
                                                                                                 style={{ width: '120px' }}
                                                                                             />
@@ -558,93 +647,118 @@ export const Data = () => {
                                                                                         </div>
                                                                                     </button>
 
-                                                                                    {/* TABLA DE PRODUCTOS */}
                                                                                     {open[ct.uid] && (
                                                                                         <div className="bg-info-subtle p-2">
-                                                                                            <table className="table table-sm table-bordered table-hover m-0">
-                                                                                                <thead className="table-dark text-center align-middle">
-                                                                                                    <tr>
-                                                                                                        <th>Grupo</th>
-                                                                                                        <th>Producto</th>
-                                                                                                        <th>Principio Activo</th>
-                                                                                                        <th>Dosis Ajustada</th>
-                                                                                                        <th>Vol. Potencial</th>
-                                                                                                        <th>Vol. Planeado</th>
-                                                                                                        <th>% Participación de Producto</th>
-                                                                                                        <th>Precio Medio</th>
-                                                                                                        <th>Área Planeada</th>
-                                                                                                        <th>Precio Planeado</th>
-                                                                                                    </tr>
-                                                                                                </thead>
-                                                                                                <tbody>
-                                                                                                    {ct.productos && ct.productos.map(pr => {
-                                                                                                        const volpotencial = pr.dosis * ct.areacultivo;
-                                                                                                        const porcenparti = volpotencial ? pr.volplaneado / volpotencial : 0;
-                                                                                                        const areaplaneada = porcenparti * ct.areacultivo;
-                                                                                                        const planeados = pr.volplaneado * pr.precio;
 
-                                                                                                        return (
-                                                                                                            <tr key={pr.uid}>
-                                                                                                                <td>{pr.grupoproducto}</td>
-                                                                                                                <td>{pr.nombre}</td>
-                                                                                                                <td>{pr.principioactivo}</td>
-                                                                                                                <td>
-                                                                                                                    <input
-                                                                                                                        type="number"
-                                                                                                                        className="form-control form-control-sm"
-                                                                                                                        value={pr.dosis}
-                                                                                                                        onChange={e => actualizarProducto(
-                                                                                                                            vd.uid,
-                                                                                                                            zf.uid,
-                                                                                                                            ct.uid,
-                                                                                                                            pr.uid,
-                                                                                                                            'dosis',
-                                                                                                                            Number(e.target.value)
-                                                                                                                        )}
-                                                                                                                        disabled={!modoEdicion}
-                                                                                                                    />
-                                                                                                                </td>
-                                                                                                                <td className="text-end">{volpotencial.toFixed(2)}</td>
-                                                                                                                <td>
-                                                                                                                    <input
-                                                                                                                        type="number"
-                                                                                                                        className="form-control form-control-sm"
-                                                                                                                        value={pr.volplaneado}
-                                                                                                                        onChange={e => actualizarProducto(
-                                                                                                                            vd.uid,
-                                                                                                                            zf.uid,
-                                                                                                                            ct.uid,
-                                                                                                                            pr.uid,
-                                                                                                                            'volplaneado',
-                                                                                                                            Number(e.target.value)
-                                                                                                                        )}
-                                                                                                                        disabled={!modoEdicion}
-                                                                                                                    />
-                                                                                                                </td>
-                                                                                                                <td className="text-end">{(porcenparti * 100).toFixed(2)}%</td>
-                                                                                                                <td>
-                                                                                                                    <input
-                                                                                                                        type="number"
-                                                                                                                        className="form-control form-control-sm"
-                                                                                                                        value={pr.precio}
-                                                                                                                        onChange={e => actualizarProducto(
-                                                                                                                            vd.uid,
-                                                                                                                            zf.uid,
-                                                                                                                            ct.uid,
-                                                                                                                            pr.uid,
-                                                                                                                            'precio',
-                                                                                                                            Number(e.target.value)
-                                                                                                                        )}
-                                                                                                                        disabled={!modoEdicion}
-                                                                                                                    />
-                                                                                                                </td>
-                                                                                                                <td className='text-end'>{areaplaneada.toFixed(2)}</td>
-                                                                                                                <td className='text-end'>{planeados.toFixed(2)}</td>
-                                                                                                            </tr>
-                                                                                                        );
-                                                                                                    })}
-                                                                                                </tbody>
-                                                                                            </table>
+                                                                                            <div key={ct.uid} className="mb-2">
+                                                                                                <table className="table table-sm table-bordered table-hover m-0">
+                                                                                                    <thead className="table-dark text-center align-middle">
+                                                                                                        <tr>
+                                                                                                            <th>Subgrupo</th>
+                                                                                                            <th>Producto</th>
+                                                                                                            <th>Principio Activo</th>
+                                                                                                            <th>Dosis Ajustada</th>
+                                                                                                            <th>Vol. Potencial</th>
+                                                                                                            <th>Vol. Planeado</th>
+                                                                                                            <th>% Participación de Producto</th>
+                                                                                                            <th>Precio Medio</th>
+                                                                                                            <th>Área Planeada</th>
+                                                                                                            <th>Precio Planeado</th>
+                                                                                                        </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        {ct.subgrupos && ct.subgrupos.flatMap(sg =>
+                                                                                                            sg.productos && sg.productos.map(pr => {
+                                                                                                                const volpotencial = pr.dosis * ct.areacultivo;
+                                                                                                                const porcenparti = volpotencial ? pr.volplaneado / volpotencial : 0;
+                                                                                                                const areaplaneada = porcenparti * ct.areacultivo;
+                                                                                                                const planeados = pr.volplaneado * pr.precio;
+
+                                                                                                                return (
+                                                                                                                    <tr key={pr.uid}>
+                                                                                                                        <td>{sg.subgrupo}</td>
+                                                                                                                        <td>{pr.nombre}</td>
+                                                                                                                        <td>{pr.principioactivo}</td>
+                                                                                                                        <td>
+                                                                                                                            <input
+                                                                                                                                type="number"
+                                                                                                                                min={0}
+                                                                                                                                className="form-control form-control-sm"
+                                                                                                                                placeholder='Dosis'
+                                                                                                                                value={pr.dosis ?? ''}
+                                                                                                                                onChange={e => {
+                                                                                                                                    e.stopPropagation();
+                                                                                                                                    const value = e.target.value;
+                                                                                                                                    actualizarProducto(
+                                                                                                                                        vd.uid,
+                                                                                                                                        zf.uid,
+                                                                                                                                        ct.uid,
+                                                                                                                                        sg.uid,
+                                                                                                                                        pr.uid,
+                                                                                                                                        'dosis',
+                                                                                                                                        value === '' ? '' : Math.max(0, Number(value))
+                                                                                                                                    )
+                                                                                                                                }}
+                                                                                                                                disabled={!modoEdicion}
+                                                                                                                            />
+                                                                                                                        </td>
+                                                                                                                        <td className="text-end">{volpotencial.toFixed(2)}</td>
+                                                                                                                        <td>
+                                                                                                                            <input
+                                                                                                                                type="number"
+                                                                                                                                min={0}
+                                                                                                                                className="form-control form-control-sm"
+                                                                                                                                placeholder='Volumen'
+                                                                                                                                value={pr.volplaneado ?? ''}
+                                                                                                                                onChange={e => {
+                                                                                                                                    e.stopPropagation();
+                                                                                                                                    const value = e.target.value;
+                                                                                                                                    actualizarProducto(
+                                                                                                                                        vd.uid,
+                                                                                                                                        zf.uid,
+                                                                                                                                        ct.uid,
+                                                                                                                                        sg.uid,
+                                                                                                                                        pr.uid,
+                                                                                                                                        'volplaneado',
+                                                                                                                                        value === '' ? '' : Math.max(0, Number(value))
+                                                                                                                                    )
+                                                                                                                                }}
+                                                                                                                                disabled={!modoEdicion}
+                                                                                                                            />
+                                                                                                                        </td>
+                                                                                                                        <td className="text-end">{(porcenparti * 100).toFixed(2)}%</td>
+                                                                                                                        <td>
+                                                                                                                            <input
+                                                                                                                                type="number"
+                                                                                                                                min={0}
+                                                                                                                                className="form-control form-control-sm"
+                                                                                                                                placeholder='Precio'
+                                                                                                                                value={pr.precio ?? ''}
+                                                                                                                                onChange={e => {
+                                                                                                                                    e.stopPropagation();
+                                                                                                                                    const value = e.target.value;
+                                                                                                                                    actualizarProducto(
+                                                                                                                                        vd.uid,
+                                                                                                                                        zf.uid,
+                                                                                                                                        ct.uid,
+                                                                                                                                        sg.uid,
+                                                                                                                                        pr.uid,
+                                                                                                                                        'precio',
+                                                                                                                                        value === '' ? '' : Math.max(0, Number(value))
+                                                                                                                                    )
+                                                                                                                                }}
+                                                                                                                                disabled={!modoEdicion}
+                                                                                                                            />
+                                                                                                                        </td>
+                                                                                                                        <td className='text-end'>{areaplaneada.toFixed(2)}</td>
+                                                                                                                        <td className='text-end'>{planeados.toFixed(2)}</td>
+                                                                                                                    </tr>
+                                                                                                                );
+                                                                                                            })
+                                                                                                        )}
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
                                                                                         </div>
                                                                                     )}
                                                                                 </div>
@@ -662,7 +776,7 @@ export const Data = () => {
                                 })}
                             </div>
                             <div className='div-report-button'>
-                                <button type='submit' className="modern-button btn-primary">
+                                <button type='submit' className="btn btn-secondary bg-success modern-button" disabled={!modoEdicion}>
                                     <i className="bi bi-check-lg"></i>Guardar
                                 </button>
                             </div>
@@ -674,4 +788,4 @@ export const Data = () => {
     );
 }
 
-export default Data;
+export default Planeamiento;

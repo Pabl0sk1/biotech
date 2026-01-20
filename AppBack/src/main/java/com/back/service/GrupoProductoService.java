@@ -182,6 +182,7 @@ public class GrupoProductoService {
 		        Integer erpId = (Integer) item.get("id");
 		        Integer grupoId = (Integer) item.get("Producto_grupo_id");
 		        String descripcion = (String) item.get("Descripcion");
+		        String grupoproductotxt = (String) item.get("Producto_grupo_txt");
 		        
 		        GrupoProducto grupoproducto = null;
 		        if (grupoId != null) grupoproducto = rep.findByErpid(grupoId).orElse(null);
@@ -190,6 +191,7 @@ public class GrupoProductoService {
 		        data.setErpid(erpId);
 		        data.setGrupoproducto(grupoproducto);
 		        data.setSubgrupoproducto(descripcion);
+		        data.setGrupoproductotxt(grupoproductotxt);
 		        
 		        repSubgrupoProducto.save(data);
 		        

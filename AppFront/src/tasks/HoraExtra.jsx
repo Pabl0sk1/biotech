@@ -1549,17 +1549,17 @@ export const HoraExtra = () => {
                                     ))}
                             </div>
                             <div className='div-report-button'>
-                                <button type='button' onClick={() => generarArchivo()} className="modern-button btn-secondary">
+                                <button type='button' onClick={() => generarArchivo()} className="btn btn-secondary modern-button" disabled={!modoEdicion}>
                                     <i className="bi bi-printer-fill"></i>Generar
                                 </button>
-                                <button type='submit' className="modern-button btn-primary">
+                                <button type='submit' className="btn btn-primary bg-success modern-button" disabled={!modoEdicion}>
                                     <i className="bi bi-check-lg"></i>Guardar
                                 </button>
                             </div>
                         </form>
                     </div>
-                </div >
-            </div >
+                </div>
+            </div>
         </>
     );
 }

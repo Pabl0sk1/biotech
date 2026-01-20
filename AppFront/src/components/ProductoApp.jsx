@@ -10,6 +10,7 @@ import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
+import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
 import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
@@ -250,10 +251,6 @@ export const ProductoApp = ({ userLog }) => {
         }
 
         return filtro;
-    };
-
-    const obtenerClaseEstado = (activo) => {
-        return activo ? 'text-bg-success' : 'text-bg-danger';
     };
 
     const handleSubmit = (event) => {
@@ -751,6 +748,58 @@ export const ProductoApp = ({ userLog }) => {
                                                 }}
                                             ></i>
                                         </th>
+                                        <th onClick={() => toggleOrder("nombrecomercial.subgrupoproducto.grupoproductotxt")} className="sortable-header">
+                                            Grupo
+                                            <i className={`bi ${getSortIcon("nombrecomercial.subgrupoproducto.grupoproductotxt")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["nombrecomercial.subgrupoproducto.grupoproductotxt"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "nombrecomercial.subgrupoproducto.grupoproductotxt",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
+                                        <th onClick={() => toggleOrder("nombrecomercial.subgrupoproducto.subgrupoproducto")} className="sortable-header">
+                                            Subgrupo
+                                            <i className={`bi ${getSortIcon("nombrecomercial.subgrupoproducto.subgrupoproducto")} ms-2`}></i>
+                                            <i
+                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const previo = filtrosAplicados["nombrecomercial.subgrupoproducto.subgrupoproducto"] ?? {};
+                                                    setFiltroActivo({
+                                                        field: "nombrecomercial.subgrupoproducto.subgrupoproducto",
+                                                        type: "string",
+                                                        visible: true,
+                                                        op: previo.op,
+                                                        value: previo.value,
+                                                        value1: previo.value1,
+                                                        value2: previo.value2,
+                                                        coords: {
+                                                            top: rect.bottom + 5,
+                                                            left: rect.left
+                                                        }
+                                                    });
+                                                }}
+                                            ></i>
+                                        </th>
                                         <th onClick={() => toggleOrder("nombrecomercial.nombrecomercial")} className="sortable-header">
                                             Descripción
                                             <i className={`bi ${getSortIcon("nombrecomercial.nombrecomercial")} ms-2`}></i>
@@ -855,10 +904,12 @@ export const ProductoApp = ({ userLog }) => {
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
                                                     <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td className='text-start'>{v.nombrecomercial?.subgrupoproducto?.grupoproductotxt}</td>
+                                                    <td className='text-start'>{v.nombrecomercial?.subgrupoproducto?.subgrupoproducto}</td>
                                                     <td className='text-start'>{v.nombrecomercial?.nombrecomercial}</td>
                                                     <td>{v.tipoproducto?.tipoproducto}</td>
                                                     <td style={{ width: '140px' }}>
-                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstado(v.activo)} m-0 rounded-2 border border-black`}>
+                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstadoReg(v.activo)} m-0 rounded-2 border border-black`}>
                                                             {v.estado}
                                                         </p>
                                                     </td>
