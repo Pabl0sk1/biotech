@@ -9,6 +9,7 @@ export const ListControls = ({
     onRefresh,
     onErpImport,
     canAdd = true,
+    canImport = false,
     showErpButton = true,
     showAddButton = true,
     pageSizeOptions = [5, 10, 30, 50, 100],
@@ -94,6 +95,7 @@ export const ListControls = ({
                         <button
                             onClick={onErpImport}
                             className="btn btn-secondary fw-bold flex-fill flex-sm-grow-0"
+                            disabled={!canImport}
                             title="Importar desde ERP"
                         >
                             <i className="bi bi-cloud-check"></i>
@@ -225,6 +227,7 @@ export const ListControls = ({
                     <button
                         onClick={() => onErpImport && onErpImport()}
                         className="btn btn-secondary fw-bold"
+                        disabled={!canImport}
                         title="Importar desde ERP"
                     >
                         <i className="bi bi-cloud-check"></i>

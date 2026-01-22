@@ -305,6 +305,17 @@ export const PermisoApp = ({ userLog }) => {
                                             />
                                         </div>
                                         <div>
+                                            <label htmlFor="puedeimportar" className="form-label m-0 me-2">Importar?</label>
+                                            <input
+                                                type="checkbox"
+                                                id="puedeimportar"
+                                                name="puedeimportar"
+                                                className="form-check-input"
+                                                checked={permisoAVisualizar.puedeimportar}
+                                                readOnly
+                                            />
+                                        </div>
+                                        <div>
                                             <label htmlFor="puedeagregar" className="form-label m-0 me-2">Agregar?</label>
                                             <input
                                                 type="checkbox"
@@ -312,6 +323,17 @@ export const PermisoApp = ({ userLog }) => {
                                                 name="puedeagregar"
                                                 className="form-check-input"
                                                 checked={permisoAVisualizar.puedeagregar}
+                                                readOnly
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
+                                            <input
+                                                type="checkbox"
+                                                id="puedeeditar"
+                                                name="puedeeditar"
+                                                className="form-check-input"
+                                                checked={permisoAVisualizar.puedeeditar}
                                                 readOnly
                                             />
                                         </div>
@@ -334,17 +356,6 @@ export const PermisoApp = ({ userLog }) => {
                                                 name="puedever"
                                                 className="form-check-input"
                                                 checked={permisoAVisualizar.puedever}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
-                                            <input
-                                                type="checkbox"
-                                                id="puedeeditar"
-                                                name="puedeeditar"
-                                                className="form-check-input"
-                                                checked={permisoAVisualizar.puedeeditar}
                                                 readOnly
                                             />
                                         </div>
@@ -448,6 +459,20 @@ export const PermisoApp = ({ userLog }) => {
                                                 />
                                             </div>
                                             <div className='form-group'>
+                                                <label htmlFor="puedeimportar" className="form-label m-0 me-2">Importar?</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="puedeimportar"
+                                                    name="puedeimportar"
+                                                    className="form-check-input"
+                                                    checked={permisoAGuardar.puedeimportar}
+                                                    onChange={(e) => {
+                                                        const estaChequeado = e.target.checked;
+                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className='form-group'>
                                                 <label htmlFor="puedeagregar" className="form-label m-0 me-2">Agregar?</label>
                                                 <input
                                                     type="checkbox"
@@ -455,6 +480,20 @@ export const PermisoApp = ({ userLog }) => {
                                                     name="puedeagregar"
                                                     className="form-check-input"
                                                     checked={permisoAGuardar.puedeagregar}
+                                                    onChange={(e) => {
+                                                        const estaChequeado = e.target.checked;
+                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className='form-group'>
+                                                <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="puedeeditar"
+                                                    name="puedeeditar"
+                                                    className="form-check-input"
+                                                    checked={permisoAGuardar.puedeeditar}
                                                     onChange={(e) => {
                                                         const estaChequeado = e.target.checked;
                                                         setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
@@ -483,20 +522,6 @@ export const PermisoApp = ({ userLog }) => {
                                                     name="puedever"
                                                     className="form-check-input"
                                                     checked={permisoAGuardar.puedever}
-                                                    onChange={(e) => {
-                                                        const estaChequeado = e.target.checked;
-                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="puedeeditar"
-                                                    name="puedeeditar"
-                                                    className="form-check-input"
-                                                    checked={permisoAGuardar.puedeeditar}
                                                     onChange={(e) => {
                                                         const estaChequeado = e.target.checked;
                                                         setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
@@ -712,7 +737,8 @@ export const PermisoApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setPermisoAGuardar(true)}
                             canAdd={permiso?.puedeagregar}
-                            showErpButton={true}
+                            canImport={permiso?.puedeimportar}
+                            showErpButton={false}
                             showAddButton={true}
                             addData={selected}
                         />

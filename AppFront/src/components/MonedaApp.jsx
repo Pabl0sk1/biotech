@@ -519,6 +519,7 @@ export const MonedaApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setMonedaErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

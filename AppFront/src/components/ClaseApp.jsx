@@ -425,6 +425,7 @@ export const ClaseApp = ({ userLog }) => {
                             onAdd={() => setClaseAGuardar(selected)}
                             onRefresh={refrescar}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={false}
                             showAddButton={true}
                             addData={selected}

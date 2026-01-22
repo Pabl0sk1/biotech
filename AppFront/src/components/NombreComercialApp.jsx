@@ -625,6 +625,7 @@ export const NombreComercialApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setNombreComercialErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

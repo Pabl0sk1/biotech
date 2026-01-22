@@ -430,6 +430,7 @@ export const HoraExtraApp = ({ userLog }) => {
                             onAdd={() => setHoraExtraAGuardar(true)}
                             onRefresh={refrescar}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={false}
                             showAddButton={true}
                         />

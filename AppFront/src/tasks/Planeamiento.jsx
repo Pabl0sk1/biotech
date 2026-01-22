@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { NumericFormat } from 'react-number-format';
 import { saveReport, updateReport } from '../services/informe.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getProduct } from '../services/producto.service.js';
@@ -729,15 +730,17 @@ export const Planeamiento = () => {
                                                                                                                         </td>
                                                                                                                         <td className="text-end">{(porcenparti * 100).toFixed(2)}%</td>
                                                                                                                         <td>
-                                                                                                                            <input
-                                                                                                                                type="number"
-                                                                                                                                min={0}
+                                                                                                                            <NumericFormat
+                                                                                                                                allowNegative={false}
+                                                                                                                                displayType="input"
+                                                                                                                                thousandSeparator="."
+                                                                                                                                decimalSeparator=","
+                                                                                                                                decimalScale={2}
+                                                                                                                                fixedDecimalScale={true}
                                                                                                                                 className="form-control form-control-sm"
                                                                                                                                 placeholder='Precio'
-                                                                                                                                value={pr.precio ?? ''}
-                                                                                                                                onChange={e => {
-                                                                                                                                    e.stopPropagation();
-                                                                                                                                    const value = e.target.value;
+                                                                                                                                value={pr.precio ?? 0}
+                                                                                                                                onValueChange={({ floatValue }) => {
                                                                                                                                     actualizarProducto(
                                                                                                                                         vd.uid,
                                                                                                                                         zf.uid,
@@ -745,7 +748,7 @@ export const Planeamiento = () => {
                                                                                                                                         sg.uid,
                                                                                                                                         pr.uid,
                                                                                                                                         'precio',
-                                                                                                                                        value === '' ? '' : Math.max(0, Number(value))
+                                                                                                                                        floatValue ?? 0
                                                                                                                                     )
                                                                                                                                 }}
                                                                                                                                 disabled={!modoEdicion}

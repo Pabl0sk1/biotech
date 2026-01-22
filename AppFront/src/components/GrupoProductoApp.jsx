@@ -626,6 +626,7 @@ export const GrupoProductoApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setGrupoProductoErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

@@ -88,7 +88,7 @@ export const ModuloApp = ({ userLog }) => {
     const eliminarModuloFn = async (id) => {
         setLoading(true);
         await deleteModule(id);
-        await AddAccess('Eliminar', id, userLog, "Modulos");
+        await AddAccess('Eliminar', id, userLog, "Módulos");
         recuperarModulos();
         setLoading(false);
     };
@@ -110,10 +110,10 @@ export const ModuloApp = ({ userLog }) => {
 
         if (moduloAGuardar.id) {
             await updateModule(moduloAGuardar.id, moduloAGuardar);
-            await AddAccess('Modificar', moduloAGuardar.id, userLog, "Modulos");
+            await AddAccess('Modificar', moduloAGuardar.id, userLog, "Módulos");
         } else {
             const nuevoModulo = await saveModule(moduloAGuardar);
-            await AddAccess('Insertar', nuevoModulo.saved.id, userLog, "Modulos");
+            await AddAccess('Insertar', nuevoModulo.saved.id, userLog, "Módulos");
         }
         recuperarModulos();
         setLoading(false);
@@ -198,7 +198,7 @@ export const ModuloApp = ({ userLog }) => {
                             <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
                                 <div className="row mb-3 fw-semibold text-start">
                                     <div className='col me-5 pe-0'>
-                                        <label htmlFor="moduloes" className="form-label m-0 mb-2">Modulo Español</label>
+                                        <label htmlFor="moduloes" className="form-label m-0 mb-2">Módulo Español</label>
                                         <input
                                             type="text"
                                             id="moduloes"
@@ -218,7 +218,7 @@ export const ModuloApp = ({ userLog }) => {
                                         />
                                     </div>
                                     <div className='col ms-5 ps-0'>
-                                        <label htmlFor="moduloen" className="form-label m-0 mb-2">Modulo Inglés</label>
+                                        <label htmlFor="moduloen" className="form-label m-0 mb-2">Módulo Inglés</label>
                                         <input
                                             type="text"
                                             id="moduloen"
@@ -253,7 +253,7 @@ export const ModuloApp = ({ userLog }) => {
                                     <div className="row mb-3 fw-semibold text-start">
                                         <div className='col me-5 pe-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="moduloes" className="form-label m-0 mb-2">Modulo Español</label>
+                                                <label htmlFor="moduloes" className="form-label m-0 mb-2">Módulo Español</label>
                                                 <input
                                                     type="text"
                                                     id="moduloes"
@@ -267,7 +267,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El modulo en español es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El módulo en español es obligatorio y no debe sobrepasar los 50 caracteres.
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
@@ -290,7 +290,7 @@ export const ModuloApp = ({ userLog }) => {
                                         </div>
                                         <div className='col ms-5 ps-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="moduloen" className="form-label m-0 mb-2">Modulo Inglés</label>
+                                                <label htmlFor="moduloen" className="form-label m-0 mb-2">Módulo Inglés</label>
                                                 <input
                                                     type="text"
                                                     id="moduloen"
@@ -303,7 +303,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     maxLength={50}
                                                 />
                                                 <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El modulo en inglés es obligatorio y no debe sobrepasar los 50 caracteres.
+                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El módulo en inglés es obligatorio y no debe sobrepasar los 50 caracteres.
                                                 </div>
                                             </div>
                                         </div>
@@ -324,11 +324,11 @@ export const ModuloApp = ({ userLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'MODULOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'MÓDULOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Modulos
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Módulos
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -368,7 +368,7 @@ export const ModuloApp = ({ userLog }) => {
                                             ></i>
                                         </th>
                                         <th onClick={() => toggleOrder("moduloes")} className="sortable-header">
-                                            Modulo Español
+                                            Módulo Español
                                             <i className={`bi ${getSortIcon("moduloes")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
@@ -394,7 +394,7 @@ export const ModuloApp = ({ userLog }) => {
                                             ></i>
                                         </th>
                                         <th onClick={() => toggleOrder("moduloen")} className="sortable-header">
-                                            Modulo Inglés
+                                            Módulo Inglés
                                             <i className={`bi ${getSortIcon("moduloen")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
@@ -489,7 +489,7 @@ export const ModuloApp = ({ userLog }) => {
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Modulos");
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Módulos");
                                                                     setModuloAVisualizar(v);
                                                                 }
                                                             }}
@@ -514,6 +514,7 @@ export const ModuloApp = ({ userLog }) => {
                             onAdd={() => setModuloAGuardar(selected)}
                             onRefresh={refrescar}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={false}
                             showAddButton={true}
                             addData={selected}

@@ -495,6 +495,7 @@ export const TributacionApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setTributacionErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

@@ -385,6 +385,7 @@ export const TokenApp = ({ userLog }) => {
                             onAdd={() => setTokenAGuardar(true)}
                             onRefresh={refrescar}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={false}
                             showAddButton={true}
                         />

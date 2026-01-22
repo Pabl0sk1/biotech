@@ -469,6 +469,7 @@ export const MedidaApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setMedidaErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

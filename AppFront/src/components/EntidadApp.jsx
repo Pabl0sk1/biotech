@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { NumericFormat } from 'react-number-format';
+import { useNavigate } from 'react-router-dom';
 import { getEntity, saveEntity, updateEntity, deleteEntity, updateErpEntity } from '../services/entidad.service.js';
 import { getPosition } from '../services/cargo.service.js';
 import { getBranch } from '../services/sucursal.service.js';
@@ -6,15 +8,13 @@ import { getWallet } from '../services/cartera.service.js';
 import { getEntityType } from '../services/tipoentidad.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import { NumericFormat } from 'react-number-format';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
-import { useNavigate } from 'react-router-dom';
 import { TruncDots } from '../utils/TruncDots.js';
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
@@ -156,14 +156,17 @@ export const EntidadApp = ({ userLog }) => {
             setEntidades(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarCargos();
-            recuperarSucursales();
-            recuperarCarteras();
-            recuperarCategorias();
             permisoUsuario();
         };
         load();
     }, [query]);
+
+    useEffect(() => {
+        recuperarCargos();
+        recuperarSucursales();
+        recuperarCarteras();
+        recuperarCategorias();
+    }, []);
 
     const eliminarEntidadFn = async (id) => {
         setLoading(true);
@@ -327,7 +330,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="nombre"
                                             name="nombre"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.nombre || ''}
                                             readOnly
                                         />
@@ -336,7 +339,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="nrotelefono"
                                             name="nrotelefono"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.nrotelefono || ''}
                                             readOnly
                                         />
@@ -347,7 +350,7 @@ export const EntidadApp = ({ userLog }) => {
                                             thousandSeparator="."
                                             decimalSeparator=","
                                             prefix={'Gs. '}
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             readOnly
                                         />
                                         <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
@@ -355,7 +358,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="correo"
                                             name="correo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.correo || ''}
                                             readOnly
                                         />
@@ -364,7 +367,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="date"
                                             id="fechainicio"
                                             name="fechainicio"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.fechainicio || ''}
                                             readOnly
                                         />
@@ -373,7 +376,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="cargo"
                                             name="cargo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.cargo?.cargo || ''}
                                             readOnly
                                         />
@@ -382,7 +385,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="cartera"
                                             name="cartera"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.cartera?.nombre || ''}
                                             readOnly
                                         />
@@ -391,7 +394,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="estado"
                                             name="estado"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.estado || ''}
                                             readOnly
                                         />
@@ -401,7 +404,7 @@ export const EntidadApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={entidadAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -414,7 +417,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="apellido"
                                             name="apellido"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.apellido || ''}
                                             readOnly
                                         />
@@ -423,7 +426,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="nrodoc"
                                             name="nrodoc"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.nrodoc || ''}
                                             readOnly
                                         />
@@ -433,7 +436,7 @@ export const EntidadApp = ({ userLog }) => {
                                             displayType="text"
                                             thousandSeparator="."
                                             decimalSeparator=","
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             readOnly
                                         />
                                         <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
@@ -441,7 +444,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="date"
                                             id="fechanacimiento"
                                             name="fechanacimiento"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.fechanacimiento || ''}
                                             readOnly
                                         />
@@ -450,7 +453,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="date"
                                             id="fechafin"
                                             name="fechafin"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.fechafin || ''}
                                             readOnly
                                         />
@@ -459,7 +462,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="sucursal"
                                             name="sucursal"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.sucursal?.sucursal || ''}
                                             readOnly
                                         />
@@ -468,7 +471,7 @@ export const EntidadApp = ({ userLog }) => {
                                             type="text"
                                             id="categoria"
                                             name="categoria"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={entidadAVisualizar.categorias || ''}
                                             readOnly
                                         />
@@ -514,7 +517,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nombre"
                                                     name="nombre"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.nombre || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
@@ -532,7 +535,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nrotelefono"
                                                     name="nrotelefono"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.nrotelefono || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
@@ -545,7 +548,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="salario"
                                                     name="salario"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     displayType="input"
                                                     thousandSeparator="."
                                                     decimalSeparator=","
@@ -565,7 +568,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="correo"
                                                     name="correo"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.correo || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
@@ -578,7 +581,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="date"
                                                     id="fechainicio"
                                                     name="fechainicio"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     value={entidadAGuardar.fechainicio || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -638,7 +641,7 @@ export const EntidadApp = ({ userLog }) => {
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
                                                 <select
-                                                    className="form-select border-input w-100"
+                                                    className="form-select modern-input w-100"
                                                     name="estado"
                                                     id='estado'
                                                     value={entidadAGuardar.estado ? entidadAGuardar.estado : ''}
@@ -660,7 +663,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.erpid || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
@@ -675,7 +678,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="apellido"
                                                     name="apellido"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.apellido || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
@@ -688,7 +691,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nrodoc"
                                                     name="nrodoc"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={entidadAGuardar.nrodoc || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
@@ -701,7 +704,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="codzktime"
                                                     name="codzktime"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     displayType="input"
                                                     value={entidadAGuardar.codzktime === 0 ? 0 : entidadAGuardar.codzktime || ''}
                                                     placeholder='Escribe...'
@@ -718,7 +721,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="date"
                                                     id="fechanacimiento"
                                                     name="fechanacimiento"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     value={entidadAGuardar.fechanacimiento || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -729,7 +732,7 @@ export const EntidadApp = ({ userLog }) => {
                                                     type="date"
                                                     id="fechafin"
                                                     name="fechafin"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     value={entidadAGuardar.fechafin || ''}
                                                     onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -761,7 +764,7 @@ export const EntidadApp = ({ userLog }) => {
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="categoria" className="form-label m-0 mb-2">Categoría</label>
+                                                <label htmlFor="categorias" className="form-label m-0 mb-2">Categoría</label>
                                                 <i style={{ cursor: puedeCrearCategoria ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCategoria ? 'text-success' : 'text-success-emphasis'}`}
                                                     onClick={async () => {
@@ -773,7 +776,7 @@ export const EntidadApp = ({ userLog }) => {
                                                 </i>
                                                 <AutocompleteSelect
                                                     options={categorias}
-                                                    value={getCategoriasSeleccionadas(entidadAGuardar.categorias)}
+                                                    value={getCategoriasSeleccionadas()}
                                                     getLabel={(v) => v.tipoentidad}
                                                     searchFields={[
                                                         v => v.tipoentidad
@@ -1071,6 +1074,7 @@ export const EntidadApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setEntidadErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

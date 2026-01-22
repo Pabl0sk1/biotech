@@ -442,6 +442,7 @@ export const FaseCultivoApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setFaseCultivoErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

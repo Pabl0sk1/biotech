@@ -56,6 +56,9 @@ public class Permiso {
     @NotNull
     @Builder.Default
     private Boolean puedeeliminar = false;
+    
+    @Builder.Default
+    private Boolean puedeimportar = false;
 	
 	public Permiso(Integer id) {
 		super();

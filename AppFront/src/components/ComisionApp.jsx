@@ -747,6 +747,7 @@ export const ComisionApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setComisionErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

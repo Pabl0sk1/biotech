@@ -403,6 +403,7 @@ export const EscenarioApp = ({ userLog }) => {
                             onAdd={() => setEscenarioAGuardar(selected)}
                             onRefresh={refrescar}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={false}
                             showAddButton={true}
                             addData={selected}

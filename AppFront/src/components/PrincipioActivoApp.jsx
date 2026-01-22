@@ -442,6 +442,7 @@ export const PrincipioActivoApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setPrincipioActivoErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

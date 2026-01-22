@@ -551,6 +551,7 @@ export const CarteraApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setCarteraErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

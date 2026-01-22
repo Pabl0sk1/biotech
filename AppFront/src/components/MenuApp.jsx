@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMenu, saveMenu, updateMenu, deleteMenu } from '../services/menu.service.js';
+import { getModule } from '../services/modulo.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
+import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
 export const MenuApp = ({ userLog }) => {
 
+    const navigate = useNavigate();
     const [menus, setMenus] = useState([]);
+    const [modulos, setModulos] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -28,6 +34,19 @@ export const MenuApp = ({ userLog }) => {
         order: "",
         filter: []
     });
+
+    const [puedeCrearModulo, setPuedeCrearModulo] = useState(false);
+
+    useEffect(() => {
+        const loadPermiso = async () => {
+            const ok1 = await tienePermisoRuta(['sc02'], userLog?.tipousuario?.id);
+            setPuedeCrearModulo(ok1);
+        };
+
+        if (userLog?.tipousuario?.id) {
+            loadPermiso();
+        }
+    }, [userLog]);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -73,6 +92,11 @@ export const MenuApp = ({ userLog }) => {
         setQuery(q => ({ ...q }));
     }
 
+    const recuperarModulos = async () => {
+        const response = await getModule();
+        setModulos(response.items);
+    }
+
     const permisoUsuario = async () => {
         const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc07`);
         setPermiso(response.items[0]);
@@ -90,10 +114,14 @@ export const MenuApp = ({ userLog }) => {
         load();
     }, [query]);
 
+    useEffect(() => {
+        recuperarModulos();
+    }, []);
+
     const eliminarMenuFn = async (id) => {
         setLoading(true);
         await deleteMenu(id);
-        await AddAccess('Eliminar', id, userLog, "Menus");
+        await AddAccess('Eliminar', id, userLog, "Menús");
         recuperarMenus();
         setLoading(false);
     };
@@ -115,10 +143,10 @@ export const MenuApp = ({ userLog }) => {
 
         if (menuAGuardar.id) {
             await updateMenu(menuAGuardar.id, menuAGuardar);
-            await AddAccess('Modificar', menuAGuardar.id, userLog, "Menus");
+            await AddAccess('Modificar', menuAGuardar.id, userLog, "Menús");
         } else {
             const nuevoMenu = await saveMenu(menuAGuardar);
-            await AddAccess('Insertar', nuevoMenu.saved.id, userLog, "Menus");
+            await AddAccess('Insertar', nuevoMenu.saved.id, userLog, "Menús");
         }
         recuperarMenus();
         setLoading(false);
@@ -174,6 +202,16 @@ export const MenuApp = ({ userLog }) => {
         }
     };
 
+    const getModulosSeleccionadas = () => {
+        if (menuAGuardar.recursos.length == 0) return [];
+
+        const recursosArray = menuAGuardar.recursos.split(',').map(c => c.trim());
+
+        return modulos.filter(v =>
+            recursosArray.includes(v.var.toLowerCase())
+        );
+    };
+
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
         setFiltrosAplicados({});
@@ -212,7 +250,7 @@ export const MenuApp = ({ userLog }) => {
                                             value={menuAVisualizar.menu || ''}
                                             readOnly
                                         />
-                                        <label htmlFor="recursos" className="form-label m-0 mb-2">Recursos</label>
+                                        <label htmlFor="recursos" className="form-label m-0 mb-2">Módulos</label>
                                         <input
                                             type="text"
                                             id="recursos"
@@ -305,16 +343,32 @@ export const MenuApp = ({ userLog }) => {
                                                 </div>
                                             </div>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="recursos" className="form-label m-0 mb-2">Recursos</label>
-                                                <input
-                                                    type="text"
-                                                    id="recursos"
-                                                    name="recursos"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={menuAGuardar.recursos || ''}
-                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={255}
+                                                <label htmlFor="recursos" className="form-label m-0 mb-2">Módulos</label>
+                                                <i style={{ cursor: puedeCrearModulo ? "pointer" : '' }}
+                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModulo ? 'text-success' : 'text-success-emphasis'}`}
+                                                    onClick={async () => {
+                                                        if (puedeCrearModulo) {
+                                                            await AddAccess('Consultar', 0, userLog, 'Módulos')
+                                                            navigate('/home/security/modules')
+                                                        };
+                                                    }}>
+                                                </i>
+                                                <AutocompleteSelect
+                                                    options={modulos}
+                                                    value={getModulosSeleccionadas()}
+                                                    getLabel={(v) => v.var}
+                                                    searchFields={[
+                                                        v => v.var
+                                                    ]}
+                                                    onChange={(v) => {
+                                                        const modulosString = v.map(c => c.var.toLowerCase()).join(',');
+                                                        setMenuAGuardar({
+                                                            ...menuAGuardar,
+                                                            recursos: modulosString
+                                                        });
+                                                    }}
+                                                    multiple={true}
+                                                    required={true}
                                                 />
                                             </div>
                                             <div className='form-group mb-1'>
@@ -392,11 +446,11 @@ export const MenuApp = ({ userLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'MENUS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'MENÚS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Menus
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Menús
                         </p>
                         <div className="p-3">
                             <FiltroModal
@@ -530,7 +584,7 @@ export const MenuApp = ({ userLog }) => {
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Menus");
+                                                                    await AddAccess('Visualizar', v.id, userLog, "Menús");
                                                                     setMenuAVisualizar(v);
                                                                 }
                                                             }}
@@ -555,6 +609,7 @@ export const MenuApp = ({ userLog }) => {
                             onAdd={() => setMenuAGuardar(selected)}
                             onRefresh={refrescar}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={false}
                             showAddButton={true}
                             addData={selected}

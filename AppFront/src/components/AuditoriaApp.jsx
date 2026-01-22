@@ -446,6 +446,7 @@ export const AuditoriaApp = ({ userLog }) => {
                             totalItems={totalItems}
                             onRefresh={refrescar}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={false}
                             showAddButton={false}
                         />

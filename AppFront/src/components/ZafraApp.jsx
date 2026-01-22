@@ -567,6 +567,7 @@ export const ZafraApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setZafraErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

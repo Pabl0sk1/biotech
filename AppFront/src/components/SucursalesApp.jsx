@@ -443,6 +443,7 @@ export const SucursalApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setSucursalErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}

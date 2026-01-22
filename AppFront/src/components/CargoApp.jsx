@@ -442,6 +442,7 @@ export const CargoApp = ({ userLog }) => {
                             onRefresh={refrescar}
                             onErpImport={() => setCargoErp(true)}
                             canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
                             showErpButton={true}
                             showAddButton={true}
                             addData={selected}
