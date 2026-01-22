@@ -541,28 +541,29 @@ export const Planeamiento = () => {
                                         </ul>
                                     </div>
                                 </div>
-                                <div className='modern-input-group'>
-                                    <label className="modern-label">
-                                        <i className="bi bi-people me-2"></i>Seleccionar Vendedores
-                                    </label>
-                                    <AutocompleteSelect
-                                        options={vendedores}
-                                        value={vendedorSeleccionado}
-                                        getLabel={(v) => v.nomape}
-                                        searchFields={[
-                                            v => v.nomape,
-                                            v => v.nrodoc
-                                        ]}
-                                        size={3}
-                                        onChange={(v) => {
-                                            setVendedorSeleccionado(v);
-                                            if (!v) return;
-                                            agregarVendedor(v);
-                                        }}
-                                        className="modern-input"
-                                        disabled={!modoEdicion}
-                                    />
-                                </div>
+                                {modoEdicion && (
+                                    <div className='modern-input-group'>
+                                        <label className="modern-label">
+                                            <i className="bi bi-people me-2"></i>Seleccionar Vendedores
+                                        </label>
+                                        <AutocompleteSelect
+                                            options={vendedores}
+                                            value={vendedorSeleccionado}
+                                            getLabel={(v) => v.nomape}
+                                            searchFields={[
+                                                v => v.nomape,
+                                                v => v.nrodoc
+                                            ]}
+                                            size={3}
+                                            onChange={(v) => {
+                                                setVendedorSeleccionado(v);
+                                                if (!v) return;
+                                                agregarVendedor(v);
+                                            }}
+                                            className="modern-input"
+                                        />
+                                    </div>
+                                )}
 
                                 {data.vendedores && data.vendedores.map(vd => {
                                     const totalVendedor = calcularTotalVendedor(vd);

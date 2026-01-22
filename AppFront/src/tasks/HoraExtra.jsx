@@ -1267,7 +1267,7 @@ export const HoraExtra = () => {
                                     .sort((a, b) => a.id - b.id)
                                     .map((fc) => (
                                         <div key={fc.id} className='w-100 border border-1 border-black'>
-                                            <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-success' : 'btn-warning'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
+                                            <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-warning' : 'btn-success'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
                                                 <p className={`float-start text-start m-0 fw-bold`}>{fc.nombre} {fc.apellido}</p>
                                                 <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
                                             </button>
@@ -1315,7 +1315,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
                                                                 <input
                                                                     type="time"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.horaent || '00:00'}
                                                                     onChange={(e) => {
@@ -1351,7 +1351,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
                                                                 <input
                                                                     type="time"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.horasal || '00:00'}
                                                                     onChange={(e) => {
@@ -1383,7 +1383,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
                                                                 <input
                                                                     type="time"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.htotal || '00:00'}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', e.target.value)}
@@ -1394,7 +1394,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
                                                                 <input
                                                                     type="time"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.horades || '00:00'}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
@@ -1407,7 +1407,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.total || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', e.target.value)}
@@ -1418,7 +1418,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.hn || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hn', e.target.value)}
@@ -1429,7 +1429,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.hnn || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnn', e.target.value)}
@@ -1440,7 +1440,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.hnmd || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmd', e.target.value)}
@@ -1451,7 +1451,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.hnmn || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmn', e.target.value)}
@@ -1462,7 +1462,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.hen || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hen', e.target.value)}
@@ -1473,7 +1473,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.hent || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hent', e.target.value)}
@@ -1484,7 +1484,7 @@ export const HoraExtra = () => {
                                                             <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
                                                                 <input
                                                                     type="number"
-                                                                    className="form-control border-input w-100"
+                                                                    className="form-control modern-input w-100"
                                                                     style={{ fontSize: '0.8rem' }}
                                                                     value={detalle.hextras || 0}
                                                                     onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', e.target.value)}

@@ -38,6 +38,7 @@ import { MenuApp } from './components/MenuApp.jsx';
 import { getConfig } from "./services/config.service";
 import { getPermission } from './services/permiso.service.js';
 import { EscenarioApp } from './components/EscenarioApp.jsx';
+import { ComisionApp } from './components/ComisionApp.jsx';
 import { HoraExtraApp } from './components/HoraExtraApp.jsx';
 import { PlaneamientoApp } from './components/PlaneamientoApp.jsx';
 
@@ -218,6 +219,11 @@ function App() {
         <Route path={UrlLocal + "/config/commercial/tradenames"} element={
           <ProtectedRoute moduloVar="cm02" permisos={permisos}>
             <NombreComercialApp userLog={userLog} />
+          </ProtectedRoute>
+        } />
+        <Route path={UrlLocal + "/config/commercial/commissions"} element={
+          <ProtectedRoute moduloVar="cm04" permisos={permisos}>
+            <ComisionApp userLog={userLog} />
           </ProtectedRoute>
         } />
         {/* Configuraciones - Productos */}

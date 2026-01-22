@@ -203,7 +203,7 @@ export const ModuloApp = ({ userLog }) => {
                                             type="text"
                                             id="moduloes"
                                             name="moduloes"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={moduloAVisualizar.moduloes || ''}
                                             readOnly
                                         />
@@ -212,7 +212,7 @@ export const ModuloApp = ({ userLog }) => {
                                             type="text"
                                             id="var"
                                             name="var"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={moduloAVisualizar.var || ''}
                                             readOnly
                                         />
@@ -223,7 +223,7 @@ export const ModuloApp = ({ userLog }) => {
                                             type="text"
                                             id="moduloen"
                                             name="moduloen"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={moduloAVisualizar.moduloen || ''}
                                             readOnly
                                         />
@@ -258,7 +258,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     type="text"
                                                     id="moduloes"
                                                     name="moduloes"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={moduloAGuardar.moduloes || ''}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
@@ -276,7 +276,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     type="text"
                                                     id="var"
                                                     name="var"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={moduloAGuardar.var || ''}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
@@ -295,7 +295,7 @@ export const ModuloApp = ({ userLog }) => {
                                                     type="text"
                                                     id="moduloen"
                                                     name="moduloen"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={moduloAGuardar.moduloen || ''}
                                                     onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}

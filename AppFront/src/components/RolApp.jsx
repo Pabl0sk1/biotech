@@ -203,7 +203,7 @@ export const RolApp = ({ userLog }) => {
                                             type="text"
                                             id="tipousuario"
                                             name="tipousuario"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={rolAVisualizar.tipousuario || ''}
                                             readOnly
                                         />
@@ -238,7 +238,7 @@ export const RolApp = ({ userLog }) => {
                                                     type="text"
                                                     id="tipousuario"
                                                     name="tipousuario"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={rolAGuardar.tipousuario || ''}
                                                     onChange={(event) => setRolAGuardar({ ...rolAGuardar, [event.target.name]: event.target.value })}

@@ -218,7 +218,7 @@ export const TributacionApp = ({ userLog }) => {
                                             type="text"
                                             id="tributacion"
                                             name="tributacion"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={tributacionAVisualizar.tributacion || ''}
                                             readOnly
                                         />
@@ -228,7 +228,7 @@ export const TributacionApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={tributacionAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -240,7 +240,7 @@ export const TributacionApp = ({ userLog }) => {
                                             type="number"
                                             id="iva"
                                             name="iva"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={tributacionAVisualizar.iva || ''}
                                             readOnly
                                         />
@@ -275,7 +275,7 @@ export const TributacionApp = ({ userLog }) => {
                                                     type="text"
                                                     id="tributacion"
                                                     name="tributacion"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={tributacionAGuardar.tributacion || ''}
                                                     onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}
@@ -293,7 +293,7 @@ export const TributacionApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={tributacionAGuardar.erpid || ''}
                                                     onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}
@@ -307,7 +307,7 @@ export const TributacionApp = ({ userLog }) => {
                                                     type="number"
                                                     id="iva"
                                                     name="iva"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={tributacionAGuardar.iva || ''}
                                                     onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}

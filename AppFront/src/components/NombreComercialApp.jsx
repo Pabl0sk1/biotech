@@ -119,12 +119,15 @@ export const NombreComercialApp = ({ userLog }) => {
             setNombreComerciales(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarSubgrupos();
-            recuperarMedidas();
             permisoUsuario();
         };
         load();
     }, [query]);
+
+    useEffect(() => {
+        recuperarSubgrupos();
+        recuperarMedidas();
+    }, []);
 
     const eliminarNombreComercialFn = async (id) => {
         setLoading(true);
@@ -265,7 +268,7 @@ export const NombreComercialApp = ({ userLog }) => {
                                             type="text"
                                             id="nombrecomercial"
                                             name="nombrecomercial"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={nombrecomercialAVisualizar.nombrecomercial || ''}
                                             readOnly
                                         />
@@ -274,7 +277,7 @@ export const NombreComercialApp = ({ userLog }) => {
                                             type="text"
                                             id="subgrupo"
                                             name="subgrupo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={nombrecomercialAVisualizar.subgrupoproducto?.subgrupoproducto || ''}
                                             readOnly
                                         />
@@ -286,7 +289,7 @@ export const NombreComercialApp = ({ userLog }) => {
                                             type="text"
                                             id="medida"
                                             name="medida"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={nombrecomercialAVisualizar.medida?.medida || ''}
                                             readOnly
                                         />
@@ -296,7 +299,7 @@ export const NombreComercialApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={nombrecomercialAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -333,7 +336,7 @@ export const NombreComercialApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nombrecomercial"
                                                     name="nombrecomercial"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={nombrecomercialAGuardar.nombrecomercial || ''}
                                                     onChange={(event) => setNombreComercialAGuardar({ ...nombrecomercialAGuardar, [event.target.name]: event.target.value })}
@@ -407,7 +410,7 @@ export const NombreComercialApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={nombrecomercialAGuardar.erpid || ''}
                                                     onChange={(event) => setNombreComercialAGuardar({ ...nombrecomercialAGuardar, [event.target.name]: event.target.value })}

@@ -120,7 +120,7 @@ public class TurnoService {
 		if (dia.isPresent()) {
 			return dia.get();
 		} else {
-			throw new RuntimeException("No se encontro el dia con ID: " + id);
+			throw new RuntimeException("No se encontro el dia del turno con ID: " + id);
 		}
 
 	}

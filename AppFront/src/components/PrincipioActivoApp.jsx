@@ -217,7 +217,7 @@ export const PrincipioActivoApp = ({ userLog }) => {
                                             type="text"
                                             id="principioactivo"
                                             name="principioactivo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={principioactivoAVisualizar.principioactivo || ''}
                                             readOnly
                                         />
@@ -227,7 +227,7 @@ export const PrincipioActivoApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={principioactivoAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -263,7 +263,7 @@ export const PrincipioActivoApp = ({ userLog }) => {
                                                     type="text"
                                                     id="principioactivo"
                                                     name="principioactivo"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={principioactivoAGuardar.principioactivo || ''}
                                                     onChange={(event) => setPrincipioActivoAGuardar({ ...principioactivoAGuardar, [event.target.name]: event.target.value })}
@@ -281,7 +281,7 @@ export const PrincipioActivoApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={principioactivoAGuardar.erpid || ''}
                                                     onChange={(event) => setPrincipioActivoAGuardar({ ...principioactivoAGuardar, [event.target.name]: event.target.value })}

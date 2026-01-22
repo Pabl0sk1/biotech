@@ -218,7 +218,7 @@ export const MedidaApp = ({ userLog }) => {
                                             type="text"
                                             id="medida"
                                             name="medida"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={medidaAVisualizar.medida || ''}
                                             readOnly
                                         />
@@ -228,7 +228,7 @@ export const MedidaApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={medidaAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -240,7 +240,7 @@ export const MedidaApp = ({ userLog }) => {
                                             type="text"
                                             id="abreviatura"
                                             name="abreviatura"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={medidaAVisualizar.abreviatura || ''}
                                             readOnly
                                         />
@@ -275,7 +275,7 @@ export const MedidaApp = ({ userLog }) => {
                                                     type="text"
                                                     id="medida"
                                                     name="medida"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={medidaAGuardar.medida || ''}
                                                     onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
@@ -293,7 +293,7 @@ export const MedidaApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={medidaAGuardar.erpid || ''}
                                                     onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
@@ -307,7 +307,7 @@ export const MedidaApp = ({ userLog }) => {
                                                     type="text"
                                                     id="abreviatura"
                                                     name="abreviatura"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={medidaAGuardar.abreviatura || ''}
                                                     onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}

@@ -217,7 +217,7 @@ export const FaseCultivoApp = ({ userLog }) => {
                                             type="text"
                                             id="fasecultivo"
                                             name="fasecultivo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={fasecultivoAVisualizar.fasecultivo || ''}
                                             readOnly
                                         />
@@ -227,7 +227,7 @@ export const FaseCultivoApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={fasecultivoAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -263,7 +263,7 @@ export const FaseCultivoApp = ({ userLog }) => {
                                                     type="text"
                                                     id="fasecultivo"
                                                     name="fasecultivo"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={fasecultivoAGuardar.fasecultivo || ''}
                                                     onChange={(event) => setFaseCultivoAGuardar({ ...fasecultivoAGuardar, [event.target.name]: event.target.value })}
@@ -281,7 +281,7 @@ export const FaseCultivoApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={fasecultivoAGuardar.erpid || ''}
                                                     onChange={(event) => setFaseCultivoAGuardar({ ...fasecultivoAGuardar, [event.target.name]: event.target.value })}

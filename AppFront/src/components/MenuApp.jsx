@@ -208,7 +208,7 @@ export const MenuApp = ({ userLog }) => {
                                             type="text"
                                             id="menu"
                                             name="menu"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={menuAVisualizar.menu || ''}
                                             readOnly
                                         />
@@ -217,7 +217,7 @@ export const MenuApp = ({ userLog }) => {
                                             type="text"
                                             id="recursos"
                                             name="recursos"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={menuAVisualizar.recursos || ''}
                                             readOnly
                                         />
@@ -238,7 +238,7 @@ export const MenuApp = ({ userLog }) => {
                                             type="text"
                                             id="icono"
                                             name="icono"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={menuAVisualizar.icono || ''}
                                             readOnly
                                         />
@@ -247,7 +247,7 @@ export const MenuApp = ({ userLog }) => {
                                             type="number"
                                             id="orden"
                                             name="orden"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={menuAVisualizar.orden || ''}
                                             readOnly
                                         />
@@ -292,7 +292,7 @@ export const MenuApp = ({ userLog }) => {
                                                     type="text"
                                                     id="menu"
                                                     name="menu"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={menuAGuardar.menu || ''}
                                                     onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
@@ -310,7 +310,7 @@ export const MenuApp = ({ userLog }) => {
                                                     type="text"
                                                     id="recursos"
                                                     name="recursos"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={menuAGuardar.recursos || ''}
                                                     onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
@@ -340,7 +340,7 @@ export const MenuApp = ({ userLog }) => {
                                                     type="text"
                                                     id="icono"
                                                     name="icono"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={menuAGuardar.icono || ''}
                                                     onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
@@ -353,7 +353,7 @@ export const MenuApp = ({ userLog }) => {
                                                     type="number"
                                                     id="orden"
                                                     name="orden"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={menuAGuardar.orden || ''}
                                                     onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}

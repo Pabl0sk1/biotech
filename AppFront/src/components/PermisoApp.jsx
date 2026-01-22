@@ -120,12 +120,15 @@ export const PermisoApp = ({ userLog }) => {
             setPermisos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarModulos();
-            recuperarRoles();
             permisoUsuario();
         };
         load();
     }, [query]);
+
+    useEffect(() => {
+        recuperarModulos();
+        recuperarRoles();
+    }, []);
 
     const eliminarPermisoFn = async (id) => {
         setLoading(true);
@@ -273,7 +276,7 @@ export const PermisoApp = ({ userLog }) => {
                                             type="text"
                                             id="modulo"
                                             name="modulo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={permisoAVisualizar.modulo.var}
                                             readOnly
                                         />
@@ -282,7 +285,7 @@ export const PermisoApp = ({ userLog }) => {
                                             type="text"
                                             id="tipousuario"
                                             name="tipousuario"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={permisoAVisualizar.tipousuario.tipousuario}
                                             readOnly
                                         />

@@ -202,7 +202,7 @@ export const ClaseApp = ({ userLog }) => {
                                             type="text"
                                             id="tipoproducto"
                                             name="tipoproducto"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={claseAVisualizar.tipoproducto || ''}
                                             readOnly
                                         />
@@ -211,7 +211,7 @@ export const ClaseApp = ({ userLog }) => {
                                             type="text"
                                             id="recurso"
                                             name="recurso"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={claseAVisualizar.recurso || ''}
                                             readOnly
                                         />
@@ -246,7 +246,7 @@ export const ClaseApp = ({ userLog }) => {
                                                     type="text"
                                                     id="tipoproducto"
                                                     name="tipoproducto"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={claseAGuardar.tipoproducto || ''}
                                                     onChange={(event) => setClaseAGuardar({ ...claseAGuardar, [event.target.name]: event.target.value })}
@@ -264,7 +264,7 @@ export const ClaseApp = ({ userLog }) => {
                                                     type="text"
                                                     id="recurso"
                                                     name="recurso"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={claseAGuardar.recurso || ''}
                                                     onChange={(event) => setClaseAGuardar({ ...claseAGuardar, [event.target.name]: event.target.value })}

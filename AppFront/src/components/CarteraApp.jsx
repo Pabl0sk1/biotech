@@ -236,7 +236,7 @@ export const CarteraApp = ({ userLog }) => {
                                             type="text"
                                             id="nombre"
                                             name="nombre"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={carteraAVisualizar.nombre || ''}
                                             readOnly
                                         />
@@ -245,7 +245,7 @@ export const CarteraApp = ({ userLog }) => {
                                             type="number"
                                             id="entidadid"
                                             name="entidadid"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={carteraAVisualizar.entidadid || ''}
                                             readOnly
                                         />
@@ -257,7 +257,7 @@ export const CarteraApp = ({ userLog }) => {
                                             type="email"
                                             id="region"
                                             name="region"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={carteraAVisualizar.region || ''}
                                             readOnly
                                         />
@@ -267,7 +267,7 @@ export const CarteraApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={carteraAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -304,7 +304,7 @@ export const CarteraApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nombre"
                                                     name="nombre"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={carteraAGuardar.nombre || ''}
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
@@ -331,7 +331,7 @@ export const CarteraApp = ({ userLog }) => {
                                                     type="number"
                                                     id="entidadid"
                                                     name="entidadid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={carteraAGuardar.entidadid || ''}
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
@@ -346,7 +346,7 @@ export const CarteraApp = ({ userLog }) => {
                                                     type="text"
                                                     id="region"
                                                     name="region"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={carteraAGuardar.region || ''}
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
@@ -363,7 +363,7 @@ export const CarteraApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={carteraAGuardar.erpid || ''}
                                                     onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}

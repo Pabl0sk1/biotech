@@ -219,7 +219,7 @@ export const MonedaApp = ({ userLog }) => {
                                             type="text"
                                             id="moneda"
                                             name="moneda"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={monedaAVisualizar.moneda || ''}
                                             readOnly
                                         />
@@ -228,7 +228,7 @@ export const MonedaApp = ({ userLog }) => {
                                             type="text"
                                             id="simbolo"
                                             name="simbolo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={monedaAVisualizar.simbolo || ''}
                                             readOnly
                                         />
@@ -239,7 +239,7 @@ export const MonedaApp = ({ userLog }) => {
                                             type="text"
                                             id="codiso"
                                             name="codiso"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={monedaAVisualizar.codiso || ''}
                                             readOnly
                                         />
@@ -249,7 +249,7 @@ export const MonedaApp = ({ userLog }) => {
                                                 type="text"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={monedaAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -285,7 +285,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     type="text"
                                                     id="moneda"
                                                     name="moneda"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={monedaAGuardar.moneda || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
@@ -303,7 +303,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     type="text"
                                                     id="simbolo"
                                                     name="simbolo"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={monedaAGuardar.simbolo || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
@@ -318,7 +318,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     type="text"
                                                     id="codiso"
                                                     name="codiso"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={monedaAGuardar.codiso || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
@@ -331,7 +331,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={monedaAGuardar.erpid || ''}
                                                     onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}

@@ -82,7 +82,7 @@ export default function AutocompleteSelect({
         <div className="position-relative">
             <input
                 type="text"
-                className={`${className ? className : ' form-control border-input w-100'}`}
+                className={`${className ? className : ' form-control modern-input w-100'}`}
                 placeholder="Buscar..."
                 disabled={disabled}
                 value={displayValue()}

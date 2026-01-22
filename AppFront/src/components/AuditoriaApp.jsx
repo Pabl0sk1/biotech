@@ -155,7 +155,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             type="text"
                                             id="usuario"
                                             name="usuario"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={auditoriaAVisualizar.usuario.nombreusuario || ''}
                                             readOnly
                                         />
@@ -164,7 +164,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             type="text"
                                             id="modulo"
                                             name="modulo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={auditoriaAVisualizar.programa || ''}
                                             readOnly
                                         />
@@ -173,7 +173,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             type="number"
                                             id="codregistro"
                                             name="codregistro"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={auditoriaAVisualizar.codregistro || ''}
                                             readOnly
                                         />
@@ -185,7 +185,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             type="datetime-local"
                                             id="fechahora"
                                             name="fechahora"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={auditoriaAVisualizar.fechahora || ''}
                                             lang='es-ES'
                                             step={60}
@@ -196,7 +196,7 @@ export const AuditoriaApp = ({ userLog }) => {
                                             type="text"
                                             id="operacion"
                                             name="operacion"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={auditoriaAVisualizar.operacion || ''}
                                             readOnly
                                         />

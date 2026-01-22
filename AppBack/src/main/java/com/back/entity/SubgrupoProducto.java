@@ -34,7 +34,7 @@ public class SubgrupoProducto {
 	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "grupoproducto_id")
-	@JsonBackReference
+	@JsonBackReference("grupoproducto-subgrupoproducto")
 	private GrupoProducto grupoproducto;
 	
 	@NotNull

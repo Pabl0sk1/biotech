@@ -217,7 +217,7 @@ export const CargoApp = ({ userLog }) => {
                                             type="text"
                                             id="cargo"
                                             name="cargo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={cargoAVisualizar.cargo || ''}
                                             readOnly
                                         />
@@ -227,7 +227,7 @@ export const CargoApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={cargoAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -263,7 +263,7 @@ export const CargoApp = ({ userLog }) => {
                                                     type="text"
                                                     id="cargo"
                                                     name="cargo"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={cargoAGuardar.cargo || ''}
                                                     onChange={(event) => setCargoAGuardar({ ...cargoAGuardar, [event.target.name]: event.target.value })}
@@ -281,7 +281,7 @@ export const CargoApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={cargoAGuardar.erpid || ''}
                                                     onChange={(event) => setCargoAGuardar({ ...cargoAGuardar, [event.target.name]: event.target.value })}

@@ -141,12 +141,15 @@ export const UsuarioApp = ({ userLog }) => {
             setUsuarios(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarRoles();
-            recuperarSucursales();
             permisoUsuario();
         };
         load();
     }, [query]);
+
+    useEffect(() => {
+        recuperarRoles();
+        recuperarSucursales();
+    }, []);
 
     const eliminarUsuarioFn = async (id) => {
         setLoading(true);
@@ -354,7 +357,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="nombreusuario"
                                             name="nombreusuario"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.nombreusuario || ''}
                                             readOnly
                                         />
@@ -363,7 +366,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="nombre"
                                             name="nombre"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.nombre || ''}
                                             readOnly
                                         />
@@ -372,7 +375,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="nrodoc"
                                             name="nrodoc"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.nrodoc || ''}
                                             readOnly
                                         />
@@ -381,7 +384,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="email"
                                             id="correo"
                                             name="correo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.correo || ''}
                                             readOnly
                                         />
@@ -390,7 +393,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="sucursal"
                                             name="sucursal"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.sucursal.sucursal || ''}
                                             readOnly
                                         />
@@ -402,7 +405,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="tipousuario"
                                             name="tipousuario"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.tipousuario.tipousuario || ''}
                                             readOnly
                                         />
@@ -411,7 +414,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="apellido"
                                             name="apellido"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.apellido || ''}
                                             readOnly
                                         />
@@ -420,7 +423,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="nrotelefono"
                                             name="nrotelefono"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.nrotelefono || ''}
                                             readOnly
                                         />
@@ -429,7 +432,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="date"
                                             id="fechanacimiento"
                                             name="fechanacimiento"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.fechanacimiento || ''}
                                             readOnly
                                         />
@@ -438,7 +441,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="estado"
                                             name="estado"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={usuarioAVisualizar.estado || ''}
                                             readOnly
                                         />
@@ -450,7 +453,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             type="text"
                                             id="direccion"
                                             name="direccion"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             style={{ resize: 'none', height: '295px' }}
                                             value={usuarioAVisualizar.direccion || ''}
                                             readOnly>
@@ -497,7 +500,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nombreusuario"
                                                     name="nombreusuario"
-                                                    className={`form-control border-input w-100 ${nombreUsuarioError ? 'is-invalid' : ''}`}
+                                                    className={`form-control modern-input w-100 ${nombreUsuarioError ? 'is-invalid' : ''}`}
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.nombreusuario || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value.toUpperCase() })}
@@ -515,7 +518,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nombre"
                                                     name="nombre"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.nombre || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
@@ -532,7 +535,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nrodoc"
                                                     name="nrodoc"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.nrodoc || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
@@ -545,7 +548,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     type="email"
                                                     id="correo"
                                                     name="correo"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.correo || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
@@ -596,7 +599,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                         type={showPasswordNueva ? "text" : "password"}
                                                         id="contrasena"
                                                         name="contrasena"
-                                                        className="form-control border-input w-100 pe-5"
+                                                        className="form-control modern-input w-100 pe-5"
                                                         placeholder="Escribe..."
                                                         value={usuarioAGuardar.contrasena || ''}
                                                         onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
@@ -655,7 +658,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     type="text"
                                                     id="apellido"
                                                     name="apellido"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.apellido || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
@@ -668,7 +671,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     type="text"
                                                     id="nrotelefono"
                                                     name="nrotelefono"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.nrotelefono || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
@@ -681,7 +684,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     type="date"
                                                     id="fechanacimiento"
                                                     name="fechanacimiento"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={usuarioAGuardar.fechanacimiento || ''}
                                                     onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
@@ -690,7 +693,7 @@ export const UsuarioApp = ({ userLog }) => {
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
                                                 <select
-                                                    className="form-select border-input w-100"
+                                                    className="form-select modern-input w-100"
                                                     name="estado"
                                                     id='estado'
                                                     value={usuarioAGuardar.estado ? usuarioAGuardar.estado : ''}
@@ -713,7 +716,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                         type={showPasswordRepetir ? "text" : "password"}
                                                         id="repetircontrasena"
                                                         name="repetircontrasena"
-                                                        className="form-control border-input w-100 pe-5"
+                                                        className="form-control modern-input w-100 pe-5"
                                                         placeholder="Escribe..."
                                                         value={repeatPassword || ''}
                                                         onChange={(event) => setRepeatPassword(event.target.value)}
@@ -743,7 +746,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                 <textarea
                                                     id="direccion"
                                                     name="direccion"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     style={{ resize: 'none', height: '260px' }}
                                                     value={usuarioAGuardar.direccion || ''}

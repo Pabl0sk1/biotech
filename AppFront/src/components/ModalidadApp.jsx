@@ -202,7 +202,7 @@ export const ModalidadApp = ({ userLog }) => {
                                             type="text"
                                             id="tipo"
                                             name="tipo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={modalidadAVisualizar.tipo || ''}
                                             readOnly
                                         />
@@ -237,7 +237,7 @@ export const ModalidadApp = ({ userLog }) => {
                                                     type="text"
                                                     id="tipo"
                                                     name="tipo"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={modalidadAGuardar.tipo || ''}
                                                     onChange={(event) => setModalidadAGuardar({ ...modalidadAGuardar, [event.target.name]: event.target.value })}

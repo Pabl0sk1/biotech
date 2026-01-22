@@ -13,8 +13,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -27,36 +25,44 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "grupoproductos")
-public class GrupoProducto {
+@Table(name = "comisiones")
+public class Comision {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "grupoproducto_sec")
-	@SequenceGenerator(name = "grupoproducto_sec", sequenceName = "grupoproductos_id_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "comision_sec")
+	@SequenceGenerator(name = "comision_sec", sequenceName = "comisiones_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@ManyToOne
-	@JoinColumn(name = "tributacion_id")
-	private Tributacion tributacion;
-	
 	@NotNull
 	@ManyToOne
-	@JoinColumn(name = "moneda_id")
-	private Moneda moneda;
+	@JoinColumn(name = "entidad_id")
+	private Entidad entidad;
+	
+	@ManyToOne
+	@JoinColumn(name = "grupoproducto_id")
+	private GrupoProducto grupoproducto;
+	
+	@ManyToOne
+	@JoinColumn(name = "subgrupoproducto_id")
+	private SubgrupoProducto subgrupoproducto;
+	
+	@ManyToOne
+	@JoinColumn(name = "producto_id")
+	private Producto producto;
 	
 	@NotNull
-	@NotEmpty
-	@NotBlank
-	@Size(max = 150)
-	private String grupoproducto;
+	@Size(max = 30)
+	private String basecalculo;
+	
+	private Double porcentaje;
 	
 	private Integer erpid;
 	
-	@OneToMany(mappedBy = "grupoproducto", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	@JsonManagedReference("grupoproducto-subgrupoproducto")
-	public List<SubgrupoProducto> subgrupoproducto;
+	@OneToMany(mappedBy = "comision", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonManagedReference("comision-zafra")
+	public List<ComisionZafra> zafras;
 	
-	public GrupoProducto(Integer id) {
+	public Comision(Integer id) {
 		super();
 		this.id = id;
 	}

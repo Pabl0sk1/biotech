@@ -202,7 +202,7 @@ export const CategoriaApp = ({ userLog }) => {
                                             type="text"
                                             id="tipoentidad"
                                             name="tipoentidad"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={categoriaAVisualizar.tipoentidad || ''}
                                             readOnly
                                         />
@@ -237,7 +237,7 @@ export const CategoriaApp = ({ userLog }) => {
                                                     type="text"
                                                     id="tipoentidad"
                                                     name="tipoentidad"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={categoriaAGuardar.tipoentidad || ''}
                                                     onChange={(event) => setCategoriaAGuardar({ ...categoriaAGuardar, [event.target.name]: event.target.value })}

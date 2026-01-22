@@ -202,7 +202,7 @@ export const EscenarioApp = ({ userLog }) => {
                                             type="text"
                                             id="tipoinforme"
                                             name="tipoinforme"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={escenarioAVisualizar.tipoinforme || ''}
                                             readOnly
                                         />
@@ -237,7 +237,7 @@ export const EscenarioApp = ({ userLog }) => {
                                                     type="text"
                                                     id="tipoinforme"
                                                     name="tipoinforme"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={escenarioAGuardar.tipoinforme || ''}
                                                     onChange={(event) => setEscenarioAGuardar({ ...escenarioAGuardar, [event.target.name]: event.target.value })}

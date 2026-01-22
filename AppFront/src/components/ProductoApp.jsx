@@ -155,15 +155,18 @@ export const ProductoApp = ({ userLog }) => {
             setProductos(response.items);
             setTotalPages(response.totalPages);
             setTotalItems(response.totalItems);
-            recuperarEntidades();
-            recuperarNombreComerciales();
-            recuperarPrincipioActivos();
-            recuperarFaseCultivos();
-            recuperarClases();
             permisoUsuario();
         };
         load();
     }, [query]);
+
+    useEffect(() => {
+        recuperarEntidades();
+        recuperarNombreComerciales();
+        recuperarPrincipioActivos();
+        recuperarFaseCultivos();
+        recuperarClases();
+    }, []);
 
     const eliminarProductoFn = async (id) => {
         setLoading(true);
@@ -312,7 +315,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="text"
                                             id="nombrecomercial"
                                             name="nombrecomercial"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.nombrecomercial?.nombrecomercial || ''}
                                             readOnly
                                         />
@@ -321,7 +324,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="text"
                                             id="fasecultivo"
                                             name="fasecultivo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.fasecultivo?.fasecultivo || ''}
                                             readOnly
                                         />
@@ -330,7 +333,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="text"
                                             id="entidad"
                                             name="entidad"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.entidad?.nomape || ''}
                                             readOnly
                                         />
@@ -339,7 +342,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="text"
                                             id="estado"
                                             name="estado"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.estado || ''}
                                             readOnly
                                         />
@@ -349,7 +352,7 @@ export const ProductoApp = ({ userLog }) => {
                                                 type="number"
                                                 id="costogerencial"
                                                 name="costogerencial"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={productoAVisualizar.costogerencial || ''}
                                                 readOnly
                                             />
@@ -360,7 +363,7 @@ export const ProductoApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={productoAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -373,7 +376,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="text"
                                             id="principioactivo"
                                             name="principioactivo"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.principioactivo?.principioactivo || ''}
                                             readOnly
                                         />
@@ -382,7 +385,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="text"
                                             id="clase"
                                             name="clase"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.tipoproducto?.tipoproducto || ''}
                                             readOnly
                                         />
@@ -391,7 +394,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="number"
                                             id="dosisporhec"
                                             name="dosisporhec"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.dosisporhec || ''}
                                             readOnly
                                         />
@@ -400,7 +403,7 @@ export const ProductoApp = ({ userLog }) => {
                                             type="number"
                                             id="precio"
                                             name="precio"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={productoAVisualizar.precio || ''}
                                             readOnly
                                         />
@@ -421,7 +424,7 @@ export const ProductoApp = ({ userLog }) => {
                                             <textarea
                                                 id="obs"
                                                 name="obs"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 style={{ resize: 'none', height: '295px' }}
                                                 value={productoAVisualizar.obs || ''}
                                                 readOnly>
@@ -536,7 +539,7 @@ export const ProductoApp = ({ userLog }) => {
                                             <div className='form-group mb-1'>
                                                 <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
                                                 <select
-                                                    className="form-select border-input w-100"
+                                                    className="form-select modern-input w-100"
                                                     name="estado"
                                                     id='estado'
                                                     value={productoAGuardar.estado ? productoAGuardar.estado : ''}
@@ -558,7 +561,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     type="number"
                                                     id="costogerencial"
                                                     name="costogerencial"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={productoAGuardar.costogerencial || ''}
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
@@ -570,7 +573,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={productoAGuardar.erpid || ''}
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
@@ -638,7 +641,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     type="number"
                                                     id="dosisporhec"
                                                     name="dosisporhec"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={productoAGuardar.dosisporhec || ''}
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
@@ -650,7 +653,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     type="number"
                                                     id="precio"
                                                     name="precio"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={productoAGuardar.precio || ''}
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
@@ -679,7 +682,7 @@ export const ProductoApp = ({ userLog }) => {
                                                 <textarea
                                                     id="obs"
                                                     name="obs"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     style={{ resize: 'none', height: '260px' }}
                                                     value={productoAGuardar.obs || ''}

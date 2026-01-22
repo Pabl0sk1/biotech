@@ -219,7 +219,7 @@ export const ZafraApp = ({ userLog }) => {
                                             type="text"
                                             id="descripcion"
                                             name="descripcion"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={zafraAVisualizar.descripcion || ''}
                                             readOnly
                                         />
@@ -228,7 +228,7 @@ export const ZafraApp = ({ userLog }) => {
                                             type="date"
                                             id="fechainicio"
                                             name="fechainicio"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={zafraAVisualizar.fechainicio || ''}
                                             readOnly
                                         />
@@ -238,7 +238,7 @@ export const ZafraApp = ({ userLog }) => {
                                                 type="number"
                                                 id="erpid"
                                                 name="erpid"
-                                                className="form-control border-input w-100 border-black mb-3"
+                                                className="form-control modern-input w-100 border-black mb-3"
                                                 value={zafraAVisualizar.erpid || ''}
                                                 readOnly
                                             />
@@ -251,7 +251,7 @@ export const ZafraApp = ({ userLog }) => {
                                             type="email"
                                             id="cultura"
                                             name="cultura"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={zafraAVisualizar.cultura || ''}
                                             readOnly
                                         />
@@ -260,7 +260,7 @@ export const ZafraApp = ({ userLog }) => {
                                             type="date"
                                             id="fechafin"
                                             name="fechafin"
-                                            className="form-control border-input w-100 border-black mb-3"
+                                            className="form-control modern-input w-100 border-black mb-3"
                                             value={zafraAVisualizar.fechafin || ''}
                                             readOnly
                                         />
@@ -296,7 +296,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     type="text"
                                                     id="descripcion"
                                                     name="descripcion"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={zafraAGuardar.descripcion || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
@@ -314,7 +314,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     type="date"
                                                     id="fechainicio"
                                                     name="fechainicio"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     value={zafraAGuardar.fechainicio || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
                                                 />
@@ -325,7 +325,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     type="number"
                                                     id="erpid"
                                                     name="erpid"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={zafraAGuardar.erpid || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
@@ -340,7 +340,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     type="text"
                                                     id="cultura"
                                                     name="cultura"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     placeholder="Escribe..."
                                                     value={zafraAGuardar.cultura || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
@@ -353,7 +353,7 @@ export const ZafraApp = ({ userLog }) => {
                                                     type="date"
                                                     id="fechafin"
                                                     name="fechafin"
-                                                    className="form-control border-input w-100"
+                                                    className="form-control modern-input w-100"
                                                     value={zafraAGuardar.fechafin || ''}
                                                     onChange={(event) => setZafraAGuardar({ ...zafraAGuardar, [event.target.name]: event.target.value })}
                                                 />
