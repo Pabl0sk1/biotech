@@ -271,7 +271,7 @@ export const PermisoApp = ({ userLog }) => {
                                 <div className="row mb-3 fw-semibold text-start">
                                     {/*Columna 1 de visualizar*/}
                                     <div className='col me-5 pe-0'>
-                                        <label htmlFor="modulo" className="form-label m-0 mb-2">Modulo</label>
+                                        <label htmlFor="modulo" className="form-label m-0 mb-2">Módulo</label>
                                         <input
                                             type="text"
                                             id="modulo"
@@ -386,7 +386,7 @@ export const PermisoApp = ({ userLog }) => {
                                         {/*Columna 1 de visualizar*/}
                                         <div className='col me-5 pe-0'>
                                             <div className='form-group mb-1'>
-                                                <label htmlFor="modulo" className="form-label m-0 mb-2">Modulo</label>
+                                                <label htmlFor="modulo" className="form-label m-0 mb-2">Módulo</label>
                                                 <i style={{ cursor: puedeCrearModulo ? "pointer" : '' }}
                                                     className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModulo ? 'text-success' : 'text-success-emphasis'}`}
                                                     onClick={async () => {
@@ -616,7 +616,7 @@ export const PermisoApp = ({ userLog }) => {
                                             ></i>
                                         </th>
                                         <th onClick={() => toggleOrder("modulo.moduloes")} className="sortable-header">
-                                            Modulo
+                                            Módulo
                                             <i className={`bi ${getSortIcon("modulo.moduloes")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"

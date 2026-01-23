@@ -52,6 +52,7 @@ public class GrupoProductoService {
 		detailRegistry.put("subgroups", repSubgrupoProducto);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -89,6 +90,7 @@ public class GrupoProductoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -100,25 +102,30 @@ public class GrupoProductoService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(GrupoProducto.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Grupo de producto no soportado");
     }
 
+	@SuppressWarnings("null")
 	public GrupoProducto guardar(GrupoProducto grupoproducto) {
 		return rep.save(grupoproducto);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 	
+	@SuppressWarnings("null")
 	public void eliminarSubgrupo(Integer id) {
 		repSubgrupoProducto.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public GrupoProducto buscarPorId(Integer id) {
 
 		Optional<GrupoProducto> grupoproducto = rep.findById(id);
@@ -131,6 +138,7 @@ public class GrupoProductoService {
 
 	}
 	
+	@SuppressWarnings("null")
 	public SubgrupoProducto buscarPorIdSubgrupo(Integer id) {
 		
 		Optional<SubgrupoProducto> subgrupo = repSubgrupoProducto.findById(id);

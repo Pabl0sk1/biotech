@@ -34,6 +34,7 @@ public class TurnoService {
 		detailRegistry.put("days", repD1);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -71,6 +72,7 @@ public class TurnoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -82,25 +84,30 @@ public class TurnoService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(Turno.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Turno no soportado");
     }
 
+	@SuppressWarnings("null")
 	public Turno guardar(Turno turno) {
 		return rep.save(turno);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 	
+	@SuppressWarnings("null")
 	public void eliminarDia(Integer id) {
 		repD1.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public Turno buscarPorId(Integer id) {
 
 		Optional<Turno> turno = rep.findById(id);
@@ -113,6 +120,7 @@ public class TurnoService {
 
 	}
 	
+	@SuppressWarnings("null")
 	public TurnoDia buscarPorIdDia(Integer id) {
 		
 		Optional<TurnoDia> dia = repD1.findById(id);

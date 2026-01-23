@@ -11,7 +11,8 @@ import java.time.format.DateTimeFormatter;
 
 public class SpecificationBuilder {
 
-    public static <T> Specification<T> build(String filterClause) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T> Specification<T> build(String filterClause) {
         if (filterClause == null || filterClause.isBlank()) {
             return (root, query, cb) -> cb.conjunction();
         }

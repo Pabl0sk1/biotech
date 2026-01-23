@@ -37,6 +37,7 @@ public class SucursalService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -74,6 +75,7 @@ public class SucursalService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "unchecked", "null", "rawtypes" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -85,21 +87,25 @@ public class SucursalService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(Sucursal.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Sucursal no soportada");
     }
 
+	@SuppressWarnings("null")
 	public Sucursal guardar(Sucursal sucursal) {
 		return rep.save(sucursal);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public Sucursal buscarPorId(Integer id) {
 
 		Optional<Sucursal> sucursal = rep.findById(id);

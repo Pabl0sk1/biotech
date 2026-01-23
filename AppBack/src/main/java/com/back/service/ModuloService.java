@@ -29,6 +29,7 @@ public class ModuloService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -66,6 +67,7 @@ public class ModuloService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -77,21 +79,25 @@ public class ModuloService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(Modulo.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Modulo no soportado");
     }
 
+	@SuppressWarnings("null")
 	public Modulo guardar(Modulo modulo) {
 		return rep.save(modulo);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public Modulo buscarPorId(Integer id) {
 
 		Optional<Modulo> modulo = rep.findById(id);

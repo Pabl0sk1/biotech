@@ -133,7 +133,10 @@ export const Planeamiento = () => {
     }
 
     const agregarVendedor = (vendedor) => {
-        if (!selectedZafras.length) return;
+        if (!selectedZafras.length) {
+            setVendedorSeleccionado(null);
+            return;
+        }
 
         // Obtener clientes del vendedor
         const clientesList = clientesPorVendedor(vendedor.erpid);

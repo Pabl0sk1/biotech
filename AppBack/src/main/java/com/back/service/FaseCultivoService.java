@@ -37,6 +37,7 @@ public class FaseCultivoService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -74,6 +75,7 @@ public class FaseCultivoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -85,21 +87,25 @@ public class FaseCultivoService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(FaseCultivo.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Fase de cultivo no soportado");
     }
 
+	@SuppressWarnings("null")
 	public FaseCultivo guardar(FaseCultivo fasecultivo) {
 		return rep.save(fasecultivo);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public FaseCultivo buscarPorId(Integer id) {
 
 		Optional<FaseCultivo> fasecultivo = rep.findById(id);

@@ -37,6 +37,7 @@ public class PrincipioActivoService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -74,6 +75,7 @@ public class PrincipioActivoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "rawtypes", "unchecked", "null" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -85,21 +87,25 @@ public class PrincipioActivoService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(PrincipioActivo.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Principio activo no soportado");
     }
 
+	@SuppressWarnings("null")
 	public PrincipioActivo guardar(PrincipioActivo principioactivo) {
 		return rep.save(principioactivo);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public PrincipioActivo buscarPorId(Integer id) {
 
 		Optional<PrincipioActivo> principioactivo = rep.findById(id);

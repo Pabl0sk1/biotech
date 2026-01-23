@@ -21,6 +21,7 @@ public class BearerTokenFilter extends OncePerRequestFilter {
 	@Autowired
 	TokenService servT;
 	
+	@SuppressWarnings("null")
 	@Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

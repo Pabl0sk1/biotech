@@ -25,7 +25,7 @@ public class RestQueryErp {
 	
 	private final RestTemplate restTemplate = new RestTemplate();
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "null", "rawtypes" })
     public List<Map<String, Object>> fetchAll(String recurso, String filtro, String valor, String detalle) {
 		
 		if (token == null || token.isBlank()) {

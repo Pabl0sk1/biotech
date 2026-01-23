@@ -35,6 +35,7 @@ public class ConfiguracionService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -72,6 +73,7 @@ public class ConfiguracionService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "rawtypes", "unchecked", "null" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -83,17 +85,20 @@ public class ConfiguracionService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(Configuracion.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Configuracion no soportada");
     }
 	
+	@SuppressWarnings("null")
 	public Configuracion guardar(Configuracion config) {
 		return rep.save(config);
 	}
 
+	@SuppressWarnings("null")
 	public Configuracion buscarPorId(Integer id) {
 		
 		Optional<Configuracion> config = rep.findById(id);

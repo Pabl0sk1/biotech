@@ -29,6 +29,7 @@ public class TipoInformeService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
+	@SuppressWarnings({ "null", "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -66,6 +67,7 @@ public class TipoInformeService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "null", "unchecked", "rawtypes" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -77,21 +79,25 @@ public class TipoInformeService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(TipoInforme.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Tipo de informe no soportado");
     }
 
+	@SuppressWarnings("null")
 	public TipoInforme guardar(TipoInforme tipoinforme) {
 		return rep.save(tipoinforme);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public TipoInforme buscarPorId(Integer id) {
 
 		Optional<TipoInforme> tipoinforme = rep.findById(id);

@@ -63,6 +63,7 @@ public class ProductoService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -100,6 +101,7 @@ public class ProductoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
+	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -111,21 +113,25 @@ public class ProductoService {
 	    return repo.findAll(spec, pageable);
 	}
     
-    private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
+    @SuppressWarnings("unchecked")
+	private <T> JpaSpecificationExecutor<T> getRepo(Class<T> entity) {
         if (entity.equals(Producto.class)) {
             return (JpaSpecificationExecutor<T>) rep;
         }
         throw new RuntimeException("Producto no soportado");
     }
 
+	@SuppressWarnings("null")
 	public Producto guardar(Producto producto) {
 		return rep.save(producto);
 	}
 
+	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
+	@SuppressWarnings("null")
 	public Producto buscarPorId(Integer id) {
 
 		Optional<Producto> producto = rep.findById(id);
@@ -192,8 +198,16 @@ public class ProductoService {
 			        data.setDosisporhec(dosisporhec);
 			        data.setEstado(estado);
 			        data.setActivo(activo);
-			        data.setCostogerencial(costogerencial);
-			        data.setPrecio(precio);
+			        if (data.getCostogerencial() == null || Double.compare(data.getCostogerencial(), 0.0) == 0) {
+			            if (costogerencial != null && costogerencial > 0) {
+			            	data.setCostogerencial(costogerencial);
+			            }
+			        }
+			        if (data.getPrecio() == null || Double.compare(data.getPrecio(), 0.0) == 0) {
+			            if (precio != null && precio > 0) {
+			                data.setPrecio(precio);
+			            }
+			        }
 			        
 			        rep.save(data);
 			        
