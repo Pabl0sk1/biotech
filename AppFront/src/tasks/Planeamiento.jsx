@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { NumericFormat } from 'react-number-format';
 import { saveReport, updateReport } from '../services/informe.service.js';
@@ -6,11 +6,13 @@ import { getEntity } from '../services/entidad.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getHarvest } from '../services/zafra.service.js';
+import { getCommission } from "../services/comision.service.js";
 import { AddAccess } from '../utils/AddAccess.js';
 import Header from '../Header';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from "../layouts/Loading";
 import Close from "../layouts/Close";
+import SaveAlert from '../layouts/SaveAlert.jsx';
 
 export const Planeamiento = () => {
 
@@ -24,20 +26,40 @@ export const Planeamiento = () => {
     const userLog = state?.userLog;
     const modoEdicion = state?.modoEdicion;
     const [datos, setDatos] = useState(state?.datos);
+    const [datosOriginal] = useState(state?.datos);
     const [data, setData] = useState(initial);
+    const initialDataRef = useRef(initial);
     const [clientes, setClientes] = useState([]);
     const [vendedores, setVendedores] = useState([]);
     const [vendedorSeleccionado, setVendedorSeleccionado] = useState(null);
     const [productos, setProductos] = useState([]);
     const [subgrupos, setSubgrupos] = useState([]);
     const [zafras, setZafras] = useState([]);
+    const [comisiones, setComisiones] = useState([]);
     const [selectedZafras, setSelectedZafras] = useState([]);
     const [open, setOpen] = useState({});
     const [close, setClose] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [saveAlert, setSaveAlert] = useState(false);
     const [descError, setDescError] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     const uid = () => crypto.randomUUID();
+
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                if (close) {
+                    confirmarEscape();
+                }
+                setSaveAlert(null);
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, [close]);
 
     useEffect(() => {
         const forms = document.querySelectorAll('.needs-validation');
@@ -64,6 +86,7 @@ export const Planeamiento = () => {
             const cli = await getEntity('', '', '', 'categorias:contains:Cliente;activo:eq:true');
             const pro = await getProduct('', '', 'nombrecomercial.subgrupoproducto.subgrupoproducto,asc', 'activo:eq:true;incluirplan:eq:true');
             const sub = await getProductGroup('', '', 'subgrupoproducto,asc', '', 'subgroups');
+            const com = await getCommission();
 
             const subgrupos = sub.items.filter(s =>
                 pro.items.some(p =>
@@ -76,6 +99,7 @@ export const Planeamiento = () => {
             setClientes(cli.items.filter(v => v.cartera));
             setProductos(pro.items);
             setSubgrupos(subgrupos);
+            setComisiones(com.items);
         };
         load();
 
@@ -85,14 +109,16 @@ export const Planeamiento = () => {
                     ? JSON.parse(datos.data)
                     : datos.data;
                 setData(dataParsed);
+                initialDataRef.current = dataParsed;
 
                 // Restaurar zafras seleccionadas
                 if (Array.isArray(dataParsed.zafras)) {
                     setSelectedZafras(dataParsed.zafras);
                 }
             } catch (error) {
-                console.error('Error al parsear datos del informe:', error);
+                console.error('Error al parsear datos del informe: ', error);
                 setData(initial);
+                initialDataRef.current = initial;
             }
         }
     }, [datos]);
@@ -103,6 +129,30 @@ export const Planeamiento = () => {
             zafras: selectedZafras
         }));
     }, [selectedZafras]);
+
+    // Función para comparar si hay cambios reales
+    const hasChanges = () => {
+        // Comparar datos (solo campos editables, no fechas)
+        const datosComparable = {
+            descripcion: datos?.descripcion,
+            estado: datos?.estado
+        };
+
+        const datosOriginalComparable = {
+            descripcion: datosOriginal?.descripcion,
+            estado: datosOriginal?.estado
+        };
+
+        const datosChanged = JSON.stringify(datosComparable) !== JSON.stringify(datosOriginalComparable);
+        const dataChanged = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
+
+        return datosChanged || dataChanged;
+    };
+
+    // Marcar cambios sin guardar cuando se modifica datos o data
+    useEffect(() => {
+        setHasUnsavedChanges(hasChanges());
+    }, [datos, data]);
 
     const formatearFechaParaInput = (fecha) => {
         if (!fecha) return '';
@@ -147,6 +197,7 @@ export const Planeamiento = () => {
             grupo: s.grupoproductotxt,
             subgrupo: s.subgrupoproducto,
             totalplaneados: 0,
+            totalcomision: 0,
             productos: productos.filter(p => p.nombrecomercial?.subgrupoproducto?.id == s.id).map(p => ({
                 uid: uid(),
                 nombre: p.nombrecomercial?.nombrecomercial,
@@ -170,6 +221,7 @@ export const Planeamiento = () => {
             nrodoc: c.nrodoc,
             areacultivo: '',
             totalplaneados: 0,
+            totalcomision: 0,
             subgrupos: subgrupoConProductos
         }));
 
@@ -180,6 +232,7 @@ export const Planeamiento = () => {
                 uid: uid(),
                 zafra: z.descripcion,
                 totalplaneados: 0,
+                totalcomision: 0,
                 clientes: clientesConSubgrupos
             }));
 
@@ -188,6 +241,7 @@ export const Planeamiento = () => {
             ...vendedor,
             uid: uid(),
             totalplaneados: 0,
+            totalcomision: 0,
             zafras: zafrasConClientes
         };
 
@@ -206,6 +260,21 @@ export const Planeamiento = () => {
 
         // Limpiar selección
         setVendedorSeleccionado(null);
+    };
+
+    // Función para calcular los campos derivados de un producto
+    const calcularCamposDerivedosProducto = (producto, areacultivo) => {
+        const volpotencial = producto.dosis * areacultivo;
+        const porcenparti = volpotencial ? producto.volplaneado / volpotencial : 0;
+        const areaplaneada = porcenparti * areacultivo;
+        const planeados = producto.volplaneado * producto.precio;
+
+        return {
+            volpotencial,
+            porcenparti,
+            areaplaneada,
+            planeados
+        };
     };
 
     const calcularTotalSubgrupo = (subgrupo) => {
@@ -237,7 +306,7 @@ export const Planeamiento = () => {
         }, 0);
     };
 
-    // Modifica actualizarAreaCliente para recalcular totales después de actualizar:
+    // Modifica actualizarAreaCliente para recalcular totales y campos derivados después de actualizar:
     const actualizarAreaCliente = (vendedorUid, zfUid, ctUid, valor) => {
         setData(prev => {
             const newData = {
@@ -248,9 +317,26 @@ export const Planeamiento = () => {
                         zafras: vend.zafras.map(zf =>
                             zf.uid !== zfUid ? zf : {
                                 ...zf,
-                                clientes: zf.clientes.map(ct =>
-                                    ct.uid !== ctUid ? ct : { ...ct, areacultivo: valor }
-                                )
+                                clientes: zf.clientes.map(ct => {
+                                    if (ct.uid !== ctUid) return ct;
+
+                                    // Recalcular campos derivados para todos los productos del cliente
+                                    const clienteActualizado = {
+                                        ...ct,
+                                        areacultivo: valor,
+                                        subgrupos: ct.subgrupos.map(sg => ({
+                                            ...sg,
+                                            productos: sg.productos.map(pr => {
+                                                const derivados = calcularCamposDerivedosProducto(pr, valor);
+                                                return {
+                                                    ...pr,
+                                                    ...derivados
+                                                };
+                                            })
+                                        }))
+                                    };
+                                    return clienteActualizado;
+                                })
                             }
                         )
                     }
@@ -276,7 +362,7 @@ export const Planeamiento = () => {
         });
     };
 
-    // Modifica actualizarProducto para recalcular totales después de actualizar:
+    // Modifica actualizarProducto para recalcular totales y campos derivados después de actualizar:
     const actualizarProducto = (vendedorUid, zfUid, ctUid, sgUid, prUid, campo, valor) => {
         setData(prev => {
             const newData = {
@@ -293,9 +379,23 @@ export const Planeamiento = () => {
                                         subgrupos: ct.subgrupos.map(sg =>
                                             sg.uid !== sgUid ? sg : {
                                                 ...sg,
-                                                productos: sg.productos.map(pr =>
-                                                    pr.uid !== prUid ? pr : { ...pr, [campo]: valor }
-                                                )
+                                                productos: sg.productos.map(pr => {
+                                                    if (pr.uid !== prUid) return pr;
+
+                                                    // Actualizar el campo especificado
+                                                    const productoActualizado = { ...pr, [campo]: valor };
+
+                                                    // Recalcular campos derivados basándose en el área del cliente
+                                                    const derivados = calcularCamposDerivedosProducto(
+                                                        productoActualizado,
+                                                        ct.areacultivo
+                                                    );
+
+                                                    return {
+                                                        ...productoActualizado,
+                                                        ...derivados
+                                                    };
+                                                })
                                             }
                                         )
                                     }
@@ -336,9 +436,76 @@ export const Planeamiento = () => {
         });
     };
 
+    // Función para eliminar un vendedor
+    const eliminarVendedor = (vendedorUid) => {
+        setData(prev => ({
+            ...prev,
+            vendedores: prev.vendedores.filter(v => v.uid !== vendedorUid)
+        }));
+    };
+
+    // Función para eliminar una zafra de un vendedor
+    const eliminarZafra = (vendedorUid, zafraUid) => {
+        setData(prev => ({
+            ...prev,
+            vendedores: prev.vendedores.map(vend =>
+                vend.uid !== vendedorUid ? vend : {
+                    ...vend,
+                    zafras: vend.zafras.filter(z => z.uid !== zafraUid)
+                }
+            )
+        }));
+    };
+
+    // Función para eliminar un cliente de una zafra
+    const eliminarCliente = (vendedorUid, zafraUid, clienteUid) => {
+        setData(prev => ({
+            ...prev,
+            vendedores: prev.vendedores.map(vend =>
+                vend.uid !== vendedorUid ? vend : {
+                    ...vend,
+                    zafras: vend.zafras.map(zf =>
+                        zf.uid !== zafraUid ? zf : {
+                            ...zf,
+                            clientes: zf.clientes.filter(c => c.uid !== clienteUid)
+                        }
+                    )
+                }
+            )
+        }));
+    };
+
+    // Función para eliminar un producto de un cliente
+    const eliminarProducto = (vendedorUid, zafraUid, clienteUid, subgrupoUid, productoUid) => {
+        setData(prev => ({
+            ...prev,
+            vendedores: prev.vendedores.map(vend =>
+                vend.uid !== vendedorUid ? vend : {
+                    ...vend,
+                    zafras: vend.zafras.map(zf =>
+                        zf.uid !== zafraUid ? zf : {
+                            ...zf,
+                            clientes: zf.clientes.map(ct =>
+                                ct.uid !== clienteUid ? ct : {
+                                    ...ct,
+                                    subgrupos: ct.subgrupos.map(sg =>
+                                        sg.uid !== subgrupoUid ? sg : {
+                                            ...sg,
+                                            productos: sg.productos.filter(p => p.uid !== productoUid)
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    )
+                }
+            )
+        }));
+    };
+
     const handleSubmit = async (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
+        event?.preventDefault();
+        const form = event?.currentTarget;
         setLoading(true);
 
         let sw = 0;
@@ -346,15 +513,19 @@ export const Planeamiento = () => {
             setDescError(true);
             sw = 1;
         } else setDescError(false);
-
-        if (sw == 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            setLoading(false);
-            return;
+        if (data.vendedores.length == 0) {
+            setSaveAlert(true);
+            sw = 1;
         }
 
-        if (form.checkValidity()) {
+        if (sw == 1) {
+            event?.stopPropagation();
+            form?.classList.add('was-validated');
+            setLoading(false);
+            return false;
+        }
+
+        if (form?.checkValidity() !== false) {
 
             const newDatos = {
                 ...datos,
@@ -365,17 +536,28 @@ export const Planeamiento = () => {
 
             if (newDatos.id) {
                 await updateReport(newDatos.id, newDatos);
-                await AddAccess('Modificar', newDatos.id, userLog, "Datas");
+                await AddAccess('Modificar', newDatos.id, userLog, "Planeamientos");
             } else {
                 const nuevo = await saveReport(newDatos);
-                await AddAccess('Insertar', nuevo.saved.id, userLog, "Datas");
+                await AddAccess('Insertar', nuevo.saved.id, userLog, "Planeamientos");
             }
 
-            form.classList.remove('was-validated');
-        } else form.classList.add('was-validated');
-        setLoading(false);
-        setClose(true);
+            form?.classList.remove('was-validated');
+            setHasUnsavedChanges(false);
+            initialDataRef.current = data;
+            setLoading(false);
+            setClose(true);
+            return true;
+        } else {
+            form?.classList.add('was-validated');
+            setLoading(false);
+            return false;
+        }
     }
+
+    const handleSaveFromHeader = async () => {
+        return await handleSubmit();
+    };
 
     return (
         <>
@@ -384,11 +566,14 @@ export const Planeamiento = () => {
                 <Loading />
             )}
             {close && (
-                <Close confirmar={confirmarEscape} title={'Data'} gen={true} />
+                <Close confirmar={confirmarEscape} title={'Planeamiento'} gen={true} />
+            )}
+            {saveAlert && (
+                <SaveAlert setClose={setSaveAlert} />
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'PLANEAMIENTOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'PLANEAMIENTOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='planeamiento' />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}
@@ -515,6 +700,7 @@ export const Planeamiento = () => {
                                                             setSelectedZafras(zafras.map(z => z.id));
                                                         }
                                                     }}
+                                                    type="button"
                                                 >
                                                     {selectedZafras.length === zafras.length
                                                         ? "Desmarcar todos"
@@ -581,10 +767,23 @@ export const Planeamiento = () => {
                                                     Total Vendedor: $ {totalVendedor.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
                                                 </small>
                                             </div>
-                                            <button type='button' className="btn rounded-0 btn-success w-100 fw-bold text-dark"
+                                            <button type='button' className="btn rounded-0 rounded-top-3 btn-success w-100 fw-bold text-dark d-flex align-items-center"
                                                 onClick={() => toggle(vd.uid)}>
-                                                {vd.nomape}
-                                                <i className={`bi float-end ${open[vd.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                                {modoEdicion && (
+                                                    <div
+                                                        role='button'
+                                                        className="btn btn-sm btn-danger rounded-0 me-2"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            eliminarVendedor(vd.uid);
+                                                        }}
+                                                        title="Eliminar vendedor"
+                                                    >
+                                                        <i className="bi bi-trash-fill"></i>
+                                                    </div>
+                                                )}
+                                                <span className="flex-grow-1 text-center">{vd.nomape}</span>
+                                                <i className={`bi ${open[vd.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
                                             </button>
 
                                             {open[vd.uid] && (
@@ -597,14 +796,27 @@ export const Planeamiento = () => {
 
                                                                 {/* ZAFRA */}
                                                                 <div className="text-end pe-2 pb-1">
-                                                                    <small className="badge bg-warning text-dark fw-bold">
+                                                                    <small className="badge bg-warning text-black fw-bold">
                                                                         Total Zafra: $ {totalZafra.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
                                                                     </small>
                                                                 </div>
-                                                                <button type='button' className="btn rounded-0 btn-warning w-100 fw-medium"
+                                                                <button type='button' className="btn rounded-0 rounded-top-3 btn-warning w-100 fw-medium d-flex align-items-center"
                                                                     onClick={() => toggle(zf.uid)}>
-                                                                    {zf.zafra}
-                                                                    <i className={`bi float-end ${open[zf.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                                                    {modoEdicion && (
+                                                                        <div
+                                                                            role='button'
+                                                                            className="btn btn-sm btn-danger rounded-0 me-2"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                eliminarZafra(vd.uid, zf.uid);
+                                                                            }}
+                                                                            title="Eliminar zafra"
+                                                                        >
+                                                                            <i className="bi bi-trash-fill"></i>
+                                                                        </div>
+                                                                    )}
+                                                                    <span className="flex-grow-1 text-center">{zf.zafra}</span>
+                                                                    <i className={`bi ${open[zf.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
                                                                 </button>
 
                                                                 {open[zf.uid] && (
@@ -617,16 +829,29 @@ export const Planeamiento = () => {
 
                                                                                     {/* CLIENTE */}
                                                                                     <div className="text-end pe-2 pb-1">
-                                                                                        <small className="badge bg-info text-dark fw-bold">
+                                                                                        <small className="badge bg-info text-black fw-bold">
                                                                                             Total Cliente: $ {totalCliente.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
                                                                                         </small>
                                                                                     </div>
                                                                                     <button
                                                                                         type='button'
-                                                                                        className="btn rounded-0 btn-info w-100 fw-medium d-flex justify-content-between align-items-center"
+                                                                                        className="btn rounded-0 rounded-top-3 btn-info w-100 fw-medium d-flex align-items-center"
                                                                                         onClick={() => toggle(ct.uid)}
                                                                                     >
-                                                                                        <span>{ct.nomape}</span>
+                                                                                        {modoEdicion && (
+                                                                                            <div
+                                                                                                role='button'
+                                                                                                className="btn btn-sm btn-danger rounded-0 me-2"
+                                                                                                onClick={(e) => {
+                                                                                                    e.stopPropagation();
+                                                                                                    eliminarCliente(vd.uid, zf.uid, ct.uid);
+                                                                                                }}
+                                                                                                title="Eliminar cliente"
+                                                                                            >
+                                                                                                <i className="bi bi-trash-fill"></i>
+                                                                                            </div>
+                                                                                        )}
+                                                                                        <span className="flex-grow-1 text-center">{ct.nomape}</span>
                                                                                         <div className="d-flex align-items-center gap-2">
                                                                                             <input
                                                                                                 type="number"
@@ -659,6 +884,7 @@ export const Planeamiento = () => {
                                                                                                 <table className="table table-sm table-bordered table-hover m-0">
                                                                                                     <thead className="table-dark text-center align-middle">
                                                                                                         <tr>
+                                                                                                            <th>-</th>
                                                                                                             <th>Subgrupo</th>
                                                                                                             <th>Producto</th>
                                                                                                             <th>Principio Activo</th>
@@ -674,13 +900,20 @@ export const Planeamiento = () => {
                                                                                                     <tbody>
                                                                                                         {ct.subgrupos && ct.subgrupos.flatMap(sg =>
                                                                                                             sg.productos && sg.productos.map(pr => {
-                                                                                                                const volpotencial = pr.dosis * ct.areacultivo;
-                                                                                                                const porcenparti = volpotencial ? pr.volplaneado / volpotencial : 0;
-                                                                                                                const areaplaneada = porcenparti * ct.areacultivo;
-                                                                                                                const planeados = pr.volplaneado * pr.precio;
-
                                                                                                                 return (
                                                                                                                     <tr key={pr.uid}>
+                                                                                                                        <td>
+                                                                                                                            {modoEdicion && (
+                                                                                                                                <button
+                                                                                                                                    type='button'
+                                                                                                                                    className="btn btn-sm btn-danger rounded-0"
+                                                                                                                                    onClick={() => eliminarProducto(vd.uid, zf.uid, ct.uid, sg.uid, pr.uid)}
+                                                                                                                                    title="Eliminar producto"
+                                                                                                                                >
+                                                                                                                                    <i className="bi bi-trash-fill"></i>
+                                                                                                                                </button>
+                                                                                                                            )}
+                                                                                                                        </td>
                                                                                                                         <td>{sg.subgrupo}</td>
                                                                                                                         <td>{pr.nombre}</td>
                                                                                                                         <td>{pr.principioactivo}</td>
@@ -707,7 +940,7 @@ export const Planeamiento = () => {
                                                                                                                                 disabled={!modoEdicion}
                                                                                                                             />
                                                                                                                         </td>
-                                                                                                                        <td className="text-end">{volpotencial.toFixed(2)}</td>
+                                                                                                                        <td className="text-end">{pr.volpotencial?.toFixed(2) ?? '0.00'}</td>
                                                                                                                         <td>
                                                                                                                             <input
                                                                                                                                 type="number"
@@ -731,7 +964,7 @@ export const Planeamiento = () => {
                                                                                                                                 disabled={!modoEdicion}
                                                                                                                             />
                                                                                                                         </td>
-                                                                                                                        <td className="text-end">{(porcenparti * 100).toFixed(2)}%</td>
+                                                                                                                        <td className="text-end">{(pr.porcenparti * 100)?.toFixed(2) ?? '0.00'}%</td>
                                                                                                                         <td>
                                                                                                                             <NumericFormat
                                                                                                                                 allowNegative={false}
@@ -757,8 +990,8 @@ export const Planeamiento = () => {
                                                                                                                                 disabled={!modoEdicion}
                                                                                                                             />
                                                                                                                         </td>
-                                                                                                                        <td className='text-end'>{areaplaneada.toFixed(2)}</td>
-                                                                                                                        <td className='text-end'>{planeados.toFixed(2)}</td>
+                                                                                                                        <td className='text-end'>{pr.areaplaneada?.toFixed(2) ?? '0.00'}</td>
+                                                                                                                        <td className='text-end'>{pr.planeados?.toFixed(2) ?? '0.00'}</td>
                                                                                                                     </tr>
                                                                                                                 );
                                                                                                             })

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getConfig, updateConfig, deleteImage } from "./services/config.service";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
@@ -15,6 +15,8 @@ export const Configuracion = ({ userLog }) => {
     const [eliminarImagen, setEliminarImagen] = useState(false);
     const [close, setClose] = useState(false);
     const [loading, setLoading] = useState(false);
+    const configOriginalRef = useRef({});
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     const [config, setConfig] = useState({
         id: 0,
@@ -67,6 +69,7 @@ export const Configuracion = ({ userLog }) => {
     const recuperarConfig = async () => {
         const response = await getConfig();
         setConfig(response.items[0]);
+        configOriginalRef.current = response.items[0];
 
         const BACKEND_URL = HostLocation(1);
         if (response.items[0].imagenurl) setImagenSeleccionada(BACKEND_URL + "/biotech" + response.items[0].imagenurl);
@@ -76,9 +79,46 @@ export const Configuracion = ({ userLog }) => {
         recuperarConfig();
     }, []);
 
+    // Función para comparar si hay cambios reales
+    const hasChanges = () => {
+        // Comparar config (solo campos editables)
+        const configComparable = {
+            entidad: config?.entidad,
+            nrodoc: config?.nrodoc,
+            nrotelefono: config?.nrotelefono,
+            correo: config?.correo,
+            colorpri: config?.colorpri,
+            colorsec: config?.colorsec,
+            colorter: config?.colorter,
+            imagennombre: config?.imagennombre,
+            imagentipo: config?.imagentipo,
+            imagenurl: config?.imagenurl
+        };
+
+        const configOriginalComparable = {
+            entidad: configOriginalRef.current?.entidad,
+            nrodoc: configOriginalRef.current?.nrodoc,
+            nrotelefono: configOriginalRef.current?.nrotelefono,
+            correo: configOriginalRef.current?.correo,
+            colorpri: configOriginalRef.current?.colorpri,
+            colorsec: configOriginalRef.current?.colorsec,
+            colorter: configOriginalRef.current?.colorter,
+            imagennombre: configOriginalRef.current?.imagennombre,
+            imagentipo: configOriginalRef.current?.imagentipo,
+            imagenurl: configOriginalRef.current?.imagenurl
+        };
+
+        return JSON.stringify(configComparable) !== JSON.stringify(configOriginalComparable);
+    };
+
+    // Marcar cambios sin guardar cuando se modifica config
+    useEffect(() => {
+        setHasUnsavedChanges(hasChanges());
+    }, [config]);
+
     const handleSubmit = async (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
+        event?.preventDefault();
+        const form = event?.currentTarget;
         setLoading(true);
 
         let sw = 0;
@@ -88,10 +128,10 @@ export const Configuracion = ({ userLog }) => {
         } else setEntidadError(false);
 
         if (sw == 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
+            event?.stopPropagation();
+            form?.classList.add('was-validated');
             setLoading(false);
-            return;
+            return false;
         }
 
         const formData = new FormData();
@@ -110,18 +150,23 @@ export const Configuracion = ({ userLog }) => {
             setEliminarImagen(false);
         }
 
-        if (form.checkValidity()) {
+        if (form?.checkValidity() !== false) {
             await updateConfig(config.id, formData);
             document.documentElement.style.setProperty('--color-primario', config.colorpri);
             document.documentElement.style.setProperty('--color-secundario', config.colorsec);
             document.documentElement.style.setProperty('--color-ternario', config.colorter);
 
-            form.classList.remove('was-validated');
+            form?.classList.remove('was-validated');
+            setHasUnsavedChanges(false);
+            configOriginalRef.current = config;
+            setLoading(false);
+            setClose(true);
+            return true;
         } else {
-            form.classList.add('was-validated');
+            form?.classList.add('was-validated');
+            setLoading(false);
+            return false;
         }
-        setLoading(false);
-        setClose(true);
     };
 
     const handleImageChange = (event) => {
@@ -142,6 +187,10 @@ export const Configuracion = ({ userLog }) => {
         reader.readAsDataURL(file);
     };
 
+    const handleSaveFromHeader = async () => {
+        return await handleSubmit();
+    };
+
     return (
         <>
 
@@ -153,7 +202,7 @@ export const Configuracion = ({ userLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'EMPRESA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'EMPRESA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt="configuración" />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getUser, updateUser, updateUserImage, deleteUserImage } from "./services/usuario.service";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
@@ -10,7 +10,9 @@ export const Perfil = ({ userLog, setUserLog }) => {
 
     const navigate = useNavigate();
     const [usuarios, setUsuarios] = useState([]);
+    const [dataOriginal] = useState(userLog);
     const [data, setData] = useState(userLog);
+    const initialDataRef = useRef(userLog);
     const [nombreUsuarioMsj, setNombreUsuarioMsj] = useState('');
     const [nombreUsuarioError, setNombreUsuarioError] = useState(false);
     const [nombreError, setNombreError] = useState(false);
@@ -19,6 +21,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
     const [imagenFile, setImagenFile] = useState(null);
     const [eliminarImagen, setEliminarImagen] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -64,6 +67,45 @@ export const Perfil = ({ userLog, setUserLog }) => {
         recuperarUsuarios();
     }, []);
 
+    // Función para comparar si hay cambios reales
+    const hasChanges = () => {
+        // Comparar datos (solo campos editables)
+        const dataComparable = {
+            nombreusuario: data?.nombreusuario,
+            nombre: data?.nombre,
+            apellido: data?.apellido,
+            nrodoc: data?.nrodoc,
+            fechanacimiento: data?.fechanacimiento,
+            correo: data?.correo,
+            nrotelefono: data?.nrotelefono,
+            direccion: data?.direccion,
+            imagennombre: data?.imagennombre,
+            imagentipo: data?.imagentipo,
+            imagenurl: data?.imagenurl
+        };
+
+        const dataOriginalComparable = {
+            nombreusuario: dataOriginal?.nombreusuario,
+            nombre: dataOriginal?.nombre,
+            apellido: dataOriginal?.apellido,
+            nrodoc: dataOriginal?.nrodoc,
+            fechanacimiento: dataOriginal?.fechanacimiento,
+            correo: dataOriginal?.correo,
+            nrotelefono: dataOriginal?.nrotelefono,
+            direccion: dataOriginal?.direccion,
+            imagennombre: dataOriginal?.imagennombre,
+            imagentipo: dataOriginal?.imagentipo,
+            imagenurl: dataOriginal?.imagenurl
+        };
+
+        return JSON.stringify(dataComparable) !== JSON.stringify(dataOriginalComparable);
+    };
+
+    // Marcar cambios sin guardar cuando se modifica data
+    useEffect(() => {
+        setHasUnsavedChanges(hasChanges());
+    }, [data]);
+
     const actualizaruserLog = async () => {
         const response = await getUser();
         const usuarioActualizado = response.items.find(u => u.id === userLog?.id);
@@ -80,8 +122,8 @@ export const Perfil = ({ userLog, setUserLog }) => {
     };
 
     const handleSubmit = async (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
+        event?.preventDefault();
+        const form = event?.currentTarget;
         setLoading(true);
 
         let apellido = "";
@@ -114,13 +156,13 @@ export const Perfil = ({ userLog, setUserLog }) => {
         } else setNombreError(false);
 
         if (sw == 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
+            event?.stopPropagation();
+            form?.classList.add('was-validated');
             setLoading(false);
-            return;
+            return false;
         }
 
-        if (form.checkValidity()) {
+        if (form?.checkValidity() !== false) {
             if (eliminarImagen && !imagenFile) {
                 await deleteUserImage(newData.id);
                 setEliminarImagen(false);
@@ -141,12 +183,17 @@ export const Perfil = ({ userLog, setUserLog }) => {
 
             await actualizaruserLog();
 
-            form.classList.remove('was-validated');
+            form?.classList.remove('was-validated');
+            setHasUnsavedChanges(false);
+            initialDataRef.current = data;
+            setLoading(false);
+            setClose(true);
+            return true;
         } else {
-            form.classList.add('was-validated');
+            form?.classList.add('was-validated');
+            setLoading(false);
+            return false;
         }
-        setLoading(false);
-        setClose(true);
     };
 
     const handleImageChange = (event) => {
@@ -171,6 +218,10 @@ export const Perfil = ({ userLog, setUserLog }) => {
         return usuarios.some(u => u.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && u.id !== id);
     };
 
+    const handleSaveFromHeader = async () => {
+        return await handleSubmit();
+    };
+
     return (
         <>
 
@@ -182,7 +233,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt="perfil" />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}

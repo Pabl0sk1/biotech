@@ -27,7 +27,9 @@ export const HoraExtra = () => {
     const userLog = state?.userLog;
     const modoEdicion = state?.modoEdicion;
     const [datos, setDatos] = useState(state?.datos);
+    const [datosOriginal] = useState(state?.datos);
     const [data, setData] = useState(initial);
+    const initialDataRef = useRef(initial);
     const [isOpen, setIsOpen] = useState({});
     const [nuevaFechaFeriado, setNuevaFechaFeriado] = useState('');
     const [csvStatus, setCsvStatus] = useState('');
@@ -42,6 +44,7 @@ export const HoraExtra = () => {
     const [loading, setLoading] = useState(false);
     const [saveAlert, setSaveAlert] = useState(false);
     const [descError, setDescError] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -70,6 +73,30 @@ export const HoraExtra = () => {
             }, false);
         });
     }, []);
+
+    // Función para comparar si hay cambios reales
+    const hasChanges = () => {
+        // Comparar datos (solo campos editables, no fechas)
+        const datosComparable = {
+            descripcion: datos?.descripcion,
+            estado: datos?.estado
+        };
+
+        const datosOriginalComparable = {
+            descripcion: datosOriginal?.descripcion,
+            estado: datosOriginal?.estado
+        };
+
+        const datosChanged = JSON.stringify(datosComparable) !== JSON.stringify(datosOriginalComparable);
+        const dataChanged = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
+
+        return datosChanged || dataChanged;
+    };
+
+    // Marcar cambios sin guardar cuando se modifica datos o data
+    useEffect(() => {
+        setHasUnsavedChanges(hasChanges());
+    }, [datos, data]);
 
     const confirmarEscape = () => {
         setClose(false);
@@ -785,6 +812,7 @@ export const HoraExtra = () => {
                     if (typeof datos.data === 'string') {
                         const dataParsed = JSON.parse(datos.data);
                         setData(dataParsed);
+                        initialDataRef.current = dataParsed;
 
                         // Establecer los funcionarios seleccionados
                         if (dataParsed.listafuncionarios && dataParsed.listafuncionarios.length > 0) {
@@ -880,8 +908,8 @@ export const HoraExtra = () => {
     }
 
     const handleSubmit = async (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
+        event?.preventDefault();
+        const form = event?.currentTarget;
         setLoading(true);
 
         const funcionariosFiltrados = data.listafuncionarios.filter(f =>
@@ -902,13 +930,13 @@ export const HoraExtra = () => {
         }
 
         if (sw == 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
+            event?.stopPropagation();
+            form?.classList.add('was-validated');
             setLoading(false);
-            return;
+            return false;
         }
 
-        if (form.checkValidity()) {
+        if (form?.checkValidity() !== false) {
 
             const newDatos = {
                 ...datos,
@@ -925,10 +953,17 @@ export const HoraExtra = () => {
                 await AddAccess('Insertar', nuevo.saved.id, userLog, "Horas Extras");
             }
 
-            form.classList.remove('was-validated');
-        } else form.classList.add('was-validated');
-        setLoading(false);
-        setClose(true);
+            form?.classList.remove('was-validated');
+            setHasUnsavedChanges(false);
+            initialDataRef.current = dataFiltrada;
+            setLoading(false);
+            setClose(true);
+            return true;
+        } else {
+            form?.classList.add('was-validated');
+            setLoading(false);
+            return false;
+        }
     }
 
     const handleSelectFuncionario = (id) => {
@@ -936,6 +971,10 @@ export const HoraExtra = () => {
             if (prev.includes(id)) return prev.filter(f => f !== id);
             return [...prev, id];
         });
+    };
+
+    const handleSaveFromHeader = async () => {
+        return await handleSubmit();
     };
 
     return (
@@ -952,7 +991,7 @@ export const HoraExtra = () => {
             )}
 
             <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+                <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='hora extra' />
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         {/* Header del perfil */}

@@ -80,7 +80,6 @@ export const PlaneamientoApp = ({ userLog }) => {
     }
 
     useEffect(() => {
-        setLoading(true);
         const load = async () => {
             const filtrosFinal = query.filter.join(";");
             const response = await getReport(query.page, query.size, query.order, 'tipoinforme.id:eq:2;' + filtrosFinal);
@@ -90,14 +89,15 @@ export const PlaneamientoApp = ({ userLog }) => {
             permisoUsuario();
         };
         load();
+    }, [query]);
 
+    useEffect(() => {
         const cargarTipo = async () => {
             const tp = await getReportType('', '', '', 'id:eq:2');
             setTipo(tp.items[0]);
         }
         cargarTipo();
-        setLoading(false);
-    }, [query]);
+    }, []);
 
     const eliminarPlaneamientoFn = async (id) => {
         setLoading(true);
