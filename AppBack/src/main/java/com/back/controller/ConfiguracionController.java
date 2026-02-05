@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import com.back.entity.Configuracion;
 import com.back.service.ConfiguracionService;
+import com.back.util.ImageUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
@@ -59,7 +60,7 @@ public class ConfiguracionController {
 	    Configuracion config = mapper.readValue(configJson, Configuracion.class);
 	    
 	    if (imagenurl != null && !imagenurl.isEmpty()) {
-	        String ruta = serv.guardarImagen(imagenurl);
+	        String ruta = ImageUtil.guardarImagen(imagenurl, "/logo/");
 	        config.setImagenurl(ruta);
 	        config.setImagennombre(imagenurl.getOriginalFilename());
 	        config.setImagentipo(imagenurl.getContentType());
@@ -89,11 +90,11 @@ public class ConfiguracionController {
 	    config.setId(id);
 	    
 	    if (imagenurl != null && !imagenurl.isEmpty() && imagenAnt != null && !imagenAnt.isEmpty()) {
-	        serv.eliminarImagen(imagenAnt);
+	    	ImageUtil.eliminarImagen(imagenAnt);
 	    }
 	    
 	    if (imagenurl != null && !imagenurl.isEmpty()) {
-	        String ruta = serv.guardarImagen(imagenurl);
+	        String ruta = ImageUtil.guardarImagen(imagenurl, "/logo/");
 	        config.setImagenurl(ruta);
 	        config.setImagennombre(imagenurl.getOriginalFilename());
 	        config.setImagentipo(imagenurl.getContentType());
@@ -119,7 +120,7 @@ public class ConfiguracionController {
 	    }
 
 	    if (config.getImagenurl() != null && !config.getImagenurl().isEmpty()) {
-	        serv.eliminarImagen(config.getImagenurl());
+	    	ImageUtil.eliminarImagen(config.getImagenurl());
 	        config.setImagenurl(null);
 	        config.setImagennombre(null);
 	        config.setImagentipo(null);

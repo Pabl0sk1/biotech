@@ -346,7 +346,7 @@ export const ProductoApp = ({ userLog }) => {
                                             value={productoAVisualizar.estado || ''}
                                             readOnly
                                         />
-                                        <div hidden={!userLog?.id == 1}>
+                                        <div hidden={userLog?.id !== 1}>
                                             <label htmlFor="costogerencial" className="form-label m-0 mb-2">Costo Gerencial</label>
                                             <input
                                                 type="number"
@@ -357,7 +357,7 @@ export const ProductoApp = ({ userLog }) => {
                                                 readOnly
                                             />
                                         </div>
-                                        <div hidden={!userLog?.id == 1}>
+                                        <div hidden={userLog?.id !== 1}>
                                             <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                             <input
                                                 type="number"
@@ -555,7 +555,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
                                                 </div>
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
                                                 <label htmlFor="costogerencial" className="form-label m-0 mb-2">Costo Gerencial</label>
                                                 <input
                                                     type="number"
@@ -567,7 +567,7 @@ export const ProductoApp = ({ userLog }) => {
                                                     onChange={(event) => setProductoAGuardar({ ...productoAGuardar, [event.target.name]: event.target.value })}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
                                                 <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                                 <input
                                                     type="number"

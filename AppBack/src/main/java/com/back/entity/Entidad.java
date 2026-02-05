@@ -9,8 +9,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -71,13 +69,10 @@ public class Entidad {
 	@Size(max = 30)
 	private String correo;
 	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fechanacimiento;
 	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fechainicio;
 	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fechafin;
 	
 	private Double salario;

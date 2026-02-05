@@ -1,5 +1,6 @@
 package com.back.controller;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.back.entity.Informe;
+import com.back.entity.InformeData;
 import com.back.service.InformeService;
+import com.back.util.CompressionUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping(path = "/api/report")
@@ -45,6 +49,38 @@ public class InformeController {
 	    result.put("currentPage", page);
 	    result.put("items", data.getContent());
 	    
+	    return result;
+	}
+	
+	@GetMapping("data/{id}")
+	public Map<String, Object> obtenerData(@PathVariable Integer id) throws Exception {
+	    Map<String, Object> result = new LinkedHashMap<>();
+	    
+	    InformeData data = serv.buscarDataPorIdInforme(id).orElseThrow(() -> new RuntimeException("Data no encontrada"));
+	    
+	    byte[] decompressed = CompressionUtil.descomprimirJson(data.getData());
+	    String json = new String(decompressed, StandardCharsets.UTF_8);
+
+	    result.put("dataJson", json);
+	    
+	    return result;
+	}
+	
+	@PostMapping(path = "saveData/{id}")
+	public Map<String, Object> guardarData(@PathVariable Integer id, @RequestBody Map<String, Object> json) throws Exception {
+		Map<String, Object> result = new LinkedHashMap<>();
+		
+	    Informe informe = serv.buscarPorId(id);
+	    
+	    String jsonString = new ObjectMapper().writeValueAsString(json.get("data"));
+	    byte[] compressed = CompressionUtil.comprimirJson(jsonString.getBytes(StandardCharsets.UTF_8));
+	    
+	    InformeData data = serv.buscarDataPorIdInforme(id).orElse(new InformeData());
+	    data.setInforme(informe);
+	    data.setData(compressed);
+	    
+	    result.put("savedData", serv.guardarData(data));
+
 	    return result;
 	}
 
@@ -81,6 +117,22 @@ public class InformeController {
 
 		if (exist != null) {
 			serv.eliminar(id);
+			result.put("deleted", exist);
+		} else {
+			result.put("message", "Registro de ID " + id + " no existe.");
+		}
+
+		return result;
+	}
+	
+	@DeleteMapping(path = "deleteData/{id}")
+	public Map<String, Object> eliminarData(@PathVariable Integer id) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		
+		InformeData exist = serv.buscarDataPorIdInforme(id).get();
+		
+		if (exist != null) {
+			serv.eliminarData(exist.getId());
 			result.put("deleted", exist);
 		} else {
 			result.put("message", "Registro de ID " + id + " no existe.");

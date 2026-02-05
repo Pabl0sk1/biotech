@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getReport, deleteReport } from '../services/informe.service.js';
+import { getReport, deleteReport, deleteReportData } from '../services/informe.service.js';
 import { getReportType } from '../services/tipoinforme.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { obtenerClaseEstadoInf } from '../utils/StatusBadge.js';
 import { DateHourFormat } from '../utils/DateHourFormat.js';
 import { FiltroModal } from "../FiltroModal.jsx";
 import { generarExcel } from '../tasks/ArchivoExcel.jsx';
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
 import SaveModal from '../layouts/SaveModal.jsx';
@@ -65,7 +65,6 @@ export const HoraExtraApp = ({ userLog }) => {
         usuario: { ...userLog },
         tipoinforme: { ...tipo },
         descripcion: "",
-        data: null,
         fechacreacion: new Date(),
         fechaactualizacion: new Date(),
         estado: "Borrador"
@@ -107,6 +106,7 @@ export const HoraExtraApp = ({ userLog }) => {
 
     const eliminarHoraExtraFn = async (id) => {
         setLoading(true);
+        await deleteReportData(id);
         await deleteReport(id);
         await AddAccess('Eliminar', id, userLog, "Horas Extras");
         recuperarHorasExtras();

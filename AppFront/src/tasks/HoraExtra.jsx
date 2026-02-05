@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { saveReport, updateReport } from '../services/informe.service.js';
+import { saveReport, updateReport, saveReportData, getReportData } from '../services/informe.service.js';
 import { getEntity } from '../services/entidad.service';
 import { getBranch } from '../services/sucursal.service';
 import { getShift } from '../services/turno.service';
@@ -92,11 +92,6 @@ export const HoraExtra = () => {
 
         return datosChanged || dataChanged;
     };
-
-    // Marcar cambios sin guardar cuando se modifica datos o data
-    useEffect(() => {
-        setHasUnsavedChanges(hasChanges());
-    }, [datos, data]);
 
     const confirmarEscape = () => {
         setClose(false);
@@ -776,96 +771,90 @@ export const HoraExtra = () => {
         setSucursales(response.items);
     }
 
-    const recuperarFuncionarios = async () => {
-        const suc = selectedSucursal ? `;sucursal.id:eq:${selectedSucursal.id}` : '';
-        const response = await getEntity('', '', '', `categorias:contains:Funcionario;estado:eq:Activo;horaextra:eq:true${suc}`);
-        setFuncionarios(response.items);
-        const fechasDelMes = obtenerFechasDelMes();
-
-        // Agregar detalles a cada funcionario
-        const funcionariosConDetalles = actualizarDetallesFuncionarios(
-            fechasDelMes.fechadesde,
-            fechasDelMes.fechahasta,
-            response.items
-        );
-
-        setData({
-            fechadesde: fechasDelMes.fechadesde,
-            fechahasta: fechasDelMes.fechahasta,
-            cantdias: fechasDelMes.cantdias,
-            listafuncionarios: funcionariosConDetalles,
-            listaferiados: [],
-            sucursal: selectedSucursal
-        });
-    }
-
     const recuperarTurnos = async () => {
         const response = await getShift();
         setTurnos(response.items);
     }
 
+    const recuperarFuncionarios = async () => {
+        const suc = selectedSucursal ? `;sucursal.id:eq:${selectedSucursal.id}` : '';
+        const response = await getEntity('', '', '', `categorias:contains:Funcionario;estado:eq:Activo;horaextra:eq:true${suc}`);
+        setFuncionarios(response.items);
+
+        if (!datos?.id) {
+            const fechasDelMes = obtenerFechasDelMes();
+            const funcionariosSeleccionados = response.items.filter(f => selectedFuncionarios.includes(f.id));
+
+            // Agregar detalles a cada funcionario
+            const funcionariosConDetalles = actualizarDetallesFuncionarios(
+                fechasDelMes.fechadesde,
+                fechasDelMes.fechahasta,
+                funcionariosSeleccionados
+            );
+
+            setData(prevData => ({
+                ...prevData,
+                fechadesde: fechasDelMes.fechadesde,
+                fechahasta: fechasDelMes.fechahasta,
+                cantdias: fechasDelMes.cantdias,
+                listafuncionarios: funcionariosConDetalles,
+                sucursal: selectedSucursal
+            }));
+        }
+    }
+
     useEffect(() => {
         const cargarDatosInforme = async () => {
-            if (datos?.data) {
-                try {
-                    // Solo parsear si es un string
-                    if (typeof datos.data === 'string') {
-                        const dataParsed = JSON.parse(datos.data);
+            if (datos?.id) {
+                const response = await getReportData(datos?.id);
+                if (response.dataJson) {
+                    try {
+                        const dataParsed = JSON.parse(response.dataJson);
                         setData(dataParsed);
                         initialDataRef.current = dataParsed;
+
+                        if (dataParsed.sucursal) setSelectedSucursal(dataParsed.sucursal);
 
                         // Establecer los funcionarios seleccionados
                         if (dataParsed.listafuncionarios && dataParsed.listafuncionarios.length > 0) {
                             const idsSeleccionados = dataParsed.listafuncionarios.map(f => f.id);
                             setSelectedFuncionarios(idsSeleccionados);
-
-                            // Buscar y establecer la sucursal del primer funcionario
-                            const primerFuncionario = dataParsed.listafuncionarios[0];
-                            if (primerFuncionario.sucursal) {
-                                const sucursalEncontrada = sucursales.find(
-                                    s => s.id === primerFuncionario.sucursal.id
-                                );
-                                if (sucursalEncontrada) {
-                                    setSelectedSucursal(sucursalEncontrada);
-                                }
-                            }
-
-                            setFuncionarios(dataParsed.listafuncionarios);
+                            await recuperarFuncionarios();
                         }
+                    } catch (error) {
+                        console.error('Error al parsear datos del informe:', error);
+                        setData(initial);
+                        initialDataRef.current = initial;
                     }
-                } catch (error) {
-                    console.error('Error al parsear datos del informe:', error);
                 }
             }
         };
-
-        // Solo cargar datos si ya se han cargado las sucursales
-        // Y solo si estamos en modo edición y datos.data es un string (no un objeto ya parseado)
-        if (sucursales.length > 0 && datos?.data && typeof datos.data === 'string') {
-            cargarDatosInforme();
-        }
-    }, [datos?.data, sucursales]);
+        cargarDatosInforme();
+    }, [datos, sucursales]);
 
     useEffect(() => {
-        if (!datos?.data || sucursalCambiadaPorUsuario) {
-            recuperarFuncionarios();
-            if (sucursalCambiadaPorUsuario) {
-                setSucursalCambiadaPorUsuario(false);
+        const load = async () => {
+            if (!data || sucursalCambiadaPorUsuario) {
+                await recuperarFuncionarios();
+                if (sucursalCambiadaPorUsuario) setSucursalCambiadaPorUsuario(false);
             }
         }
+        load();
     }, [selectedSucursal]);
 
     useEffect(() => {
         const inicializar = async () => {
             await recuperarSucursales();
             await recuperarTurnos();
-            if (!datos?.data) {
-                await recuperarFuncionarios();
-            }
+            await recuperarFuncionarios();
         };
-
         inicializar();
     }, []);
+
+    // Marcar cambios sin guardar cuando se modifica datos o data
+    useEffect(() => {
+        setHasUnsavedChanges(hasChanges());
+    }, [datos, data]);
 
     // Función para actualizar un detalle específico de un funcionario
     const actualizarDetalleFuncionario = (funcionarioId, fechaIndex, campo, valor) => {
@@ -940,16 +929,17 @@ export const HoraExtra = () => {
 
             const newDatos = {
                 ...datos,
-                data: JSON.stringify(dataFiltrada),
                 fechaactualizacion: new Date(),
                 usuario: userLog
             }
 
             if (newDatos.id) {
                 await updateReport(newDatos.id, newDatos);
+                await saveReportData(newDatos.id, { data: dataFiltrada });
                 await AddAccess('Modificar', newDatos.id, userLog, "Horas Extras");
             } else {
                 const nuevo = await saveReport(newDatos);
+                await saveReportData(nuevo.saved.id, { data: dataFiltrada });
                 await AddAccess('Insertar', nuevo.saved.id, userLog, "Horas Extras");
             }
 
@@ -968,8 +958,33 @@ export const HoraExtra = () => {
 
     const handleSelectFuncionario = (id) => {
         setSelectedFuncionarios(prev => {
-            if (prev.includes(id)) return prev.filter(f => f !== id);
-            return [...prev, id];
+            let nuevoSeleccionado = prev;
+            if (prev.includes(id)) {
+                nuevoSeleccionado = prev.filter(f => f !== id);
+                // Remover del listafuncionarios si se desmarca
+                setData(prevData => ({
+                    ...prevData,
+                    listafuncionarios: prevData.listafuncionarios.filter(f => f.id !== id)
+                }));
+            } else {
+                nuevoSeleccionado = [...prev, id];
+                // Agregar al listafuncionarios con detalles si se marca
+                const funcionarioAMarcar = funcionarios.find(f => f.id === id);
+                if (funcionarioAMarcar) {
+                    const funcionarioConDetalles = actualizarDetallesFuncionarios(
+                        data.fechadesde,
+                        data.fechahasta,
+                        [funcionarioAMarcar]
+                    );
+                    const funcionarioConFeriados = aplicarFeriados(funcionarioConDetalles, data.listaferiados);
+
+                    setData(prevData => ({
+                        ...prevData,
+                        listafuncionarios: [...prevData.listafuncionarios, ...funcionarioConFeriados]
+                    }));
+                }
+            }
+            return nuevoSeleccionado;
         });
     };
 
@@ -1033,6 +1048,7 @@ export const HoraExtra = () => {
                                             onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
                                             maxLength={150}
                                             disabled={!modoEdicion}
+                                            autoFocus={modoEdicion}
                                         />
                                         {descError && (
                                             <div className="error-message">
@@ -1057,7 +1073,6 @@ export const HoraExtra = () => {
                                                     disabled={!datos.id || !modoEdicion}
                                                     required
                                                 >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
                                                     <option key={1} value={'Aprobado'}>Aprobado</option>
                                                     <option key={2} value={'Borrador'}>Borrador</option>
                                                 </select>
@@ -1168,7 +1183,7 @@ export const HoraExtra = () => {
                                             className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
                                             type="button"
                                             data-bs-toggle="dropdown"
-                                            disabled={!modoEdicion}
+                                            disabled={!modoEdicion || datos?.id}
                                         >
                                             {selectedSucursal
                                                 ? selectedSucursal.sucursal
@@ -1571,7 +1586,7 @@ export const HoraExtra = () => {
                                                                 </div>
                                                             </td>
 
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={!userLog?.id == 1} style={{ width: '60px' }}>
+                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={userLog?.id !== 1} style={{ width: '60px' }}>
                                                                 <input
                                                                     type="text"
                                                                     className='form-control border-black text-center'

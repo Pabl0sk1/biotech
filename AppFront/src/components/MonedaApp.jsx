@@ -243,7 +243,7 @@ export const MonedaApp = ({ userLog }) => {
                                             value={monedaAVisualizar.codiso || ''}
                                             readOnly
                                         />
-                                        <div hidden={!userLog?.id == 1}>
+                                        <div hidden={userLog?.id !== 1}>
                                             <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                             <input
                                                 type="text"
@@ -325,7 +325,7 @@ export const MonedaApp = ({ userLog }) => {
                                                     maxLength={20}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
                                                 <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                                 <input
                                                     type="number"

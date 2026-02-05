@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { NumericFormat } from 'react-number-format';
-import { saveReport, updateReport } from '../services/informe.service.js';
+import { saveReport, updateReport, saveReportData, getReportData } from '../services/informe.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
@@ -103,24 +103,28 @@ export const Planeamiento = () => {
         };
         load();
 
-        if (datos?.data) {
-            try {
-                const dataParsed = typeof datos.data === 'string'
-                    ? JSON.parse(datos.data)
-                    : datos.data;
-                setData(dataParsed);
-                initialDataRef.current = dataParsed;
+        const loadData = async () => {
+            if (datos?.id) {
+                const response = await getReportData(datos?.id);
+                if (response.dataJson) {
+                    try {
+                        const dataParsed = JSON.parse(response.dataJson);
+                        setData(dataParsed);
+                        initialDataRef.current = dataParsed;
 
-                // Restaurar zafras seleccionadas
-                if (Array.isArray(dataParsed.zafras)) {
-                    setSelectedZafras(dataParsed.zafras);
+                        // Restaurar zafras seleccionadas
+                        if (Array.isArray(dataParsed.zafras)) {
+                            setSelectedZafras(dataParsed.zafras);
+                        }
+                    } catch (error) {
+                        console.error('Error al parsear datos del informe: ', error);
+                        setData(initial);
+                        initialDataRef.current = initial;
+                    }
                 }
-            } catch (error) {
-                console.error('Error al parsear datos del informe: ', error);
-                setData(initial);
-                initialDataRef.current = initial;
             }
         }
+        loadData();
     }, [datos]);
 
     useEffect(() => {
@@ -183,7 +187,7 @@ export const Planeamiento = () => {
     }
 
     const agregarVendedor = (vendedor) => {
-        if (!selectedZafras.length) {
+        if (!selectedZafras.length || data.vendedores.length >= 2) {
             setVendedorSeleccionado(null);
             return;
         }
@@ -194,34 +198,38 @@ export const Planeamiento = () => {
         // Mapear grupos de productos para los clientes
         const subgrupoConProductos = subgrupos.map(s => ({
             uid: uid(),
-            grupo: s.grupoproductotxt,
+            subgrupoid: s.id,
             subgrupo: s.subgrupoproducto,
-            totalplaneados: 0,
-            totalcomision: 0,
+            grupo: s.grupoproductotxt,
+            totplansubgrupo: 0,
+            totcomisubgrupo: 0,
             productos: productos.filter(p => p.nombrecomercial?.subgrupoproducto?.id == s.id).map(p => ({
                 uid: uid(),
+                productoid: p.id,
                 nombre: p.nombrecomercial?.nombrecomercial,
                 principioactivo: p.principioactivo?.principioactivo,
                 dosis: p.dosisporhec || 0,
                 volpotencial: 0,
                 volplaneado: 0,
                 porcenparti: 0,
-                precio: p.precio || 0,
+                preciomedio: p.precio || 0,
                 areaplaneada: 0,
-                planeados: 0
+                precioplan: 0,
+                preciocomi: 0
             }))
         }));
 
         // Mapear clientes para agregar campos necesarios y productos
         const clientesConSubgrupos = clientesList.map(c => ({
             uid: uid(),
+            clienteid: c.id,
             nomape: c.nomape,
             nombre: c.nombre,
             apellido: c.apellido,
             nrodoc: c.nrodoc,
             areacultivo: '',
-            totalplaneados: 0,
-            totalcomision: 0,
+            totplancliente: 0,
+            totcomicliente: 0,
             subgrupos: subgrupoConProductos
         }));
 
@@ -230,9 +238,10 @@ export const Planeamiento = () => {
             .filter(z => selectedZafras.includes(z.id))
             .map(z => ({
                 uid: uid(),
+                zafraid: z.id,
                 zafra: z.descripcion,
-                totalplaneados: 0,
-                totalcomision: 0,
+                totplanzafra: 0,
+                totcomizafra: 0,
                 clientes: clientesConSubgrupos
             }));
 
@@ -240,8 +249,8 @@ export const Planeamiento = () => {
         const vendedorConZafras = {
             ...vendedor,
             uid: uid(),
-            totalplaneados: 0,
-            totalcomision: 0,
+            totplanvendedor: 0,
+            totcomivendedor: 0,
             zafras: zafrasConClientes
         };
 
@@ -267,21 +276,21 @@ export const Planeamiento = () => {
         const volpotencial = producto.dosis * areacultivo;
         const porcenparti = volpotencial ? producto.volplaneado / volpotencial : 0;
         const areaplaneada = porcenparti * areacultivo;
-        const planeados = producto.volplaneado * producto.precio;
+        const precioplan = producto.volplaneado * producto.preciomedio;
 
         return {
             volpotencial,
             porcenparti,
             areaplaneada,
-            planeados
+            precioplan
         };
     };
 
     const calcularTotalSubgrupo = (subgrupo) => {
         if (!subgrupo.productos) return 0;
         return subgrupo.productos.reduce((sum, pr) => {
-            const planeados = pr.volplaneado * pr.precio;
-            return sum + planeados;
+            const precioplan = pr.volplaneado * pr.preciomedio;
+            return sum + precioplan;
         }, 0);
     }
 
@@ -348,13 +357,13 @@ export const Planeamiento = () => {
                 ...newData,
                 vendedores: newData.vendedores.map(vend => ({
                     ...vend,
-                    totalplaneados: calcularTotalVendedor(vend),
+                    totplanvendedor: calcularTotalVendedor(vend),
                     zafras: vend.zafras.map(zf => ({
                         ...zf,
-                        totalplaneados: calcularTotalZafra(zf),
+                        totplanzafra: calcularTotalZafra(zf),
                         clientes: zf.clientes.map(ct => ({
                             ...ct,
-                            totalplaneados: calcularTotalCliente(ct)
+                            totplancliente: calcularTotalCliente(ct)
                         }))
                     }))
                 }))
@@ -411,16 +420,16 @@ export const Planeamiento = () => {
                 ...newData,
                 vendedores: newData.vendedores.map(vend => ({
                     ...vend,
-                    totalplaneados: calcularTotalVendedor(vend),
+                    totplanvendedor: calcularTotalVendedor(vend),
                     zafras: vend.zafras.map(zf => ({
                         ...zf,
-                        totalplaneados: calcularTotalZafra(zf),
+                        totplanzafra: calcularTotalZafra(zf),
                         clientes: zf.clientes.map(ct => ({
                             ...ct,
-                            totalplaneados: calcularTotalCliente(ct),
+                            totplancliente: calcularTotalCliente(ct),
                             subgrupos: ct.subgrupos.map(sg => ({
                                 ...sg,
-                                totalplaneados: calcularTotalSubgrupo(sg)
+                                totplansubgrupo: calcularTotalSubgrupo(sg)
                             }))
                         }))
                     }))
@@ -529,16 +538,17 @@ export const Planeamiento = () => {
 
             const newDatos = {
                 ...datos,
-                data: JSON.stringify(data),
                 fechaactualizacion: new Date(),
                 usuario: userLog
             }
 
             if (newDatos.id) {
                 await updateReport(newDatos.id, newDatos);
+                await saveReportData(newDatos.id, { data });
                 await AddAccess('Modificar', newDatos.id, userLog, "Planeamientos");
             } else {
                 const nuevo = await saveReport(newDatos);
+                await saveReportData(nuevo.saved.id, { data });
                 await AddAccess('Insertar', nuevo.saved.id, userLog, "Planeamientos");
             }
 
@@ -615,6 +625,7 @@ export const Planeamiento = () => {
                                             onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
                                             maxLength={150}
                                             disabled={!modoEdicion}
+                                            autoFocus={modoEdicion}
                                         />
                                         {descError && (
                                             <div className="error-message">
@@ -639,7 +650,6 @@ export const Planeamiento = () => {
                                                     disabled={!datos.id || !modoEdicion}
                                                     required
                                                 >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
                                                     <option key={1} value={'Aprobado'}>Aprobado</option>
                                                     <option key={2} value={'Borrador'}>Borrador</option>
                                                 </select>
@@ -722,7 +732,7 @@ export const Planeamiento = () => {
                                                             onChange={() => handleSelectZafra(z.id)}
                                                             disabled={!modoEdicion}
                                                         />
-                                                        <label className="form-check-label" htmlFor={`func-${z.id}`}>
+                                                        <label className="form-check-label text-black" htmlFor={`func-${z.id}`}>
                                                             {z.descripcion}
                                                         </label>
                                                     </div>
@@ -751,6 +761,7 @@ export const Planeamiento = () => {
                                                 agregarVendedor(v);
                                             }}
                                             className="modern-input"
+                                            disabled={data.vendedores.length >= 2}
                                         />
                                     </div>
                                 )}
@@ -895,6 +906,7 @@ export const Planeamiento = () => {
                                                                                                             <th>Precio Medio</th>
                                                                                                             <th>Área Planeada</th>
                                                                                                             <th>Precio Planeado</th>
+                                                                                                            <th>Precio Comisión</th>
                                                                                                         </tr>
                                                                                                     </thead>
                                                                                                     <tbody>
@@ -983,7 +995,7 @@ export const Planeamiento = () => {
                                                                                                                                         ct.uid,
                                                                                                                                         sg.uid,
                                                                                                                                         pr.uid,
-                                                                                                                                        'precio',
+                                                                                                                                        'preciomedio',
                                                                                                                                         floatValue ?? 0
                                                                                                                                     )
                                                                                                                                 }}
@@ -991,7 +1003,8 @@ export const Planeamiento = () => {
                                                                                                                             />
                                                                                                                         </td>
                                                                                                                         <td className='text-end'>{pr.areaplaneada?.toFixed(2) ?? '0.00'}</td>
-                                                                                                                        <td className='text-end'>{pr.planeados?.toFixed(2) ?? '0.00'}</td>
+                                                                                                                        <td className='text-end'>{pr.precioplan?.toFixed(2) ?? '0.00'}</td>
+                                                                                                                        <td className='text-end'>{pr.preciocomi?.toFixed(2) ?? '0.00'}</td>
                                                                                                                     </tr>
                                                                                                                 );
                                                                                                             })
@@ -1022,8 +1035,8 @@ export const Planeamiento = () => {
                             </div>
                         </form>
                     </div>
-                </div >
-            </div >
+                </div>
+            </div>
         </>
     );
 }

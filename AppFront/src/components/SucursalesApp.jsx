@@ -222,7 +222,7 @@ export const SucursalApp = ({ userLog }) => {
                                             value={sucursalAVisualizar.sucursal || ''}
                                             readOnly
                                         />
-                                        <div hidden={!userLog?.id == 1}>
+                                        <div hidden={userLog?.id !== 1}>
                                             <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                             <input
                                                 type="number"
@@ -276,7 +276,7 @@ export const SucursalApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
                                                 </div>
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
                                                 <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                                 <input
                                                     type="number"

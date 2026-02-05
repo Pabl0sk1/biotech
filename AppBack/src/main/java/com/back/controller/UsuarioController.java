@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import com.back.entity.Usuario;
 import com.back.service.UsuarioService;
+import com.back.util.ImageUtil;
 
 @RestController
 @RequestMapping(path = "/api/user")
@@ -91,10 +92,10 @@ public class UsuarioController {
 	    
 	    if (imagenurl != null && !imagenurl.isEmpty()) {
 	    	if (imagenAnt != null && !imagenAnt.isEmpty()) {
-	            serv.eliminarImagen(imagenAnt);
+	    		ImageUtil.eliminarImagen(imagenAnt);
 	        }
 	    	
-	        String ruta = serv.guardarImagen(imagenurl);
+	        String ruta = ImageUtil.guardarImagen(imagenurl, "/profilepic/");
 	        usuario.setImagenurl(ruta);
 	        usuario.setImagennombre(imagenurl.getOriginalFilename());
 	        usuario.setImagentipo(imagenurl.getContentType());
@@ -180,7 +181,7 @@ public class UsuarioController {
 	    }
 	    
 	    if (usuario.getImagenurl() != null && !usuario.getImagenurl().isEmpty()) {
-	        serv.eliminarImagen(usuario.getImagenurl());
+	    	ImageUtil.eliminarImagen(usuario.getImagenurl());
 	        usuario.setImagenurl(null);
 	        usuario.setImagennombre(null);
 	        usuario.setImagentipo(null);

@@ -582,7 +582,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     required={true}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
                                                 <div className="d-flex align-items-center justify-content-between">
                                                     <label htmlFor="contrasena" className="form-label m-0 mb-2">Contraseña</label>
                                                     <button
@@ -709,7 +709,7 @@ export const UsuarioApp = ({ userLog }) => {
                                                     <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
                                                 </div>
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
                                                 <label htmlFor="repetircontrasena" className="form-label m-0 mb-2">Repetir Contraseña</label>
                                                 <div className="d-flex align-items-center position-relative">
                                                     <input

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.back.entity.Menu;
+import com.back.entity.Programa;
 import com.back.entity.Submenu;
 import com.back.service.MenuService;
 
@@ -98,6 +99,22 @@ public class MenuController {
 		
 		if (exist != null) {
 			serv.eliminarSubmenu(id);
+			result.put("deleted", exist);
+		} else {
+			result.put("message", "Registro de ID " + id + " no existe.");
+		}
+
+		return result;
+	}
+	
+	@DeleteMapping(path = "deleteProgram/{id}")
+	public Map<String, Object> eliminarProgram(@PathVariable Integer id) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		
+		Programa exist = serv.buscarPorIdPrograma(id);
+		
+		if (exist != null) {
+			serv.eliminarPrograma(id);
 			result.put("deleted", exist);
 		} else {
 			result.put("message", "Registro de ID " + id + " no existe.");

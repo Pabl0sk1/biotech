@@ -13,7 +13,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Informe;
+import com.back.entity.InformeData;
 import com.back.repository.InformeRepository;
+import com.back.repository.InformeDataRepository;
 import jakarta.annotation.PostConstruct;
 
 @Service
@@ -21,6 +23,9 @@ public class InformeService {
 	
 	@Autowired
 	InformeRepository rep;
+	
+	@Autowired
+	InformeDataRepository repD1;
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
@@ -91,10 +96,20 @@ public class InformeService {
 	public Informe guardar(Informe informe) {
 		return rep.save(informe);
 	}
+	
+	@SuppressWarnings("null")
+	public InformeData guardarData(InformeData data) {
+		return repD1.save(data);
+	}
 
 	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
+	}
+	
+	@SuppressWarnings("null")
+	public void eliminarData(Integer id) {
+		repD1.deleteById(id);
 	}
 
 	@SuppressWarnings("null")
@@ -108,6 +123,10 @@ public class InformeService {
 			throw new RuntimeException("No se encontro el informe con ID: " + id);
 		}
 
+	}
+	
+	public Optional<InformeData> buscarDataPorIdInforme(Integer informeId) {
+		return repD1.findByInformeId(informeId);
 	}
 
 }

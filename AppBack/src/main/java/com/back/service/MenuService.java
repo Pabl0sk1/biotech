@@ -13,8 +13,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Menu;
+import com.back.entity.Programa;
 import com.back.entity.Submenu;
 import com.back.repository.MenuRepository;
+import com.back.repository.ProgramaRepository;
 import com.back.repository.SubmenuRepository;
 import jakarta.annotation.PostConstruct;
 
@@ -26,12 +28,16 @@ public class MenuService {
 	
 	@Autowired
 	SubmenuRepository repD1;
+	
+	@Autowired
+	ProgramaRepository repD2;
 
 	private final Map<String, JpaSpecificationExecutor<?>> detailRegistry = new HashMap<>();
 	
 	@PostConstruct
     public void init() {
 		detailRegistry.put("submenus", repD1);
+		detailRegistry.put("programs", repD2);
     }
 	
 	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
@@ -106,6 +112,11 @@ public class MenuService {
 	public void eliminarSubmenu(Integer id) {
 		repD1.deleteById(id);
 	}
+	
+	@SuppressWarnings("null")
+	public void eliminarPrograma(Integer id) {
+		repD2.deleteById(id);
+	}
 
 	@SuppressWarnings("null")
 	public Menu buscarPorId(Integer id) {
@@ -129,6 +140,19 @@ public class MenuService {
 			return submenu.get();
 		} else {
 			throw new RuntimeException("No se encontro el submenu con ID: " + id);
+		}
+
+	}
+	
+	@SuppressWarnings("null")
+	public Programa buscarPorIdPrograma(Integer id) {
+		
+		Optional<Programa> programa = repD2.findById(id);
+		
+		if (programa.isPresent()) {
+			return programa.get();
+		} else {
+			throw new RuntimeException("No se encontro el programa con ID: " + id);
 		}
 
 	}

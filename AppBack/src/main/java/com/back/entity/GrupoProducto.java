@@ -52,7 +52,7 @@ public class GrupoProducto {
 	
 	private Integer erpid;
 	
-	@OneToMany(mappedBy = "grupoproducto", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+	@OneToMany(mappedBy = "grupoproducto", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JsonManagedReference("grupoproducto-subgrupoproducto")
 	public List<SubgrupoProducto> subgrupoproducto;
 	

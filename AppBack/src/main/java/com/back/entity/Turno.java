@@ -14,8 +14,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -49,13 +47,10 @@ public class Turno {
 	@Size(max = 150)
 	private String descripcion;
 
-	@Temporal(TemporalType.TIME)
 	private LocalTime horaent;
 	
-	@Temporal(TemporalType.TIME)
 	private LocalTime horasal;
 	
-	@Temporal(TemporalType.TIME)
 	private LocalTime horades;
 
 	private Integer thoras;

@@ -31,13 +31,13 @@ public class GrupoProductoService {
 	GrupoProductoRepository rep;
 	
 	@Autowired
-	SubgrupoProductoRepository repSubgrupoProducto;
-	
-	@Autowired
 	MonedaRepository repMoneda;
 	
 	@Autowired
 	TributacionRepository repTributacion;
+	
+	@Autowired
+	SubgrupoProductoRepository repD1;
 	
 	private final RestQueryErp rest;
 	
@@ -49,7 +49,7 @@ public class GrupoProductoService {
 	
 	@PostConstruct
     public void init() {
-		detailRegistry.put("subgroups", repSubgrupoProducto);
+		detailRegistry.put("subgroups", repD1);
     }
 	
 	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
@@ -122,7 +122,7 @@ public class GrupoProductoService {
 	
 	@SuppressWarnings("null")
 	public void eliminarSubgrupo(Integer id) {
-		repSubgrupoProducto.deleteById(id);
+		repD1.deleteById(id);
 	}
 
 	@SuppressWarnings("null")
@@ -141,7 +141,7 @@ public class GrupoProductoService {
 	@SuppressWarnings("null")
 	public SubgrupoProducto buscarPorIdSubgrupo(Integer id) {
 		
-		Optional<SubgrupoProducto> subgrupo = repSubgrupoProducto.findById(id);
+		Optional<SubgrupoProducto> subgrupo = repD1.findById(id);
 		
 		if (subgrupo.isPresent()) {
 			return subgrupo.get();
@@ -195,13 +195,13 @@ public class GrupoProductoService {
 		        GrupoProducto grupoproducto = null;
 		        if (grupoId != null) grupoproducto = rep.findByErpid(grupoId).orElse(null);
 		        
-		        SubgrupoProducto data = repSubgrupoProducto.findByErpid(erpId).orElse(new SubgrupoProducto());
+		        SubgrupoProducto data = repD1.findByErpid(erpId).orElse(new SubgrupoProducto());
 		        data.setErpid(erpId);
 		        data.setGrupoproducto(grupoproducto);
 		        data.setSubgrupoproducto(descripcion);
 		        data.setGrupoproductotxt(grupoproductotxt);
 		        
-		        repSubgrupoProducto.save(data);
+		        repD1.save(data);
 		        
 			} catch (Exception e) {
 		        System.err.println("Error procesando item: " + item);

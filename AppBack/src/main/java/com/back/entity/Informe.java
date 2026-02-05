@@ -1,18 +1,14 @@
 package com.back.entity;
 
 import java.time.LocalDate;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -51,14 +47,8 @@ public class Informe {
 	@Size(max = 150)
 	private String descripcion;
 	
-	@Lob
-	@Column(columnDefinition = "TEXT")
-	private String data;
-	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fechacreacion;
 	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fechaactualizacion;
 	
 	@NotNull

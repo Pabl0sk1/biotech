@@ -33,3 +33,8 @@ export const deleteSubMenu = async (id) => {
     const response = await axios.delete(`${API_BASE_URL}/deleteSubmenu/${id}`);
     return response.data;
 };
+
+export const deleteProgram = async (id) => {
+    const response = await axios.delete(`${API_BASE_URL}/deleteProgram/${id}`);
+    return response.data;
+};

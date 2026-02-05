@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { getPermission, savePermission, updatePermission, deletePermission } from '../services/permiso.service.js';
 import { getRole } from '../services/tipousuario.service.js';
 import { getModule } from '../services/modulo.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
 import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
@@ -91,7 +91,8 @@ export const PermisoApp = ({ userLog }) => {
         puedever: false,
         puedeagregar: false,
         puedeeliminar: false,
-        puedeeditar: false
+        puedeeditar: false,
+        puedeimportar: false
     };
 
     const recuperarPermisos = () => {

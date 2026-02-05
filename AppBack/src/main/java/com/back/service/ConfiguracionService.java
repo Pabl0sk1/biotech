@@ -1,13 +1,8 @@
 package com.back.service;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,7 +11,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import com.back.config.SpecificationBuilder;
 import com.back.entity.Configuracion;
 import com.back.repository.ConfiguracionRepository;
@@ -109,24 +103,6 @@ public class ConfiguracionService {
 			throw new RuntimeException("No se encontro la configuración con ID: " + id);
 		}
 		
-	}
-	
-	public String guardarImagen(MultipartFile archivo) throws Exception {
-	    String folder = "uploads/logo/";
-	    File dir = new File(folder);
-	    if (!dir.exists()) dir.mkdirs();
-
-	    String filename = UUID.randomUUID() + "_" + archivo.getOriginalFilename();
-	    Path path = Paths.get(folder + filename);
-
-	    Files.write(path, archivo.getBytes());
-
-	    return "/logo/" + filename;
-	}
-	
-	public void eliminarImagen(String ruta) throws Exception {
-	    Path path = Paths.get("uploads" + ruta);
-	    Files.deleteIfExists(path);
 	}
 	
 }

@@ -10,8 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -37,10 +35,8 @@ public class Auditoria {
 	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;
 	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fecha;
 
-	@Temporal(TemporalType.TIMESTAMP)
 	private LocalDateTime fechahora;
 
 	@Size(max = 20)

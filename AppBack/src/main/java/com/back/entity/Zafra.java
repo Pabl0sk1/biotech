@@ -7,8 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -40,10 +38,8 @@ public class Zafra {
 	@Size(max = 150)
 	private String cultura;
 	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fechainicio;
 	
-	@Temporal(TemporalType.DATE)
 	private LocalDate fechafin;
 	
 	private Integer erpid;

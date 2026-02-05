@@ -294,7 +294,7 @@ export const GrupoProductoApp = ({ userLog }) => {
                                             value={grupoproductoAVisualizar.moneda?.moneda || ''}
                                             readOnly
                                         />
-                                        <div hidden={!userLog?.id == 1}>
+                                        <div hidden={userLog?.id !== 1}>
                                             <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                             <input
                                                 type="number"
@@ -405,7 +405,7 @@ export const GrupoProductoApp = ({ userLog }) => {
                                                     required={true}
                                                 />
                                             </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
+                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
                                                 <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
                                                 <input
                                                     type="number"
