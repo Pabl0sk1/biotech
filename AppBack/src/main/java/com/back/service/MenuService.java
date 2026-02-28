@@ -40,7 +40,7 @@ public class MenuService {
 		detailRegistry.put("programs", repD2);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -78,7 +78,7 @@ public class MenuService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -98,27 +98,22 @@ public class MenuService {
         throw new RuntimeException("Menu no soportado");
     }
 
-	@SuppressWarnings("null")
 	public Menu guardar(Menu menu) {
 		return rep.save(menu);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 	
-	@SuppressWarnings("null")
 	public void eliminarSubmenu(Integer id) {
 		repD1.deleteById(id);
 	}
 	
-	@SuppressWarnings("null")
 	public void eliminarPrograma(Integer id) {
 		repD2.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Menu buscarPorId(Integer id) {
 
 		Optional<Menu> menu = rep.findById(id);
@@ -131,7 +126,6 @@ public class MenuService {
 
 	}
 	
-	@SuppressWarnings("null")
 	public Submenu buscarPorIdSubmenu(Integer id) {
 		
 		Optional<Submenu> submenu = repD1.findById(id);
@@ -144,7 +138,6 @@ public class MenuService {
 
 	}
 	
-	@SuppressWarnings("null")
 	public Programa buscarPorIdPrograma(Integer id) {
 		
 		Optional<Programa> programa = repD2.findById(id);

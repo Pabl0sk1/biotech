@@ -9,13 +9,13 @@ export default function AutocompleteSelect({
     size = 5,
     multiple = false,
     disabled = false,
-    required = false,
     autofocus = false,
     className = ""
 }) {
     const [inputValue, setInputValue] = useState('');
     const [open, setOpen] = useState(false);
     const [highlight, setHighlight] = useState(-1);
+    const [showTooltip, setShowTooltip] = useState(false);
 
     const selected = multiple
         ? Array.isArray(value) ? value : []
@@ -30,7 +30,10 @@ export default function AutocompleteSelect({
         if (searchFields.length === 0) {
             return (getLabel(o) ?? '').toLowerCase().includes(normalizedInput);
         }
-        return searchFields.some(fn => (fn(o) ?? '').toString().toLowerCase().includes(normalizedInput));
+        return searchFields.some(fn => {
+            const value = fn(o);
+            return (value ?? '').toString().toLowerCase().includes(normalizedInput);
+        });
     }).slice(0, size);
 
     const selectItem = (item) => {
@@ -79,11 +82,11 @@ export default function AutocompleteSelect({
     };
 
     return (
-        <div className="position-relative">
+        <div className="position-relative" onMouseEnter={() => multiple && selected.length > 0 && setShowTooltip(true)} onMouseLeave={() => setShowTooltip(false)}>
             <input
                 type="text"
-                className={`${className ? className : ' form-control modern-input w-100'}`}
-                placeholder="Buscar..."
+                className={`${className ? className : 'modern-input-edit w-100'}`}
+                placeholder={!disabled ? "Buscar..." : ""}
                 disabled={disabled}
                 value={displayValue()}
                 onFocus={() => {
@@ -103,11 +106,14 @@ export default function AutocompleteSelect({
                     setInputValue('');
                 }, 150)}
                 autoFocus={autofocus}
-                required={required}
             />
-            <div className="invalid-feedback text-danger text-start">
-                <i className="bi bi-exclamation-triangle-fill m-2"></i>El campo es obligatorio.
-            </div>
+
+            {showTooltip && multiple && selected.length > 0 && (
+                <div className="toolTipMultipleBox">
+                    {selected.map(item => getLabel(item)).join(', ')}
+                    <div className="toolTipMultipleArrow" />
+                </div>
+            )}
 
             {open && filtered.length > 0 && (
                 <ul className="list-group position-absolute w-100 shadow z-3">
@@ -117,7 +123,7 @@ export default function AutocompleteSelect({
                             <li
                                 key={item.id}
                                 className={`list-group-item list-group-item-action
-                                    ${idx === highlight ? 'active' : ''}
+                                    ${idx === highlight ? 'select-active' : ''}
                                     ${isSelected ? 'fw-bold text-success' : ''}`}
                                 style={{ cursor: 'pointer' }}
                                 onMouseDown={() => selectItem(item)}

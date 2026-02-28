@@ -66,7 +66,6 @@ export const Header = ({
                             </button>
                         )}
                         <div className="header-title-wrapper">
-                            <i className="bi bi-circle-fill title-indicator"></i>
                             <h5 className="header-title">{title}</h5>
                         </div>
                     </div>

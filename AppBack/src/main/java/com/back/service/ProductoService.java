@@ -63,7 +63,7 @@ public class ProductoService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -101,7 +101,7 @@ public class ProductoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -121,17 +121,14 @@ public class ProductoService {
         throw new RuntimeException("Producto no soportado");
     }
 
-	@SuppressWarnings("null")
 	public Producto guardar(Producto producto) {
 		return rep.save(producto);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Producto buscarPorId(Integer id) {
 
 		Optional<Producto> producto = rep.findById(id);
@@ -173,7 +170,7 @@ public class ProductoService {
 			        
 			        if (r.equals("BP51") || r.equals("BP61") || r.equals("BP64")) {
 			        	precios = rest.fetchAll("BP51", "Producto_id", erpId.toString(), "Precio");
-			        	if (!precios.isEmpty()) precio = rest.parseDouble(precios.getFirst().get("P_normal"));
+			        	if (!precios.isEmpty()) precio = rest.parseDouble(precios.get(0).get("P_normal"));
 			        }
 			        
 			        NombreComercial nombrecomercial = null;

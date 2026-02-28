@@ -53,7 +53,7 @@ public class EntidadService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -91,7 +91,7 @@ public class EntidadService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -111,17 +111,14 @@ public class EntidadService {
         throw new RuntimeException("Entidad no soportada");
     }
 
-	@SuppressWarnings("null")
 	public Entidad guardar(Entidad entidad) {
 		return rep.save(entidad);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Entidad buscarPorId(Integer id) {
 
 		Optional<Entidad> entidad = rep.findById(id);
@@ -160,7 +157,7 @@ public class EntidadService {
 		        
 		        Cargo cargo = null;
 		        if (categorias != null && categorias.contains("Funcionario")) {
-		        	contrato = rest.fetchAll("AR05", "Entidad_id", erpId.toString(), "").getFirst();
+		        	contrato = rest.fetchAll("AR05", "Entidad_id", erpId.toString(), "").get(0);
 		        	salario = rest.parseDouble(contrato.get("Salario"));
 		        	fechafin = rest.parseDate(contrato.get("Fecha_caducidad"));
 		        	
@@ -190,9 +187,6 @@ public class EntidadService {
 		        data.setSalario(salario);
 		        data.setEstado(estado);
 		        data.setActivo(activo);
-		        data.setCodzktime(null);
-				data.setNrotelefono(null);
-		        data.setCorreo(null);
 		        
 		        rep.save(data);
 		        

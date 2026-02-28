@@ -62,7 +62,7 @@ public class ComisionService {
 		detailRegistry.put("harvests", repD1);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -100,7 +100,7 @@ public class ComisionService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "unchecked", "null" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -120,22 +120,18 @@ public class ComisionService {
         throw new RuntimeException("Comision no soportada");
     }
 
-	@SuppressWarnings("null")
 	public Comision guardar(Comision comision) {
 		return rep.save(comision);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 	
-	@SuppressWarnings("null")
 	public void eliminarZafra(Integer id) {
 		repD1.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Comision buscarPorId(Integer id) {
 
 		Optional<Comision> comision = rep.findById(id);
@@ -148,7 +144,6 @@ public class ComisionService {
 
 	}
 	
-	@SuppressWarnings("null")
 	public ComisionZafra buscarPorIdZafra(Integer id) {
 		
 		Optional<ComisionZafra> zafra = repD1.findById(id);

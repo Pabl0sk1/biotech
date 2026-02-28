@@ -29,7 +29,7 @@ public class TipoProductoService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -67,7 +67,7 @@ public class TipoProductoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -87,17 +87,14 @@ public class TipoProductoService {
         throw new RuntimeException("Tipo de producto no soportado");
     }
 
-	@SuppressWarnings("null")
 	public TipoProducto guardar(TipoProducto tipoproducto) {
 		return rep.save(tipoproducto);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public TipoProducto buscarPorId(Integer id) {
 
 		Optional<TipoProducto> tipoproducto = rep.findById(id);

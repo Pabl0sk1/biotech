@@ -4,13 +4,11 @@ import { getMeasure } from '../services/medida.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -18,7 +16,6 @@ import ImportErp from '../layouts/ImportErp.jsx';
 
 export const NombreComercialApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [nombrecomerciales, setNombreComerciales] = useState([]);
     const [medidas, setMedidas] = useState([]);
     const [subgrupos, setSubgrupos] = useState([]);
@@ -40,22 +37,6 @@ export const NombreComercialApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearSubgrupo, setPuedeCrearSubgrupo] = useState(false);
-    const [puedeCrearMedida, setPuedeCrearMedida] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['pr01'], userLog?.tipousuario?.id);
-            setPuedeCrearSubgrupo(ok1);
-            const ok2 = await tienePermisoRuta(['pr02'], userLog?.tipousuario?.id);
-            setPuedeCrearMedida(ok2);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -72,25 +53,38 @@ export const NombreComercialApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         subgrupoproducto: null,
         medida: null,
         nombrecomercial: "",
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        nombrecomercial: { label: "Nombre Comercial", order: 1, notnull: true },
+        medida: {
+            type: "object",
+            options: medidas,
+            searches: ['medida'],
+            getLabel: (item) => item?.medida || "",
+            module: ['pr02'],
+            listPath: "/home/config/product/measures",
+            popupTitle: "Medidas",
+            notnull: true
+        },
+        subgrupoproducto: {
+            type: "object",
+            options: subgrupos,
+            searches: ['subgrupoproducto'],
+            label: "Subgrupo de Producto",
+            getLabel: (item) => item?.subgrupoproducto || "",
+            module: ['pr01'],
+            listPath: "/home/config/product/productgroups",
+            popupTitle: "Grupos de Productos",
+            notnull: true
+        },
+        erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };
 
     const recuperarNombreComerciales = () => {
@@ -156,9 +150,10 @@ export const NombreComercialApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (nombrecomercialAGuardar) => {
-        setNombreComercialAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const nombrecomercialAGuardar = { ...formData };
 
         if (nombrecomercialAGuardar.id) {
             await updateCommercial(nombrecomercialAGuardar.id, nombrecomercialAGuardar);
@@ -169,6 +164,7 @@ export const NombreComercialApp = ({ userLog }) => {
         }
         recuperarNombreComerciales();
         setLoading(false);
+        setNombreComercialAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -209,25 +205,8 @@ export const NombreComercialApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        let sw = 0;
-        if (!nombrecomercialAGuardar.nombrecomercial || !nombrecomercialAGuardar.medida || !nombrecomercialAGuardar.subgrupoproducto) sw = 1;
-
-        if (sw === 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
-        if (form.checkValidity()) {
-            guardarFn({ ...nombrecomercialAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -255,182 +234,27 @@ export const NombreComercialApp = ({ userLog }) => {
             )}
 
             {nombrecomercialAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="nombrecomercial" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="nombrecomercial"
-                                            name="nombrecomercial"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={nombrecomercialAVisualizar.nombrecomercial || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="subgrupo" className="form-label m-0 mb-2">Subgrupo de Producto</label>
-                                        <input
-                                            type="text"
-                                            id="subgrupo"
-                                            name="subgrupo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={nombrecomercialAVisualizar.subgrupoproducto?.subgrupoproducto || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="medida" className="form-label m-0 mb-2">Medida</label>
-                                        <input
-                                            type="text"
-                                            id="medida"
-                                            name="medida"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={nombrecomercialAVisualizar.medida?.medida || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={nombrecomercialAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setNombreComercialAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!nombrecomercialAVisualizar}
+                    onClose={() => setNombreComercialAVisualizar(null)}
+                    title="Nombre Comercial"
+                    data={nombrecomercialAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {nombrecomercialAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nombrecomercial" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="nombrecomercial"
-                                                    name="nombrecomercial"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={nombrecomercialAGuardar.nombrecomercial || ''}
-                                                    onChange={(event) => setNombreComercialAGuardar({ ...nombrecomercialAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="subgrupo" className="form-label m-0 mb-2">Subgrupo de Producto</label>
-                                                <i style={{ cursor: puedeCrearSubgrupo ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSubgrupo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearSubgrupo) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Grupos de Productos')
-                                                            navigate('/home/config/product/productgroups')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={subgrupos}
-                                                    value={nombrecomercialAGuardar.subgrupoproducto}
-                                                    getLabel={(v) => v.subgrupoproducto}
-                                                    searchFields={[
-                                                        v => v.subgrupoproducto
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setNombreComercialAGuardar({
-                                                            ...nombrecomercialAGuardar,
-                                                            subgrupoproducto: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="medida" className="form-label m-0 mb-2">Medida</label>
-                                                <i style={{ cursor: puedeCrearMedida ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearMedida ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearMedida) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Medidas')
-                                                            navigate('/home/config/product/measures')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={medidas}
-                                                    value={nombrecomercialAGuardar.medida}
-                                                    getLabel={(v) => v.medida}
-                                                    searchFields={[
-                                                        v => v.medida
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setNombreComercialAGuardar({
-                                                            ...nombrecomercialAGuardar,
-                                                            medida: v
-                                                        })
-                                                    }
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={nombrecomercialAGuardar.erpid || ''}
-                                                    onChange={(event) => setNombreComercialAGuardar({ ...nombrecomercialAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setNombreComercialAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!nombrecomercialAGuardar}
+                    onClose={() => setNombreComercialAGuardar(null)}
+                    title="Nombre Comercial"
+                    data={nombrecomercialAGuardar}
+                    onSave={handleSubmit}
+                    mode={nombrecomercialAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

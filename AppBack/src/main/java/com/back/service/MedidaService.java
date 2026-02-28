@@ -37,7 +37,7 @@ public class MedidaService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -75,7 +75,7 @@ public class MedidaService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -95,17 +95,14 @@ public class MedidaService {
         throw new RuntimeException("Medida no soportada");
     }
 
-	@SuppressWarnings("null")
 	public Medida guardar(Medida medida) {
 		return rep.save(medida);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Medida buscarPorId(Integer id) {
 
 		Optional<Medida> medida = rep.findById(id);

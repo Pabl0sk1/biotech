@@ -29,7 +29,7 @@ public class TipoTurnoService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -67,7 +67,7 @@ public class TipoTurnoService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "unchecked", "null" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -87,17 +87,14 @@ public class TipoTurnoService {
         throw new RuntimeException("Tipo de turno no soportado");
     }
 
-	@SuppressWarnings("null")
 	public TipoTurno guardar(TipoTurno tipo) {
 		return rep.save(tipo);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public TipoTurno buscarPorId(Integer id) {
 
 		Optional<TipoTurno> tipo = rep.findById(id);

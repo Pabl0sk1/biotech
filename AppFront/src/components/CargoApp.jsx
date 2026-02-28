@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { getPosition, savePosition, updatePosition, deletePosition, updateErpPosition } from '../services/cargo.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from "../Header.jsx";
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -48,23 +49,15 @@ export const CargoApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         cargo: "",
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        cargo: { label: "Descripción", notnull: true, autofocus: true },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
 
     const recuperarCargos = () => {
@@ -115,9 +108,10 @@ export const CargoApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (cargoAGuardar) => {
-        setCargoAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const cargoAGuardar = { ...formData };
 
         if (cargoAGuardar.id) {
             await updatePosition(cargoAGuardar.id, cargoAGuardar);
@@ -128,6 +122,7 @@ export const CargoApp = ({ userLog }) => {
         }
         recuperarCargos();
         setLoading(false);
+        setCargoAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -168,16 +163,8 @@ export const CargoApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...cargoAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -205,103 +192,27 @@ export const CargoApp = ({ userLog }) => {
             )}
 
             {cargoAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" cargoe="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="cargo" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="cargo"
-                                            name="cargo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={cargoAVisualizar.cargo || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={cargoAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setCargoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!cargoAVisualizar}
+                    onClose={() => setCargoAVisualizar(null)}
+                    title="Cargo"
+                    data={cargoAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {cargoAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" cargoe="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="cargo" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="cargo"
-                                                    name="cargo"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={cargoAGuardar.cargo || ''}
-                                                    onChange={(event) => setCargoAGuardar({ ...cargoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={cargoAGuardar.erpid || ''}
-                                                    onChange={(event) => setCargoAGuardar({ ...cargoAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setCargoAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!cargoAGuardar}
+                    onClose={() => setCargoAGuardar(null)}
+                    title="Cargo"
+                    data={cargoAGuardar}
+                    onSave={handleSubmit}
+                    mode={cargoAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

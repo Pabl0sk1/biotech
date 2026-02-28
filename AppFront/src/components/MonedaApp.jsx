@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getCurrency, saveCurrency, updateCurrency, deleteCurrency, updateErpCurrency } from '../services/moneda.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -48,25 +49,19 @@ export const MonedaApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         moneda: "",
         simbolo: "",
         codiso: "",
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        moneda: { label: "Descripción", notnull: true, autofocus: true },
+        simbolo: { label: "Símbolo" },
+        codiso: { label: "Código ISO" },
+        erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };
 
     const recuperarMonedas = () => {
@@ -117,9 +112,10 @@ export const MonedaApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (monedaAGuardar) => {
-        setMonedaAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const monedaAGuardar = { ...formData };
 
         if (monedaAGuardar.id) {
             await updateCurrency(monedaAGuardar.id, monedaAGuardar);
@@ -130,6 +126,7 @@ export const MonedaApp = ({ userLog }) => {
         }
         recuperarMonedas();
         setLoading(false);
+        setMonedaAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -170,16 +167,8 @@ export const MonedaApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...monedaAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -207,151 +196,27 @@ export const MonedaApp = ({ userLog }) => {
             )}
 
             {monedaAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="moneda" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="moneda"
-                                            name="moneda"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={monedaAVisualizar.moneda || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="simbolo" className="form-label m-0 mb-2">Símbolo</label>
-                                        <input
-                                            type="text"
-                                            id="simbolo"
-                                            name="simbolo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={monedaAVisualizar.simbolo || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="codiso" className="form-label m-0 mb-2">Código ISO</label>
-                                        <input
-                                            type="text"
-                                            id="codiso"
-                                            name="codiso"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={monedaAVisualizar.codiso || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="text"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={monedaAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setMonedaAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!monedaAVisualizar}
+                    onClose={() => setMonedaAVisualizar(null)}
+                    title="Moneda"
+                    data={monedaAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {monedaAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="moneda" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="moneda"
-                                                    name="moneda"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={monedaAGuardar.moneda || ''}
-                                                    onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={50}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="simbolo" className="form-label m-0 mb-2">Símbolo</label>
-                                                <input
-                                                    type="text"
-                                                    id="simbolo"
-                                                    name="simbolo"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={monedaAGuardar.simbolo || ''}
-                                                    onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={20}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="codiso" className="form-label m-0 mb-2">Código ISO</label>
-                                                <input
-                                                    type="text"
-                                                    id="codiso"
-                                                    name="codiso"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={monedaAGuardar.codiso || ''}
-                                                    onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={20}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={monedaAGuardar.erpid || ''}
-                                                    onChange={(event) => setMonedaAGuardar({ ...monedaAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setMonedaAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!monedaAGuardar}
+                    onClose={() => setMonedaAGuardar(null)}
+                    title="Moneda"
+                    data={monedaAGuardar}
+                    onSave={handleSubmit}
+                    mode={monedaAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

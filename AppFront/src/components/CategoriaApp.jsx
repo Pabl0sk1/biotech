@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getEntityType, saveEntityType, updateEntityType, deleteEntityType } from '../services/tipoentidad.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -45,22 +46,13 @@ export const CategoriaApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         tipoentidad: ""
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipoentidad: { label: "Descripción", notnull: true, autofocus: true }
     };
 
     const recuperarCategorias = () => {
@@ -103,9 +95,10 @@ export const CategoriaApp = ({ userLog }) => {
         else setCategoriaAEliminar(categoria);
     };
 
-    const guardarFn = async (categoriaAGuardar) => {
-        setCategoriaAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const categoriaAGuardar = { ...formData };
 
         if (categoriaAGuardar.id) {
             await updateEntityType(categoriaAGuardar.id, categoriaAGuardar);
@@ -116,6 +109,7 @@ export const CategoriaApp = ({ userLog }) => {
         }
         recuperarCategorias();
         setLoading(false);
+        setCategoriaAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -156,16 +150,8 @@ export const CategoriaApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...categoriaAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -190,80 +176,29 @@ export const CategoriaApp = ({ userLog }) => {
             )}
 
             {categoriaAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="tipoentidad" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="tipoentidad"
-                                            name="tipoentidad"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={categoriaAVisualizar.tipoentidad || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setCategoriaAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!categoriaAVisualizar}
+                    onClose={() => setCategoriaAVisualizar(null)}
+                    title="Categoría"
+                    data={categoriaAVisualizar}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             {categoriaAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipoentidad" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="tipoentidad"
-                                                    name="tipoentidad"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={categoriaAGuardar.tipoentidad || ''}
-                                                    onChange={(event) => setCategoriaAGuardar({ ...categoriaAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setCategoriaAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!categoriaAGuardar}
+                    onClose={() => setCategoriaAGuardar(null)}
+                    title="Categoría"
+                    data={categoriaAGuardar}
+                    onSave={handleSubmit}
+                    mode={categoriaAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">
@@ -271,7 +206,7 @@ export const CategoriaApp = ({ userLog }) => {
                 <div className="container-fluid p-4 mt-2">
                     <div className="form-card mt-5">
                         <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Categorias
+                            <i className="bi bi-search me-2 fs-5"></i>Listado de Categorías
                         </p>
                         <div className="p-3">
                             <FiltroModal

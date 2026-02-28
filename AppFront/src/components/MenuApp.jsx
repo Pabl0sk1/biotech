@@ -1,21 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getMenu, saveMenu, updateMenu, deleteMenu } from '../services/menu.service.js';
 import { getModule } from '../services/modulo.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
 import Header from '../Header.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
 export const MenuApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [menus, setMenus] = useState([]);
     const [modulos, setModulos] = useState([]);
     const [permiso, setPermiso] = useState({});
@@ -35,19 +32,6 @@ export const MenuApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearModulo, setPuedeCrearModulo] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['sc02'], userLog?.tipousuario?.id);
-            setPuedeCrearModulo(ok1);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -63,29 +47,35 @@ export const MenuApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         menu: "",
         icono: "",
-        unico: false,
-        activo: true,
         orden: 1,
         recursos: "",
-        submenus: [],
-        programas: []
+        unico: false,
+        activo: true,
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        menu: { label: "Descripción", notnull: true, order: 1, autofocus: true },
+        orden: { type: "number", order: 4 },
+        icono: { order: 3 },
+        recursos: {
+            type: "object.multiple",
+            options: modulos,
+            searches: ['moduloes', 'var'],
+            getLabel: (item) => item?.moduloes || "",
+            idfield: 'var',
+            module: ['sc02'],
+            listPath: "/home/security/modules",
+            popupTitle: "Módulos",
+            order: 2
+        },
+        unico: { label: "¿Es menú único?", type: "checkbox" },
+        activo: { label: "¿Está activo?", type: "checkbox" },
+        submenus: { hidden: true },
+        programas: { hidden: true }
     };
 
     const recuperarMenus = () => {
@@ -137,9 +127,13 @@ export const MenuApp = ({ userLog }) => {
         setMenuAEliminar(menu);
     };
 
-    const guardarFn = async (menuAGuardar) => {
-        setMenuAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const menuAGuardar = {
+            ...formData,
+            recursos: formData?.recursos.toLowerCase() || ""
+        };
 
         if (menuAGuardar.id) {
             await updateMenu(menuAGuardar.id, menuAGuardar);
@@ -150,6 +144,7 @@ export const MenuApp = ({ userLog }) => {
         }
         recuperarMenus();
         setLoading(false);
+        setMenuAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -190,26 +185,8 @@ export const MenuApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...menuAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
-    };
-
-    const getModulosSeleccionadas = () => {
-        if (menuAGuardar.recursos.length == 0) return [];
-
-        const recursosArray = menuAGuardar.recursos.split(',').map(c => c.trim());
-
-        return modulos.filter(v =>
-            recursosArray.includes(v.var.toLowerCase())
-        );
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -234,215 +211,27 @@ export const MenuApp = ({ userLog }) => {
             )}
 
             {menuAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col me-5 pe-5'>
-                                        <label htmlFor="menu" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="menu"
-                                            name="menu"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={menuAVisualizar.menu || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="recursos" className="form-label m-0 mb-2">Módulos</label>
-                                        <input
-                                            type="text"
-                                            id="recursos"
-                                            name="recursos"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={menuAVisualizar.recursos || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="activo" className="form-label m-0 mb-2 me-2 d-flex">Activo</label>
-                                        <input
-                                            type="checkbox"
-                                            id="activo"
-                                            name="activo"
-                                            className="form-check-input"
-                                            style={{ width: '60px', height: '30px' }}
-                                            checked={menuAVisualizar.activo || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    <div className='col ms-5 ps-5'>
-                                        <label htmlFor="icono" className="form-label m-0 mb-2">Icono</label>
-                                        <input
-                                            type="text"
-                                            id="icono"
-                                            name="icono"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={menuAVisualizar.icono || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="orden" className="form-label m-0 mb-2">Orden</label>
-                                        <input
-                                            type="number"
-                                            id="orden"
-                                            name="orden"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={menuAVisualizar.orden || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="unico" className="form-label m-0 mb-2 me-2 d-flex">Único</label>
-                                        <input
-                                            type="checkbox"
-                                            id="unico"
-                                            name="unico"
-                                            className="form-check-input"
-                                            style={{ width: '60px', height: '30px' }}
-                                            checked={menuAVisualizar.unico || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setMenuAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!menuAVisualizar}
+                    onClose={() => setMenuAVisualizar(null)}
+                    title="Menú"
+                    data={menuAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {menuAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col me-5 pe-5'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="menu" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="menu"
-                                                    name="menu"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={menuAGuardar.menu || ''}
-                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={50}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 50 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="recursos" className="form-label m-0 mb-2">Módulos</label>
-                                                <i style={{ cursor: puedeCrearModulo ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModulo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearModulo) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Módulos')
-                                                            navigate('/home/security/modules')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={modulos}
-                                                    value={getModulosSeleccionadas()}
-                                                    getLabel={(v) => v.var}
-                                                    searchFields={[
-                                                        v => v.var
-                                                    ]}
-                                                    onChange={(v) => {
-                                                        const modulosString = v.map(c => c.var.toLowerCase()).join(',');
-                                                        setMenuAGuardar({
-                                                            ...menuAGuardar,
-                                                            recursos: modulosString
-                                                        });
-                                                    }}
-                                                    multiple={true}
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="activo" className="form-label m-0 mb-2 me-2 d-flex">Activo</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="activo"
-                                                    name="activo"
-                                                    className="form-check-input"
-                                                    style={{ width: '60px', height: '30px' }}
-                                                    checked={menuAGuardar.activo || ''}
-                                                    onChange={(e) => {
-                                                        const check = e.target.checked;
-                                                        setMenuAGuardar({ ...menuAGuardar, [e.target.name]: check });
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className='col ms-5 ps-5'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="icono" className="form-label m-0 mb-2">Icono</label>
-                                                <input
-                                                    type="text"
-                                                    id="icono"
-                                                    name="icono"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={menuAGuardar.icono || ''}
-                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="orden" className="form-label m-0 mb-2">Orden</label>
-                                                <input
-                                                    type="number"
-                                                    id="orden"
-                                                    name="orden"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={menuAGuardar.orden || ''}
-                                                    onChange={(event) => setMenuAGuardar({ ...menuAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="unico" className="form-label m-0 mb-2 me-2 d-flex">Único</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="unico"
-                                                    name="unico"
-                                                    className="form-check-input"
-                                                    style={{ width: '60px', height: '30px' }}
-                                                    checked={menuAGuardar.unico || ''}
-                                                    onChange={(e) => {
-                                                        const check = e.target.checked;
-                                                        setMenuAGuardar({ ...menuAGuardar, [e.target.name]: check });
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setMenuAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!menuAGuardar}
+                    onClose={() => setMenuAGuardar(null)}
+                    title="Menú"
+                    data={menuAGuardar}
+                    onSave={handleSubmit}
+                    mode={menuAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

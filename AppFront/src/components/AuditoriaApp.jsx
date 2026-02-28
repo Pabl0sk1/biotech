@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { getAccess, deleteAccess } from '../services/auditoria.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header';
 import { FiltroModal } from "../FiltroModal.jsx";
 import { DateHourFormat } from '../utils/DateHourFormat.js';
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
 
@@ -39,18 +40,17 @@ export const AuditoriaApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
+    const fieldSettings = {
+        id: { hidden: true },
+        usuario: {
+            type: "object",
+            getLabel: (item) => item?.nombreusuario || "",
+        },
+        fecha: { hidden: true },
+        fechahora: { type: "datetime-local", label: "Fecha y Hora" },
+        codregistro: { type: "number", label: "Cód. Registro" },
+        ip: { label: "IP" }
+    };
 
     const recuperarAuditorias = () => {
         setQuery(q => ({ ...q }));
@@ -139,6 +139,17 @@ export const AuditoriaApp = ({ userLog }) => {
             )}
             {auditoriaAEliminar && (
                 <Delete setEliminar={setAuditoriaAEliminar} title={'acceso'} gen={true} confirmar={confirmarEliminacion} id={auditoriaAEliminar.id} />
+            )}
+
+            {auditoriaAVisualizar && (
+                <SmartModal
+                    open={!!auditoriaAVisualizar}
+                    onClose={() => setAuditoriaAVisualizar(null)}
+                    title="Acceso"
+                    data={auditoriaAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {auditoriaAVisualizar && (

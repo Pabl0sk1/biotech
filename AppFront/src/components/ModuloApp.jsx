@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { getModule, saveModule, updateModule, deleteModule } from '../services/modulo.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -44,24 +45,17 @@ export const ModuloApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         moduloes: "",
         moduloen: "",
         var: ""
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        moduloes: { label: "Módulo Español", notnull: true, autofocus: true },
+        moduloen: { label: "Módulo Inglés", notnull: true },
+        var: { label: "Variable", notnull: true }
     };
 
     const recuperarModulos = () => {
@@ -104,9 +98,10 @@ export const ModuloApp = ({ userLog }) => {
         else setModuloAEliminar(modulo);
     };
 
-    const guardarFn = async (moduloAGuardar) => {
-        setModuloAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const moduloAGuardar = { ...formData };
 
         if (moduloAGuardar.id) {
             await updateModule(moduloAGuardar.id, moduloAGuardar);
@@ -117,6 +112,7 @@ export const ModuloApp = ({ userLog }) => {
         }
         recuperarModulos();
         setLoading(false);
+        setModuloAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -157,16 +153,8 @@ export const ModuloApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...moduloAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -191,136 +179,27 @@ export const ModuloApp = ({ userLog }) => {
             )}
 
             {moduloAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="moduloes" className="form-label m-0 mb-2">Módulo Español</label>
-                                        <input
-                                            type="text"
-                                            id="moduloes"
-                                            name="moduloes"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={moduloAVisualizar.moduloes || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="var" className="form-label m-0 mb-2">Variable</label>
-                                        <input
-                                            type="text"
-                                            id="var"
-                                            name="var"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={moduloAVisualizar.var || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="moduloen" className="form-label m-0 mb-2">Módulo Inglés</label>
-                                        <input
-                                            type="text"
-                                            id="moduloen"
-                                            name="moduloen"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={moduloAVisualizar.moduloen || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setModuloAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!moduloAVisualizar}
+                    onClose={() => setModuloAVisualizar(null)}
+                    title="Módulo"
+                    data={moduloAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {moduloAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" moduloe="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="moduloes" className="form-label m-0 mb-2">Módulo Español</label>
-                                                <input
-                                                    type="text"
-                                                    id="moduloes"
-                                                    name="moduloes"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={moduloAGuardar.moduloes || ''}
-                                                    onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={50}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El módulo en español es obligatorio y no debe sobrepasar los 50 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="var" className="form-label m-0 mb-2">Variable</label>
-                                                <input
-                                                    type="text"
-                                                    id="var"
-                                                    name="var"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={moduloAGuardar.var || ''}
-                                                    onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={50}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La variable es obligatoria y no debe sobrepasar los 10 caracteres.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="moduloen" className="form-label m-0 mb-2">Módulo Inglés</label>
-                                                <input
-                                                    type="text"
-                                                    id="moduloen"
-                                                    name="moduloen"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={moduloAGuardar.moduloen || ''}
-                                                    onChange={(event) => setModuloAGuardar({ ...moduloAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={50}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El módulo en inglés es obligatorio y no debe sobrepasar los 50 caracteres.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setModuloAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!moduloAGuardar}
+                    onClose={() => setModuloAGuardar(null)}
+                    title="Módulo"
+                    data={moduloAGuardar}
+                    onSave={handleSubmit}
+                    mode={moduloAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

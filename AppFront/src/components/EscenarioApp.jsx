@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getReportType, saveReportType, updateReportType, deleteReportType } from '../services/tipoinforme.service.js';
 import { getReport } from '../services/informe.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -45,22 +46,13 @@ export const EscenarioApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         tipoinforme: ""
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipoinforme: { notnull: true, label: "Descripción", autofocus: true },
     };
 
     const recuperarEscenarios = () => {
@@ -103,9 +95,10 @@ export const EscenarioApp = ({ userLog }) => {
         else setEscenarioAEliminar(escenario);
     };
 
-    const guardarFn = async (escenarioAGuardar) => {
-        setEscenarioAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const escenarioAGuardar = { ...formData };
 
         if (escenarioAGuardar.id) {
             await updateReportType(escenarioAGuardar.id, escenarioAGuardar);
@@ -116,6 +109,7 @@ export const EscenarioApp = ({ userLog }) => {
         }
         recuperarEscenarios();
         setLoading(false);
+        setEscenarioAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -156,16 +150,8 @@ export const EscenarioApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...escenarioAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -190,80 +176,29 @@ export const EscenarioApp = ({ userLog }) => {
             )}
 
             {escenarioAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="tipoinforme" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="tipoinforme"
-                                            name="tipoinforme"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={escenarioAVisualizar.tipoinforme || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setEscenarioAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!escenarioAVisualizar}
+                    onClose={() => setEscenarioAVisualizar(null)}
+                    title="Escenario"
+                    data={escenarioAVisualizar}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             {escenarioAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipoinforme" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="tipoinforme"
-                                                    name="tipoinforme"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={escenarioAGuardar.tipoinforme || ''}
-                                                    onChange={(event) => setEscenarioAGuardar({ ...escenarioAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setEscenarioAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!escenarioAGuardar}
+                    onClose={() => setEscenarioAGuardar(null)}
+                    title="Escenario"
+                    data={escenarioAGuardar}
+                    onSave={handleSubmit}
+                    mode={escenarioAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

@@ -29,7 +29,7 @@ public class AuditoriaService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -67,7 +67,7 @@ public class AuditoriaService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -87,17 +87,14 @@ public class AuditoriaService {
         throw new RuntimeException("Auditoria no soportada");
     }
 
-	@SuppressWarnings("null")
 	public Auditoria guardar(Auditoria auditoria) {
 		return rep.save(auditoria);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Auditoria buscarPorId(Integer id) {
 
 		Optional<Auditoria> auditoria = rep.findById(id);

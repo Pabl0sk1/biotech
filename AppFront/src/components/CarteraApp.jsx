@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { getWallet, saveWallet, updateWallet, deleteWallet, updateErpWallet } from '../services/cartera.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -15,7 +14,6 @@ import ImportErp from '../layouts/ImportErp.jsx';
 
 export const CarteraApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [carteras, setCarteras] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
@@ -35,19 +33,6 @@ export const CarteraApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearEntidad, setPuedeCrearEntidad] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['ca01'], userLog?.tipousuario?.id);
-            setPuedeCrearEntidad(ok1);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -64,25 +49,19 @@ export const CarteraApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         entidadid: 0,
         nombre: "",
         region: "",
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        nombre: { label: "Descripción", notnull: true, order: 1, autofocus: true },
+        region: { label: "Región", notnull: true, order: 2 },
+        entidadid: { type: "number", label: "Entidad ID" },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
 
     const recuperarCarteras = () => {
@@ -133,9 +112,10 @@ export const CarteraApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (carteraAGuardar) => {
-        setCarteraAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const carteraAGuardar = { ...formData };
 
         if (carteraAGuardar.id) {
             await updateWallet(carteraAGuardar.id, carteraAGuardar);
@@ -146,6 +126,7 @@ export const CarteraApp = ({ userLog }) => {
         }
         recuperarCarteras();
         setLoading(false);
+        setCarteraAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -186,16 +167,8 @@ export const CarteraApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...carteraAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -223,167 +196,27 @@ export const CarteraApp = ({ userLog }) => {
             )}
 
             {carteraAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
-                                        <input
-                                            type="text"
-                                            id="nombre"
-                                            name="nombre"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.nombre || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="entidadid" className="form-label m-0 mb-2">Entidad ID</label>
-                                        <input
-                                            type="number"
-                                            id="entidadid"
-                                            name="entidadid"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.entidadid || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="region" className="form-label m-0 mb-2">Región</label>
-                                        <input
-                                            type="email"
-                                            id="region"
-                                            name="region"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={carteraAVisualizar.region || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={carteraAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setCarteraAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!carteraAVisualizar}
+                    onClose={() => setCarteraAVisualizar(null)}
+                    title="Cartera"
+                    data={carteraAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {carteraAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
-                                                <input
-                                                    type="text"
-                                                    id="nombre"
-                                                    name="nombre"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={carteraAGuardar.nombre || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="entidadid" className="form-label m-0 mb-2">Entidad ID</label>
-                                                <i style={{ cursor: puedeCrearEntidad ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearEntidad ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearEntidad) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Entidades')
-                                                            navigate('/home/cadastres/entities');
-                                                        }
-                                                    }}>
-                                                </i>
-                                                <input
-                                                    type="number"
-                                                    id="entidadid"
-                                                    name="entidadid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={carteraAGuardar.entidadid || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="region" className="form-label m-0 mb-2">Región</label>
-                                                <input
-                                                    type="text"
-                                                    id="region"
-                                                    name="region"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={carteraAGuardar.region || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La región es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={carteraAGuardar.erpid || ''}
-                                                    onChange={(event) => setCarteraAGuardar({ ...carteraAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setCarteraAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!carteraAGuardar}
+                    onClose={() => setCarteraAGuardar(null)}
+                    title="Cartera"
+                    data={carteraAGuardar}
+                    onSave={handleSubmit}
+                    mode={carteraAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

@@ -33,7 +33,7 @@ public class UsuarioService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -71,7 +71,7 @@ public class UsuarioService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -105,12 +105,10 @@ public class UsuarioService {
 	    return rep.save(usuario);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Usuario buscarPorId(Integer id) {
 
 		Optional<Usuario> usuario = rep.findById(id);
@@ -127,14 +125,12 @@ public class UsuarioService {
 	    return rep.findByNombreusuario(nombreusuario).orElse(null);
 	}
 	
-	@SuppressWarnings("null")
 	public boolean verificarContrasena(String nombreusuario, String contrasena) {
 	    String sql = "SELECT COUNT(*) FROM usuarios WHERE nombreusuario = ? AND contrasena = crypt(?, contrasena)";
 	    int count = jdbcTemplate.queryForObject(sql, Integer.class, nombreusuario, contrasena);
 	    return count > 0;
 	}
 	
-	@SuppressWarnings("null")
 	public boolean verificarContrasenaID(Integer userId, String contrasena) {
 	    String sql = "SELECT COUNT(*) FROM usuarios WHERE id = ? AND contrasena = crypt(?, contrasena)";
 	    int count = jdbcTemplate.queryForObject(sql, Integer.class, userId, contrasena);

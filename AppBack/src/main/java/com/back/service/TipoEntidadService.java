@@ -29,7 +29,7 @@ public class TipoEntidadService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -67,7 +67,7 @@ public class TipoEntidadService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -87,17 +87,14 @@ public class TipoEntidadService {
         throw new RuntimeException("Tipo de entidad no soportada");
     }
 
-	@SuppressWarnings("null")
 	public TipoEntidad guardar(TipoEntidad tipoentidad) {
 		return rep.save(tipoentidad);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public TipoEntidad buscarPorId(Integer id) {
 
 		Optional<TipoEntidad> tipoentidad = rep.findById(id);

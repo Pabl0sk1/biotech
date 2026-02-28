@@ -7,7 +7,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class FileStorageConfig implements WebMvcConfigurer {
 	
-	@SuppressWarnings("null")
 	@Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 

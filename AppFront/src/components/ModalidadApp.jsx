@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { getSchedule, saveSchedule, updateSchedule, deleteSchedule } from '../services/tipoturno.service.js';
 import { getShift } from '../services/turno.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -45,22 +46,13 @@ export const ModalidadApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         tipo: ""
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipo: { label: "Descripción", notnull: true, autofocus: true }
     };
 
     const recuperarModalidades = () => {
@@ -103,9 +95,10 @@ export const ModalidadApp = ({ userLog }) => {
         else setModalidadAEliminar(modalidad);
     };
 
-    const guardarFn = async (modalidadAGuardar) => {
-        setModalidadAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const modalidadAGuardar = { ...formData };
 
         if (modalidadAGuardar.id) {
             await updateSchedule(modalidadAGuardar.id, modalidadAGuardar);
@@ -116,6 +109,7 @@ export const ModalidadApp = ({ userLog }) => {
         }
         recuperarModalidades();
         setLoading(false);
+        setModalidadAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -156,16 +150,8 @@ export const ModalidadApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...modalidadAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -190,80 +176,29 @@ export const ModalidadApp = ({ userLog }) => {
             )}
 
             {modalidadAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" modalidade="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="tipo" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="tipo"
-                                            name="tipo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={modalidadAVisualizar.tipo || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setModalidadAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!modalidadAVisualizar}
+                    onClose={() => setModalidadAVisualizar(null)}
+                    title="Modalidad"
+                    data={modalidadAVisualizar}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             {modalidadAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" modalidade="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipo" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="tipo"
-                                                    name="tipo"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={modalidadAGuardar.tipo || ''}
-                                                    onChange={(event) => setModalidadAGuardar({ ...modalidadAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setModalidadAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!modalidadAGuardar}
+                    onClose={() => setModalidadAGuardar(null)}
+                    title="Modalidad"
+                    data={modalidadAGuardar}
+                    onSave={handleSubmit}
+                    mode={modalidadAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

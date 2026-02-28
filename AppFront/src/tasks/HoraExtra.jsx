@@ -1194,6 +1194,7 @@ export const HoraExtra = () => {
                                             {/* Opción para todas las sucursales */}
                                             <li>
                                                 <button
+                                                    type="button"
                                                     className={`dropdown-item ${!selectedSucursal ? 'active' : ''}`}
                                                     onClick={(e) => {
                                                         e.preventDefault();
@@ -1214,6 +1215,7 @@ export const HoraExtra = () => {
                                                 .map(sucursal => (
                                                     <li key={sucursal.id}>
                                                         <button
+                                                            type="button"
                                                             className={`dropdown-item ${selectedSucursal?.id === sucursal.id ? 'active' : ''}`}
                                                             onClick={(e) => {
                                                                 e.preventDefault();
@@ -1256,12 +1258,28 @@ export const HoraExtra = () => {
                                                         if (selectedFuncionarios.length === funcionarios.length) {
                                                             // desmarcar todo
                                                             setSelectedFuncionarios([]);
+                                                            setData(prevData => ({
+                                                                ...prevData,
+                                                                listafuncionarios: []
+                                                            }));
                                                         } else {
                                                             // seleccionar todos
                                                             setSelectedFuncionarios(funcionarios.map(f => f.id));
+                                                            // Agregar todos los funcionarios con detalles
+                                                            const funcionariosConDetalles = actualizarDetallesFuncionarios(
+                                                                data.fechadesde,
+                                                                data.fechahasta,
+                                                                funcionarios
+                                                            );
+                                                            const funcionariosConFeriados = aplicarFeriados(funcionariosConDetalles, data.listaferiados);
+                                                            setData(prevData => ({
+                                                                ...prevData,
+                                                                listafuncionarios: funcionariosConFeriados
+                                                            }));
                                                         }
                                                     }}
                                                     disabled={!modoEdicion}
+                                                    type="button"
                                                 >
                                                     {selectedFuncionarios.length === funcionarios.length
                                                         ? "Desmarcar todos"
@@ -1581,7 +1599,7 @@ export const HoraExtra = () => {
                                                                             fijarHoraEntrada(fc.id, fechaIndex, detalle.turno, detalle.horasal, detalle.dia);
                                                                         }}
                                                                         onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                        disabled={detalle.extra || !modoEdicion}
+                                                                        disabled={!modoEdicion}
                                                                     />
                                                                 </div>
                                                             </td>

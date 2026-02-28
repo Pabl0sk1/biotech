@@ -3,15 +3,12 @@ import { getCommission, saveCommission, updateCommission, deleteCommission, upda
 import { getEntity } from '../services/entidad.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getProduct } from '../services/producto.service.js';
-import { getHarvest } from '../services/zafra.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -19,13 +16,11 @@ import ImportErp from '../layouts/ImportErp.jsx';
 
 export const ComisionApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [comisiones, setComisiones] = useState([]);
     const [entidades, setEntidades] = useState([]);
     const [grupos, setGrupos] = useState([]);
     const [subgrupos, setSubgrupos] = useState([]);
     const [productos, setProductos] = useState([]);
-    const [zafras, setZafras] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -44,25 +39,6 @@ export const ComisionApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearEntidad, setPuedeCrearEntidad] = useState(false);
-    const [puedeCrearGrupo, setPuedeCrearGrupo] = useState(false);
-    const [puedeCrearProducto, setPuedeCrearProducto] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['ca01'], userLog?.tipousuario?.id);
-            setPuedeCrearEntidad(ok1);
-            const ok2 = await tienePermisoRuta(['pr01'], userLog?.tipousuario?.id);
-            setPuedeCrearGrupo(ok2);
-            const ok3 = await tienePermisoRuta(['ca02'], userLog?.tipousuario?.id);
-            setPuedeCrearProducto(ok3);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -79,19 +55,6 @@ export const ComisionApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         entidad: null,
@@ -100,8 +63,59 @@ export const ComisionApp = ({ userLog }) => {
         producto: null,
         basecalculo: "",
         porcentaje: 0,
-        erpid: 0,
-        zafras: []
+        erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        entidad: {
+            type: "object",
+            notnull: true,
+            options: entidades,
+            searches: ['nomape', 'nrodoc'],
+            label: "Entidad",
+            getLabel: (item) => item?.nomape || "",
+            autofocus: true,
+            module: ['ca01'],
+            listPath: "/home/cadastres/entities",
+            popupTitle: "Entidades"
+        },
+        grupoproducto: {
+            type: "object",
+            options: grupos,
+            searches: ['grupoproducto'],
+            label: "Grupo de Producto",
+            getLabel: (item) => item?.grupoproducto || "",
+            module: ['pr01'],
+            listPath: "/home/config/product/productgroups",
+            popupTitle: "Grupos de Productos",
+            disabledifvalues: ['subgrupoproducto', 'producto']
+        },
+        subgrupoproducto: {
+            type: "object",
+            options: subgrupos,
+            searches: ['subgrupoproducto'],
+            label: "Subgrupo de Producto",
+            getLabel: (item) => item?.subgrupoproducto || "",
+            module: ['pr01'],
+            listPath: "/home/config/product/productgroups",
+            popupTitle: "Grupos de Productos",
+            disabledifvalues: ['producto', 'grupoproducto']
+        },
+        producto: {
+            type: "object",
+            options: productos,
+            searches: ['nombrecomercial.nombrecomercial'],
+            label: "Producto",
+            getLabel: (item) => item?.nombrecomercial?.nombrecomercial || "",
+            module: ['ca02'],
+            listPath: "/home/cadastres/products",
+            popupTitle: "Productos",
+            disabledifvalues: ['grupoproducto', 'subgrupoproducto']
+        },
+        basecalculo: { type: "select", label: "Base de Cálculo", options: ["Precio", "Rentabilidad"], notnull: true },
+        porcentaje: { notnull: true, type: "number", min: 0, max: 100 },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" },
+        zafras: { hidden: true }
     };
 
     const recuperarComisiones = () => {
@@ -128,11 +142,6 @@ export const ComisionApp = ({ userLog }) => {
         setProductos(response.items);
     }
 
-    const recuperarZafras = async () => {
-        const response = await getHarvest();
-        setZafras(response.items);
-    }
-
     const permisoUsuario = async () => {
         const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:cm04`);
         setPermiso(response.items[0]);
@@ -155,7 +164,6 @@ export const ComisionApp = ({ userLog }) => {
         recuperarGrupos();
         recuperarSubgrupos();
         recuperarProductos();
-        recuperarZafras();
     }, []);
 
     const eliminarComisionFn = async (id) => {
@@ -185,9 +193,10 @@ export const ComisionApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (comisionAGuardar) => {
-        setComisionAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const comisionAGuardar = { ...formData };
 
         if (comisionAGuardar.id) {
             await updateCommission(comisionAGuardar.id, comisionAGuardar);
@@ -198,6 +207,7 @@ export const ComisionApp = ({ userLog }) => {
         }
         recuperarComisiones();
         setLoading(false);
+        setComisionAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -238,26 +248,8 @@ export const ComisionApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        let sw = 0;
-        if (!comisionAGuardar.entidad || !comisionAGuardar.entidad) sw = 1;
-        if (!comisionAGuardar.basecalculo) sw = 1;
-
-        if (sw === 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
-        if (form.checkValidity()) {
-            guardarFn({ ...comisionAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -285,274 +277,27 @@ export const ComisionApp = ({ userLog }) => {
             )}
 
             {comisionAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="entidad" className="form-label m-0 mb-2">Entidad</label>
-                                        <input
-                                            type="text"
-                                            id="entidad"
-                                            name="entidad"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={comisionAVisualizar.entidad?.nomape || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="grupo" className="form-label m-0 mb-2">Grupo de Producto</label>
-                                        <input
-                                            type="text"
-                                            id="grupo"
-                                            name="grupo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={comisionAVisualizar.grupoproducto?.grupoproducto || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="basecalculo" className="form-label m-0 mb-2">Base de Cálculo</label>
-                                        <input
-                                            type="text"
-                                            id="basecalculo"
-                                            name="basecalculo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={comisionAVisualizar.basecalculo || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={comisionAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="producto" className="form-label m-0 mb-2">Producto</label>
-                                        <input
-                                            type="text"
-                                            id="producto"
-                                            name="producto"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={comisionAVisualizar.producto?.nombrecomercial?.nombrecomercial || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="subgrupo" className="form-label m-0 mb-2">Subgrupo de Producto</label>
-                                        <input
-                                            type="text"
-                                            id="subgrupo"
-                                            name="subgrupo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={comisionAVisualizar.subgrupoproducto?.subgrupoproducto || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="porcentaje" className="form-label m-0 mb-2">Porcentaje</label>
-                                        <input
-                                            type="number"
-                                            id="porcentaje"
-                                            name="porcentaje"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={comisionAVisualizar.porcentaje || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setComisionAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!comisionAVisualizar}
+                    onClose={() => setComisionAVisualizar(null)}
+                    title="Comisión"
+                    data={comisionAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {comisionAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="entidad" className="form-label m-0 mb-2">Entidad</label>
-                                                <i style={{ cursor: puedeCrearEntidad ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearEntidad ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearEntidad) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Entidades')
-                                                            navigate('/home/cadastres/entities')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={entidades}
-                                                    value={comisionAGuardar.entidad}
-                                                    getLabel={(v) => v.nomape}
-                                                    searchFields={[
-                                                        v => v.nomape,
-                                                        v => v.nrodoc
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setComisionAGuardar({
-                                                            ...comisionAGuardar,
-                                                            entidad: v
-                                                        })
-                                                    }
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="fasecultivo" className="form-label m-0 mb-2">Grupo de Producto</label>
-                                                <i style={{ cursor: puedeCrearGrupo ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearGrupo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearGrupo) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Grupos de Productos')
-                                                            navigate('/home/config/product/productgroups')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={grupos}
-                                                    value={comisionAGuardar.grupoproducto}
-                                                    getLabel={(v) => v.grupoproducto}
-                                                    searchFields={[
-                                                        v => v.grupoproducto
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setComisionAGuardar({
-                                                            ...comisionAGuardar,
-                                                            grupoproducto: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="basecalculo" className="form-label m-0 mb-2">Base de Cálculo</label>
-                                                <select
-                                                    className="form-select modern-input w-100"
-                                                    name="basecalculo"
-                                                    id='basecalculo'
-                                                    value={comisionAGuardar.basecalculo ? comisionAGuardar.basecalculo : ''}
-                                                    onChange={(event) => setComisionAGuardar({ ...comisionAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione una base...</option>
-                                                    <option key={1} value={'Precio'}>Precio</option>
-                                                    <option key={2} value={'Rentabilidad'}>Rentabilidad</option>
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La base de cálculo es obligatoria.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={comisionAGuardar.erpid || ''}
-                                                    onChange={(event) => setComisionAGuardar({ ...comisionAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="producto" className="form-label m-0 mb-2">Producto</label>
-                                                <i style={{ cursor: puedeCrearProducto ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearProducto ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearProducto) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Principios Activos')
-                                                            navigate('/home/config/product/assets')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={productos}
-                                                    value={comisionAGuardar.producto}
-                                                    getLabel={(v) => v.nombrecomercial.nombrecomercial}
-                                                    searchFields={[
-                                                        v => v.nombrecomercial.nombrecomercial
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setComisionAGuardar({
-                                                            ...comisionAGuardar,
-                                                            producto: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="subgrupo" className="form-label m-0 mb-2">Subgrupo de Producto</label>
-                                                <i style={{ cursor: puedeCrearGrupo ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearGrupo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearGrupo) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Grupos de Productos')
-                                                            navigate('/home/config/product/productgroups')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={subgrupos}
-                                                    value={comisionAGuardar.subgrupoproducto}
-                                                    getLabel={(v) => v.subgrupoproducto}
-                                                    searchFields={[
-                                                        v => v.subgrupoproducto
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setComisionAGuardar({
-                                                            ...comisionAGuardar,
-                                                            subgrupoproducto: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="porcentaje" className="form-label m-0 mb-2">Porcentaje</label>
-                                                <input
-                                                    type="number"
-                                                    id="porcentaje"
-                                                    name="porcentaje"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={comisionAGuardar.porcentaje || ''}
-                                                    onChange={(event) => setComisionAGuardar({ ...comisionAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setComisionAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!comisionAGuardar}
+                    onClose={() => setComisionAGuardar(null)}
+                    title="Comisión"
+                    data={comisionAGuardar}
+                    onSave={handleSubmit}
+                    mode={comisionAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

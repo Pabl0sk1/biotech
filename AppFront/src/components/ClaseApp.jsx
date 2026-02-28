@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getProductType, saveProductType, updateProductType, deleteProductType } from '../services/tipoproducto.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -45,22 +46,15 @@ export const ClaseApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
-        tipoproducto: ""
+        tipoproducto: "",
+        recurso: ""
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipoproducto: { label: "Descripción", notnull: true, autofocus: true },
+        recurso: { label: "Recurso" }
     };
 
     const recuperarClases = () => {
@@ -103,9 +97,10 @@ export const ClaseApp = ({ userLog }) => {
         else setClaseAEliminar(clase);
     };
 
-    const guardarFn = async (claseAGuardar) => {
-        setClaseAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const claseAGuardar = { ...formData };
 
         if (claseAGuardar.id) {
             await updateProductType(claseAGuardar.id, claseAGuardar);
@@ -116,6 +111,7 @@ export const ClaseApp = ({ userLog }) => {
         }
         recuperarClases();
         setLoading(false);
+        setClaseAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -156,16 +152,8 @@ export const ClaseApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...claseAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -190,102 +178,27 @@ export const ClaseApp = ({ userLog }) => {
             )}
 
             {claseAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="tipoproducto" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="tipoproducto"
-                                            name="tipoproducto"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={claseAVisualizar.tipoproducto || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="recurso" className="form-label m-0 mb-2">Recurso</label>
-                                        <input
-                                            type="text"
-                                            id="recurso"
-                                            name="recurso"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={claseAVisualizar.recurso || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setClaseAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!claseAVisualizar}
+                    onClose={() => setClaseAVisualizar(null)}
+                    title="Clase"
+                    data={claseAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {claseAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipoproducto" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="tipoproducto"
-                                                    name="tipoproducto"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={claseAGuardar.tipoproducto || ''}
-                                                    onChange={(event) => setClaseAGuardar({ ...claseAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="recurso" className="form-label m-0 mb-2">Recurso</label>
-                                                <input
-                                                    type="text"
-                                                    id="recurso"
-                                                    name="recurso"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={claseAGuardar.recurso || ''}
-                                                    onChange={(event) => setClaseAGuardar({ ...claseAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={20}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setClaseAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!claseAGuardar}
+                    onClose={() => setClaseAGuardar(null)}
+                    title="Clase"
+                    data={claseAGuardar}
+                    onSave={handleSubmit}
+                    mode={claseAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

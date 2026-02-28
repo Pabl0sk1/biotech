@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getMeasure, saveMeasure, updateMeasure, deleteMeasure, updateErpMeasure } from '../services/medida.service.js';
 import { getCommercial } from '../services/nombrecomercial.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -48,24 +49,16 @@ export const MedidaApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         medida: "",
         abreviatura: "",
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        medida: { label: "Descripción", notnull: true, autofocus: true },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
 
     const recuperarMedidas = () => {
@@ -116,9 +109,10 @@ export const MedidaApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (medidaAGuardar) => {
-        setMedidaAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const medidaAGuardar = { ...formData };
 
         if (medidaAGuardar.id) {
             await updateMeasure(medidaAGuardar.id, medidaAGuardar);
@@ -129,6 +123,7 @@ export const MedidaApp = ({ userLog }) => {
         }
         recuperarMedidas();
         setLoading(false);
+        setMedidaAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -169,16 +164,8 @@ export const MedidaApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...medidaAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -206,129 +193,27 @@ export const MedidaApp = ({ userLog }) => {
             )}
 
             {medidaAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="medida" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="medida"
-                                            name="medida"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={medidaAVisualizar.medida || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={medidaAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="abreviatura" className="form-label m-0 mb-2">Abreviatura</label>
-                                        <input
-                                            type="text"
-                                            id="abreviatura"
-                                            name="abreviatura"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={medidaAVisualizar.abreviatura || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setMedidaAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!medidaAVisualizar}
+                    onClose={() => setMedidaAVisualizar(null)}
+                    title="Medida"
+                    data={medidaAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {medidaAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="medida" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="medida"
-                                                    name="medida"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={medidaAGuardar.medida || ''}
-                                                    onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={medidaAGuardar.erpid || ''}
-                                                    onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="abreviatura" className="form-label m-0 mb-2">Abreviatura</label>
-                                                <input
-                                                    type="text"
-                                                    id="abreviatura"
-                                                    name="abreviatura"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={medidaAGuardar.abreviatura || ''}
-                                                    onChange={(event) => setMedidaAGuardar({ ...medidaAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={20}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setMedidaAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!medidaAGuardar}
+                    onClose={() => setMedidaAGuardar(null)}
+                    title="Medida"
+                    data={medidaAGuardar}
+                    onSave={handleSubmit}
+                    mode={medidaAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

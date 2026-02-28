@@ -29,7 +29,7 @@ public class TipoUsuarioService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -67,7 +67,7 @@ public class TipoUsuarioService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "unchecked", "rawtypes", "null" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -87,17 +87,14 @@ public class TipoUsuarioService {
         throw new RuntimeException("Tipo de usuario no soportado");
     }
 
-	@SuppressWarnings("null")
 	public TipoUsuario guardar(TipoUsuario tipousuario) {
 		return rep.save(tipousuario);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public TipoUsuario buscarPorId(Integer id) {
 
 		Optional<TipoUsuario> tipousuario = rep.findById(id);

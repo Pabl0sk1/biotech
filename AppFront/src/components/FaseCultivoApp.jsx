@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getCrop, saveCrop, updateCrop, deleteCrop, updateErpCrop } from '../services/fasecultivo.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -48,23 +49,15 @@ export const FaseCultivoApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         fasecultivo: "",
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        fasecultivo: { label: "Descripción", notnull: true, autofocus: true },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
 
     const recuperarFaseCultivos = () => {
@@ -115,9 +108,10 @@ export const FaseCultivoApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (fasecultivoAGuardar) => {
-        setFaseCultivoAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const fasecultivoAGuardar = { ...formData };
 
         if (fasecultivoAGuardar.id) {
             await updateCrop(fasecultivoAGuardar.id, fasecultivoAGuardar);
@@ -128,6 +122,7 @@ export const FaseCultivoApp = ({ userLog }) => {
         }
         recuperarFaseCultivos();
         setLoading(false);
+        setFaseCultivoAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -168,16 +163,8 @@ export const FaseCultivoApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...fasecultivoAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -205,103 +192,27 @@ export const FaseCultivoApp = ({ userLog }) => {
             )}
 
             {fasecultivoAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="fasecultivo" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="fasecultivo"
-                                            name="fasecultivo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={fasecultivoAVisualizar.fasecultivo || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={fasecultivoAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setFaseCultivoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!fasecultivoAVisualizar}
+                    onClose={() => setFaseCultivoAVisualizar(null)}
+                    title="Fase de Cultivo"
+                    data={fasecultivoAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {fasecultivoAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="fasecultivo" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="fasecultivo"
-                                                    name="fasecultivo"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={fasecultivoAGuardar.fasecultivo || ''}
-                                                    onChange={(event) => setFaseCultivoAGuardar({ ...fasecultivoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={fasecultivoAGuardar.erpid || ''}
-                                                    onChange={(event) => setFaseCultivoAGuardar({ ...fasecultivoAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setFaseCultivoAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!fasecultivoAGuardar}
+                    onClose={() => setFaseCultivoAGuardar(null)}
+                    title="Fase de Cultivo"
+                    data={fasecultivoAGuardar}
+                    onSave={handleSubmit}
+                    mode={fasecultivoAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

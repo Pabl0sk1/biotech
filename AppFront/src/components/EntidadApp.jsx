@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { NumericFormat } from 'react-number-format';
-import { useNavigate } from 'react-router-dom';
 import { getEntity, saveEntity, updateEntity, deleteEntity, updateErpEntity } from '../services/entidad.service.js';
 import { getPosition } from '../services/cargo.service.js';
 import { getBranch } from '../services/sucursal.service.js';
@@ -10,12 +8,11 @@ import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
 import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
 import { TruncDots } from '../utils/TruncDots.js';
 import { ListControls } from '../ListControls.jsx';
 import Header from '../Header.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -23,7 +20,6 @@ import ImportErp from '../layouts/ImportErp.jsx';
 
 export const EntidadApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [entidades, setEntidades] = useState([]);
     const [sucursales, setSucursales] = useState([]);
     const [cargos, setCargos] = useState([]);
@@ -47,28 +43,6 @@ export const EntidadApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearCargo, setPuedeCrearCargo] = useState(false);
-    const [puedeCrearSucursal, setPuedeCrearSucursal] = useState(false);
-    const [puedeCrearCartera, setPuedeCrearCartera] = useState(false);
-    const [puedeCrearCategoria, setPuedeCrearCategoria] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['rh01'], userLog?.tipousuario?.id);
-            setPuedeCrearCargo(ok1);
-            const ok2 = await tienePermisoRuta(['gr03'], userLog?.tipousuario?.id);
-            setPuedeCrearSucursal(ok2);
-            const ok3 = await tienePermisoRuta(['cm01'], userLog?.tipousuario?.id);
-            setPuedeCrearCartera(ok3);
-            const ok4 = await tienePermisoRuta(['gr06'], userLog?.tipousuario?.id);
-            setPuedeCrearCategoria(ok4);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -85,25 +59,12 @@ export const EntidadApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         cargo: null,
         sucursal: null,
         cartera: null,
-        categorias: [],
+        categorias: "",
         nomape: "",
         nombre: "",
         apellido: "",
@@ -117,7 +78,68 @@ export const EntidadApp = ({ userLog }) => {
         codzktime: 0,
         estado: "Activo",
         activo: true,
+        horaextra: false,
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        cargo: {
+            type: "object",
+            options: cargos,
+            searches: ['cargo'],
+            label: "Cargo",
+            getLabel: (item) => item?.cargo || "",
+            autofocus: true,
+            module: ['rh01'],
+            listPath: "/home/config/rrhh/positions",
+            popupTitle: "Cargos"
+        },
+        sucursal: {
+            type: "object",
+            options: sucursales,
+            searches: ['sucursal'],
+            label: "Sucursal",
+            getLabel: (item) => item?.sucursal || "",
+            module: ['gr03'],
+            listPath: "/home/config/general/branchs",
+            popupTitle: "Sucursales"
+        },
+        cartera: {
+            type: "object",
+            options: carteras,
+            searches: ['nombre'],
+            label: "Cartera",
+            getLabel: (item) => item?.nombre || "",
+            module: ['cm01'],
+            listPath: "/home/config/commercial/wallets",
+            popupTitle: "Carteras"
+        },
+        categorias: {
+            type: "object.multiple",
+            options: categorias,
+            searches: ['tipoentidad'],
+            label: "Categorías",
+            getLabel: (item) => item?.tipoentidad || "",
+            notnull: true,
+            idfield: 'tipoentidad',
+            module: ['gr06'],
+            listPath: "/home/config/general/categories",
+            popupTitle: "Categorías"
+        },
+        nomape: { hidden: true },
+        nombre: { notnull: true },
+        nrodoc: { label: "Nro. de documento" },
+        nrotelefono: { type: "tel", label: "Nro. de teléfono" },
+        correo: { type: "email" },
+        fechanacimiento: { type: "date", label: "Fecha de nacimiento" },
+        fechainicio: { type: "date", label: "Fecha de inicio" },
+        fechafin: { type: "date", label: "Fecha de fin" },
+        salario: { type: "number" },
+        codzktime: { type: "number", label: "Código ZKTime" },
+        estado: { type: "select", options: ["Activo", "Inactivo"], notnull: true },
+        activo: { hidden: true },
+        horaextra: { type: "checkbox", label: "¿Realiza horas extras?" },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
 
     const recuperarEntidades = () => {
@@ -196,19 +218,18 @@ export const EntidadApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (entidadAGuardar) => {
-        setEntidadAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
 
         let activo = true;
-        if (entidadAGuardar.estado == 'Inactivo') activo = false;
+        if (formData.estado == 'Inactivo') activo = false;
 
         let apellido = "";
-        if (entidadAGuardar.apellido) apellido = ", " + entidadAGuardar.apellido;
+        if (formData.apellido) apellido = ", " + formData.apellido;
 
         const entidadActualizado = {
-            ...entidadAGuardar,
-            nomape: entidadAGuardar.nombre + apellido,
+            ...formData,
+            nomape: formData.nombre + apellido,
             activo: activo
         };
 
@@ -221,6 +242,7 @@ export const EntidadApp = ({ userLog }) => {
         }
         recuperarEntidades();
         setLoading(false);
+        setEntidadAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -261,35 +283,8 @@ export const EntidadApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        let sw = 0;
-        if (!entidadAGuardar.categorias || !entidadAGuardar.nombre) sw = 1;
-
-        if (sw === 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
-        if (form.checkValidity()) {
-            guardarFn({ ...entidadAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
-    };
-
-    const getCategoriasSeleccionadas = () => {
-        if (entidadAGuardar.categorias.length == 0) return [];
-
-        const categoriasArray = entidadAGuardar.categorias.split(',').map(c => c.trim());
-
-        return categorias.filter(v =>
-            categoriasArray.includes(v.tipoentidad)
-        );
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -317,511 +312,27 @@ export const EntidadApp = ({ userLog }) => {
             )}
 
             {entidadAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
-                                        <input
-                                            type="text"
-                                            id="nombre"
-                                            name="nombre"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.nombre || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
-                                        <input
-                                            type="text"
-                                            id="nrotelefono"
-                                            name="nrotelefono"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.nrotelefono || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="salario" className="form-label m-0 mb-2">Salario</label>
-                                        <NumericFormat
-                                            value={entidadAVisualizar.salario || 0}
-                                            displayType="text"
-                                            thousandSeparator="."
-                                            decimalSeparator=","
-                                            prefix={'Gs. '}
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            readOnly
-                                        />
-                                        <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
-                                        <input
-                                            type="text"
-                                            id="correo"
-                                            name="correo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.correo || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="fechainicio" className="form-label m-0 mb-2">Fecha de Inicio</label>
-                                        <input
-                                            type="date"
-                                            id="fechainicio"
-                                            name="fechainicio"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.fechainicio || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
-                                        <input
-                                            type="text"
-                                            id="cargo"
-                                            name="cargo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.cargo?.cargo || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="cartera" className="form-label m-0 mb-2">Cartera</label>
-                                        <input
-                                            type="text"
-                                            id="cartera"
-                                            name="cartera"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.cartera?.nombre || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
-                                        <input
-                                            type="text"
-                                            id="estado"
-                                            name="estado"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.estado || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={!userLog?.id == 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={entidadAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
-                                        <input
-                                            type="text"
-                                            id="apellido"
-                                            name="apellido"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.apellido || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                        <input
-                                            type="text"
-                                            id="nrodoc"
-                                            name="nrodoc"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.nrodoc || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="codzktime" className="form-label m-0 mb-2">Código ZKTime</label>
-                                        <NumericFormat
-                                            value={entidadAVisualizar.codzktime || 0}
-                                            displayType="text"
-                                            thousandSeparator="."
-                                            decimalSeparator=","
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            readOnly
-                                        />
-                                        <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
-                                        <input
-                                            type="date"
-                                            id="fechanacimiento"
-                                            name="fechanacimiento"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.fechanacimiento || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="fechafin" className="form-label m-0 mb-2">Fecha de Final</label>
-                                        <input
-                                            type="date"
-                                            id="fechafin"
-                                            name="fechafin"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.fechafin || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
-                                        <input
-                                            type="text"
-                                            id="sucursal"
-                                            name="sucursal"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.sucursal?.sucursal || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="categoria" className="form-label m-0 mb-2">Categoría</label>
-                                        <input
-                                            type="text"
-                                            id="categoria"
-                                            name="categoria"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={entidadAVisualizar.categorias || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="horaextra" className="form-label m-0 mb-2 me-2 d-flex">Hora Extra</label>
-                                        <input
-                                            type="checkbox"
-                                            id="horaextra"
-                                            name="horaextra"
-                                            className="form-check-input"
-                                            style={{ width: '60px', height: '30px' }}
-                                            checked={entidadAVisualizar.horaextra || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setEntidadAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!entidadAVisualizar}
+                    onClose={() => setEntidadAVisualizar(null)}
+                    title="Entidad"
+                    data={entidadAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {entidadAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
-                                                <input
-                                                    type="text"
-                                                    id="nombre"
-                                                    name="nombre"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={entidadAGuardar.nombre || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrotelefono"
-                                                    name="nrotelefono"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={entidadAGuardar.nrotelefono || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="salario" className="form-label m-0 mb-2">Salario</label>
-                                                <NumericFormat
-                                                    type="text"
-                                                    id="salario"
-                                                    name="salario"
-                                                    className="form-control modern-input w-100"
-                                                    displayType="input"
-                                                    thousandSeparator="."
-                                                    decimalSeparator=","
-                                                    prefix={'Gs. '}
-                                                    value={entidadAGuardar.salario === 0 ? 0 : entidadAGuardar.salario || ''}
-                                                    placeholder='Escribe...'
-                                                    min={0}
-                                                    onChange={(event) => {
-                                                        const value = event.target.value.replace(/[^0-9]/g, '');
-                                                        setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: value === '' ? '' : parseFloat(value) || 0 })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
-                                                <input
-                                                    type="text"
-                                                    id="correo"
-                                                    name="correo"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={entidadAGuardar.correo || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="fechainicio" className="form-label m-0 mb-2">Fecha de Inicio</label>
-                                                <input
-                                                    type="date"
-                                                    id="fechainicio"
-                                                    name="fechainicio"
-                                                    className="form-control modern-input w-100"
-                                                    value={entidadAGuardar.fechainicio || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="cargo" className="form-label m-0 mb-2">Cargo</label>
-                                                <i style={{ cursor: puedeCrearCargo ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCargo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearCargo) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Cargos')
-                                                            navigate('/home/config/rrhh/positions')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={cargos}
-                                                    value={entidadAGuardar.cargo}
-                                                    getLabel={(v) => v.cargo}
-                                                    searchFields={[
-                                                        v => v.cargo
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setEntidadAGuardar({
-                                                            ...entidadAGuardar,
-                                                            cargo: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="cartera" className="form-label m-0 mb-2">Cartera</label>
-                                                <i style={{ cursor: puedeCrearCartera ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCartera ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearCartera) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Carteras')
-                                                            navigate('/home/config/commercial/wallets')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={carteras}
-                                                    value={entidadAGuardar.cartera}
-                                                    getLabel={(v) => v.nombre}
-                                                    searchFields={[
-                                                        v => v.nombre
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setEntidadAGuardar({
-                                                            ...entidadAGuardar,
-                                                            cartera: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
-                                                <select
-                                                    className="form-select modern-input w-100"
-                                                    name="estado"
-                                                    id='estado'
-                                                    value={entidadAGuardar.estado ? entidadAGuardar.estado : ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    disabled={!entidadAGuardar.id}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
-                                                    <option key={1} value={'Activo'}>Activo</option>
-                                                    <option key={2} value={'Inactivo'}>Inactivo</option>
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={!userLog?.id == 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={entidadAGuardar.erpid || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
-                                                <input
-                                                    type="text"
-                                                    id="apellido"
-                                                    name="apellido"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={entidadAGuardar.apellido || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={150}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrodoc"
-                                                    name="nrodoc"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={entidadAGuardar.nrodoc || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="codzktime" className="form-label m-0 mb-2">Código ZKTime</label>
-                                                <NumericFormat
-                                                    type="text"
-                                                    id="codzktime"
-                                                    name="codzktime"
-                                                    className="form-control modern-input w-100"
-                                                    displayType="input"
-                                                    value={entidadAGuardar.codzktime === 0 ? 0 : entidadAGuardar.codzktime || ''}
-                                                    placeholder='Escribe...'
-                                                    min={0}
-                                                    onChange={(event) => {
-                                                        const value = event.target.value.replace(/[^0-9]/g, '');
-                                                        setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: value === '' ? '' : parseFloat(value) || 0 })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
-                                                <input
-                                                    type="date"
-                                                    id="fechanacimiento"
-                                                    name="fechanacimiento"
-                                                    className="form-control modern-input w-100"
-                                                    value={entidadAGuardar.fechanacimiento || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="fechafin" className="form-label m-0 mb-2">Fecha de Final</label>
-                                                <input
-                                                    type="date"
-                                                    id="fechafin"
-                                                    name="fechafin"
-                                                    className="form-control modern-input w-100"
-                                                    value={entidadAGuardar.fechafin || ''}
-                                                    onChange={(event) => setEntidadAGuardar({ ...entidadAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
-                                                <i style={{ cursor: puedeCrearSucursal ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSucursal ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearSucursal) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Sucursales')
-                                                            navigate('/home/config/general/branchs')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={sucursales}
-                                                    value={entidadAGuardar.sucursal}
-                                                    getLabel={(v) => v.sucursal}
-                                                    searchFields={[
-                                                        v => v.sucursal
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setEntidadAGuardar({
-                                                            ...entidadAGuardar,
-                                                            sucursal: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="categorias" className="form-label m-0 mb-2">Categoría</label>
-                                                <i style={{ cursor: puedeCrearCategoria ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearCategoria ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearCategoria) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Categorias')
-                                                            navigate('/home/config/general/categories')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={categorias}
-                                                    value={getCategoriasSeleccionadas()}
-                                                    getLabel={(v) => v.tipoentidad}
-                                                    searchFields={[
-                                                        v => v.tipoentidad
-                                                    ]}
-                                                    onChange={(v) => {
-                                                        const categoriasString = v.map(c => c.tipoentidad).join(',');
-                                                        setEntidadAGuardar({
-                                                            ...entidadAGuardar,
-                                                            categorias: categoriasString
-                                                        });
-                                                    }}
-                                                    multiple={true}
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horaextra" className="form-label m-0 mb-2 me-2 d-flex">Hora Extra</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="horaextra"
-                                                    name="horaextra"
-                                                    className="form-check-input"
-                                                    style={{ width: '60px', height: '30px' }}
-                                                    checked={entidadAGuardar.horaextra || ''}
-                                                    onChange={(e) => {
-                                                        const check = e.target.checked;
-                                                        setEntidadAGuardar({ ...entidadAGuardar, [e.target.name]: check });
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setEntidadAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!entidadAGuardar}
+                    onClose={() => setEntidadAGuardar(null)}
+                    title="Entidad"
+                    data={entidadAGuardar}
+                    onSave={handleSubmit}
+                    mode={entidadAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

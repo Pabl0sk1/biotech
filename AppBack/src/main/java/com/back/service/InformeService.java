@@ -34,7 +34,7 @@ public class InformeService {
 		//detailRegistry.put("campoDetalle", repositorioDetalle);
     }
 	
-	@SuppressWarnings({ "rawtypes", "null", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Page<?> query(Class<?> entity, Integer page, Integer size, String orderClause, String filterClause, String detail) {
 		Pageable pageable = getPageable(page, size, orderClause);
 		
@@ -72,7 +72,7 @@ public class InformeService {
 	    return PageRequest.of(page, size, sort);
 	}
     
-	@SuppressWarnings({ "unchecked", "rawtypes", "null" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Page<?> queryDetalle(String detail, String filterClause, Pageable pageable) {
 	    JpaSpecificationExecutor<?> repo = detailRegistry.get(detail.toLowerCase());
 	    
@@ -92,27 +92,22 @@ public class InformeService {
         throw new RuntimeException("Informe no soportado");
     }
 
-	@SuppressWarnings("null")
 	public Informe guardar(Informe informe) {
 		return rep.save(informe);
 	}
 	
-	@SuppressWarnings("null")
 	public InformeData guardarData(InformeData data) {
 		return repD1.save(data);
 	}
 
-	@SuppressWarnings("null")
 	public void eliminar(Integer id) {
 		rep.deleteById(id);
 	}
 	
-	@SuppressWarnings("null")
 	public void eliminarData(Integer id) {
 		repD1.deleteById(id);
 	}
 
-	@SuppressWarnings("null")
 	public Informe buscarPorId(Integer id) {
 
 		Optional<Informe> informe = rep.findById(id);

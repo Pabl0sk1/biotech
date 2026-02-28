@@ -4,13 +4,11 @@ import { getCurrency } from '../services/moneda.service.js';
 import { getTaxation } from '../services/tributaciones.service.js';
 import { getCommercial } from '../services/nombrecomercial.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -18,7 +16,6 @@ import ImportErp from '../layouts/ImportErp.jsx';
 
 export const GrupoProductoApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [grupoproductos, setGrupoProductos] = useState([]);
     const [monedas, setMonedas] = useState([]);
     const [tributaciones, setTributaciones] = useState([]);
@@ -40,22 +37,6 @@ export const GrupoProductoApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearTributacion, setPuedeCrearTributacion] = useState(false);
-    const [puedeCrearMoneda, setPuedeCrearMoneda] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['gr04'], userLog?.tipousuario?.id);
-            setPuedeCrearTributacion(ok1);
-            const ok2 = await tienePermisoRuta(['gr02'], userLog?.tipousuario?.id);
-            setPuedeCrearMoneda(ok2);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
@@ -72,26 +53,42 @@ export const GrupoProductoApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         tributacion: null,
         moneda: null,
         grupoproducto: "",
-        erpid: 0,
-        subgrupoproducto: []
+        erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        grupoproducto: { label: "Descripción", notnull: true },
+        tributacion: {
+            type: "object",
+            options: tributaciones,
+            searches: ['tributacion'],
+            label: "Tributación",
+            getLabel: (item) => item?.tributacion || "",
+            module: ['gr04'],
+            listPath: "/home/config/general/taxations",
+            popupTitle: "Tributaciones",
+            order: 1,
+            autofocus: true
+        },
+        moneda: {
+            type: "object",
+            options: monedas,
+            searches: ['moneda'],
+            label: "Moneda",
+            getLabel: (item) => item?.moneda || "",
+            module: ['gr02'],
+            listPath: "/home/config/general/currencies",
+            popupTitle: "Monedas",
+            notnull: true,
+            order: 2
+        },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" },
+        subgrupoproducto: { hidden: true }
     };
 
     const recuperarGrupoProductos = () => {
@@ -157,9 +154,10 @@ export const GrupoProductoApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (grupoproductoAGuardar) => {
-        setGrupoProductoAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const grupoproductoAGuardar = { ...formData };
 
         if (grupoproductoAGuardar.id) {
             await updateProductGroup(grupoproductoAGuardar.id, grupoproductoAGuardar);
@@ -170,6 +168,7 @@ export const GrupoProductoApp = ({ userLog }) => {
         }
         recuperarGrupoProductos();
         setLoading(false);
+        setGrupoProductoAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -210,25 +209,8 @@ export const GrupoProductoApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        let sw = 0;
-        if (!grupoproductoAGuardar.grupoproducto || !grupoproductoAGuardar.moneda) sw = 1;
-
-        if (sw === 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
-        if (form.checkValidity()) {
-            guardarFn({ ...grupoproductoAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -256,182 +238,27 @@ export const GrupoProductoApp = ({ userLog }) => {
             )}
 
             {grupoproductoAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="grupoproducto" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="grupoproducto"
-                                            name="grupoproducto"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={grupoproductoAVisualizar.grupoproducto || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="tributacion" className="form-label m-0 mb-2">Tributación</label>
-                                        <input
-                                            type="text"
-                                            id="tributacion"
-                                            name="tributacion"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={grupoproductoAVisualizar.tributacion?.tributacion || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="moneda" className="form-label m-0 mb-2">Moneda</label>
-                                        <input
-                                            type="text"
-                                            id="moneda"
-                                            name="moneda"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={grupoproductoAVisualizar.moneda?.moneda || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={grupoproductoAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setGrupoProductoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!grupoproductoAVisualizar}
+                    onClose={() => setGrupoProductoAVisualizar(null)}
+                    title="Grupo de Producto"
+                    data={grupoproductoAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {grupoproductoAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="grupoproducto" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="grupoproducto"
-                                                    name="grupoproducto"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={grupoproductoAGuardar.grupoproducto || ''}
-                                                    onChange={(event) => setGrupoProductoAGuardar({ ...grupoproductoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tributacion" className="form-label m-0 mb-2">Tributacion</label>
-                                                <i style={{ cursor: puedeCrearTributacion ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearTributacion ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearTributacion) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Tributaciones')
-                                                            navigate('/home/config/general/taxations')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={tributaciones}
-                                                    value={grupoproductoAGuardar.tributacion}
-                                                    getLabel={(v) => v.tributacion}
-                                                    searchFields={[
-                                                        v => v.tributacion
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setGrupoProductoAGuardar({
-                                                            ...grupoproductoAGuardar,
-                                                            tributacion: v
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="moneda" className="form-label m-0 mb-2">Moneda</label>
-                                                <i style={{ cursor: puedeCrearMoneda ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearMoneda ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearMoneda) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Monedas')
-                                                            navigate('/home/config/general/currencies')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={monedas}
-                                                    value={grupoproductoAGuardar.moneda}
-                                                    getLabel={(v) => v.moneda}
-                                                    searchFields={[
-                                                        v => v.moneda
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setGrupoProductoAGuardar({
-                                                            ...grupoproductoAGuardar,
-                                                            moneda: v
-                                                        })
-                                                    }
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={grupoproductoAGuardar.erpid || ''}
-                                                    onChange={(event) => setGrupoProductoAGuardar({ ...grupoproductoAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setGrupoProductoAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!grupoproductoAGuardar}
+                    onClose={() => setGrupoProductoAGuardar(null)}
+                    title="Grupo de Producto"
+                    data={grupoproductoAGuardar}
+                    onSave={handleSubmit}
+                    mode={grupoproductoAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">
