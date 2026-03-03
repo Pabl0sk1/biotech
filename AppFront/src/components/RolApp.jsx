@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { getRole, saveRole, updateRole, deleteRole } from '../services/tipousuario.service.js';
 import { getUser } from "../services/usuario.service.js";
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -45,22 +46,13 @@ export const RolApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         tipousuario: ""
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipousuario: { label: "Descripción", notnull: true, autofocus: true }
     };
 
     const recuperarRoles = () => {
@@ -104,9 +96,10 @@ export const RolApp = ({ userLog }) => {
         else setRolAEliminar(rol);
     };
 
-    const guardarFn = async (rolAGuardar) => {
-        setRolAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const rolAGuardar = { ...formData };
 
         if (rolAGuardar.id) {
             await updateRole(rolAGuardar.id, rolAGuardar);
@@ -117,6 +110,7 @@ export const RolApp = ({ userLog }) => {
         }
         recuperarRoles();
         setLoading(false);
+        setRolAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -157,16 +151,8 @@ export const RolApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...rolAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -191,80 +177,29 @@ export const RolApp = ({ userLog }) => {
             )}
 
             {rolAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="tipousuario" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="tipousuario"
-                                            name="tipousuario"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={rolAVisualizar.tipousuario || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setRolAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!rolAVisualizar}
+                    onClose={() => setRolAVisualizar(null)}
+                    title="Rol"
+                    data={rolAVisualizar}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             {rolAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipousuario" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="tipousuario"
-                                                    name="tipousuario"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={rolAGuardar.tipousuario || ''}
-                                                    onChange={(event) => setRolAGuardar({ ...rolAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setRolAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!rolAGuardar}
+                    onClose={() => setRolAGuardar(null)}
+                    title="Rol"
+                    data={rolAGuardar}
+                    onSave={handleSubmit}
+                    mode={rolAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    columns={1}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

@@ -2,23 +2,19 @@ import { useState, useEffect } from 'react';
 import { getShift, saveShift, updateShift, deleteShift } from '../services/turno.service.js';
 import { getSchedule } from '../services/tipoturno.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { HourFormat } from '../utils/DateHourFormat.js';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
 
 export const TurnoApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [turnos, setTurnos] = useState([]);
     const [modalidades, setModalidades] = useState([]);
-    const [detallesAEliminar, setDetallesAEliminar] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -36,26 +32,12 @@ export const TurnoApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearModalidad, setPuedeCrearModalidad] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['rh02'], userLog?.tipousuario?.id);
-            setPuedeCrearModalidad(ok1);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
                 if (detalleNoEliminar) {
                     setDetalleNoEliminar(false);
                 } else {
-                    setDetallesAEliminar([]);
                     setTurnoAEliminar(null);
                     setTurnoAVisualizar(null);
                     setTurnoAGuardar(null);
@@ -68,19 +50,6 @@ export const TurnoApp = ({ userLog }) => {
         };
     }, [detalleNoEliminar]);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         tipoturno: null,
@@ -89,8 +58,29 @@ export const TurnoApp = ({ userLog }) => {
         horasal: "00:00",
         horades: "00:00",
         thoras: 0,
-        extporcen: 0,
-        turnodia: []
+        extporcen: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipoturno: {
+            type: "object",
+            options: modalidades,
+            searches: ['tipo'],
+            label: "Modalidad",
+            getLabel: (item) => item?.tipo || "",
+            autofocus: true,
+            module: ['rh02'],
+            listPath: '/home/config/rrhh/schedules',
+            popupTitle: 'Modalidades',
+            notnull: true
+        },
+        descripcion: { label: "Descripción", notnull: true },
+        horaent: { type: "time", label: "Horarío de entrada" },
+        horasal: { type: "time", label: "Horarío de salida" },
+        horades: { type: "time", label: "Tiempo de descanso" },
+        thoras: { type: "number", label: "Total de horas semanales" },
+        extporcen: { type: "number", label: "Porcentaje" },
+        turnodia: { hidden: true }
     };
 
     const recuperarTurnos = () => {
@@ -140,26 +130,21 @@ export const TurnoApp = ({ userLog }) => {
         setTurnoAEliminar(turno);
     };
 
-    const guardarFn = async (turnoAGuardar) => {
-        setTurnoAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
 
-        const nuevosDias = turnoAGuardar.turnodia.filter(d => {
-            if (d.id === null) return true;
-            return !detallesAEliminar.includes(d.id);
-        });
-        const turnoActualizado = { ...turnoAGuardar, turnodia: nuevosDias };
+        const turnoAGuardar = { ...formData };
 
         if (turnoAGuardar.id) {
-            await updateShift(turnoActualizado.id, turnoActualizado);
-            await AddAccess('Modificar', turnoActualizado.id, userLog, "Turnos");
+            await updateShift(turnoAGuardar.id, turnoAGuardar);
+            await AddAccess('Modificar', turnoAGuardar.id, userLog, "Turnos");
         } else {
-            const nuevaTurno = await saveShift(turnoActualizado);
+            const nuevaTurno = await saveShift(turnoAGuardar);
             await AddAccess('Insertar', nuevaTurno.saved.id, userLog, "Turnos");
         }
-        setDetallesAEliminar([]);
         recuperarTurnos();
         setLoading(false);
+        setTurnoAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -200,29 +185,8 @@ export const TurnoApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        let sw = 0;
-        if (!turnoAGuardar.turnodia.length) {
-            sw = 1;
-            setDetalleNoEliminar(true);
-        }
-        if (!turnoAGuardar.tipoturno) sw = 1;
-
-        if (sw == 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
-        if (form.checkValidity()) {
-            guardarFn({ ...turnoAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -244,310 +208,27 @@ export const TurnoApp = ({ userLog }) => {
             )}
 
             {turnoAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="descripcion" className="form-label m-0 mb-2">Descripción</label>
-                                            <input
-                                                type="text"
-                                                id="descripcion"
-                                                name="descripcion"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.descripcion || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horaent" className="form-label m-0 mb-2">Horarío de Entrada</label>
-                                            <input
-                                                type="time"
-                                                id="horaent"
-                                                name="horaent"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horaent || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horades" className="form-label m-0 mb-2">Tiempo de Descanso</label>
-                                            <input
-                                                type="time"
-                                                id="horades"
-                                                name="horades"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horades || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="extporcen" className="form-label m-0 mb-2">Porcentaje</label>
-                                            <input
-                                                type="number"
-                                                id="extporcen"
-                                                name="extporcen"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.extporcen || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
-                                            <input
-                                                type="text"
-                                                id="tipoturno"
-                                                name="tipoturno"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.tipoturno.tipo || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="horasal" className="form-label m-0 mb-2">Horarío de Salida</label>
-                                            <input
-                                                type="time"
-                                                id="horasal"
-                                                name="horasal"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.horasal || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className='form-group mb-1'>
-                                            <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
-                                            <input
-                                                type="number"
-                                                id="thoras"
-                                                name="thoras"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={turnoAVisualizar.thoras || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="form-group bg-success mb-3 rounded-3 text-center w-100">
-                                    <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
-                                    <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
-                                        {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
-                                            const estaMarcado = turnoAVisualizar.turnodia?.some((d) => d.dia === dia);
-                                            return (
-                                                <div className="form-check" key={dia}>
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        id={dia}
-                                                        checked={estaMarcado}
-                                                        readOnly
-                                                    />
-                                                    <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
-                                                        {dia}
-                                                    </label>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                                <button onClick={() => setTurnoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!turnoAVisualizar}
+                    onClose={() => setTurnoAVisualizar(null)}
+                    title="Turno"
+                    data={turnoAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {turnoAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
-                                            <div className="form-group mb-1">
-                                                <label htmlFor="descripcion" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="descripcion"
-                                                    name="descripcion"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={turnoAGuardar.descripcion || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    autoFocus
-                                                    maxLength={150}
-                                                    required
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horaent" className="form-label m-0 mb-2">Horarío de Entrada</label>
-                                                <input
-                                                    type="time"
-                                                    id="horaent"
-                                                    name="horaent"
-                                                    className="form-control modern-input w-100"
-                                                    value={turnoAGuardar.horaent || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horades" className="form-label m-0 mb-2">Tiempo de Descanso</label>
-                                                <input
-                                                    type="time"
-                                                    id="horades"
-                                                    name="horades"
-                                                    className="form-control modern-input w-100"
-                                                    value={turnoAGuardar.horades || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="extporcen" className="form-label m-0 mb-2">Porcentaje</label>
-                                                <input
-                                                    type="number"
-                                                    id="extporcen"
-                                                    name="extporcen"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={turnoAGuardar.extporcen || ''}
-                                                    min={0}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipoturno" className="form-label m-0 mb-2">Modalidad</label>
-                                                <i style={{ cursor: puedeCrearModalidad ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModalidad ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearModalidad) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Modalidades')
-                                                            navigate('/home/config/rrhh/schedules')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={modalidades}
-                                                    value={turnoAGuardar.tipoturno}
-                                                    getLabel={(v) => v.tipo}
-                                                    searchFields={[
-                                                        v => v.tipo
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setTurnoAGuardar({
-                                                            ...turnoAGuardar,
-                                                            tipoturno: v
-                                                        })
-                                                    }
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="horasal" className="form-label m-0 mb-2">Horarío de Salida</label>
-                                                <input
-                                                    type="time"
-                                                    id="horasal"
-                                                    name="horasal"
-                                                    className="form-control modern-input w-100"
-                                                    value={turnoAGuardar.horasal || ''}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="thoras" className="form-label m-0 mb-2">Total de Horas Semanales</label>
-                                                <input
-                                                    type="number"
-                                                    id="thoras"
-                                                    name="thoras"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={turnoAGuardar.thoras || ''}
-                                                    min={0}
-                                                    onChange={(event) => setTurnoAGuardar({ ...turnoAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="form-group bg-success mb-3 rounded-3 text-center w-100">
-                                        <label className="form-label m-0 p-3 fw-bold fs-5 text-success-emphasis">Días del Turno</label>
-                                        <div className="d-flex flex-wrap gap-xl-3 px-3 pb-3 justify-content-center">
-                                            {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dia) => {
-                                                const estaMarcado = turnoAGuardar.turnodia?.some((d) => d.dia === dia);
-                                                return (
-                                                    <div className="form-check" key={dia}>
-                                                        <input
-                                                            className="form-check-input"
-                                                            type="checkbox"
-                                                            id={dia}
-                                                            checked={estaMarcado}
-                                                            onChange={(e) => {
-                                                                const estaChequeado = e.target.checked;
-                                                                const turnosActuales = turnoAGuardar.turnodia || [];
-                                                                if (estaChequeado) {
-                                                                    const yaExiste = turnosActuales.some((d) => d.dia === dia);
-                                                                    if (!yaExiste) {
-                                                                        const nuevosDias = [...turnosActuales, { id: null, dia }];
-                                                                        setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
-                                                                    }
-                                                                } else {
-                                                                    const detalleEliminado = turnosActuales.find((d) => d.dia === dia);
-                                                                    const nuevosDias = turnosActuales.filter((d) => d.dia !== dia);
-                                                                    setTurnoAGuardar({ ...turnoAGuardar, turnodia: nuevosDias });
-                                                                    if (detalleEliminado?.id != null) {
-                                                                        setDetallesAEliminar((prev) => [...prev, detalleEliminado.id]);
-                                                                    }
-                                                                }
-                                                            }}
-                                                        />
-                                                        <label className="form-check-label fw-semibold text-black" htmlFor={dia}>
-                                                            {dia}
-                                                        </label>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                    <div className='mt-4'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => {
-                                            setTurnoAGuardar(null);
-                                            setDetallesAEliminar([]);
-                                        }}
-                                            className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div >
-                </>
+                <SmartModal
+                    open={!!turnoAGuardar}
+                    onClose={() => setTurnoAGuardar(null)}
+                    title="Turno"
+                    data={turnoAGuardar}
+                    onSave={handleSubmit}
+                    mode={turnoAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

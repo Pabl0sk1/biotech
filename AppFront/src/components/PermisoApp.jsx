@@ -4,11 +4,9 @@ import { getRole } from '../services/tipousuario.service.js';
 import { getModule } from '../services/modulo.service.js';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
 import Header from '../Header.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -16,7 +14,6 @@ import Duplicate from '../layouts/Duplicate.jsx';
 
 export const PermisoApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
     const [permisos, setPermisos] = useState([]);
     const [roles, setRoles] = useState([]);
     const [modulos, setModulos] = useState([]);
@@ -38,50 +35,24 @@ export const PermisoApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearRol, setPuedeCrearRol] = useState(false);
-    const [puedeCrearModulo, setPuedeCrearModulo] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['sc03'], userLog?.tipousuario?.id);
-            setPuedeCrearRol(ok1);
-            const ok2 = await tienePermisoRuta(['sc02'], userLog?.tipousuario?.id);
-            setPuedeCrearModulo(ok2);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
                 setPermisoAEliminar(null);
                 setPermisoNoEliminar(null);
                 setPermisoAVisualizar(null);
+                if (permisoDuplicado) {
+                    setPermisoDuplicado(null);
+                    return;
+                }
                 setPermisoAGuardar(null);
-                setPermisoDuplicado(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, []);
-
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
+    }, [permisoDuplicado]);
 
     const selected = {
         id: null,
@@ -93,6 +64,38 @@ export const PermisoApp = ({ userLog }) => {
         puedeeliminar: false,
         puedeeditar: false,
         puedeimportar: false
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipousuario: {
+            type: "object",
+            options: roles,
+            searches: ['tipousuario'],
+            label: "Rol",
+            getLabel: (item) => item?.tipousuario || "",
+            autofocus: true,
+            module: ['sc03'],
+            listPath: "/home/security/roles",
+            popupTitle: "Roles",
+            notnull: true
+        },
+        modulo: {
+            type: "object",
+            options: modulos,
+            searches: ['moduloes', 'var'],
+            label: "Módulo",
+            getLabel: (item) => item?.moduloes || "",
+            module: ['sc02'],
+            listPath: "/home/security/modules",
+            popupTitle: "Módulos",
+            notnull: true
+        },
+        puedeconsultar: { type: "checkbox", label: "¿Puede consultar?" },
+        puedever: { type: "checkbox", label: "¿Puede ver?" },
+        puedeagregar: { type: "checkbox", label: "¿Puede agregar?" },
+        puedeeliminar: { type: "checkbox", label: "¿Puede eliminar?" },
+        puedeeditar: { type: "checkbox", label: "¿Puede editar?" },
+        puedeimportar: { type: "checkbox", label: "¿Puede importar?" },
     };
 
     const recuperarPermisos = () => {
@@ -148,9 +151,10 @@ export const PermisoApp = ({ userLog }) => {
         setPermisoAEliminar(permiso);
     };
 
-    const guardarFn = async (permisoAGuardar) => {
-        setPermisoAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const permisoAGuardar = { ...formData };
 
         if (permisoAGuardar.id) {
             await updatePermission(permisoAGuardar.id, permisoAGuardar);
@@ -161,18 +165,7 @@ export const PermisoApp = ({ userLog }) => {
         }
         recuperarPermisos();
         setLoading(false);
-    };
-
-    const verificarPermisoDuplicado = (dato) => {
-        return permisos.some(p => p.tipousuario.id == dato.tipousuario.id && p.modulo.id == dato.modulo.id && p.id !== dato.id);
-    }
-
-    const nextPage = () => {
-        if (query.page + 1 < totalPages) setQuery(q => ({ ...q, page: q.page + 1 }));
-    };
-
-    const prevPage = () => {
-        if (query.page > 0) setQuery(q => ({ ...q, page: q.page - 1 }));
+        setPermisoAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -213,30 +206,16 @@ export const PermisoApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
+    const verificarPermisoDuplicado = (dato) => {
+        return permisos.some(p => p.tipousuario.id == dato.tipousuario.id && p.modulo.id == dato.modulo.id && p.id !== dato.id);
+    };
 
-        let sw = 0;
-        if (!permisoAGuardar.tipousuario || !permisoAGuardar.modulo) sw = 1;
-        else if (verificarPermisoDuplicado(permisoAGuardar)) {
-            setPermisoAGuardar(null);
+    const handleSubmit = (formData) => {
+        if (verificarPermisoDuplicado(formData)) {
             setPermisoDuplicado(true);
-            sw = 1;
-        };
-
-        if (sw === 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
             return;
         }
-
-        if (form.checkValidity()) {
-            guardarFn({ ...permisoAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -264,286 +243,27 @@ export const PermisoApp = ({ userLog }) => {
             )}
 
             {permisoAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="modulo" className="form-label m-0 mb-2">Módulo</label>
-                                        <input
-                                            type="text"
-                                            id="modulo"
-                                            name="modulo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={permisoAVisualizar.modulo.var}
-                                            readOnly
-                                        />
-                                        <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
-                                        <input
-                                            type="text"
-                                            id="tipousuario"
-                                            name="tipousuario"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={permisoAVisualizar.tipousuario.tipousuario}
-                                            readOnly
-                                        />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 ps-0'>
-                                        <p htmlFor="operaciones" className="mb-1 fw-bold text-decoration-underline">Operaciones</p>
-                                        <div>
-                                            <label htmlFor="puedeconsultar" className="form-label m-0 me-2">Consultar?</label>
-                                            <input
-                                                type="checkbox"
-                                                id="puedeconsultar"
-                                                name="puedeconsultar"
-                                                className="form-check-input"
-                                                checked={permisoAVisualizar.puedeconsultar}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="puedeimportar" className="form-label m-0 me-2">Importar?</label>
-                                            <input
-                                                type="checkbox"
-                                                id="puedeimportar"
-                                                name="puedeimportar"
-                                                className="form-check-input"
-                                                checked={permisoAVisualizar.puedeimportar}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="puedeagregar" className="form-label m-0 me-2">Agregar?</label>
-                                            <input
-                                                type="checkbox"
-                                                id="puedeagregar"
-                                                name="puedeagregar"
-                                                className="form-check-input"
-                                                checked={permisoAVisualizar.puedeagregar}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
-                                            <input
-                                                type="checkbox"
-                                                id="puedeeditar"
-                                                name="puedeeditar"
-                                                className="form-check-input"
-                                                checked={permisoAVisualizar.puedeeditar}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="puedeeliminar" className="form-label m-0 me-2">Eliminar?</label>
-                                            <input
-                                                type="checkbox"
-                                                id="puedeeliminar"
-                                                name="puedeeliminar"
-                                                className="form-check-input"
-                                                checked={permisoAVisualizar.puedeeliminar}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="puedever" className="form-label m-0 me-2">Ver?</label>
-                                            <input
-                                                type="checkbox"
-                                                id="puedever"
-                                                name="puedever"
-                                                className="form-check-input"
-                                                checked={permisoAVisualizar.puedever}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setPermisoAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!permisoAVisualizar}
+                    onClose={() => setPermisoAVisualizar(null)}
+                    title="Permiso"
+                    data={permisoAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {permisoAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de visualizar*/}
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="modulo" className="form-label m-0 mb-2">Módulo</label>
-                                                <i style={{ cursor: puedeCrearModulo ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearModulo ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearModulo) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Modulos')
-                                                            navigate('/home/security/modules')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={modulos}
-                                                    value={permisoAGuardar.modulo}
-                                                    getLabel={(v) => v.moduloes}
-                                                    searchFields={[
-                                                        v => v.moduloes
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setPermisoAGuardar({
-                                                            ...permisoAGuardar,
-                                                            modulo: v
-                                                        })
-                                                    }
-                                                    autofocus={true}
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
-                                                <i style={{ cursor: puedeCrearRol ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearRol ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearRol) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Roles')
-                                                            navigate('/home/security/roles')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={roles}
-                                                    value={permisoAGuardar.tipousuario}
-                                                    getLabel={(v) => v.tipousuario}
-                                                    searchFields={[
-                                                        v => v.tipousuario
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setPermisoAGuardar({
-                                                            ...permisoAGuardar,
-                                                            tipousuario: v
-                                                        })
-                                                    }
-                                                    required={true}
-                                                />
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de visualizar*/}
-                                        <div className='col ms-5 ps-0'>
-                                            <p htmlFor="operaciones" className="mb-1 fw-bold text-decoration-underline">Operaciones</p>
-                                            <div className='form-group'>
-                                                <label htmlFor="puedeconsultar" className="form-label m-0 me-2">Consultar?</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="puedeconsultar"
-                                                    name="puedeconsultar"
-                                                    className="form-check-input"
-                                                    checked={permisoAGuardar.puedeconsultar}
-                                                    onChange={(e) => {
-                                                        const estaChequeado = e.target.checked;
-                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group'>
-                                                <label htmlFor="puedeimportar" className="form-label m-0 me-2">Importar?</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="puedeimportar"
-                                                    name="puedeimportar"
-                                                    className="form-check-input"
-                                                    checked={permisoAGuardar.puedeimportar}
-                                                    onChange={(e) => {
-                                                        const estaChequeado = e.target.checked;
-                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group'>
-                                                <label htmlFor="puedeagregar" className="form-label m-0 me-2">Agregar?</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="puedeagregar"
-                                                    name="puedeagregar"
-                                                    className="form-check-input"
-                                                    checked={permisoAGuardar.puedeagregar}
-                                                    onChange={(e) => {
-                                                        const estaChequeado = e.target.checked;
-                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group'>
-                                                <label htmlFor="puedeeditar" className="form-label m-0 me-2">Editar?</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="puedeeditar"
-                                                    name="puedeeditar"
-                                                    className="form-check-input"
-                                                    checked={permisoAGuardar.puedeeditar}
-                                                    onChange={(e) => {
-                                                        const estaChequeado = e.target.checked;
-                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group'>
-                                                <label htmlFor="puedeeliminar" className="form-label m-0 me-2">Eliminar?</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="puedeeliminar"
-                                                    name="puedeeliminar"
-                                                    className="form-check-input"
-                                                    checked={permisoAGuardar.puedeeliminar}
-                                                    onChange={(e) => {
-                                                        const estaChequeado = e.target.checked;
-                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className='form-group'>
-                                                <label htmlFor="puedever" className="form-label m-0 me-2">Ver?</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="puedever"
-                                                    name="puedever"
-                                                    className="form-check-input"
-                                                    checked={permisoAGuardar.puedever}
-                                                    onChange={(e) => {
-                                                        const estaChequeado = e.target.checked;
-                                                        setPermisoAGuardar({ ...permisoAGuardar, [e.target.name]: estaChequeado })
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setPermisoAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!permisoAGuardar}
+                    onClose={() => setPermisoAGuardar(null)}
+                    title="Permiso"
+                    data={permisoAGuardar}
+                    onSave={handleSubmit}
+                    mode={permisoAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

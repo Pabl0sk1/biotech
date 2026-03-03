@@ -42,19 +42,6 @@ export const TokenApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const recuperarTokens = () => {
         setQuery(q => ({ ...q }));
     };
@@ -94,13 +81,13 @@ export const TokenApp = ({ userLog }) => {
     };
 
     const guardarFn = async () => {
-        setTokenAGuardar(null);
         setLoading(true);
 
         const nuevoToken = await saveToken(userLog?.id);
         await AddAccess('Insertar', nuevoToken.saved.id, userLog, "Tokens");
         recuperarTokens();
         setLoading(false);
+        setTokenAGuardar(null);
     };
 
     const toggleOrder = (field) => {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AddAccess } from "./utils/AddAccess.js";
 import { tienePermisoRuta } from './utils/RouteAccess.js';
+import { GeneratePass } from './utils/GeneratePass.js';
 import AutocompleteSelect from "./AutocompleteSelect";
 
 /* =======================
@@ -35,7 +36,7 @@ const getMultipleOpts = (stringValue, opts, idfield) => {
 /* =======================
     Campo automático
 ======================= */
-const AutoField = ({ name, value, onChange, disabled, settings, mode }) => {
+const AutoField = ({ name, value, onChange, disabled, settings }) => {
     const type = settings?.type ?? "text";
     const required = settings?.notnull || false;
     const optMul = settings?.options || [];
@@ -65,7 +66,7 @@ const AutoField = ({ name, value, onChange, disabled, settings, mode }) => {
         );
     }
 
-    if (type == "select") {
+    if (type === "select") {
         return (
             <select {...common}>
                 {(settings.options || []).map(opt => (
@@ -74,6 +75,23 @@ const AutoField = ({ name, value, onChange, disabled, settings, mode }) => {
                     </option>
                 ))}
             </select>
+        );
+    }
+
+    const [showPasswordNueva, setShowPasswordNueva] = useState(false);
+    if (type === "password") {
+        return (
+            <div className="d-flex align-items-center position-relative">
+                <input type={showPasswordNueva ? "text" : "password"} {...common} />
+                <button
+                    type="button"
+                    className="btn btn-light btn-eye"
+                    style={{ marginTop: '7px' }}
+                    onClick={() => setShowPasswordNueva(!showPasswordNueva)}
+                >
+                    {showPasswordNueva ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
+                </button>
+            </div>
         );
     }
 
@@ -251,6 +269,16 @@ export const SmartModal = ({
                                                 {settings?.label ?? labelize(key)}
                                                 {settings?.notnull && mode !== "view" && <i className="text-danger ms-1">*</i>}
                                             </label>
+                                            {settings?.type === "password" && mode !== "view" && (
+                                                <button
+                                                    type="button"
+                                                    className="btn-action enabled"
+                                                    onClick={() => handleChange(key, GeneratePass())}
+                                                    title="Generar contraseña"
+                                                >
+                                                    <i className="bi bi-key-fill text-success"></i>
+                                                </button>
+                                            )}
                                             {['object', 'object.multiple'].includes(settings?.type) && mode !== "view" && (() => {
                                                 const allowed = canCreateMap[key];
                                                 return (
@@ -288,7 +316,6 @@ export const SmartModal = ({
                                                             onChange={handleChange}
                                                             disabled={disabledAll || dynamicDisabled}
                                                             settings={settings}
-                                                            mode={mode}
                                                         />
                                                     );
                                                 })()

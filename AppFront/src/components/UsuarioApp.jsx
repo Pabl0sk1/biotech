@@ -3,29 +3,19 @@ import { getUser, saveUser, updateUser, deleteUser } from '../services/usuario.s
 import { getBranch } from '../services/sucursal.service.js';
 import { getRole } from '../services/tipousuario.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from '../FiltroModal.jsx';
-import { tienePermisoRuta } from '../utils/RouteAccess.js';
-import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
-import { GeneratePass } from '../utils/GeneratePass.js';
-import { useNavigate } from 'react-router-dom';
 import { ListControls } from '../ListControls.jsx';
-import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
+import Duplicate from '../layouts/Duplicate.jsx';
 
 export const UsuarioApp = ({ userLog }) => {
 
-    const navigate = useNavigate();
-    const [nombreUsuarioMsj, setNombreUsuarioMsj] = useState('');
-    const [nombreUsuarioError, setNombreUsuarioError] = useState(false);
-    const [newPassMsj, setNewPassMsj] = useState('');
-    const [newPassError, setNewPassError] = useState(false);
-    const [repeatPassMsj, setRepeatPassMsj] = useState('');
-    const [repeatPassError, setRepeatPassError] = useState(false);
-    const [repeatPassword, setRepeatPassword] = useState('');
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);
     const [sucursales, setSucursales] = useState([]);
@@ -36,8 +26,7 @@ export const UsuarioApp = ({ userLog }) => {
     const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
     const [usuarioNoEliminar, setUsuarioNoEliminar] = useState(null);
     const [usuarioAVisualizar, setUsuarioAVisualizar] = useState(null);
-    const [showPasswordNueva, setShowPasswordNueva] = useState(false);
-    const [showPasswordRepetir, setShowPasswordRepetir] = useState(false);
+    const [usuarioDuplicado, setUsuarioDuplicado] = useState(null);
     const [loading, setLoading] = useState(false);
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
@@ -48,28 +37,16 @@ export const UsuarioApp = ({ userLog }) => {
         filter: []
     });
 
-    const [puedeCrearRol, setPuedeCrearRol] = useState(false);
-    const [puedeCrearSucursal, setPuedeCrearSucursal] = useState(false);
-
-    useEffect(() => {
-        const loadPermiso = async () => {
-            const ok1 = await tienePermisoRuta(['sc03'], userLog?.tipousuario?.id);
-            setPuedeCrearRol(ok1);
-            const ok2 = await tienePermisoRuta(['gr03'], userLog?.tipousuario?.id);
-            setPuedeCrearSucursal(ok2);
-        };
-
-        if (userLog?.tipousuario?.id) {
-            loadPermiso();
-        }
-    }, [userLog]);
-
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
                 setUsuarioAEliminar(null);
                 setUsuarioNoEliminar(null);
                 setUsuarioAVisualizar(null);
+                if (usuarioDuplicado) {
+                    setUsuarioDuplicado(null);
+                    return;
+                }
                 setUsuarioAGuardar(null);
             }
         };
@@ -77,20 +54,7 @@ export const UsuarioApp = ({ userLog }) => {
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, []);
-
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
+    }, [usuarioDuplicado]);
 
     const selected = {
         id: null,
@@ -105,14 +69,59 @@ export const UsuarioApp = ({ userLog }) => {
         nrotelefono: "",
         correo: "",
         direccion: "",
+        fechanacimiento: "",
         estado: "Activo",
         activo: true,
         online: false,
         vermapa: false,
-        fechanacimiento: "",
         imagentipo: "",
         imagennombre: "",
         imagenurl: ""
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tipousuario: {
+            type: "object",
+            options: roles,
+            searches: ['tipousuario'],
+            label: "Rol",
+            getLabel: (item) => item?.tipousuario || "",
+            module: ['sc03'],
+            listPath: "/home/security/roles",
+            popupTitle: "Roles",
+            notnull: true,
+            autofocus: true,
+            order: 1
+        },
+        sucursal: {
+            type: "object",
+            options: sucursales,
+            searches: ['sucursal'],
+            label: "Sucursal",
+            getLabel: (item) => item?.sucursal || "",
+            module: ['gr03'],
+            listPath: "/home/config/general/branchs",
+            popupTitle: "Sucursales",
+            notnull: true,
+            order: 2
+        },
+        nombreusuario: { notnull: true, label: "Nombre de Usuario", order: 5 },
+        contrasena: { type: "password", label: "Contraseña", notnull: true, order: 6 },
+        nomape: { hidden: true },
+        nombre: { notnull: true, order: 3 },
+        apellido: { order: 4 },
+        nrodoc: { label: "Nro. de documento", order: 7 },
+        nrotelefono: { type: "tel", label: "Nro. de teléfono", order: 8 },
+        correo: { type: "email", order: 9 },
+        direccion: { type: "textarea", label: "Dirección", order: 13 },
+        fechanacimiento: { type: "date", label: "Fecha de nacimiento", order: 10 },
+        estado: { type: "select", options: ["Activo", "Inactivo"], notnull: true, order: 11 },
+        vermapa: { type: "checkbox", label: "¿Puede ver informe Power-Bi?", order: 12 },
+        activo: { hidden: true },
+        online: { hidden: true },
+        imagennombre: { hidden: true },
+        imagentipo: { hidden: true },
+        imagenurl: { hidden: true }
     };
 
     const recuperarUsuarios = () => {
@@ -168,42 +177,32 @@ export const UsuarioApp = ({ userLog }) => {
         setUsuarioAEliminar(usuario);
     };
 
-    const guardarFn = async (usuarioAGuardar) => {
-        setUsuarioAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
 
         let activo = true;
-        if (usuarioAGuardar.estado == 'Inactivo') activo = false;
+        if (formData.estado == 'Inactivo') activo = false;
 
         let apellido = "";
-        if (usuarioAGuardar.apellido) apellido = ", " + usuarioAGuardar.apellido;
+        if (formData.apellido) apellido = ", " + formData.apellido;
 
-        const usuarioActualizado = {
-            ...usuarioAGuardar,
-            nomape: usuarioAGuardar.nombre + apellido,
+        const usuarioAGuardar = {
+            ...formData,
+            nomape: formData.nombre + apellido,
             activo: activo
         };
 
-        if (usuarioActualizado.id) {
-            await updateUser(usuarioActualizado.id, usuarioActualizado);
-            await AddAccess('Modificar', usuarioActualizado.id, userLog, "Usuarios");
+        if (usuarioAGuardar.id) {
+            await updateUser(usuarioAGuardar.id, usuarioAGuardar);
+            await AddAccess('Modificar', usuarioAGuardar.id, userLog, "Usuarios");
         } else {
-            const nuevoUsuario = await saveUser(usuarioActualizado);
+            const nuevoUsuario = await saveUser(usuarioAGuardar);
             await AddAccess('Insertar', nuevoUsuario.saved.id, userLog, "Usuarios");
         }
         recuperarUsuarios();
         setLoading(false);
+        setUsuarioAGuardar(null);
     };
-
-    const generarContrasena = () => {
-        const pass = GeneratePass();
-        setUsuarioAGuardar({ ...usuarioAGuardar, contrasena: pass });
-        setRepeatPassword(pass);
-        setNewPassMsj('');
-        setNewPassError(false);
-        setRepeatPassMsj('');
-        setRepeatPassError(false);
-    }
 
     const toggleOrder = (field) => {
         const [currentField, dir] = query.order.split(",");
@@ -243,88 +242,21 @@ export const UsuarioApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        let sw = 0;
-        if (!usuarioAGuardar.tipousuario || !usuarioAGuardar.nombre) sw = 1;
-        if (!usuarioAGuardar.nombreusuario) {
-            setNombreUsuarioMsj('El nombre de usuario es obligatorio y no debe sobrepasar los 50 caracteres.');
-            setNombreUsuarioError(true);
-            sw = 1;
-        } else {
-            const existe = verificarNombreUsuarioExistente(usuarioAGuardar.nombreusuario, usuarioAGuardar.id);
-            if (existe) {
-                setNombreUsuarioMsj('El nombre de usuario ya existe.');
-                setNombreUsuarioError(true);
-                sw = 1;
-            } else {
-                setNombreUsuarioMsj('');
-                setNombreUsuarioError(false);
-            }
-        }
-        if (!usuarioAGuardar.id) {
-            if (!usuarioAGuardar.contrasena) {
-                setNewPassMsj("La contraseña es obligatoria y no debe sobrepasar los 30 caracteres.");
-                setNewPassError(true);
-                sw = 1;
-            } else if (usuarioAGuardar.contrasena.length < 8) {
-                setNewPassMsj("La contraseña debe contener al menos 8 caracteres.");
-                setNewPassError(true);
-                sw = 1;
-            } else {
-                setNewPassMsj('');
-                setNewPassError(false);
-            }
-            if (!repeatPassword) {
-                setRepeatPassMsj("Debe volver a introducir la contraseña.");
-                setRepeatPassError(true);
-                sw = 1;
-            } else if (usuarioAGuardar.contrasena !== repeatPassword) {
-                setRepeatPassMsj("Las contraseñas no coinciden.");
-                setRepeatPassError(true);
-                sw = 1;
-            } else {
-                setRepeatPassMsj('');
-                setRepeatPassError(false);
-            }
-        }
-
-        if (sw == 1) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
-        if (form.checkValidity()) {
-            guardarFn({ ...usuarioAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
-    };
-
     const verificarNombreUsuarioExistente = (nombreUsuario, id) => {
         return usuarios.some(u => u.nombreusuario.toLowerCase() === nombreUsuario.toLowerCase() && u.id !== id);
+    };
+
+    const handleSubmit = (formData) => {
+        if (verificarNombreUsuarioExistente(formData.nombreusuario, formData.id)) {
+            setUsuarioDuplicado(true);
+            return;
+        }
+        guardarFn(formData);
     };
 
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
         setFiltrosAplicados({});
-    };
-
-    const handleOpenForm = (usuario) => {
-        setShowPasswordNueva(false);
-        setShowPasswordRepetir(false);
-        setRepeatPassword('');
-        setNewPassMsj('');
-        setRepeatPassMsj('');
-        setNewPassError(false);
-        setRepeatPassError(false);
-        setNombreUsuarioMsj('');
-        setNombreUsuarioError(false);
-        setUsuarioAGuardar(usuario);
     };
 
     const rows = [...usuarios];
@@ -336,6 +268,9 @@ export const UsuarioApp = ({ userLog }) => {
             {loading && (
                 <Loading />
             )}
+            {usuarioDuplicado && (
+                <Duplicate setDuplicado={setUsuarioDuplicado} title={'nombre de usuario'} gen={true} />
+            )}
             {usuarioAEliminar && (
                 <Delete setEliminar={setUsuarioAEliminar} title={'usuario'} gen={true} confirmar={confirmarEliminacion} id={usuarioAEliminar.id} />
             )}
@@ -344,446 +279,27 @@ export const UsuarioApp = ({ userLog }) => {
             )}
 
             {usuarioAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '800px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    {/*Columna 1 de visualizar*/}
-                                    <div className='col pe-0'>
-                                        <label htmlFor="nombreusuario" className="form-label m-0 mb-2">Nombre de Usuario</label>
-                                        <input
-                                            type="text"
-                                            id="nombreusuario"
-                                            name="nombreusuario"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nombreusuario || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
-                                        <input
-                                            type="text"
-                                            id="nombre"
-                                            name="nombre"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nombre || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                        <input
-                                            type="text"
-                                            id="nrodoc"
-                                            name="nrodoc"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nrodoc || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
-                                        <input
-                                            type="email"
-                                            id="correo"
-                                            name="correo"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.correo || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
-                                        <input
-                                            type="text"
-                                            id="sucursal"
-                                            name="sucursal"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.sucursal.sucursal || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    {/*Columna 2 de visualizar*/}
-                                    <div className='col ms-5 me-5 p-0'>
-                                        <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
-                                        <input
-                                            type="text"
-                                            id="tipousuario"
-                                            name="tipousuario"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.tipousuario.tipousuario || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
-                                        <input
-                                            type="text"
-                                            id="apellido"
-                                            name="apellido"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.apellido || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
-                                        <input
-                                            type="text"
-                                            id="nrotelefono"
-                                            name="nrotelefono"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.nrotelefono || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
-                                        <input
-                                            type="date"
-                                            id="fechanacimiento"
-                                            name="fechanacimiento"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.fechanacimiento || ''}
-                                            readOnly
-                                        />
-                                        <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
-                                        <input
-                                            type="text"
-                                            id="estado"
-                                            name="estado"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={usuarioAVisualizar.estado || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                    {/*Columna 3 de visualizar*/}
-                                    <div className='col ps-0'>
-                                        <label htmlFor="direccion" className="form-label m-0 mb-2">Dirección</label>
-                                        <textarea
-                                            type="text"
-                                            id="direccion"
-                                            name="direccion"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            style={{ resize: 'none', height: '295px' }}
-                                            value={usuarioAVisualizar.direccion || ''}
-                                            readOnly>
-                                        </textarea>
-                                        <label htmlFor="vermapa" className="form-label m-0 mb-2 me-2 d-flex">Ver Mapa</label>
-                                        <input
-                                            type="checkbox"
-                                            id="vermapa"
-                                            name="vermapa"
-                                            className="form-check-input"
-                                            style={{ width: '60px', height: '30px' }}
-                                            checked={usuarioAVisualizar.vermapa || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setUsuarioAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!usuarioAVisualizar}
+                    onClose={() => setUsuarioAVisualizar(null)}
+                    title="Usuario"
+                    data={usuarioAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {usuarioAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '800px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        {/*Columna 1 de guardar*/}
-                                        <div className='col pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nombreusuario" className="form-label m-0 mb-2">Nombre de Usuario</label>
-                                                <input
-                                                    type="text"
-                                                    id="nombreusuario"
-                                                    name="nombreusuario"
-                                                    className={`form-control modern-input w-100 ${nombreUsuarioError ? 'is-invalid' : ''}`}
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nombreusuario || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value.toUpperCase() })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={50}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>{nombreUsuarioMsj}
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nombre" className="form-label m-0 mb-2">Nombre</label>
-                                                <input
-                                                    type="text"
-                                                    id="nombre"
-                                                    name="nombre"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nombre || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-dangertext-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El nombre es obligatorio y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nrodoc" className="form-label m-0 mb-2">Nro. de Documento</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrodoc"
-                                                    name="nrodoc"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nrodoc || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="correo" className="form-label m-0 mb-2">Correo</label>
-                                                <input
-                                                    type="email"
-                                                    id="correo"
-                                                    name="correo"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.correo || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Sucursal</label>
-                                                <i style={{ cursor: puedeCrearSucursal ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearSucursal ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearSucursal) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Sucursales')
-                                                            navigate('/home/config/general/branchs')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={sucursales}
-                                                    value={usuarioAGuardar.sucursal}
-                                                    getLabel={(v) => v.sucursal}
-                                                    searchFields={[
-                                                        v => v.sucursal
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setUsuarioAGuardar({
-                                                            ...usuarioAGuardar,
-                                                            sucursal: v
-                                                        })
-                                                    }
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <label htmlFor="contrasena" className="form-label m-0 mb-2">Contraseña</label>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-success mb-2"
-                                                        onClick={generarContrasena}
-                                                        title="Generar contraseña segura"
-                                                    >
-                                                        <i className="bi bi-key-fill me-1"></i>Generar
-                                                    </button>
-                                                </div>
-                                                <div className="d-flex align-items-center position-relative">
-                                                    <input
-                                                        type={showPasswordNueva ? "text" : "password"}
-                                                        id="contrasena"
-                                                        name="contrasena"
-                                                        className="form-control modern-input w-100 pe-5"
-                                                        placeholder="Escribe..."
-                                                        value={usuarioAGuardar.contrasena || ''}
-                                                        onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                        required={usuarioAGuardar.contrasena}
-                                                        autoComplete='off'
-                                                        maxLength={30}
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-light btn-eye"
-                                                        style={{ marginTop: '7px' }}
-                                                        onClick={() => setShowPasswordNueva(!showPasswordNueva)}
-                                                    >
-                                                        {showPasswordNueva ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                                                    </button>
-                                                </div>
-                                                {newPassError && (
-                                                    <div className="text-danger text-start mt-1" style={{ fontSize: '14px' }}>
-                                                        <i className="bi bi-exclamation-triangle-fill me-2"></i>{newPassMsj}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {/*Columna 2 de guardar*/}
-                                        <div className='col ms-5 me-5 p-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tipousuario" className="form-label m-0 mb-2">Rol</label>
-                                                <i style={{ cursor: puedeCrearRol ? "pointer" : '' }}
-                                                    className={`bi bi-plus-circle-fill ms-2 ${puedeCrearRol ? 'text-success' : 'text-success-emphasis'}`}
-                                                    onClick={async () => {
-                                                        if (puedeCrearRol) {
-                                                            await AddAccess('Consultar', 0, userLog, 'Roles')
-                                                            navigate('/home/security/roles')
-                                                        };
-                                                    }}>
-                                                </i>
-                                                <AutocompleteSelect
-                                                    options={roles}
-                                                    value={usuarioAGuardar.tipousuario}
-                                                    getLabel={(v) => v.tipousuario}
-                                                    searchFields={[
-                                                        v => v.tipousuario
-                                                    ]}
-                                                    onChange={(v) =>
-                                                        setUsuarioAGuardar({
-                                                            ...usuarioAGuardar,
-                                                            tipousuario: v
-                                                        })
-                                                    }
-                                                    required={true}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="apellido" className="form-label m-0 mb-2">Apellido</label>
-                                                <input
-                                                    type="text"
-                                                    id="apellido"
-                                                    name="apellido"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.apellido || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={150}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="nrotelefono" className="form-label m-0 mb-2">Nro. de Teléfono</label>
-                                                <input
-                                                    type="text"
-                                                    id="nrotelefono"
-                                                    name="nrotelefono"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.nrotelefono || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="fechanacimiento" className="form-label m-0 mb-2">Fecha de Nacimiento</label>
-                                                <input
-                                                    type="date"
-                                                    id="fechanacimiento"
-                                                    name="fechanacimiento"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={usuarioAGuardar.fechanacimiento || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="estado" className="form-label m-0 mb-2">Estado</label>
-                                                <select
-                                                    className="form-select modern-input w-100"
-                                                    name="estado"
-                                                    id='estado'
-                                                    value={usuarioAGuardar.estado ? usuarioAGuardar.estado : ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    disabled={!usuarioAGuardar.id}
-                                                    required
-                                                >
-                                                    <option value="" className="bg-secondary-subtle">Seleccione un estado...</option>
-                                                    <option key={1} value={'Activo'}>Activo</option>
-                                                    <option key={2} value={'Inactivo'}>Inactivo</option>
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="repetircontrasena" className="form-label m-0 mb-2">Repetir Contraseña</label>
-                                                <div className="d-flex align-items-center position-relative">
-                                                    <input
-                                                        type={showPasswordRepetir ? "text" : "password"}
-                                                        id="repetircontrasena"
-                                                        name="repetircontrasena"
-                                                        className="form-control modern-input w-100 pe-5"
-                                                        placeholder="Escribe..."
-                                                        value={repeatPassword || ''}
-                                                        onChange={(event) => setRepeatPassword(event.target.value)}
-                                                        autoComplete='new-password'
-                                                        maxLength={30}
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-light btn-eye"
-                                                        style={{ marginTop: '7px' }}
-                                                        onClick={() => setShowPasswordRepetir(!showPasswordRepetir)}
-                                                    >
-                                                        {showPasswordRepetir ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                                                    </button>
-                                                </div>
-                                                {repeatPassError && (
-                                                    <div className="text-danger text-start mt-1" style={{ fontSize: '14px' }}>
-                                                        <i className="bi bi-exclamation-triangle-fill me-2"></i>{repeatPassMsj}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {/*Columna 3 de visualizar*/}
-                                        <div className='col ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="direccion" className="form-label m-0 mb-2">Dirección</label>
-                                                <textarea
-                                                    id="direccion"
-                                                    name="direccion"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    style={{ resize: 'none', height: '260px' }}
-                                                    value={usuarioAGuardar.direccion || ''}
-                                                    onChange={(event) => setUsuarioAGuardar({ ...usuarioAGuardar, [event.target.name]: event.target.value })}
-                                                    maxLength={150}>
-                                                </textarea>
-                                            </div>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="vermapa" className="form-label m-0 mb-2 me-2 d-flex">Ver Mapa</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="vermapa"
-                                                    name="vermapa"
-                                                    className="form-check-input"
-                                                    style={{ width: '60px', height: '30px' }}
-                                                    checked={usuarioAGuardar.vermapa || ''}
-                                                    onChange={(e) => {
-                                                        const check = e.target.checked;
-                                                        setUsuarioAGuardar({ ...usuarioAGuardar, [e.target.name]: check });
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setUsuarioAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div >
-                </>
+                <SmartModal
+                    open={!!usuarioAGuardar}
+                    onClose={() => setUsuarioAGuardar(null)}
+                    title="Usuario"
+                    data={usuarioAGuardar}
+                    onSave={handleSubmit}
+                    mode={usuarioAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">
@@ -982,7 +498,8 @@ export const UsuarioApp = ({ userLog }) => {
                                                     key={v ? v.id : `empty-${index}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (puedeEditar) handleOpenForm(v);
+                                                        const newV = { ...v, contrasena: "" };
+                                                        if (puedeEditar) setUsuarioAGuardar(newV);
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { getTaxation, saveTaxation, updateTaxation, deleteTaxation, updateErpTaxation } from '../services/tributaciones.service.js';
 import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from '../Header.jsx';
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -48,24 +49,17 @@ export const TributacionApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         tributacion: "",
         iva: 0,
         erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        tributacion: { label: "Descripción", notnull: true, autofocus: true },
+        iva: { label: "IVA", type: "number" },
+        erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };
 
     const recuperarTributaciones = () => {
@@ -116,9 +110,10 @@ export const TributacionApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (tributacionAGuardar) => {
-        setTributacionAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const tributacionAGuardar = { ...formData };
 
         if (tributacionAGuardar.id) {
             await updateTaxation(tributacionAGuardar.id, tributacionAGuardar);
@@ -129,6 +124,7 @@ export const TributacionApp = ({ userLog }) => {
         }
         recuperarTributaciones();
         setLoading(false);
+        setTributacionAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -169,16 +165,8 @@ export const TributacionApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...tributacionAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -206,128 +194,27 @@ export const TributacionApp = ({ userLog }) => {
             )}
 
             {tributacionAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col me-5 pe-0'>
-                                        <label htmlFor="tributacion" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="tributacion"
-                                            name="tributacion"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={tributacionAVisualizar.tributacion || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={tributacionAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className='col ms-5 ps-0'>
-                                        <label htmlFor="iva" className="form-label m-0 mb-2">IVA</label>
-                                        <input
-                                            type="number"
-                                            id="iva"
-                                            name="iva"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={tributacionAVisualizar.iva || ''}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                                <button onClick={() => setTributacionAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!tributacionAVisualizar}
+                    onClose={() => setTributacionAVisualizar(null)}
+                    title="Tributación"
+                    data={tributacionAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {tributacionAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg">
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" role="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col me-5 pe-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="tributacion" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="tributacion"
-                                                    name="tributacion"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={tributacionAGuardar.tributacion || ''}
-                                                    onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={tributacionAGuardar.erpid || ''}
-                                                    onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className='col ms-5 ps-0'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="iva" className="form-label m-0 mb-2">IVA</label>
-                                                <input
-                                                    type="number"
-                                                    id="iva"
-                                                    name="iva"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={tributacionAGuardar.iva || ''}
-                                                    onChange={(event) => setTributacionAGuardar({ ...tributacionAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setTributacionAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!tributacionAGuardar}
+                    onClose={() => setTributacionAGuardar(null)}
+                    title="Tributación"
+                    data={tributacionAGuardar}
+                    onSave={handleSubmit}
+                    mode={tributacionAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">

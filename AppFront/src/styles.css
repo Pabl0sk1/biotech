@@ -146,6 +146,11 @@ select:hover {
   cursor: pointer;
 }
 
+input[type="select"]:disabled,
+select:disabled {
+  cursor: default;
+}
+
 .breadLink:hover {
   text-decoration: underline;
 }

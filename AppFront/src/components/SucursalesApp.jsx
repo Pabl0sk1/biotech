@@ -3,10 +3,11 @@ import { getBranch, saveBranch, updateBranch, deleteBranch, updateErpBranch } fr
 import { getUser } from '../services/usuario.service.js';
 import { getEntity } from '../services/entidad.service.js';
 import { getPermission } from '../services/permiso.service.js';
-import Header from "../Header.jsx";
 import { AddAccess } from "../utils/AddAccess.js";
 import { FiltroModal } from "../FiltroModal.jsx";
 import { ListControls } from '../ListControls.jsx';
+import Header from '../Header.jsx';
+import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
@@ -49,22 +50,15 @@ export const SucursalApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
-        sucursal: ""
+        sucursal: "",
+        erpid: 0
+    };
+    const fieldSettings = {
+        id: { hidden: true },
+        sucursal: { label: "Descripción", notnull: true, autofocus: true },
+        erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };
 
     const recuperarSucursales = () => {
@@ -116,9 +110,10 @@ export const SucursalApp = ({ userLog }) => {
         setLoading(false);
     }
 
-    const guardarFn = async (sucursalAGuardar) => {
-        setSucursalAGuardar(null);
+    const guardarFn = async (formData) => {
         setLoading(true);
+
+        const sucursalAGuardar = { ...formData };
 
         if (sucursalAGuardar.id) {
             await updateBranch(sucursalAGuardar.id, sucursalAGuardar);
@@ -129,6 +124,7 @@ export const SucursalApp = ({ userLog }) => {
         }
         recuperarSucursales();
         setLoading(false);
+        setSucursalAGuardar(null);
     };
 
     const toggleOrder = (field) => {
@@ -169,16 +165,8 @@ export const SucursalApp = ({ userLog }) => {
         return filtro;
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (form.checkValidity()) {
-            guardarFn({ ...sucursalAGuardar });
-            form.classList.remove('was-validated');
-        } else {
-            form.classList.add('was-validated');
-        }
+    const handleSubmit = (formData) => {
+        guardarFn(formData);
     };
 
     const refrescar = () => {
@@ -206,103 +194,27 @@ export const SucursalApp = ({ userLog }) => {
             )}
 
             {sucursalAVisualizar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
-                                <div className="row mb-3 fw-semibold text-start">
-                                    <div className='col'>
-                                        <label htmlFor="sucursal" className="form-label m-0 mb-2">Descripción</label>
-                                        <input
-                                            type="text"
-                                            id="sucursal"
-                                            name="sucursal"
-                                            className="form-control modern-input w-100 border-black mb-3"
-                                            value={sucursalAVisualizar.sucursal || ''}
-                                            readOnly
-                                        />
-                                        <div hidden={userLog?.id !== 1}>
-                                            <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                            <input
-                                                type="number"
-                                                id="erpid"
-                                                name="erpid"
-                                                className="form-control modern-input w-100 border-black mb-3"
-                                                value={sucursalAVisualizar.erpid || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setSucursalAVisualizar(null)} className="btn btn-danger text-black fw-bold mt-1">
-                                    <i className="bi bi-x-lg me-2"></i>Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!sucursalAVisualizar}
+                    onClose={() => setSucursalAVisualizar(null)}
+                    title="Sucursal"
+                    data={sucursalAVisualizar}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             {sucursalAGuardar && (
-                <>
-                    <div className="position-fixed top-0 start-0 z-2 w-100 h-100 bg-dark opacity-25"></div>
-                    <div className="position-fixed top-50 start-50 z-3 d-flex align-items-center justify-content-center translate-middle user-select-none">
-                        <div className="bg-white border border-1 border-black rounded-2 p-0 m-0 shadow-lg" style={{ width: '400px' }}>
-                            <div className="alert alert-success alert-dismissible fade show m-2 p-3 shadow-sm text-black" sucursale="alert">
-                                <form
-                                    action="url.ph"
-                                    onSubmit={handleSubmit}
-                                    className="needs-validation"
-                                    noValidate
-                                >
-                                    <div className="row mb-3 fw-semibold text-start">
-                                        <div className='col'>
-                                            <div className='form-group mb-1'>
-                                                <label htmlFor="sucursal" className="form-label m-0 mb-2">Descripción</label>
-                                                <input
-                                                    type="text"
-                                                    id="sucursal"
-                                                    name="sucursal"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={sucursalAGuardar.sucursal || ''}
-                                                    onChange={(event) => setSucursalAGuardar({ ...sucursalAGuardar, [event.target.name]: event.target.value })}
-                                                    required
-                                                    autoFocus
-                                                    maxLength={150}
-                                                />
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>La descripción es obligatoria y no debe sobrepasar los 150 caracteres.
-                                                </div>
-                                            </div>
-                                            <div className='form-group mb-1' hidden={userLog?.id !== 1}>
-                                                <label htmlFor="erpid" className="form-label m-0 mb-2">ERP ID</label>
-                                                <input
-                                                    type="number"
-                                                    id="erpid"
-                                                    name="erpid"
-                                                    className="form-control modern-input w-100"
-                                                    placeholder="Escribe..."
-                                                    value={sucursalAGuardar.erpid || ''}
-                                                    onChange={(event) => setSucursalAGuardar({ ...sucursalAGuardar, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='mt-3'>
-                                        <button type='submit' className="btn btn-success text-black me-4 fw-bold">
-                                            <i className='bi bi-floppy-fill me-2'></i>Guardar
-                                        </button>
-                                        <button onClick={() => setSucursalAGuardar(null)} className="btn btn-danger ms-4 text-black fw-bold">
-                                            <i className="bi bi-x-lg me-2"></i>Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <SmartModal
+                    open={!!sucursalAGuardar}
+                    onClose={() => setSucursalAGuardar(null)}
+                    title="Sucursal"
+                    data={sucursalAGuardar}
+                    onSave={handleSubmit}
+                    mode={sucursalAGuardar.id ? 'edit' : 'create'}
+                    fieldSettings={fieldSettings}
+                    userLog={userLog}
+                />
             )}
 
             <div className="modern-container colorPrimario">
