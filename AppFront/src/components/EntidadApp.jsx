@@ -335,14 +335,25 @@ export const EntidadApp = ({ userLog }) => {
                 />
             )}
 
-            <div className="modern-container colorPrimario">
+            <div>
                 <Header userLog={userLog} title={'ENTIDADES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Entidades
-                        </p>
-                        <div className="p-3">
+                <div className="container-fluid p-0">
+                    <div className="form-card">
+                        <ListControls
+                            query={query}
+                            setQuery={setQuery}
+                            totalPages={totalPages}
+                            totalItems={totalItems}
+                            onAdd={() => setEntidadAGuardar(selected)}
+                            onRefresh={refrescar}
+                            onErpImport={() => setEntidadErp(true)}
+                            canAdd={permiso?.puedeagregar}
+                            canImport={permiso?.puedeimportar}
+                            showErpButton={true}
+                            showAddButton={true}
+                            addData={selected}
+                        />
+                        <div>
                             <FiltroModal
                                 filtroActivo={filtroActivo}
                                 setFiltroActivo={setFiltroActivo}
@@ -350,8 +361,8 @@ export const EntidadApp = ({ userLog }) => {
                                 setFiltrosAplicados={setFiltrosAplicados}
                                 generarFiltro={generarFiltro}
                             />
-                            <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-success'>
+                            <table className='table table-hover align-middle m-0 list-table'>
+                                <thead className='table-secondary'>
                                     <tr>
                                         <th onClick={() => toggleOrder("id")} className="sortable-header">
                                             #
@@ -458,7 +469,7 @@ export const EntidadApp = ({ userLog }) => {
                                             ></i>
                                         </th>
                                         <th onClick={() => toggleOrder("categorias")} className="sortable-header">
-                                            Categoría
+                                            Categorías
                                             <i className={`bi ${getSortIcon("categorias")} ms-2`}></i>
                                             <i
                                                 className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
@@ -534,23 +545,23 @@ export const EntidadApp = ({ userLog }) => {
                                                     }}
                                                     style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
                                                 >
-                                                    <td style={{ width: '120px' }}>{v.id}</td>
+                                                    <td>{v.id}</td>
                                                     <td className='text-start'>{TruncDots(v.nomape, 35)}</td>
                                                     <td>{v.sucursal?.sucursal}</td>
                                                     <td className='text-end'>{v.nrodoc}</td>
                                                     <td>{v.categorias}</td>
-                                                    <td style={{ width: '140px' }}>
-                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstadoReg(v.activo)} m-0 rounded-2 border border-black`}>
+                                                    <td>
+                                                        <p className={`status-badge ${obtenerClaseEstadoReg(v.activo)}`}>
                                                             {v.estado}
                                                         </p>
                                                     </td>
-                                                    <td style={{ width: '100px' }}>
+                                                    <td>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 if (puedeEliminar) handleEliminarEntidad(v);
                                                             }}
-                                                            className="btn border-0 me-2 p-0"
+                                                            className="icon-action"
                                                             style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
                                                         >
                                                             <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
@@ -563,7 +574,7 @@ export const EntidadApp = ({ userLog }) => {
                                                                     setEntidadAVisualizar(v);
                                                                 }
                                                             }}
-                                                            className="btn border-0 ms-2 p-0"
+                                                            className="icon-action"
                                                             style={{ cursor: puedeVer ? 'pointer' : 'default' }}
                                                         >
                                                             <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
@@ -575,21 +586,8 @@ export const EntidadApp = ({ userLog }) => {
                                     )}
                                 </tbody>
                             </table>
+                            <div className='bg-light border border-secondary-subtle p-3' />
                         </div>
-                        <ListControls
-                            query={query}
-                            setQuery={setQuery}
-                            totalPages={totalPages}
-                            totalItems={totalItems}
-                            onAdd={() => setEntidadAGuardar(selected)}
-                            onRefresh={refrescar}
-                            onErpImport={() => setEntidadErp(true)}
-                            canAdd={permiso?.puedeagregar}
-                            canImport={permiso?.puedeimportar}
-                            showErpButton={true}
-                            showAddButton={true}
-                            addData={selected}
-                        />
                     </div>
                 </div>
             </div>

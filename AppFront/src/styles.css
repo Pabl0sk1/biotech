@@ -155,28 +155,6 @@ select:disabled {
   text-decoration: underline;
 }
 
-.scrollbar-container {
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0px;
-}
-
-.scrollbar-container::-webkit-scrollbar {
-  width: 10px;
-}
-
-.scrollbar-container::-webkit-scrollbar-thumb {
-  background: #cac3c3;
-}
-
-.scrollbar-container::-webkit-scrollbar-thumb:hover {
-  background: #a7a2a2;
-}
-
-.scrollbar-container::-webkit-scrollbar-track {
-  background: #eae7e7;
-}
-
 .usuarioNombre:hover {
   color: var(--color-ternario);
 }
@@ -252,10 +230,10 @@ input[type="number"] {
 
 .form-card {
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   border: none;
   overflow: hidden;
+  margin-top: 54px;
 }
 
 .form-header {
@@ -1316,27 +1294,10 @@ input[type="number"] {
   object-fit: cover;
 }
 
-/* ===== CONTENIDO DEL MENÚ ===== */
 .sidebar-content {
   padding: 8px 0;
   overflow-y: auto;
   height: calc(100vh - 160px);
-}
-
-.sidebar-content::-webkit-scrollbar,
-.modal-body::-webkit-scrollbar {
-  width: 5px;
-}
-
-.sidebar-content::-webkit-scrollbar-track,
-.modal-body::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.sidebar-content::-webkit-scrollbar-thumb,
-.modal-body::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.719);
-  border-radius: 2px;
 }
 
 /* ===== ITEMS DEL MENÚ ===== */
@@ -1664,7 +1625,7 @@ input[type="number"] {
   z-index: 1;
   background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
   box-shadow: 0 2px 20px rgba(16, 185, 129, 0.08);
-  border-bottom: 3px solid #10b981;
+  border-bottom: 3px solid #303030;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
 }
@@ -1995,4 +1956,150 @@ input[type="number"] {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-top: 5px solid #2c3e50;
+}
+
+/*Estilos nuevos para tabla de listados*/
+.list-table {
+  font-size: 0.9rem;
+  height: 100vh;
+}
+
+.list-table thead {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.list-table thead th {
+  font-weight: 600;
+  color: #343a40;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+}
+
+.list-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.list-table tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.list-table td {
+  border-top: 1px solid #f1f3f5;
+  padding: 5px;
+}
+
+.list-table td.text-end {
+  font-variant-numeric: tabular-nums;
+}
+
+/*Estilo de estado para celdas de la tabla*/
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.badge-activo {
+  background-color: #e6f4ea;
+  color: #1e7e34;
+}
+
+.badge-inactivo {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+/*Accion para iconos de opciones de registros*/
+.icon-action {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+  margin-right: 5px;
+}
+
+.icon-action:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.05);
+  border: none;
+}
+
+/*Estilo para scrollbar de la página*/
+.scrollbar-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0px;
+}
+
+html::-webkit-scrollbar-button {
+  display: block;
+  height: 14px;
+  background-color: rgb(255, 255, 255);
+}
+
+html::-webkit-scrollbar-button:vertical:decrement:start {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,2 9,8 1,8' fill='rgba(16,185,129,0.7)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
+}
+
+html::-webkit-scrollbar-button:vertical:increment:end {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,8 9,2 1,2' fill='rgba(16,185,129,0.7)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
+}
+
+html::-webkit-scrollbar-button:vertical:increment:start,
+html::-webkit-scrollbar-button:vertical:decrement:end {
+  display: none;
+}
+
+html::-webkit-scrollbar-button:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+  cursor: pointer;
+}
+
+.sidebar-content::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-body::-webkit-scrollbar,
+html::-webkit-scrollbar {
+  background-color: #dddddd;
+}
+
+html::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar-content::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.719);
+  border-radius: 2px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 1);
+  cursor: pointer;
 }

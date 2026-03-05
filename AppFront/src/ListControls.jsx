@@ -67,7 +67,7 @@ export const ListControls = ({
     };
 
     return (
-        <div className="border-top border-2 border-black pt-2 pb-2 ps-2 ps-md-3 pe-2 pe-md-3 m-0 user-select-none">
+        <div className="pt-2 pb-2 ps-2 ps-md-3 pe-2 pe-md-3 m-0 user-select-none">
             {/* Layout para móvil y tablet */}
             <div className="d-flex d-lg-none flex-column gap-3">
                 {/* Fila 1: Botones de acción */}
@@ -109,7 +109,7 @@ export const ListControls = ({
                     <div className="d-flex align-items-center gap-2">
                         <label className="fw-semibold mb-0 small">Tamaño</label>
                         <select
-                            className="form-select form-select-sm border-black"
+                            className="form-select form-select-sm"
                             style={{ width: 'auto', minWidth: '70px' }}
                             value={query.size}
                             onChange={(e) => {
@@ -137,7 +137,7 @@ export const ListControls = ({
                     <ul className="pagination m-0 pagination-sm">
                         <li className={`page-item ${query.page === 0 ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-end-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-end-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
                                 onClick={goToFirstPage}
                                 disabled={query.page === 0}
                                 title="Primera página"
@@ -147,7 +147,7 @@ export const ListControls = ({
                         </li>
                         <li className={`page-item ${query.page === 0 ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
                                 onClick={prevPage}
                                 disabled={query.page === 0}
                             >
@@ -159,7 +159,7 @@ export const ListControls = ({
                                 <input
                                     ref={inputRef}
                                     type="number"
-                                    className="form-control form-control-sm text-center fw-bold border-black rounded-0 border-start-0"
+                                    className="form-control form-control-sm text-center fw-bold rounded-0 border-start-0"
                                     value={pageInput}
                                     onChange={(e) => setPageInput(e.target.value)}
                                     onBlur={handlePageChange}
@@ -169,7 +169,7 @@ export const ListControls = ({
                                 />
                             ) : (
                                 <button
-                                    className="page-link text-bg-secondary border-black fw-bold rounded-0"
+                                    className="page-link text-bg-secondary fw-bold rounded-0"
                                     onClick={() => {
                                         setPageInput((query.page + 1).toString());
                                         setEditingPage(true);
@@ -182,7 +182,7 @@ export const ListControls = ({
                         </li>
                         <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
                                 onClick={nextPage}
                                 disabled={query.page + 1 >= totalPages}
                             >
@@ -191,7 +191,7 @@ export const ListControls = ({
                         </li>
                         <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-start-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-start-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
                                 onClick={goToLastPage}
                                 disabled={query.page + 1 >= totalPages}
                                 title="Última página"
@@ -241,7 +241,7 @@ export const ListControls = ({
                 <div className="d-flex align-items-center gap-2">
                     <label className="fw-semibold mb-0">Tamaño</label>
                     <select
-                        className="form-select form-select-sm border-black"
+                        className="form-select form-select-sm"
                         style={{ width: 'auto' }}
                         value={query.size}
                         onChange={(e) => {
@@ -270,7 +270,7 @@ export const ListControls = ({
                     <ul className="pagination m-0">
                         <li className={`page-item ${query.page === 0 ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-end-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-end-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
                                 onClick={goToFirstPage}
                                 disabled={query.page === 0}
                                 title="Primera página"
@@ -280,7 +280,7 @@ export const ListControls = ({
                         </li>
                         <li className={`page-item ${query.page === 0 ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-0 ${query.page === 0 ? 'text-black' : 'text-success'}`}
                                 onClick={prevPage}
                                 disabled={query.page === 0}
                             >
@@ -292,7 +292,7 @@ export const ListControls = ({
                                 <input
                                     ref={inputRef}
                                     type="number"
-                                    className="form-control text-center fw-bold border-black rounded-0 border-start-0"
+                                    className="form-control text-center fw-bold rounded-0 border-start-0"
                                     value={pageInput}
                                     onChange={(e) => setPageInput(e.target.value)}
                                     onBlur={handlePageChange}
@@ -302,7 +302,7 @@ export const ListControls = ({
                                 />
                             ) : (
                                 <button
-                                    className="page-link text-bg-secondary fw-bold border-black rounded-0"
+                                    className="page-link text-bg-secondary fw-bold rounded-0"
                                     onClick={() => {
                                         setPageInput((query.page + 1).toString());
                                         setEditingPage(true);
@@ -316,7 +316,7 @@ export const ListControls = ({
                         </li>
                         <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
                                 onClick={nextPage}
                                 disabled={query.page + 1 >= totalPages}
                             >
@@ -325,7 +325,7 @@ export const ListControls = ({
                         </li>
                         <li className={`page-item ${query.page + 1 >= totalPages ? 'disabled' : ''}`}>
                             <button
-                                className={`page-link border-black rounded-start-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
+                                className={`page-link rounded-start-0 ${query.page + 1 >= totalPages ? 'text-black' : 'text-success'}`}
                                 onClick={goToLastPage}
                                 disabled={query.page + 1 >= totalPages}
                                 title="Última página"
