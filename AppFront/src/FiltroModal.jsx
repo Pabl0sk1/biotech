@@ -45,8 +45,8 @@ export const FiltroModal = ({
             <div
                 className="position-absolute bg-white border border-black shadow p-3 rounded"
                 style={{
-                    top: filtroActivo.coords?.top ?? "150px",
-                    left: filtroActivo.coords?.left ?? "500px",
+                    top: filtroActivo.coords?.top,
+                    left: filtroActivo.coords?.left,
                     zIndex: 21
                 }}
             >

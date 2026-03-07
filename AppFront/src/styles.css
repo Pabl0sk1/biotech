@@ -2018,19 +2018,29 @@ input[type="number"] {
 /*Accion para iconos de opciones de registros*/
 .icon-action {
   background: transparent;
-  border: none;
   padding: 6px;
   border-radius: 6px;
   transition:
     background-color 0.15s ease,
     transform 0.1s ease;
-  margin-right: 5px;
+  outline: none;
+  border: none;
 }
 
 .icon-action:hover {
-  background-color: #f8f9fa;
+  background-color: #ffffff;
   transform: scale(1.05);
   border: none;
+}
+
+.icon-action:disabled {
+  background-color: transparent;
+}
+
+.icon-action:focus,
+.icon-action:active {
+  outline: none;
+  box-shadow: none;
 }
 
 /*Estilo para scrollbar de la página*/
