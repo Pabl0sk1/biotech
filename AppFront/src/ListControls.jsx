@@ -13,11 +13,18 @@ export const ListControls = ({
     showErpButton = true,
     showAddButton = true,
     pageSizeOptions = [5, 10, 30, 50, 100],
-    addData = null
+    addData = null,
+    columns = [],
+    visibleColumns = [],
+    toggleColumn = () => { },
+    columnMenuOpen = false,
+    setColumnMenuOpen = () => { }
 }) => {
     const [editingPage, setEditingPage] = useState(false);
     const [pageInput, setPageInput] = useState('');
     const inputRef = useRef(null);
+    const menuRefMobile = useRef(null);
+    const menuRefDesktop = useRef(null);
 
     useEffect(() => {
         if (editingPage && inputRef.current) {
@@ -25,6 +32,21 @@ export const ListControls = ({
             inputRef.current.select();
         }
     }, [editingPage]);
+
+    useEffect(() => {
+        if (!columnMenuOpen) return;
+
+        const handleClickOutside = (e) => {
+            const insideMobile = menuRefMobile.current?.contains(e.target);
+            const insideDesktop = menuRefDesktop.current?.contains(e.target);
+            if (!insideMobile && !insideDesktop) {
+                setColumnMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [columnMenuOpen, setColumnMenuOpen]);
 
     const handlePageChange = () => {
         const newPage = parseInt(pageInput) - 1;
@@ -90,8 +112,7 @@ export const ListControls = ({
                     >
                         <i className="bi bi-arrow-repeat"></i>
                         <span className="d-none d-sm-inline ms-2">Refrescar</span>
-                    </button>
-                    {showErpButton && (
+                    </button>                    {showErpButton && (
                         <button
                             onClick={onErpImport}
                             className="btn btn-secondary fw-bold flex-fill flex-sm-grow-0"
@@ -129,6 +150,61 @@ export const ListControls = ({
                     <div className="d-flex align-items-center gap-2">
                         <label className="fw-semibold mb-0 small">Total:</label>
                         <span className="badge bg-secondary">{totalItems}</span>
+                        <div ref={menuRefMobile} className="position-relative column-menu-container listcontrols-column-menu-container">
+                            <button
+                                className="btn btn-secondary btn-sm"
+                                type="button"
+                                onClick={() => setColumnMenuOpen(o => !o)}
+                            >
+                                <i className="bi bi-columns-gap"></i>
+                                <span className="ms-2">Columnas</span>
+                            </button>
+
+                            {columnMenuOpen && (
+                                <>
+                                    <div
+                                        className="d-lg-none"
+                                        onClick={() => setColumnMenuOpen(false)}
+                                        style={{
+                                            position: 'fixed',
+                                            inset: 0,
+                                            zIndex: 998,
+                                            background: 'rgba(0,0,0,0.35)',
+                                            backdropFilter: 'blur(2px)',
+                                        }}
+                                    />
+                                    <div className="card p-2 column-menu-dropdown">
+                                        <div className="d-flex align-items-center justify-content-between px-1 pb-2 mb-2 border-bottom">
+                                            <span className="fw-bold d-flex align-items-center gap-2">
+                                                <i className="bi bi-columns-gap text-success"></i>
+                                                Mostrar columnas
+                                            </span>
+                                            <button
+                                                className="btn-close"
+                                                style={{ fontSize: '0.7rem' }}
+                                                onClick={() => setColumnMenuOpen(false)}
+                                            />
+                                        </div>
+                                        {columns
+                                            .filter(col => !col.hidden)
+                                            .map(col => (
+                                                <div key={col.key} className="form-check">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id={`col_select_${col.key}`}
+                                                        checked={visibleColumns.includes(col.key)}
+                                                        onChange={() => toggleColumn(col.key)}
+                                                    />
+                                                    <label className="form-check-label" htmlFor={`col_select_${col.key}`}>
+                                                        {col.label}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -260,9 +336,52 @@ export const ListControls = ({
                 </div>
 
                 {/* Total */}
-                <div className="d-flex align-items-center gap-2 ms-3">
+                <div ref={menuRefDesktop} className="d-flex align-items-center gap-2 ms-3 position-relative column-menu-container listcontrols-column-menu-container">
                     <label className="fw-semibold mb-0">Total:</label>
                     <span className="badge bg-secondary fs-6">{totalItems}</span>
+
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        type="button"
+                        onClick={() => setColumnMenuOpen(o => !o)}
+                    >
+                        <i className="bi bi-columns-gap"></i>
+                        <span className="ms-2">Columnas</span>
+                    </button>
+
+                    {columnMenuOpen && (
+                        <>
+                            <div className="card p-2 column-menu-dropdown">
+                                <div className="d-flex align-items-center justify-content-between px-1 pb-2 mb-2 border-bottom">
+                                    <span className="fw-bold d-flex align-items-center gap-2">
+                                        <i className="bi bi-columns-gap text-success"></i>
+                                        Mostrar columnas
+                                    </span>
+                                    <button
+                                        className="btn-close"
+                                        style={{ fontSize: '0.7rem' }}
+                                        onClick={() => setColumnMenuOpen(false)}
+                                    />
+                                </div>
+                                {columns
+                                    .filter(col => !col.hidden)
+                                    .map(col => (
+                                        <div key={col.key} className="form-check">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id={`col_select_${col.key}`}
+                                                checked={visibleColumns.includes(col.key)}
+                                                onChange={() => toggleColumn(col.key)}
+                                            />
+                                            <label className="form-check-label" htmlFor={`col_select_${col.key}`}>
+                                                {col.label}
+                                            </label>
+                                        </div>
+                                    ))}
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Paginación */}

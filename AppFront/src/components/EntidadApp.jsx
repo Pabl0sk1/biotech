@@ -7,8 +7,6 @@ import { getEntityType } from '../services/tipoentidad.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import { AddAccess } from "../utils/AddAccess.js";
-import { obtenerClaseEstadoReg } from '../utils/StatusBadge.js';
-import { TruncDots } from '../utils/TruncDots.js';
 import Header from '../Header.jsx';
 import SmartModal from '../ModernModal.jsx';
 import SmartTable from '../ModernTable.jsx';
@@ -139,26 +137,48 @@ export const EntidadApp = ({ userLog }) => {
         erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
     const columnSettings = {
-        id: { label: "#", type: "number" },
+        id: { label: "#", type: "number", default: true },
+        cargo: { label: "Cargo", type: "string", field: "cargo.cargo", classname: "text-start" },
+        sucursal: { label: "Sucursal", type: "string", field: "sucursal.sucursal", classname: "text-start" },
+        cartera: { label: "Cartera", type: "string", field: "cartera.nombre", classname: "text-start" },
+        categorias: { label: "Categorías", type: "string", default: true },
         nomape: {
             label: "Nombre/Apellido",
             type: "string",
             classname: "text-start",
-            render: (row) => <span>{TruncDots(row.nomape, 35)}</span>,
-            sortable: false
+            default: true,
+            render: {
+                rentype: "truncate",
+                renval1: "nomape",
+                renval2: 35
+            }
         },
-        sucursal: { label: "Sucursal", type: "string", field: "sucursal.sucursal", classname: "text-start" },
+        nombre: { label: "Nombre", type: "string", classname: "text-start" },
+        apellido: { label: "Apellido", type: "string", classname: "text-start" },
         nrodoc: { label: "Nro. de documento", type: "string", classname: "text-end" },
-        categorias: { label: "Categorías", type: "string" },
+        nrotelefono: { label: "Nro. de teléfono", type: "string", classname: "text-end" },
+        correo: { label: "Correo", type: "email", classname: "text-start" },
+        fechanacimiento: { label: "Fecha de nacimiento", type: "date" },
+        fechainicio: { label: "Fecha de inicio", type: "date" },
+        fechafin: { label: "Fecha de fin", type: "date" },
+        salario: { label: "Salario", type: "number", classname: "text-end" },
+        codzktime: { label: "Código ZKTime", type: "number", classname: "text-end" },
         estado: {
             label: "Estado",
             type: "string",
-            render: (row) => (
-                <p className={`status-badge ${obtenerClaseEstadoReg(row.activo)}`}>
-                    {row.estado}
-                </p>
-            )
-        }
+            default: true,
+            render: {
+                rentype: "statusreg",
+                renval1: "activo",
+                renval2: "estado"
+            }
+        },
+        activo: { hidden: true },
+        horaextra: {
+            label: "¿Realiza horas extras?",
+            type: "boolean"
+        },
+        erpid: { label: "ERPID", type: "number", classname: "text-end", hidden: userLog?.id !== 1 }
     };
 
     const recuperarEntidades = () => {

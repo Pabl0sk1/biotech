@@ -232,7 +232,7 @@ input[type="number"] {
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   border: none;
-  overflow: hidden;
+  overflow: visible;
   margin-top: 54px;
 }
 
@@ -1993,6 +1993,23 @@ input[type="number"] {
   font-variant-numeric: tabular-nums;
 }
 
+.icon-filter {
+  cursor: pointer;
+  font-size: 12px;
+}
+
+@media (max-width: 992px) {
+  .list-table {
+    height: auto;
+    min-width: 600px;
+    font-size: 10px;
+  }
+
+  .icon-filter {
+    font-size: 10px;
+  }
+}
+
 /*Estilo de estado para celdas de la tabla*/
 .status-badge {
   display: inline-block;
@@ -2013,6 +2030,13 @@ input[type="number"] {
 .badge-inactivo {
   background-color: #f8d7da;
   color: #842029;
+}
+
+@media (max-width: 992px) {
+  .status-badge {
+    font-size: 0.5rem;
+    padding: 2px 6px;
+  }
 }
 
 /*Accion para iconos de opciones de registros*/
@@ -2041,6 +2065,54 @@ input[type="number"] {
 .icon-action:active {
   outline: none;
   box-shadow: none;
+}
+
+/* Modal de columnas de listados */
+.column-menu-dropdown {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  right: auto !important;
+  width: 90vw;
+  max-width: 280px;
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 999 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+  animation: scaleIn 0.18s ease;
+  border-radius: 0 !important;
+  border: 1px solid gray;
+}
+
+@media (min-width: 576px) and (max-width: 991px) {
+  .column-menu-dropdown {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 75vw;
+    max-width: 360px;
+    max-height: 65vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .column-menu-dropdown > .d-flex {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 992px) {
+  .column-menu-dropdown {
+    position: absolute !important;
+    left: auto !important;
+    top: calc(100% + 0.4rem) !important;
+    right: 0 !important;
+    transform: none !important;
+    width: 220px;
+    max-height: 50vh;
+  }
 }
 
 /*Estilo para scrollbar de la página*/
@@ -2081,11 +2153,13 @@ html::-webkit-scrollbar-button:hover {
 }
 
 .sidebar-content::-webkit-scrollbar,
-.modal-body::-webkit-scrollbar {
+.modal-body::-webkit-scrollbar,
+.column-menu-dropdown::-webkit-scrollbar {
   width: 5px;
 }
 
 .modal-body::-webkit-scrollbar,
+.column-menu-dropdown::-webkit-scrollbar,
 html::-webkit-scrollbar {
   background-color: #dddddd;
 }
@@ -2096,12 +2170,14 @@ html::-webkit-scrollbar {
 
 .sidebar-content::-webkit-scrollbar-track,
 .modal-body::-webkit-scrollbar-track,
+.column-menu-dropdown::-webkit-scrollbar-track,
 html::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-content::-webkit-scrollbar-thumb,
 .modal-body::-webkit-scrollbar-thumb,
+.column-menu-dropdown::-webkit-scrollbar-thumb,
 html::-webkit-scrollbar-thumb {
   background: rgba(16, 185, 129, 0.719);
   border-radius: 2px;
@@ -2109,7 +2185,63 @@ html::-webkit-scrollbar-thumb {
 
 .sidebar-content::-webkit-scrollbar-thumb:hover,
 .modal-body::-webkit-scrollbar-thumb:hover,
+.column-menu-dropdown::-webkit-scrollbar-thumb:hover,
 html::-webkit-scrollbar-thumb:hover {
   background: rgba(16, 185, 129, 1);
+  cursor: pointer;
+}
+
+.table-scroll-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+  width: 100%;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar {
+  height: 8px;
+  background-color: #dddddd;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.719);
+  border-radius: 2px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 1);
+  cursor: pointer;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-button {
+  display: block;
+  width: 14px;
+  background-color: rgb(255, 255, 255);
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:decrement:start {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='2,5 8,1 8,9' fill='rgba(16,185,129,0.7)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:increment:end {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='8,5 2,1 2,9' fill='rgba(16,185,129,0.7)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:increment:start,
+.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:decrement:end {
+  display: none;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-button:hover {
+  background-color: rgba(16, 185, 129, 0.2);
   cursor: pointer;
 }

@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ListControls } from "./ListControls";
 import { FiltroModal } from "./FiltroModal";
+import { obtenerClaseEstadoReg, obtenerClaseEstadoInf } from './utils/StatusBadge.js';
+import { DateHourFormat, HourFormat } from './utils/DateHourFormat.js';
+import { TruncDots } from './utils/TruncDots.js';
 
 /* =======================
     Utilidades
@@ -8,6 +11,72 @@ import { FiltroModal } from "./FiltroModal";
 const getNestedValue = (obj, path) => {
     if (!path || !obj) return "";
     return path.split(".").reduce((current, prop) => current?.[prop], obj) || "";
+};
+
+const evalValue = (spec, row, fallback) => {
+    if (typeof spec === "function") return spec(row);
+    if (typeof spec === "string") return getNestedValue(row, spec);
+    if (spec !== undefined) return spec;
+    return fallback;
+};
+
+const renderStatusBadge = (activo, label) => (
+    <span className={`status-badge ${obtenerClaseEstadoReg(activo)}`}>
+        {label}
+    </span>
+);
+
+const renderReportBadged = (estado) => (
+    <span className={`status-badge ${obtenerClaseEstadoInf(estado)}`}>
+        {estado}
+    </span>
+);
+
+const formatCellValue = (col, row) => {
+    // If a custom render function is provided, use it directly
+    if (typeof col.render === "function") {
+        return col.render(row);
+    }
+
+    const rawValue = getNestedValue(row, col.field);
+
+    // Special render config (object-based): { rentype, ... }
+    if (col.render && typeof col.render === "object") {
+        const type = col.render.rentype;
+
+        switch (type) {
+            case "statusreg": {
+                const activo = evalValue(col.render.renval1, row, false);
+                const label = evalValue(col.render.renval2, row, "");
+                return renderStatusBadge(activo, label);
+            }
+            case "statusinf": {
+                const label = evalValue(col.render.renval1, row, "");
+                return renderReportBadged(label);
+            }
+            case "truncate": {
+                const text = evalValue(col.render.renval1, row, rawValue);
+                const maxLength = col.render.renval2 ?? 30;
+                return TruncDots(text, maxLength);
+            }
+            default:
+                return rawValue;
+        }
+    }
+
+    // Fallback formatting based on column type
+    switch (col.type) {
+        case "date":
+            return DateHourFormat(rawValue, 2);
+        case "datetime":
+            return DateHourFormat(rawValue, 1);
+        case "time":
+            return HourFormat(rawValue);
+        case "boolean":
+            return rawValue ? 'Si' : 'No';
+        default:
+            return rawValue;
+    }
 };
 
 // Generador de filtro por defecto similar al usado en muchos componentes
@@ -54,26 +123,55 @@ export const SmartTable = ({
     canEdit = true,
     canDelete = true,
     canView = true,
-    tableClassName = "table table-hover align-middle m-0 list-table",
-    theadClassName = "table-secondary",
+    tableClassName = "table table-hover align-middle m-0 list-table vh-100",
+    theadClassName = "table-secondary align-middle",
     rowClassName,
     columnSettings = {} // key: {label, sortable, filtered, type, render, order, classname, field}
 }) => {
     // construimos el array de columnas a partir de la configuración
     // El "key" es el identificador usado en la UI; "field" es el path usado para sorting/filtering y para obtener el valor del row.
-    const columns = Object.entries(columnSettings).map(([key, cfg]) => {
-        const field = cfg.field || key;
-        return {
-            key,
-            field,
-            ...cfg
-        };
-    });
+    const columns = useMemo(() => {
+        const cols = Object.entries(columnSettings).map(([key, cfg]) => {
+            const field = cfg.field || key;
+            return {
+                key,
+                field,
+                ...cfg
+            };
+        });
 
-    // opcionalmente ordenar las columnas si la configuración incluye order numérico
-    columns.sort((a, b) => (a.order || 0) - (b.order || 0));
+        // opcionalmente ordenar las columnas si la configuración incluye order numérico
+        cols.sort((a, b) => (a.order || 0) - (b.order || 0));
+        return cols;
+    }, [columnSettings]);
+
     const [filtroActivo, setFiltroActivo] = useState({ visible: false });
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
+    const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+    const getDefaultVisible = (cols) =>
+        cols
+            .filter(c => !c.hidden)
+            .filter(c => c.default ?? false)
+            .map(c => c.key);
+
+    const columnSignature = useMemo(() => {
+        return columns
+            .map(c => `${c.key}:${c.hidden ?? false}:${c.default ?? false}`)
+            .sort()
+            .join("|");
+    }, [columns]);
+
+    const [visibleColumns, setVisibleColumns] = useState(() => getDefaultVisible(columns));
+    const prevColumnSignature = useRef(columnSignature);
+
+    // Mantener lista de columnas visibles cuando cambian las columnas reales (solo si cambia la configuración)
+    useEffect(() => {
+        if (prevColumnSignature.current === columnSignature) return;
+        prevColumnSignature.current = columnSignature;
+        setVisibleColumns(getDefaultVisible(columns));
+    }, [columnSignature, columns]);
+
+    const displayedColumns = columns.filter(c => visibleColumns.includes(c.key));
     const generarFiltro = defaultGenerarFiltro;
 
     const toggleOrder = (field) => {
@@ -91,7 +189,26 @@ export const SmartTable = ({
     const handleFilterClick = (e, field, type = "string") => {
         e.stopPropagation();
         const rect = e.target.getBoundingClientRect();
+        const isMobile = window.innerWidth < 768;
         const previo = filtrosAplicados[field] ?? {};
+
+        // Calcular posición para que no se salga de pantalla
+        const modalWidth = 260;
+        const modalHeight = 220;
+        let left = rect.left;
+        let top = rect.bottom + 4;
+
+        if (!isMobile) {
+            // Ajustar si se sale por la derecha
+            if (left + modalWidth > window.innerWidth - 12) {
+                left = window.innerWidth - modalWidth - 12;
+            }
+            // Ajustar si se sale por abajo
+            if (top + modalHeight > window.innerHeight - 12) {
+                top = rect.top - modalHeight - 4;
+            }
+        }
+
         setFiltroActivo({
             field,
             type,
@@ -100,10 +217,19 @@ export const SmartTable = ({
             value: previo.value,
             value1: previo.value1,
             value2: previo.value2,
-            coords: {
-                top: rect.bottom - 95,
-                left: rect.left
+            isMobile,
+            coords: { top, left }
+        });
+    };
+
+    const toggleColumn = (key) => {
+        setVisibleColumns(prev => {
+            if (prev.includes(key)) {
+                // Always keep at least one column visible
+                if (prev.length <= 1) return prev;
+                return prev.filter(k => k !== key);
             }
+            return [...prev, key];
         });
     };
 
@@ -135,6 +261,11 @@ export const SmartTable = ({
                 canImport={canImport}
                 showErpButton={showErpButton}
                 showAddButton={showAddButton}
+                columns={columns}
+                visibleColumns={visibleColumns}
+                toggleColumn={toggleColumn}
+                columnMenuOpen={columnMenuOpen}
+                setColumnMenuOpen={setColumnMenuOpen}
             />
 
             <div style={{ position: "relative" }}>
@@ -147,105 +278,90 @@ export const SmartTable = ({
                     generarFiltro={generarFiltro}
                 />
                 {/* Tabla */}
-                <table className={tableClassName}>
-                    <thead className={theadClassName}>
-                        <tr>
-                            {columns.map(col => {
-                                const colSettings = columnSettings[col?.key] || {};
-                                const sort = col?.sortable ?? true;
-                                const filter = col?.filtered ?? true;
-                                return (
-                                    <th
-                                        key={col?.key}
-                                        onClick={() => sort && toggleOrder(col?.field)}
-                                        className={sort ? "sortable-header" : ""}
-                                        style={{ cursor: sort ? "pointer" : "default" }}
-                                    >
-                                        {col?.label}
-                                        {sort && (
-                                            <i className={`bi ${getSortIcon(col?.field)} ms-2`}></i>
-                                        )}
-                                        {filter && (
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => handleFilterClick(e, col?.field, colSettings?.type || "string")}
-                                            ></i>
-                                        )}
-                                    </th>
-                                );
-                            })}
-                            <th style={{ cursor: 'default' }}>Opciones</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {data.length === 0 ? (
+                <div className="table-scroll-wrapper">
+                    <table className={tableClassName}>
+                        <thead className={theadClassName}>
                             <tr>
-                                <td
-                                    colSpan={columns.length + (canEdit || canDelete || canView ? 1 : 0)}
-                                    className="text-center py-3 text-muted fs-3 fw-bold"
-                                >
-                                    No hay registros
-                                </td>
+                                <th style={{ cursor: 'default' }}>Opciones</th>
+                                {displayedColumns.map(col => {
+                                    const colSettings = columnSettings[col?.key] || {};
+                                    const sort = col?.sortable ?? true;
+                                    const filter = col?.filtered ?? true;
+                                    return (
+                                        <th
+                                            key={col?.key}
+                                            onClick={() => sort && toggleOrder(col?.field)}
+                                            className={sort ? "sortable-header" : ""}
+                                            style={{ cursor: sort ? "pointer" : "default" }}
+                                        >
+                                            {col?.label}
+                                            {sort && (
+                                                <i className={`bi ${getSortIcon(col?.field)} ms-2`}></i>
+                                            )}
+                                            {filter && (
+                                                <i
+                                                    className="bi bi-funnel-fill btn btn-primary p-0 px-1 border-0 ms-2 icon-filter"
+                                                    onClick={(e) => handleFilterClick(e, col?.field, colSettings?.type || "string")}
+                                                ></i>
+                                            )}
+                                        </th>
+                                    );
+                                })}
                             </tr>
-                        ) : (
-                            data.map((row, index) => (
-                                <tr
-                                    key={row.id || `row-${index}`}
-                                    className={`text-center align-middle ${rowClassName || ""}`}
-                                    onClick={(e) => handleRowClick(row, e)}
-                                    style={{ cursor: canEdit ? "pointer" : "default" }}
-                                >
-                                    {columns.map(col => {
-                                        let value = getNestedValue(row, col?.field);
+                        </thead>
 
-                                        if (col?.render) {
-                                            return <td
-                                                key={col?.key}
-                                                className={col?.classname}
-                                            >
-                                                {col?.render(row)}
-                                            </td>;
-                                        }
-
-                                        return (
-                                            <td
-                                                key={col?.key}
-                                                className={col?.classname}
-                                            >
-                                                {value}
-                                            </td>
-                                        );
-                                    })}
-
-                                    <td onClick={e => e.stopPropagation()} className="bg-light" style={{ cursor: 'default' }}>
-                                        <div className="d-flex justify-content-evenly">
-                                            <button
-                                                onClick={() => { if (canDelete) onDelete(row) }}
-                                                className="icon-action"
-                                                title="Eliminar"
-                                                style={{ cursor: canDelete ? 'pointer' : 'default' }}
-                                                disabled={!canDelete}
-                                            >
-                                                <i className={`bi bi-trash-fill ${canDelete ? 'text-danger' : 'text-danger-emphasis'}`}></i>
-                                            </button>
-                                            <button
-                                                onClick={async (e) => { if (canView) onView(row) }}
-                                                className="icon-action"
-                                                title="Ver"
-                                                style={{ cursor: canView ? 'pointer' : 'default' }}
-                                                disabled={!canView}
-                                            >
-                                                <i className={`bi bi-eye-fill ${canView ? 'text-primary' : 'text-primary-emphasis'}`}></i>
-                                            </button>
-                                        </div>
+                        <tbody>
+                            {data.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan={displayedColumns.length + (canEdit || canDelete || canView ? 1 : 0)}
+                                        className="text-center py-3 text-muted fs-3 fw-bold"
+                                    >
+                                        No hay registros
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : (
+                                data.map((row, index) => (
+                                    <tr
+                                        key={row.id || `row-${index}`}
+                                        className={`text-center align-middle ${rowClassName || ""}`}
+                                        onClick={(e) => handleRowClick(row, e)}
+                                        style={{ cursor: canEdit ? "pointer" : "default" }}
+                                    >
+                                        <td onClick={e => e.stopPropagation()} className="bg-light" style={{ cursor: 'default' }}>
+                                            <div className="d-flex justify-content-evenly">
+                                                <button
+                                                    onClick={() => { if (canDelete) onDelete(row) }}
+                                                    className="icon-action"
+                                                    title="Eliminar"
+                                                    style={{ cursor: canDelete ? 'pointer' : 'default' }}
+                                                    disabled={!canDelete}
+                                                >
+                                                    <i className={`bi bi-trash-fill ${canDelete ? 'text-danger' : 'text-danger-emphasis'}`}></i>
+                                                </button>
+                                                <button
+                                                    onClick={async (e) => { if (canView) onView(row) }}
+                                                    className="icon-action"
+                                                    title="Ver"
+                                                    style={{ cursor: canView ? 'pointer' : 'default' }}
+                                                    disabled={!canView}
+                                                >
+                                                    <i className={`bi bi-eye-fill ${canView ? 'text-primary' : 'text-primary-emphasis'}`}></i>
+                                                </button>
+                                            </div>
+                                        </td>
+
+                                        {displayedColumns.map(col => (
+                                            <td key={col?.key} className={col?.classname}>
+                                                {formatCellValue(col, row)}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
                 <div className='bg-light border-top border-secondary-subtle p-3' />
             </div>
         </div>

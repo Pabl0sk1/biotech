@@ -8,10 +8,11 @@ export const FiltroModal = ({
 }) => {
     if (!filtroActivo.visible) return null;
 
+    const isMobile = filtroActivo.isMobile;
+
     const aplicarFiltro = () => {
         const filtroString = generarFiltro(filtroActivo);
         if (!filtroString) return;
-
         setQuery(q => ({
             ...q,
             page: 0,
@@ -20,7 +21,6 @@ export const FiltroModal = ({
                 filtroString
             ]
         }));
-
         setFiltroActivo(f => ({ ...f, visible: false }));
         setFiltrosAplicados(prev => ({
             ...prev,
@@ -28,59 +28,87 @@ export const FiltroModal = ({
         }));
     };
 
+    const limpiarFiltro = () => {
+        setQuery(q => ({
+            ...q,
+            page: 0,
+            filter: q.filter.filter(x => !x.startsWith(filtroActivo.field + ":"))
+        }));
+        setFiltroActivo(f => ({ ...f, op: "eq", value: "", value1: "", value2: "" }));
+        setFiltrosAplicados(prev => ({ ...prev, [filtroActivo.field]: undefined }));
+    };
+
     const filtroTxt = (txt) => {
         const pt = txt.split('.');
-        const ultimo = pt[pt.length - 1];
-        return ultimo || '';
-    }
+        return pt[pt.length - 1] || '';
+    };
+
+    const cerrar = () => setFiltroActivo(f => ({ ...f, visible: false }));
+
+    // Estilos condicionales: móvil = centrado, desktop = anclado al ícono
+    const containerStyle = isMobile
+        ? {
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '90vw',
+            maxWidth: '320px',
+            zIndex: 21,
+        }
+        : {
+            position: 'fixed',
+            top: filtroActivo.coords?.top,
+            left: filtroActivo.coords?.left,
+            width: '260px',
+            zIndex: 21,
+        };
 
     return (
         <>
+            {/* Backdrop */}
             <div
-                className="position-fixed top-0 start-0 w-100 h-100"
-                style={{ zIndex: 20 }}
-                onClick={() => setFiltroActivo(f => ({ ...f, visible: false }))}
-            ></div>
-
-            <div
-                className="position-absolute bg-white border border-black shadow p-3 rounded"
                 style={{
-                    top: filtroActivo.coords?.top,
-                    left: filtroActivo.coords?.left,
-                    zIndex: 21
+                    position: 'fixed', inset: 0, zIndex: 20,
+                    background: isMobile ? 'rgba(0,0,0,0.35)' : 'transparent',
+                    backdropFilter: isMobile ? 'blur(2px)' : 'none',
                 }}
-            >
-                <h6 className="fw-bold mb-2 d-flex align-items-center justify-content-between">
-                    <span>
-                        Filtro: <span className="fw-semibold text-success">{filtroTxt(filtroActivo.field)}</span>
-                    </span>
-                    {/* Icono de borrador */}
-                    <i
-                        className="bi bi-eraser-fill text-danger"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                            // Limpiar filtro del campo
-                            setQuery(q => ({
-                                ...q,
-                                page: 0,
-                                filter: q.filter.filter(x => !x.startsWith(filtroActivo.field + ":"))
-                            }));
-                            // Limpiar el estado del filtro activo y aplicado
-                            setFiltroActivo(f => ({ ...f, op: "eq", value: "", value1: "", value2: "" }));
-                            setFiltrosAplicados(prev => ({ ...prev, [filtroActivo.field]: undefined }));
-                        }}
-                        title="Borrar filtro"
-                    ></i>
-                </h6>
+                onClick={cerrar}
+            />
 
+            {/* Panel del filtro */}
+            <div
+                className="bg-white border border-secondary shadow-lg rounded-3 p-3"
+                style={containerStyle}
+            >
+                {/* Header */}
+                <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                    <span className="fw-bold d-flex align-items-center gap-2">
+                        <i className="bi bi-funnel-fill text-success"></i>
+                        <span className="text-capitalize">{filtroTxt(filtroActivo.field)}</span>
+                    </span>
+                    <div className="d-flex align-items-center gap-2">
+                        <i
+                            className="bi bi-eraser-fill text-danger"
+                            style={{ cursor: 'pointer', fontSize: '1rem' }}
+                            onClick={limpiarFiltro}
+                            title="Borrar filtro"
+                        />
+                        <button
+                            className="btn-close"
+                            style={{ fontSize: '0.65rem' }}
+                            onClick={cerrar}
+                        />
+                    </div>
+                </div>
+
+                {/* Contenido según tipo */}
                 {filtroActivo.type === "string" && (
                     <>
                         <select
-                            className="form-select mb-2"
+                            className="form-select form-select-sm mb-2"
                             value={filtroActivo.op}
-                            onChange={e =>
-                                setFiltroActivo({ ...filtroActivo, op: e.target.value })
-                            }
+                            onChange={e => setFiltroActivo({ ...filtroActivo, op: e.target.value })}
                         >
                             <option value="eq">Igual que</option>
                             <option value="neq">Distinto de</option>
@@ -88,31 +116,24 @@ export const FiltroModal = ({
                             <option value="ends">Termina con</option>
                             <option value="contains">Contiene</option>
                         </select>
-
                         <input
                             type="text"
-                            className="form-control mb-2"
+                            className="form-control form-control-sm mb-2"
                             placeholder="Valor..."
                             value={filtroActivo.value || ""}
-                            onChange={e =>
-                                setFiltroActivo({ ...filtroActivo, value: e.target.value })
-                            }
+                            onChange={e => setFiltroActivo({ ...filtroActivo, value: e.target.value })}
+                            onKeyDown={e => e.key === 'Enter' && aplicarFiltro()}
+                            autoFocus
                         />
-
-                        <button className="btn btn-success w-100 fw-bold" onClick={aplicarFiltro}>
-                            Aplicar
-                        </button>
                     </>
                 )}
 
-                {(["number", "date", "datetime-local"].includes(filtroActivo.type)) && (
+                {["number", "date", "datetime-local"].includes(filtroActivo.type) && (
                     <>
                         <select
-                            className="form-select mb-2"
+                            className="form-select form-select-sm mb-2"
                             value={filtroActivo.op}
-                            onChange={e =>
-                                setFiltroActivo({ ...filtroActivo, op: e.target.value })
-                            }
+                            onChange={e => setFiltroActivo({ ...filtroActivo, op: e.target.value })}
                         >
                             <option value="eq">Igual que</option>
                             <option value="neq">Distinto de</option>
@@ -126,41 +147,36 @@ export const FiltroModal = ({
                         {filtroActivo.op !== "between" ? (
                             <input
                                 type={filtroActivo.type}
-                                className="form-control mb-2"
-                                placeholder="Valor..."
+                                className="form-control form-control-sm mb-2"
                                 value={filtroActivo.value || ""}
-                                onChange={e =>
-                                    setFiltroActivo({ ...filtroActivo, value: e.target.value })
-                                }
+                                onChange={e => setFiltroActivo({ ...filtroActivo, value: e.target.value })}
+                                onKeyDown={e => e.key === 'Enter' && aplicarFiltro()}
+                                autoFocus
                             />
                         ) : (
-                            <>
+                            <div className="d-flex gap-2 mb-2">
                                 <input
                                     type={filtroActivo.type}
-                                    className="form-control mb-2"
-                                    placeholder="Valor..."
+                                    className="form-control form-control-sm"
+                                    placeholder="Desde"
                                     value={filtroActivo.value1 || ""}
-                                    onChange={e =>
-                                        setFiltroActivo({ ...filtroActivo, value1: e.target.value })
-                                    }
+                                    onChange={e => setFiltroActivo({ ...filtroActivo, value1: e.target.value })}
                                 />
                                 <input
                                     type={filtroActivo.type}
-                                    className="form-control mb-2"
-                                    placeholder="Valor..."
+                                    className="form-control form-control-sm"
+                                    placeholder="Hasta"
                                     value={filtroActivo.value2 || ""}
-                                    onChange={e =>
-                                        setFiltroActivo({ ...filtroActivo, value2: e.target.value })
-                                    }
+                                    onChange={e => setFiltroActivo({ ...filtroActivo, value2: e.target.value })}
                                 />
-                            </>
+                            </div>
                         )}
-
-                        <button className="btn btn-success w-100 fw-bold" onClick={aplicarFiltro}>
-                            Aplicar
-                        </button>
                     </>
                 )}
+
+                <button className="btn btn-success btn-sm w-100 fw-bold" onClick={aplicarFiltro}>
+                    <i className="bi bi-check-lg me-1"></i>Aplicar
+                </button>
             </div>
         </>
     );

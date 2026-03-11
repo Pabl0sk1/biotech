@@ -52,7 +52,7 @@ export const Header = ({
                 <SaveClose title={modulotxt} onSave={handleSaveAndClose} onClose={handleCloseWithoutSaving} onCancel={handleCancelModal} />
             )}
 
-            <nav className="modern-header">
+            <nav className="modern-header" style={{ zIndex: 1000 }}>
                 <div className="header-container">
                     {/* Sección izquierda */}
                     <div className="header-left">
