@@ -174,6 +174,37 @@ export const SmartTable = ({
     const displayedColumns = columns.filter(c => visibleColumns.includes(c.key));
     const generarFiltro = defaultGenerarFiltro;
 
+    // Agregar junto a los otros useState
+    const [colWidths, setColWidths] = useState({});
+    const handleResizeStart = (e, colKey) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const initialX = e.clientX;
+        const initialWidth = colWidths[colKey] || 150;
+        let resizeStarted = false;
+
+        const onMouseMove = (moveEvent) => {
+            const diff = moveEvent.clientX - initialX;
+
+            if (!resizeStarted && Math.abs(diff) < 5) return;
+            resizeStarted = true;
+
+            const newWidth = Math.max(60, initialWidth + diff);
+            setColWidths(prev => ({ ...prev, [colKey]: newWidth }));
+            document.body.classList.add('table-resizing');
+        };
+
+        const onMouseUp = () => {
+            document.body.classList.remove('table-resizing');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
     const toggleOrder = (field) => {
         const [currentField, dir] = query.order.split(",");
         const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
@@ -292,18 +323,41 @@ export const SmartTable = ({
                                             key={col?.key}
                                             onClick={() => sort && toggleOrder(col?.field)}
                                             className={sort ? "sortable-header" : ""}
-                                            style={{ cursor: sort ? "pointer" : "default" }}
+                                            style={{
+                                                cursor: sort ? "pointer" : "default",
+                                                position: 'relative',
+                                                width: colWidths[col?.key] || 'auto',
+                                                minWidth: 60,
+                                                userSelect: 'none',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                            }}
                                         >
                                             {col?.label}
-                                            {sort && (
-                                                <i className={`bi ${getSortIcon(col?.field)} ms-2`}></i>
-                                            )}
+                                            {sort && <i className={`bi ${getSortIcon(col?.field)} ms-2`}></i>}
                                             {filter && (
                                                 <i
                                                     className="bi bi-funnel-fill btn btn-primary p-0 px-1 border-0 ms-2 icon-filter"
                                                     onClick={(e) => handleFilterClick(e, col?.field, colSettings?.type || "string")}
-                                                ></i>
+                                                />
                                             )}
+                                            {/* Handle de resize */}
+                                            <span
+                                                onMouseDown={(e) => handleResizeStart(e, col?.key)}
+                                                onClick={e => e.stopPropagation()}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: 0,
+                                                    top: 0,
+                                                    bottom: 0,
+                                                    width: '6px',
+                                                    cursor: 'col-resize',
+                                                    background: 'transparent',
+                                                    zIndex: 1,
+                                                }}
+                                                className="col-resize-handle"
+                                            />
                                         </th>
                                     );
                                 })}

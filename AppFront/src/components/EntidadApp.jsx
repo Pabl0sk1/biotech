@@ -138,10 +138,6 @@ export const EntidadApp = ({ userLog }) => {
     };
     const columnSettings = {
         id: { label: "#", type: "number", default: true },
-        cargo: { label: "Cargo", type: "string", field: "cargo.cargo", classname: "text-start" },
-        sucursal: { label: "Sucursal", type: "string", field: "sucursal.sucursal", classname: "text-start" },
-        cartera: { label: "Cartera", type: "string", field: "cartera.nombre", classname: "text-start" },
-        categorias: { label: "Categorías", type: "string", default: true },
         nomape: {
             label: "Nombre/Apellido",
             type: "string",
@@ -153,11 +149,15 @@ export const EntidadApp = ({ userLog }) => {
                 renval2: 35
             }
         },
-        nombre: { label: "Nombre", type: "string", classname: "text-start" },
-        apellido: { label: "Apellido", type: "string", classname: "text-start" },
+        categorias: { label: "Categorías", type: "string", default: true },
+        cargo: { label: "Cargo", type: "string", field: "cargo.cargo", classname: "text-start" },
+        sucursal: { label: "Sucursal", type: "string", field: "sucursal.sucursal", classname: "text-start" },
+        cartera: { label: "Cartera", type: "string", field: "cartera.nombre", classname: "text-start", default: true },
+        nombre: { hidden: true },
+        apellido: { hidden: true },
         nrodoc: { label: "Nro. de documento", type: "string", classname: "text-end" },
-        nrotelefono: { label: "Nro. de teléfono", type: "string", classname: "text-end" },
-        correo: { label: "Correo", type: "email", classname: "text-start" },
+        nrotelefono: { label: "Nro. de teléfono", type: "string", classname: "text-end", default: true },
+        correo: { label: "Correo", type: "string", classname: "text-start", default: true },
         fechanacimiento: { label: "Fecha de nacimiento", type: "date" },
         fechainicio: { label: "Fecha de inicio", type: "date" },
         fechafin: { label: "Fecha de fin", type: "date" },

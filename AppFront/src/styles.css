@@ -1179,6 +1179,7 @@ input[type="number"] {
   height: 88vh;
 }
 
+/* Estilo para el logo del menú */
 .logoMenu {
   position: absolute;
   top: 75px;
@@ -1191,9 +1192,15 @@ input[type="number"] {
   justify-content: center;
 }
 
-.logoMenu img {
-  max-width: 50%;
+.logoMenu a {
+  display: inline-flex;
+  width: 50%;
   max-height: 80%;
+}
+
+.logoMenu img {
+  width: 100%;
+  height: 100%;
   padding: 30px;
   background: #ffffff;
   border-radius: 10%;
@@ -1206,12 +1213,13 @@ input[type="number"] {
   transition: all 0.3s ease;
 }
 
-.logoMenu img:hover {
+.logoMenu a:hover img {
   opacity: 1;
   filter: grayscale(0%);
   transform: scale(1.03);
 }
 
+/*Estilo para botón de perfil*/
 .perfilBtn {
   width: 44px;
   height: 44px;
@@ -2244,4 +2252,32 @@ html::-webkit-scrollbar-thumb:hover {
 .table-scroll-wrapper::-webkit-scrollbar-button:hover {
   background-color: rgba(16, 185, 129, 0.2);
   cursor: pointer;
+}
+
+/* Resize handle de columnas */
+.col-resize-handle {
+  display: block;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s ease;
+  z-index: 2;
+}
+
+.col-resize-handle:hover,
+.col-resize-handle:active {
+  background: rgba(16, 185, 129, 0.5);
+}
+
+.table-resizing {
+  user-select: none;
+  cursor: col-resize !important;
+}
+
+.table-resizing * {
+  cursor: col-resize !important;
 }

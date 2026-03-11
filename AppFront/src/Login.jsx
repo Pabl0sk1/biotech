@@ -138,13 +138,6 @@ export const Login = ({ setUserLog }) => {
                             </form>
                         </div>
                     </div>
-                    <div className="login-right">
-                        <img
-                            src="/biotech/portrait.webp"
-                            alt="Retrato"
-                            className="login-image"
-                        />
-                    </div>
                 </div>
             </div>
         </>

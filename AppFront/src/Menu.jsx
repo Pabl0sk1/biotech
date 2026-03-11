@@ -145,7 +145,9 @@ export const Menu = ({ userLog, setUserLog }) => {
                     handleLogoutClick={handleLogoutClick}
                 />
                 <div className='logoMenu'>
-                    <img src={logo} alt="Logo Empresa" />
+                    <a href='https://biosafrasgroup.com.py/' target='_blank'>
+                        <img src={logo} alt="Logo Empresa" />
+                    </a>
                 </div>
             </div>
         </>

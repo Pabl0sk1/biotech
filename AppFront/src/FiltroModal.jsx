@@ -60,7 +60,7 @@ export const FiltroModal = ({
             position: 'fixed',
             top: filtroActivo.coords?.top,
             left: filtroActivo.coords?.left,
-            width: '260px',
+            maxWidth: '320px',
             zIndex: 21,
         };
 
@@ -103,7 +103,7 @@ export const FiltroModal = ({
                 </div>
 
                 {/* Contenido según tipo */}
-                {filtroActivo.type === "string" && (
+                {["boolean", "string"].includes(filtroActivo.type) && (
                     <>
                         <select
                             className="form-select form-select-sm mb-2"
@@ -128,7 +128,7 @@ export const FiltroModal = ({
                     </>
                 )}
 
-                {["number", "date", "datetime-local"].includes(filtroActivo.type) && (
+                {["number", "date", "time", "datetime-local"].includes(filtroActivo.type) && (
                     <>
                         <select
                             className="form-select form-select-sm mb-2"
@@ -148,6 +148,7 @@ export const FiltroModal = ({
                             <input
                                 type={filtroActivo.type}
                                 className="form-control form-control-sm mb-2"
+                                placeholder="Valor..."
                                 value={filtroActivo.value || ""}
                                 onChange={e => setFiltroActivo({ ...filtroActivo, value: e.target.value })}
                                 onKeyDown={e => e.key === 'Enter' && aplicarFiltro()}
