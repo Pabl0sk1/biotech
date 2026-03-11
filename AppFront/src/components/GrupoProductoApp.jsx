@@ -61,7 +61,7 @@ export const GrupoProductoApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         grupoproducto: { label: "Descripción", notnull: true },
         tributacion: {
             type: "object",

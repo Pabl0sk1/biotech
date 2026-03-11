@@ -57,7 +57,7 @@ export const CarteraApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         nombre: { label: "Descripción", notnull: true, order: 1, autofocus: true },
         region: { label: "Región", notnull: true, order: 2 },
         entidadid: { type: "number", label: "Entidad ID" },

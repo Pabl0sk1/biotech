@@ -57,7 +57,7 @@ export const MenuApp = ({ userLog, setUserLog }) => {
         activo: true,
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         menu: { label: "Descripción", notnull: true, order: 1, autofocus: true },
         orden: { type: "number", order: 4 },
         icono: { order: 3 },

@@ -56,7 +56,7 @@ export const MedidaApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         medida: { label: "Descripción", notnull: true, autofocus: true },
         erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };

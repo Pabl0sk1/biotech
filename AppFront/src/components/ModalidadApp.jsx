@@ -51,7 +51,7 @@ export const ModalidadApp = ({ userLog, setUserLog }) => {
         tipo: ""
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         tipo: { label: "Descripción", notnull: true, autofocus: true }
     };
 

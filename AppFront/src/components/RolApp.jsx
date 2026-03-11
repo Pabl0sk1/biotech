@@ -51,7 +51,7 @@ export const RolApp = ({ userLog, setUserLog }) => {
         tipousuario: ""
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         tipousuario: { label: "Descripción", notnull: true, autofocus: true }
     };
 

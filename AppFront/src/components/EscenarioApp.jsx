@@ -51,7 +51,7 @@ export const EscenarioApp = ({ userLog, setUserLog }) => {
         tipoinforme: ""
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         tipoinforme: { notnull: true, label: "Descripción", autofocus: true },
     };
 

@@ -52,7 +52,7 @@ export const ClaseApp = ({ userLog, setUserLog }) => {
         recurso: ""
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         tipoproducto: { label: "Descripción", notnull: true, autofocus: true },
         recurso: { label: "Recurso" }
     };

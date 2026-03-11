@@ -61,7 +61,7 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
         extporcen: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         tipoturno: {
             type: "object",
             options: modalidades,

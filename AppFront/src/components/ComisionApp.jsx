@@ -66,7 +66,7 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         entidad: {
             type: "object",
             notnull: true,

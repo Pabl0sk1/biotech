@@ -41,7 +41,7 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
     }, []);
 
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         usuario: {
             type: "object",
             getLabel: (item) => item?.nombreusuario || "",

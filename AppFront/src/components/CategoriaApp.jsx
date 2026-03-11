@@ -51,7 +51,7 @@ export const CategoriaApp = ({ userLog, setUserLog }) => {
         tipoentidad: ""
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         tipoentidad: { label: "Descripción", notnull: true, autofocus: true }
     };
 

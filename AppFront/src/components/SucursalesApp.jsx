@@ -56,7 +56,7 @@ export const SucursalApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         sucursal: { label: "Descripción", notnull: true, autofocus: true },
         erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };

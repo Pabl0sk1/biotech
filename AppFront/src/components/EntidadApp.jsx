@@ -78,7 +78,7 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         cargo: {
             type: "object",
             options: cargos,
@@ -308,7 +308,9 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
 
     return (
         <>
-            {loading && <Loading />}
+            {loading && (
+                <Loading />
+            )}
             {entidadErp && (
                 <ImportErp setErp={setEntidadErp} title={'entidades'} fun={importarDatosERP} />
             )}

@@ -52,7 +52,7 @@ export const ModuloApp = ({ userLog, setUserLog }) => {
         var: ""
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         moduloes: { label: "Módulo Español", notnull: true, autofocus: true },
         moduloen: { label: "Módulo Inglés", notnull: true },
         var: { label: "Variable", notnull: true }

@@ -66,7 +66,7 @@ export const PermisoApp = ({ userLog, setUserLog }) => {
         puedeimportar: false
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         tipousuario: {
             type: "object",
             options: roles,

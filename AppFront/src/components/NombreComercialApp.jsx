@@ -61,7 +61,7 @@ export const NombreComercialApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         nombrecomercial: { label: "Nombre Comercial", order: 1, notnull: true },
         medida: {
             type: "object",

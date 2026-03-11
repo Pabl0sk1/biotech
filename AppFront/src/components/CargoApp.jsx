@@ -55,7 +55,7 @@ export const CargoApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { hidden: true },
+        id: { disabled: true, order: 0 },
         cargo: { label: "Descripción", notnull: true, autofocus: true },
         erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
