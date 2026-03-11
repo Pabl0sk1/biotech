@@ -17,7 +17,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const ProductoApp = ({ userLog }) => {
+export const ProductoApp = ({ userLog, setUserLog }) => {
 
     const [productos, setProductos] = useState([]);
     const [entidades, setEntidades] = useState([]);

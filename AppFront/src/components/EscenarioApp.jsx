@@ -11,7 +11,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const EscenarioApp = ({ userLog }) => {
+export const EscenarioApp = ({ userLog, setUserLog }) => {
 
     const [escenarios, setEscenarios] = useState([]);
     const [permiso, setPermiso] = useState({});

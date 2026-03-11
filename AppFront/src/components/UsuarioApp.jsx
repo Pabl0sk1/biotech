@@ -14,7 +14,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import Duplicate from '../layouts/Duplicate.jsx';
 
-export const UsuarioApp = ({ userLog }) => {
+export const UsuarioApp = ({ userLog, setUserLog }) => {
 
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);

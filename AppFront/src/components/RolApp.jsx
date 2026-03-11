@@ -11,7 +11,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const RolApp = ({ userLog }) => {
+export const RolApp = ({ userLog, setUserLog }) => {
 
     const [roles, setRoles] = useState([]);
     const [permiso, setPermiso] = useState({});

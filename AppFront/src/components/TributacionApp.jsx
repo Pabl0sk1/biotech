@@ -12,7 +12,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const TributacionApp = ({ userLog }) => {
+export const TributacionApp = ({ userLog, setUserLog }) => {
 
     const [tributaciones, setTributaciones] = useState([]);
     const [permiso, setPermiso] = useState({});

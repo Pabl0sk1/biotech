@@ -12,7 +12,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const ZafraApp = ({ userLog }) => {
+export const ZafraApp = ({ userLog, setUserLog }) => {
 
     const [zafras, setZafras] = useState([]);
     const [permiso, setPermiso] = useState({});

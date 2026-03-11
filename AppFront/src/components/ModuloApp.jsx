@@ -10,7 +10,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const ModuloApp = ({ userLog }) => {
+export const ModuloApp = ({ userLog, setUserLog }) => {
 
     const [modulos, setModulos] = useState([]);
     const [permiso, setPermiso] = useState({});

@@ -12,7 +12,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const MedidaApp = ({ userLog }) => {
+export const MedidaApp = ({ userLog, setUserLog }) => {
 
     const [medidas, setMedidas] = useState([]);
     const [permiso, setPermiso] = useState({});

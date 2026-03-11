@@ -11,7 +11,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const ModalidadApp = ({ userLog }) => {
+export const ModalidadApp = ({ userLog, setUserLog }) => {
 
     const [modalidades, setModalidades] = useState([]);
     const [permiso, setPermiso] = useState({});

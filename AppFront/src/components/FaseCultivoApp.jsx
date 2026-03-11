@@ -12,7 +12,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const FaseCultivoApp = ({ userLog }) => {
+export const FaseCultivoApp = ({ userLog, setUserLog }) => {
 
     const [fasecultivos, setFaseCultivos] = useState([]);
     const [permiso, setPermiso] = useState({});

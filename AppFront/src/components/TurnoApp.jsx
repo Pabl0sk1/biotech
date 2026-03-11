@@ -11,7 +11,7 @@ import SmartModal from '../ModernModal.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const TurnoApp = ({ userLog }) => {
+export const TurnoApp = ({ userLog, setUserLog }) => {
 
     const [turnos, setTurnos] = useState([]);
     const [modalidades, setModalidades] = useState([]);

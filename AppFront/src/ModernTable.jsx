@@ -106,6 +106,8 @@ const defaultGenerarFiltro = (f) => {
 ======================= */
 export const SmartTable = ({
     data = [],
+    customReg = 'register',
+    userLog,
     query = { page: 0, size: 10, order: "", filter: [] },
     setQuery,
     totalPages = 1,
@@ -270,11 +272,18 @@ export const SmartTable = ({
         onRefresh?.();
     };
 
-    const handleRowClick = (row, e) => {
-        if (e) e.stopPropagation();
-        if (canEdit && onEdit) {
-            onEdit(row);
+    const handleReg = (op, can) => {
+        let custom = true;
+        if (op === 'edit') {
+            if (customReg === 'report') {
+                if (data[0]?.estado === 'Aprobado' && userLog?.id !== 1) custom = false;
+            }
+        } else if (op === 'delete') {
+            if (customReg === 'report') {
+                if (data[0]?.estado === 'Aprobado' && userLog?.id !== 1) custom = false;
+            }
         }
+        return can && custom;
     };
 
     return (
@@ -379,28 +388,28 @@ export const SmartTable = ({
                                     <tr
                                         key={row.id || `row-${index}`}
                                         className={`text-center align-middle ${rowClassName || ""}`}
-                                        onClick={(e) => handleRowClick(row, e)}
-                                        style={{ cursor: canEdit ? "pointer" : "default" }}
+                                        onClick={() => { if (handleReg('edit', canEdit)) onEdit(row) }}
+                                        style={{ cursor: handleReg('edit', canEdit) ? "pointer" : "default" }}
                                     >
                                         <td onClick={e => e.stopPropagation()} className="bg-light" style={{ cursor: 'default' }}>
                                             <div className="d-flex justify-content-evenly">
                                                 <button
-                                                    onClick={() => { if (canDelete) onDelete(row) }}
+                                                    onClick={() => { if (handleReg('delete', canDelete)) onDelete(row) }}
                                                     className="icon-action"
                                                     title="Eliminar"
-                                                    style={{ cursor: canDelete ? 'pointer' : 'default' }}
-                                                    disabled={!canDelete}
+                                                    style={{ cursor: handleReg('delete', canDelete) ? 'pointer' : 'default' }}
+                                                    disabled={!handleReg('delete', canDelete)}
                                                 >
-                                                    <i className={`bi bi-trash-fill ${canDelete ? 'text-danger' : 'text-danger-emphasis'}`}></i>
+                                                    <i className={`bi bi-trash-fill ${handleReg('delete', canDelete) ? 'text-danger' : 'text-danger-emphasis'}`}></i>
                                                 </button>
                                                 <button
-                                                    onClick={async (e) => { if (canView) onView(row) }}
+                                                    onClick={() => { if (handleReg('view', canView)) onView(row) }}
                                                     className="icon-action"
                                                     title="Ver"
-                                                    style={{ cursor: canView ? 'pointer' : 'default' }}
-                                                    disabled={!canView}
+                                                    style={{ cursor: handleReg('view', canView) ? 'pointer' : 'default' }}
+                                                    disabled={!handleReg('view', canView)}
                                                 >
-                                                    <i className={`bi bi-eye-fill ${canView ? 'text-primary' : 'text-primary-emphasis'}`}></i>
+                                                    <i className={`bi bi-eye-fill ${handleReg('view', canView) ? 'text-primary' : 'text-primary-emphasis'}`}></i>
                                                 </button>
                                             </div>
                                         </td>

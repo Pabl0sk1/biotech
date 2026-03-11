@@ -10,12 +10,13 @@ import { AddAccess } from "../utils/AddAccess.js";
 import Header from '../Header.jsx';
 import SmartModal from '../ModernModal.jsx';
 import SmartTable from '../ModernTable.jsx';
+import Sidebar from '../Sidebar.jsx';
 import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const EntidadApp = ({ userLog }) => {
+export const EntidadApp = ({ userLog, setUserLog }) => {
 
     const [entidades, setEntidades] = useState([]);
     const [sucursales, setSucursales] = useState([]);
@@ -312,20 +313,10 @@ export const EntidadApp = ({ userLog }) => {
                 <ImportErp setErp={setEntidadErp} title={'entidades'} fun={importarDatosERP} />
             )}
             {entidadAEliminar && (
-                <Delete
-                    setEliminar={setEntidadAEliminar}
-                    title={'entidad'}
-                    gen={false}
-                    confirmar={confirmarEliminacion}
-                    id={entidadAEliminar.id}
-                />
+                <Delete setEliminar={setEntidadAEliminar} title={'entidad'} gen={false} confirmar={confirmarEliminacion} id={entidadAEliminar.id} />
             )}
             {entidadNoEliminar && (
-                <NotDelete
-                    setNoEliminar={setEntidadNoEliminar}
-                    title={'entidad'}
-                    gen={false}
-                />
+                <NotDelete setNoEliminar={setEntidadNoEliminar} title={'entidad'} gen={false} />
             )}
             {entidadAVisualizar && (
                 <SmartModal
@@ -351,8 +342,14 @@ export const EntidadApp = ({ userLog }) => {
             )}
 
             <Header userLog={userLog} title={'ENTIDADES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
             <SmartTable
                 data={entidades}
+                userLog={userLog}
                 query={query}
                 setQuery={setQuery}
                 totalPages={totalPages}

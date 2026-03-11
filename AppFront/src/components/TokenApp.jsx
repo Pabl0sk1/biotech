@@ -11,7 +11,7 @@ import Delete from '../layouts/Delete.jsx';
 import SaveModal from "../layouts/SaveModal.jsx";
 import Header from '../Header';
 
-export const TokenApp = ({ userLog }) => {
+export const TokenApp = ({ userLog, setUserLog }) => {
 
     const [tokens, setTokens] = useState([]);
     const [permiso, setPermiso] = useState({});

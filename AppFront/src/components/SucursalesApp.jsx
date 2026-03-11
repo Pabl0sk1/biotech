@@ -13,7 +13,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const SucursalApp = ({ userLog }) => {
+export const SucursalApp = ({ userLog, setUserLog }) => {
 
     const [sucursales, setSucursales] = useState([]);
     const [permiso, setPermiso] = useState({});

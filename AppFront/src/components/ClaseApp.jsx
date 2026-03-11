@@ -11,7 +11,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const ClaseApp = ({ userLog }) => {
+export const ClaseApp = ({ userLog, setUserLog }) => {
 
     const [clases, setClases] = useState([]);
     const [permiso, setPermiso] = useState({});

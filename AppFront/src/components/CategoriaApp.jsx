@@ -11,7 +11,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const CategoriaApp = ({ userLog }) => {
+export const CategoriaApp = ({ userLog, setUserLog }) => {
 
     const [categorias, setCategorias] = useState([]);
     const [permiso, setPermiso] = useState({});

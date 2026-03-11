@@ -12,7 +12,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const CarteraApp = ({ userLog }) => {
+export const CarteraApp = ({ userLog, setUserLog }) => {
 
     const [carteras, setCarteras] = useState([]);
     const [permiso, setPermiso] = useState({});

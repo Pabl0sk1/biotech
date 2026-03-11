@@ -12,7 +12,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import Duplicate from '../layouts/Duplicate.jsx';
 
-export const PermisoApp = ({ userLog }) => {
+export const PermisoApp = ({ userLog, setUserLog }) => {
 
     const [permisos, setPermisos] = useState([]);
     const [roles, setRoles] = useState([]);

@@ -12,7 +12,7 @@ import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
-export const MonedaApp = ({ userLog }) => {
+export const MonedaApp = ({ userLog, setUserLog }) => {
 
     const [monedas, setMonedas] = useState([]);
     const [permiso, setPermiso] = useState({});

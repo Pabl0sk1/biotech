@@ -4,16 +4,14 @@ import { getReport, deleteReport, deleteReportData } from '../services/informe.s
 import { getReportType } from '../services/tipoinforme.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import { AddAccess } from "../utils/AddAccess.js";
-import { DateHourFormat } from '../utils/DateHourFormat.js';
-import { obtenerClaseEstadoInf } from '../utils/StatusBadge.js';
-import { FiltroModal } from "../FiltroModal.jsx";
-import { ListControls } from '../ListControls.jsx';
 import Header from '../Header.jsx';
+import SmartTable from '../ModernTable.jsx';
+import Sidebar from '../Sidebar.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
 import SaveModal from '../layouts/SaveModal.jsx';
 
-export const PlaneamientoApp = ({ userLog }) => {
+export const PlaneamientoApp = ({ userLog, setUserLog }) => {
 
     const navigate = useNavigate();
     const [planeamientos, setPlaneamientos] = useState([]);
@@ -24,8 +22,6 @@ export const PlaneamientoApp = ({ userLog }) => {
     const [planeamientoAGuardar, setPlaneamientoAGuardar] = useState(null);
     const [planeamientoAEliminar, setPlaneamientoAEliminar] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
-    const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
         page: 0,
         size: 10,
@@ -46,19 +42,6 @@ export const PlaneamientoApp = ({ userLog }) => {
         };
     }, []);
 
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
     const selected = {
         id: null,
         usuario: { ...userLog },
@@ -67,7 +50,22 @@ export const PlaneamientoApp = ({ userLog }) => {
         fechacreacion: new Date(),
         fechaactualizacion: new Date(),
         estado: "Borrador"
-    }
+    };
+    const columnSettings = {
+        id: { label: "#", type: "number", default: true },
+        descripcion: { label: "Descripción", type: "string", classname: "text-start", default: true },
+        fechacreacion: { label: "Fecha de creación", type: "date" },
+        fechaactualizacion: { label: "Fecha de actualización", type: "date", default: true },
+        estado: {
+            label: "Estado",
+            type: "string",
+            default: true,
+            render: {
+                rentype: "statusinf",
+                renval1: "estado"
+            }
+        },
+    };
 
     const recuperarPlaneamientos = () => {
         setQuery(q => ({ ...q }));
@@ -112,12 +110,6 @@ export const PlaneamientoApp = ({ userLog }) => {
         setPlaneamientoAEliminar(null);
     }
 
-    const handleEliminarPlaneamiento = async (planeamiento) => {
-        // const rel = await getProduct('', '', '', `tipoproducto.id:eq:${planeamiento?.id}`);
-        // if (rel.items.length > 0) setPlaneamientoNoEliminar(planeamiento);
-        setPlaneamientoAEliminar(planeamiento);
-    };
-
     const guardarFn = async (datos, modoEdicion) => {
         setPlaneamientoAGuardar(null);
         if (datos?.id) navigate(`/home/main/commercial/planning/${datos.id}`, {
@@ -129,51 +121,22 @@ export const PlaneamientoApp = ({ userLog }) => {
         recuperarPlaneamientos();
     };
 
-    const toggleOrder = (field) => {
-        const [currentField, dir] = query.order.split(",");
-        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
-
-        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
-    };
-
-    const getSortIcon = (field) => {
-        const [currentField, direction] = query.order.split(",");
-
-        if (currentField !== field) return "bi-chevron-expand";
-
-        return direction === "asc"
-            ? "bi-chevron-up"
-            : "bi-chevron-down";
-    };
-
-    const generarFiltro = (f) => {
-        if (!f.op) {
-            setFiltroActivo({ ...filtroActivo, op: "eq" })
-            f = ({ ...f, op: "eq" })
-        }
-
-        const field = f.field.trim();
-        const op = f.op.trim();
-        let filtro = "";
-
-        if (op === "between") {
-            if (!f.value1 || !f.value2) return null;
-            filtro = `${field}:between:${f.value1}..${f.value2}`;
-        } else {
-            if (!f.value) return null;
-            filtro = `${field}:${op}:${f.value}`;
-        }
-
-        return filtro;
-    };
-
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
-        setFiltrosAplicados({});
-    }
+    };
 
-    const rows = [...planeamientos];
-    while (rows.length < query.size) rows.push(null);
+    const handleViewPlaneamiento = async (planeamiento) => {
+        await AddAccess('Visualizar', planeamiento.id, userLog, "Planeamientos");
+        guardarFn(planeamiento);
+    };
+
+    const handleEditPlaneamiento = (planeamiento) => {
+        guardarFn(planeamiento, true);
+    };
+
+    const handleDeletePlaneamiento = (planeamiento) => {
+        setPlaneamientoAEliminar(planeamiento);
+    };
 
     return (
         <>
@@ -188,236 +151,35 @@ export const PlaneamientoApp = ({ userLog }) => {
                 <SaveModal setGuardar={setPlaneamientoAGuardar} title={'planeamiento'} gen={true} fun={guardarFn} />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'PLANEAMIENTOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Planeamientos
-                        </p>
-                        <div className="p-3">
-                            <FiltroModal
-                                filtroActivo={filtroActivo}
-                                setFiltroActivo={setFiltroActivo}
-                                setQuery={setQuery}
-                                setFiltrosAplicados={setFiltrosAplicados}
-                                generarFiltro={generarFiltro}
-                            />
-                            <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-success'>
-                                    <tr>
-                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
-                                            #
-                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["id"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "id",
-                                                        type: "number",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("descripcion")} className="sortable-header">
-                                            Descripción
-                                            <i className={`bi ${getSortIcon("descripcion")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["descripcion"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "descripcion",
-                                                        type: "string",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("fechacreacion")} className="sortable-header">
-                                            Fecha de Creación
-                                            <i className={`bi ${getSortIcon("fechacreacion")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["fechacreacion"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "fechacreacion",
-                                                        type: "date",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("fechaactualizacion")} className="sortable-header">
-                                            Fecha de Actualización
-                                            <i className={`bi ${getSortIcon("fechaactualizacion")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["fechaactualizacion"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "fechaactualizacion",
-                                                        type: "date",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("estado")} className="sortable-header">
-                                            Estado
-                                            <i className={`bi ${getSortIcon("estado")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["estado"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "estado",
-                                                        type: "string",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th>Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {planeamientos.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="6" className="text-center py-3 text-muted fs-3 fw-bold">
-                                                No hay registros
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        rows.filter(v => v).map((v, index) => {
-                                            const puedeEditar = permiso?.puedeeditar && (v.estado == 'Borrador' || userLog?.id == 1);
-                                            const puedeEliminar = permiso?.puedeeliminar && (v.estado == 'Borrador' || userLog?.id == 1);
-                                            const puedeVer = permiso?.puedever;
-                                            return (
-                                                <tr
-                                                    className="text-center align-middle"
-                                                    key={v ? v.id : `empty-${index}`}
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        if (puedeEditar) await guardarFn(v, true);
-                                                    }}
-                                                    style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
-                                                >
-                                                    <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.descripcion}</td>
-                                                    <td>{DateHourFormat(v.fechacreacion, 0)}</td>
-                                                    <td>{DateHourFormat(v.fechaactualizacion, 0)}</td>
-                                                    <td style={{ width: '140px' }}>
-                                                        <p className={`text-center mx-auto w-75 ${obtenerClaseEstadoInf(v.estado)} m-0 rounded-2 border border-black`}>
-                                                            {v.estado}
-                                                        </p>
-                                                    </td>
-                                                    <td style={{ width: '100px' }}>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarPlaneamiento(v);
-                                                            }}
-                                                            className="btn border-0 me-2 p-0"
-                                                            style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
-                                                        >
-                                                            <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
-                                                        </button>
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Planeamientos");
-                                                                    await guardarFn(v, false);
-                                                                }
-                                                            }}
-                                                            className="btn border-0 ms-2 p-0"
-                                                            style={{ cursor: puedeVer ? 'pointer' : 'default' }}
-                                                        >
-                                                            <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        <ListControls
-                            query={query}
-                            setQuery={setQuery}
-                            totalPages={totalPages}
-                            totalItems={totalItems}
-                            onAdd={() => setPlaneamientoAGuardar(selected)}
-                            onRefresh={refrescar}
-                            canAdd={permiso?.puedeagregar}
-                            canImport={permiso?.puedeimportar}
-                            showErpButton={false}
-                            showAddButton={true}
-                            addData={selected}
-                        />
-                    </div>
-                </div>
-            </div>
+            <Header userLog={userLog} title={'PLANEAMIENTOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <SmartTable
+                data={planeamientos}
+                customReg={'report'}
+                userLog={userLog}
+                query={query}
+                setQuery={setQuery}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                onAdd={() => setPlaneamientoAGuardar(selected)}
+                onRefresh={refrescar}
+                onErpImport={() => null}
+                canAdd={permiso?.puedeagregar}
+                canImport={null}
+                showErpButton={false}
+                showAddButton={true}
+                onEdit={handleEditPlaneamiento}
+                onDelete={handleDeletePlaneamiento}
+                onView={handleViewPlaneamiento}
+                canEdit={permiso?.puedeeditar}
+                canDelete={permiso?.puedeeliminar}
+                canView={permiso?.puedever}
+                columnSettings={columnSettings}
+            />
         </>
     );
 };

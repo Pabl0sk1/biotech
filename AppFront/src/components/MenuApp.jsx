@@ -11,7 +11,7 @@ import Loading from '../layouts/Loading.jsx';
 import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 
-export const MenuApp = ({ userLog }) => {
+export const MenuApp = ({ userLog, setUserLog }) => {
 
     const [menus, setMenus] = useState([]);
     const [modulos, setModulos] = useState([]);
