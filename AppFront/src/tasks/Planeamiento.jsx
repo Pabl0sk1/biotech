@@ -105,55 +105,48 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
             setZafras(zaf.items);
         };
         loadZafras();
-    }, [])
+    }, []);
 
     useEffect(() => {
-        setLoading(true);
-        const load = async () => {
-            const ven = await getEntity('', '', '', 'categorias:contains:Vendedor;activo:eq:true');
-            const cli = await getEntity('', '', '', 'categorias:contains:Cliente;activo:eq:true');
-            const pro = await getProduct('', '', 'nombrecomercial.subgrupoproducto.subgrupoproducto,asc', 'activo:eq:true;incluirplan:eq:true');
-            const sub = await getProductGroup('', '', 'subgrupoproducto,asc', '', 'subgroups');
-            const com = await getCommission();
+        const loadAll = async () => {
+            setLoading(true);
+            try {
+                const [ven, cli, pro, sub, com] = await Promise.all([
+                    getEntity('', '', '', 'categorias:contains:Vendedor;activo:eq:true'),
+                    getEntity('', '', '', 'categorias:contains:Cliente;activo:eq:true'),
+                    getProduct('', '', 'nombrecomercial.subgrupoproducto.subgrupoproducto,asc', 'activo:eq:true;incluirplan:eq:true'),
+                    getProductGroup('', '', 'subgrupoproducto,asc', '', 'subgroups'),
+                    getCommission()
+                ]);
 
-            const subgrupos = sub.items.filter(s =>
-                pro.items.some(p =>
-                    s.id === p.nombrecomercial?.subgrupoproducto?.id
-                )
-            );
+                const subgruposFiltrados = sub.items.filter(s =>
+                    pro.items.some(p => s.id === p.nombrecomercial?.subgrupoproducto?.id)
+                );
+                setVendedores(ven.items);
+                setClientes(cli.items.filter(v => v.cartera));
+                setProductos(pro.items);
+                setSubgrupos(subgruposFiltrados);
+                setComisiones(com.items);
 
-            setVendedores(ven.items);
-            setClientes(cli.items.filter(v => v.cartera));
-            setProductos(pro.items);
-            setSubgrupos(subgrupos);
-            setComisiones(com.items);
-        };
-        load();
-
-        const loadData = async () => {
-            if (datos?.id) {
-                const response = await getReportData(datos?.id);
-                if (response.dataJson) {
-                    try {
-                        const dataParsed = JSON.parse(response.dataJson);
-                        setData(dataParsed);
-                        initialDataRef.current = dataParsed;
-
-                        // Restaurar zafras seleccionadas
-                        if (Array.isArray(dataParsed.zafras)) {
-                            setSelectedZafras(dataParsed.zafras);
+                if (datos?.id) {
+                    const response = await getReportData(datos.id);
+                    if (response.dataJson) {
+                        try {
+                            const dataParsed = JSON.parse(response.dataJson);
+                            setData(dataParsed);
+                            initialDataRef.current = dataParsed;
+                            if (Array.isArray(dataParsed.zafras)) setSelectedZafras(dataParsed.zafras);
+                        } catch (error) {
+                            console.error('Error al parsear datos del informe:', error);
                         }
-                    } catch (error) {
-                        console.error('Error al parsear datos del informe: ', error);
-                        setData(initial);
-                        initialDataRef.current = initial;
                     }
                 }
+            } finally {
+                setLoading(false);
             }
-        }
-        loadData();
-        setLoading(false);
-    }, [datos]);
+        };
+        loadAll();
+    }, []);
 
     useEffect(() => {
         setData(prev => {
@@ -781,7 +774,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                 <SaveAlert setClose={setSaveAlert} />
             )}
 
-            <Header userLog={userLog} title={datosOriginal.id ? 'EDITAR PLAN' : 'CREAR PLAN'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='planeamiento' />
+            <Header userLog={userLog} title={!modoEdicion ? 'VER PLAN' : datosOriginal.id ? 'EDITAR PLAN' : 'CREAR PLAN'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='planeamiento' />
             <Sidebar
                 userLog={userLog}
                 setUserLog={setUserLog}
@@ -816,14 +809,14 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                             <div className="modern-input-group">
                                 <label htmlFor="descripcion" className="modern-label">
                                     <i className="bi bi-card-text me-2"></i>Descripción
-                                    <i className="text-danger ms-1">*</i>
+                                    {modoEdicion ? <i className="text-danger ms-1">*</i> : ''}
                                 </label>
                                 <input
                                     type="text"
                                     id="descripcion"
                                     name="descripcion"
                                     placeholder="Ingresa una descripcion"
-                                    className={`modern-input ${descError ? 'error' : ''}`}
+                                    className={`modern-input-edit`}
                                     value={datos.descripcion}
                                     onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
                                     maxLength={150}
@@ -831,10 +824,10 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                     autoFocus={modoEdicion}
                                 />
                                 {descError && (
-                                    <div className="error-message">
-                                        <i className="bi bi-exclamation-triangle-fill"></i>
-                                        La descripción es obligatoria (máx. 150 caracteres)
-                                    </div>
+                                    <small className="text-danger d-block mt-1 text-start">
+                                        <i className="bi bi-exclamation-triangle me-1"></i>
+                                        Este campo es obligatorio.
+                                    </small>
                                 )}
                             </div>
 
@@ -845,7 +838,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                             <i className="bi bi-check2-square me-2"></i>Estado
                                         </label>
                                         <select
-                                            className="modern-input"
+                                            className="modern-input-edit"
                                             id="estado"
                                             name="estado"
                                             value={datos.estado ? datos.estado : ''}
@@ -870,7 +863,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                             type="date"
                                             id="fechacreacion"
                                             name="fechacreacion"
-                                            className="modern-input"
+                                            className="modern-input-edit"
                                             value={formatearFechaParaInput(datos.fechacreacion)}
                                             disabled
                                         />
@@ -898,7 +891,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                         ? `${selectedZafras.length} Seleccionados`
                                         : "Lista de Zafras"}
                                 </button>
-                                <ul className="dropdown-menu p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                <ul className="dropdown-menu modal-body p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
                                     {/* Botón de seleccionar todo */}
                                     <li className="pb-2 border-bottom mb-2">
                                         <button
@@ -944,7 +937,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                 </ul>
                             </div>
                         </div>
-                        {modoEdicion && (
+                        {modoEdicion && data.vendedores.length < 2 && (
                             <div className='modern-input-group'>
                                 <label className="modern-label">
                                     <i className="bi bi-people me-2"></i>Seleccionar Vendedores
@@ -963,7 +956,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                         if (!v) return;
                                         agregarVendedor(v);
                                     }}
-                                    className="modern-input"
+                                    className="modern-input-edit"
                                     disabled={data.vendedores.length >= 2}
                                 />
                             </div>
@@ -1017,8 +1010,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                                             if (!z) return;
                                                             agregarZafraAVendedor(vd.uid, vd.erpid, z);
                                                         }}
-                                                        className="modern-input input-group w-25"
-                                                        placeholder="Agregar zafra a este vendedor..."
+                                                        className="modern-input-edit"
                                                     />
                                                 </div>
                                             )}
@@ -1073,8 +1065,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                                                                 if (!c) return;
                                                                                 agregarClienteAZafra(vd.uid, zf.uid, c);
                                                                             }}
-                                                                            className="modern-input input-group w-25"
-                                                                            placeholder="Agregar cliente a esta zafra..."
+                                                                            className="modern-input-edit"
                                                                         />
                                                                     </div>
                                                                 )}
@@ -1156,12 +1147,11 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                                                                                     if (!p) return;
                                                                                                     agregarProductoACliente(vd.uid, zf.uid, ct.uid, p);
                                                                                                 }}
-                                                                                                className="modern-input input-group w-25"
-                                                                                                placeholder="Agregar producto..."
+                                                                                                className="modern-input-edit"
                                                                                             />
                                                                                         </div>
                                                                                     )}
-                                                                                    <div key={ct.uid} className="mb-2">
+                                                                                    <div key={ct.uid} className="my-2">
                                                                                         <table className="table table-sm table-bordered table-hover m-0">
                                                                                             <thead className="table-dark text-center align-middle">
                                                                                                 <tr>
