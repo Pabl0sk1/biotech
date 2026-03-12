@@ -2189,7 +2189,6 @@ html::-webkit-scrollbar-track {
 .column-menu-dropdown::-webkit-scrollbar-thumb,
 html::-webkit-scrollbar-thumb {
   background: rgba(16, 185, 129, 0.719);
-  border-radius: 2px;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb:hover,
@@ -2206,39 +2205,45 @@ html::-webkit-scrollbar-thumb:hover {
   width: 100%;
 }
 
-.table-scroll-wrapper::-webkit-scrollbar {
+.table-scroll-wrapper::-webkit-scrollbar,
+html::-webkit-scrollbar {
   height: 8px;
   background-color: #dddddd;
 }
 
-.table-scroll-wrapper::-webkit-scrollbar-track {
+.table-scroll-wrapper::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.table-scroll-wrapper::-webkit-scrollbar-thumb {
+.table-scroll-wrapper::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb {
   background: rgba(16, 185, 129, 0.719);
-  border-radius: 2px;
 }
 
-.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:hover {
   background: rgba(16, 185, 129, 1);
   cursor: pointer;
 }
 
-.table-scroll-wrapper::-webkit-scrollbar-button {
+.table-scroll-wrapper::-webkit-scrollbar-button,
+html::-webkit-scrollbar-button {
   display: block;
   width: 14px;
   background-color: rgb(255, 255, 255);
 }
 
-.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:decrement:start {
+.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:decrement:start,
+html::-webkit-scrollbar-button:horizontal:decrement:start {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='2,5 8,1 8,9' fill='rgba(16,185,129,0.7)'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 10px;
 }
 
-.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:increment:end {
+.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:increment:end,
+html::-webkit-scrollbar-button:horizontal:increment:end {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='8,5 2,1 2,9' fill='rgba(16,185,129,0.7)'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
@@ -2246,11 +2251,14 @@ html::-webkit-scrollbar-thumb:hover {
 }
 
 .table-scroll-wrapper::-webkit-scrollbar-button:horizontal:increment:start,
-.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:decrement:end {
+.table-scroll-wrapper::-webkit-scrollbar-button:horizontal:decrement:end,
+html::-webkit-scrollbar-button:horizontal:increment:start,
+html::-webkit-scrollbar-button:horizontal:decrement:end {
   display: none;
 }
 
-.table-scroll-wrapper::-webkit-scrollbar-button:hover {
+.table-scroll-wrapper::-webkit-scrollbar-button:hover,
+html::-webkit-scrollbar-button:hover {
   background-color: rgba(16, 185, 129, 0.2);
   cursor: pointer;
 }

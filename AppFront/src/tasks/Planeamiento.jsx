@@ -8,22 +8,23 @@ import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getHarvest } from '../services/zafra.service.js';
 import { getCommission } from "../services/comision.service.js";
 import { AddAccess } from '../utils/AddAccess.js';
-import Header from '../Header';
 import AutocompleteSelect from '../AutocompleteSelect.jsx';
+import Header from '../Header';
+import Sidebar from '../Sidebar.jsx';
 import Loading from "../layouts/Loading";
 import Close from "../layouts/Close";
 import SaveAlert from '../layouts/SaveAlert.jsx';
 
-export const Planeamiento = () => {
+export const Planeamiento = ({ userLog, setUserLog }) => {
 
     const initial = {
         zafras: [],
         vendedores: []
     }
 
+    const uid = () => crypto.randomUUID();
     const navigate = useNavigate();
     const { state } = useLocation();
-    const userLog = state?.userLog;
     const modoEdicion = state?.modoEdicion;
     const [datos, setDatos] = useState(state?.datos);
     const [datosOriginal] = useState(state?.datos);
@@ -43,8 +44,32 @@ export const Planeamiento = () => {
     const [saveAlert, setSaveAlert] = useState(false);
     const [descError, setDescError] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [zafraSeleccionadaPorVendedor, setZafraSeleccionadaPorVendedor] = useState({});
+    const [clienteSeleccionadoPorZafra, setClienteSeleccionadoPorZafra] = useState({});
+    const [productoSeleccionadoPorCliente, setProductoSeleccionadoPorCliente] = useState({});
 
-    const uid = () => crypto.randomUUID();
+    // Función para comparar si hay cambios reales
+    const hasChanges = () => {
+        const datosComparable = {
+            descripcion: datos?.descripcion,
+            estado: datos?.estado
+        };
+
+        const datosOriginalComparable = {
+            descripcion: datosOriginal?.descripcion,
+            estado: datosOriginal?.estado
+        };
+
+        const datosChanged = JSON.stringify(datosComparable) !== JSON.stringify(datosOriginalComparable);
+        const dataChanged = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
+
+        return datosChanged || dataChanged;
+    };
+
+    const confirmarEscape = () => {
+        setClose(false);
+        if (!descError) navigate(-1);
+    };
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -74,14 +99,17 @@ export const Planeamiento = () => {
         });
     }, []);
 
-    const confirmarEscape = () => {
-        setClose(false);
-        if (!descError) navigate(-1);
-    };
+    useEffect(() => {
+        const loadZafras = async () => {
+            const zaf = await getHarvest();
+            setZafras(zaf.items);
+        };
+        loadZafras();
+    }, [])
 
     useEffect(() => {
+        setLoading(true);
         const load = async () => {
-            const zaf = await getHarvest();
             const ven = await getEntity('', '', '', 'categorias:contains:Vendedor;activo:eq:true');
             const cli = await getEntity('', '', '', 'categorias:contains:Cliente;activo:eq:true');
             const pro = await getProduct('', '', 'nombrecomercial.subgrupoproducto.subgrupoproducto,asc', 'activo:eq:true;incluirplan:eq:true');
@@ -94,7 +122,6 @@ export const Planeamiento = () => {
                 )
             );
 
-            setZafras(zaf.items);
             setVendedores(ven.items);
             setClientes(cli.items.filter(v => v.cartera));
             setProductos(pro.items);
@@ -125,33 +152,87 @@ export const Planeamiento = () => {
             }
         }
         loadData();
+        setLoading(false);
     }, [datos]);
 
     useEffect(() => {
-        setData(prev => ({
-            ...prev,
-            zafras: selectedZafras
-        }));
+        setData(prev => {
+            // Actualizar el array de IDs de zafras seleccionadas
+            const newData = { ...prev, zafras: selectedZafras };
+
+            if (!prev.vendedores.length) return newData;
+
+            // Sincronizar zafras en cada vendedor
+            const vendedoresActualizados = prev.vendedores.map(vend => {
+                const zafrasActuales = vend.zafras || [];
+
+                // Agregar zafras nuevas que no tenga el vendedor
+                const zafrasAAgregar = zafras
+                    .filter(z =>
+                        selectedZafras.includes(z.id) &&
+                        !zafrasActuales.some(zf => zf.zafraid === z.id)
+                    )
+                    .map(z => {
+                        // Reconstruir clientes con subgrupos para la nueva zafra
+                        const clientesList = clientesPorVendedor(vend.erpid);
+                        const subgrupoConProductos = subgrupos.map(s => ({
+                            uid: uid(),
+                            subgrupoid: s.id,
+                            subgrupo: s.subgrupoproducto,
+                            grupo: s.grupoproductotxt,
+                            totplansubgrupo: 0,
+                            totcomisubgrupo: 0,
+                            productos: productos.filter(p => p.nombrecomercial?.subgrupoproducto?.id == s.id).map(p => ({
+                                uid: uid(),
+                                productoid: p.id,
+                                nombre: p.nombrecomercial?.nombrecomercial,
+                                principioactivo: p.principioactivo?.principioactivo,
+                                dosis: p.dosisporhec || 0,
+                                volpotencial: 0,
+                                volplaneado: 0,
+                                porcenparti: 0,
+                                preciomedio: p.precio || 0,
+                                areaplaneada: 0,
+                                precioplan: 0,
+                                preciocomi: 0
+                            }))
+                        }));
+                        const clientesConSubgrupos = clientesList.map(c => ({
+                            uid: uid(),
+                            clienteid: c.id,
+                            nomape: c.nomape,
+                            nombre: c.nombre,
+                            apellido: c.apellido,
+                            nrodoc: c.nrodoc,
+                            areacultivo: '',
+                            totplancliente: 0,
+                            totcomicliente: 0,
+                            subgrupos: subgrupoConProductos
+                        }));
+                        return {
+                            uid: uid(),
+                            zafraid: z.id,
+                            zafra: z.descripcion,
+                            totplanzafra: 0,
+                            totcomizafra: 0,
+                            clientes: clientesConSubgrupos
+                        };
+                    });
+
+                // Quitar zafras que fueron deseleccionadas
+                const zafrasFiltradas = zafrasActuales.filter(zf =>
+                    selectedZafras.includes(zf.zafraid)
+                );
+
+                return {
+                    ...vend,
+                    zafras: [...zafrasFiltradas, ...zafrasAAgregar]
+                };
+            });
+
+            return { ...newData, vendedores: vendedoresActualizados };
+        });
     }, [selectedZafras]);
-
-    // Función para comparar si hay cambios reales
-    const hasChanges = () => {
-        // Comparar datos (solo campos editables, no fechas)
-        const datosComparable = {
-            descripcion: datos?.descripcion,
-            estado: datos?.estado
-        };
-
-        const datosOriginalComparable = {
-            descripcion: datosOriginal?.descripcion,
-            estado: datosOriginal?.estado
-        };
-
-        const datosChanged = JSON.stringify(datosComparable) !== JSON.stringify(datosOriginalComparable);
-        const dataChanged = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
-
-        return datosChanged || dataChanged;
-    };
 
     // Marcar cambios sin guardar cuando se modifica datos o data
     useEffect(() => {
@@ -569,6 +650,124 @@ export const Planeamiento = () => {
         return await handleSubmit();
     };
 
+    const agregarZafraAVendedor = (vendedorUid, vendedorErpid, zafra) => {
+        setData(prev => ({
+            ...prev,
+            vendedores: prev.vendedores.map(vend => {
+                if (vend.uid !== vendedorUid) return vend;
+                if (vend.zafras.some(z => z.zafraid === zafra.id)) return vend;
+
+                const clientesList = clientesPorVendedor(vendedorErpid);
+                const subgrupoConProductos = subgrupos.map(s => ({
+                    uid: uid(), subgrupoid: s.id, subgrupo: s.subgrupoproducto,
+                    grupo: s.grupoproductotxt, totplansubgrupo: 0, totcomisubgrupo: 0,
+                    productos: productos.filter(p => p.nombrecomercial?.subgrupoproducto?.id == s.id).map(p => ({
+                        uid: uid(), productoid: p.id, nombre: p.nombrecomercial?.nombrecomercial,
+                        principioactivo: p.principioactivo?.principioactivo, dosis: p.dosisporhec || 0,
+                        volpotencial: 0, volplaneado: 0, porcenparti: 0, preciomedio: p.precio || 0,
+                        areaplaneada: 0, precioplan: 0, preciocomi: 0
+                    }))
+                }));
+                const nuevaZafra = {
+                    uid: uid(), zafraid: zafra.id, zafra: zafra.descripcion,
+                    totplanzafra: 0, totcomizafra: 0,
+                    clientes: clientesList.map(c => ({
+                        uid: uid(), clienteid: c.id, nomape: c.nomape, nombre: c.nombre,
+                        apellido: c.apellido, nrodoc: c.nrodoc, areacultivo: '',
+                        totplancliente: 0, totcomicliente: 0, subgrupos: subgrupoConProductos
+                    }))
+                };
+                return { ...vend, zafras: [...vend.zafras, nuevaZafra] };
+            })
+        }));
+        setZafraSeleccionadaPorVendedor(prev => ({ ...prev, [vendedorUid]: null }));
+    };
+
+    const agregarClienteAZafra = (vendedorUid, zafraUid, cliente) => {
+        setData(prev => ({
+            ...prev,
+            vendedores: prev.vendedores.map(vend => {
+                if (vend.uid !== vendedorUid) return vend;
+                return {
+                    ...vend,
+                    zafras: vend.zafras.map(zf => {
+                        if (zf.uid !== zafraUid) return zf;
+                        if (zf.clientes.some(c => c.clienteid === cliente.id)) return zf;
+
+                        const subgrupoConProductos = subgrupos.map(s => ({
+                            uid: uid(), subgrupoid: s.id, subgrupo: s.subgrupoproducto,
+                            grupo: s.grupoproductotxt, totplansubgrupo: 0, totcomisubgrupo: 0,
+                            productos: productos.filter(p => p.nombrecomercial?.subgrupoproducto?.id == s.id).map(p => ({
+                                uid: uid(), productoid: p.id, nombre: p.nombrecomercial?.nombrecomercial,
+                                principioactivo: p.principioactivo?.principioactivo, dosis: p.dosisporhec || 0,
+                                volpotencial: 0, volplaneado: 0, porcenparti: 0, preciomedio: p.precio || 0,
+                                areaplaneada: 0, precioplan: 0, preciocomi: 0
+                            }))
+                        }));
+                        const nuevoCliente = {
+                            uid: uid(), clienteid: cliente.id, nomape: cliente.nomape,
+                            nombre: cliente.nombre, apellido: cliente.apellido, nrodoc: cliente.nrodoc,
+                            areacultivo: '', totplancliente: 0, totcomicliente: 0,
+                            subgrupos: subgrupoConProductos
+                        };
+                        return { ...zf, clientes: [...zf.clientes, nuevoCliente] };
+                    })
+                };
+            })
+        }));
+        setClienteSeleccionadoPorZafra(prev => ({ ...prev, [zafraUid]: null }));
+    };
+
+    const agregarProductoACliente = (vendedorUid, zafraUid, clienteUid, producto) => {
+        setData(prev => ({
+            ...prev,
+            vendedores: prev.vendedores.map(vend => {
+                if (vend.uid !== vendedorUid) return vend;
+                return {
+                    ...vend,
+                    zafras: vend.zafras.map(zf => {
+                        if (zf.uid !== zafraUid) return zf;
+                        return {
+                            ...zf,
+                            clientes: zf.clientes.map(ct => {
+                                if (ct.uid !== clienteUid) return ct;
+
+                                const sgId = producto.nombrecomercial?.subgrupoproducto?.id;
+                                const nuevoProducto = {
+                                    uid: uid(), productoid: producto.id,
+                                    nombre: producto.nombrecomercial?.nombrecomercial,
+                                    principioactivo: producto.principioactivo?.principioactivo,
+                                    dosis: producto.dosisporhec || 0, volpotencial: 0, volplaneado: 0,
+                                    porcenparti: 0, preciomedio: producto.precio || 0,
+                                    areaplaneada: 0, precioplan: 0, preciocomi: 0
+                                };
+
+                                // Agregar al subgrupo correspondiente, o crear uno nuevo
+                                const sgExiste = ct.subgrupos.some(sg => sg.subgrupoid === sgId);
+                                const subgruposActualizados = sgExiste
+                                    ? ct.subgrupos.map(sg => {
+                                        if (sg.subgrupoid !== sgId) return sg;
+                                        if (sg.productos.some(p => p.productoid === producto.id)) return sg;
+                                        return { ...sg, productos: [...sg.productos, nuevoProducto] };
+                                    })
+                                    : [...ct.subgrupos, {
+                                        uid: uid(), subgrupoid: sgId,
+                                        subgrupo: producto.nombrecomercial?.subgrupoproducto?.subgrupoproducto,
+                                        grupo: producto.nombrecomercial?.subgrupoproducto?.grupoproductotxt,
+                                        totplansubgrupo: 0, totcomisubgrupo: 0,
+                                        productos: [nuevoProducto]
+                                    }];
+
+                                return { ...ct, subgrupos: subgruposActualizados };
+                            })
+                        };
+                    })
+                };
+            })
+        }));
+        setProductoSeleccionadoPorCliente(prev => ({ ...prev, [clienteUid]: null }));
+    };
+
     return (
         <>
 
@@ -582,460 +781,529 @@ export const Planeamiento = () => {
                 <SaveAlert setClose={setSaveAlert} />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'PLANEAMIENTOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='planeamiento' />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        {/* Header del perfil */}
-                        <div className="extend-header">
-                            <div className="security-icon">
-                                <i className="bi bi-clipboard-data"></i>
-                            </div>
-                            <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Planeamientos
-                            </h2>
-                            <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
-                                Realizar el registro del planeamiento
-                            </p>
-                        </div>
-                        <form
-                            action="url.ph"
-                            onSubmit={handleSubmit}
-                            className="needs-validation"
-                            noValidate
-                        >
-                            <div className="form-body">
-                                {/* Sección de Información de Cuenta */}
-                                <h3 className="section-title">
-                                    <i className="bi bi-shield-check input-icon"></i>
-                                    Datos del Registro
-                                </h3>
-                                <div className="form-section">
-                                    <div className="modern-input-group">
-                                        <label htmlFor="descripcion" className="modern-label">
-                                            <i className="bi bi-card-text me-2"></i>Descripción *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="descripcion"
-                                            name="descripcion"
-                                            placeholder="Ingresa una descripcion"
-                                            className={`modern-input ${descError ? 'error' : ''}`}
-                                            value={datos.descripcion}
-                                            onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
-                                            maxLength={150}
-                                            disabled={!modoEdicion}
-                                            autoFocus={modoEdicion}
-                                        />
-                                        {descError && (
-                                            <div className="error-message">
-                                                <i className="bi bi-exclamation-triangle-fill"></i>
-                                                La descripción es obligatoria (máx. 150 caracteres)
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="row">
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="apellido" className="modern-label">
-                                                    <i className="bi bi-check2-square me-2"></i>Estado
-                                                </label>
-                                                <select
-                                                    className="modern-input"
-                                                    id="estado"
-                                                    name="estado"
-                                                    value={datos.estado ? datos.estado : ''}
-                                                    onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
-                                                    disabled={!datos.id || !modoEdicion}
-                                                    required
-                                                >
-                                                    <option key={1} value={'Aprobado'}>Aprobado</option>
-                                                    <option key={2} value={'Borrador'}>Borrador</option>
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="fechacreacion" className="modern-label">
-                                                    <i className="bi bi-calendar me-2"></i>Fecha de Creación
-                                                </label>
-                                                <input
-                                                    type="date"
-                                                    id="fechacreacion"
-                                                    name="fechacreacion"
-                                                    className="modern-input"
-                                                    value={formatearFechaParaInput(datos.fechacreacion)}
-                                                    disabled
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <h3 className="section-title">
-                                    <i className="bi bi-shield-check input-icon"></i>
-                                    Generación de Datos
-                                </h3>
-                                {/* Sección de selección de zafras */}
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-brightness-alt-high me-2"></i>Seleccionar Zafras
-                                    </label>
-                                    <div className="dropdown mb-3">
-                                        <button
-                                            className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
-                                            type="button"
-                                            data-bs-toggle="dropdown"
-                                        >
-                                            {selectedZafras.length > 0
-                                                ? `${selectedZafras.length} Seleccionados`
-                                                : "Lista de Zafras"}
-                                        </button>
-                                        <ul className="dropdown-menu p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
-                                            {/* Botón de seleccionar todo */}
-                                            <li className="pb-2 border-bottom mb-2">
-                                                <button
-                                                    className="btn btn-success w-100 py-1"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        if (selectedZafras.length === zafras.length) {
-                                                            // desmarcar todo
-                                                            setSelectedZafras([]);
-                                                        } else {
-                                                            // seleccionar todos
-                                                            setSelectedZafras(zafras.map(z => z.id));
-                                                        }
-                                                    }}
-                                                    type="button"
-                                                >
-                                                    {selectedZafras.length === zafras.length
-                                                        ? "Desmarcar todos"
-                                                        : "Seleccionar todos"
-                                                    }
-                                                </button>
-                                            </li>
-
-                                            {/* Lista de zafras */}
-                                            {zafras.map(z => (
-                                                <li key={z.id}>
-                                                    <div className="form-check">
-                                                        <input
-                                                            className="form-check-input"
-                                                            type="checkbox"
-                                                            value={z.id}
-                                                            id={`zaf-${z.id}`}
-                                                            checked={selectedZafras.includes(z.id)}
-                                                            onChange={() => handleSelectZafra(z.id)}
-                                                            disabled={!modoEdicion}
-                                                        />
-                                                        <label className="form-check-label text-black" htmlFor={`func-${z.id}`}>
-                                                            {z.descripcion}
-                                                        </label>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                                {modoEdicion && (
-                                    <div className='modern-input-group'>
-                                        <label className="modern-label">
-                                            <i className="bi bi-people me-2"></i>Seleccionar Vendedores
-                                        </label>
-                                        <AutocompleteSelect
-                                            options={vendedores}
-                                            value={vendedorSeleccionado}
-                                            getLabel={(v) => v.nomape}
-                                            searchFields={[
-                                                v => v.nomape,
-                                                v => v.nrodoc
-                                            ]}
-                                            size={3}
-                                            onChange={(v) => {
-                                                setVendedorSeleccionado(v);
-                                                if (!v) return;
-                                                agregarVendedor(v);
-                                            }}
-                                            className="modern-input"
-                                            disabled={data.vendedores.length >= 2}
-                                        />
+            <Header userLog={userLog} title={datosOriginal.id ? 'EDITAR PLAN' : 'CREAR PLAN'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='planeamiento' />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <div className="form-card">
+                {/* Header del perfil */}
+                <div className="extend-header">
+                    <div className="security-icon">
+                        <i className="bi bi-clipboard-data"></i>
+                    </div>
+                    <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
+                        {datos.descripcion || 'Planeamiento'}
+                    </h2>
+                    <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
+                        Realizar el registro del planeamiento
+                    </p>
+                </div>
+                <form
+                    action="url.ph"
+                    onSubmit={handleSubmit}
+                    className="needs-validation"
+                    noValidate
+                >
+                    <div className="form-body">
+                        {/* Sección de Información de Cuenta */}
+                        <h3 className="section-title">
+                            <i className="bi bi-shield-check input-icon"></i>
+                            Datos del Registro
+                        </h3>
+                        <div className="form-section">
+                            <div className="modern-input-group">
+                                <label htmlFor="descripcion" className="modern-label">
+                                    <i className="bi bi-card-text me-2"></i>Descripción
+                                    <i className="text-danger ms-1">*</i>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="descripcion"
+                                    name="descripcion"
+                                    placeholder="Ingresa una descripcion"
+                                    className={`modern-input ${descError ? 'error' : ''}`}
+                                    value={datos.descripcion}
+                                    onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
+                                    maxLength={150}
+                                    disabled={!modoEdicion}
+                                    autoFocus={modoEdicion}
+                                />
+                                {descError && (
+                                    <div className="error-message">
+                                        <i className="bi bi-exclamation-triangle-fill"></i>
+                                        La descripción es obligatoria (máx. 150 caracteres)
                                     </div>
                                 )}
+                            </div>
 
-                                {data.vendedores && data.vendedores.map(vd => {
-                                    const totalVendedor = calcularTotalVendedor(vd);
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="apellido" className="modern-label">
+                                            <i className="bi bi-check2-square me-2"></i>Estado
+                                        </label>
+                                        <select
+                                            className="modern-input"
+                                            id="estado"
+                                            name="estado"
+                                            value={datos.estado ? datos.estado : ''}
+                                            onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
+                                            disabled={!datos.id || !modoEdicion}
+                                            required
+                                        >
+                                            <option key={1} value={'Aprobado'}>Aprobado</option>
+                                            <option key={2} value={'Borrador'}>Borrador</option>
+                                        </select>
+                                        <div className="invalid-feedback text-danger text-start">
+                                            <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="fechacreacion" className="modern-label">
+                                            <i className="bi bi-calendar me-2"></i>Fecha de Creación
+                                        </label>
+                                        <input
+                                            type="date"
+                                            id="fechacreacion"
+                                            name="fechacreacion"
+                                            className="modern-input"
+                                            value={formatearFechaParaInput(datos.fechacreacion)}
+                                            disabled
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                    return (
-                                        <div key={vd.uid} className="mb-2">
+                        <h3 className="section-title">
+                            <i className="bi bi-shield-check input-icon"></i>
+                            Generación de Datos
+                        </h3>
+                        {/* Sección de selección de zafras */}
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-brightness-alt-high me-2"></i>Seleccionar Zafras
+                            </label>
+                            <div className="dropdown mb-3">
+                                <button
+                                    className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                >
+                                    {selectedZafras.length > 0
+                                        ? `${selectedZafras.length} Seleccionados`
+                                        : "Lista de Zafras"}
+                                </button>
+                                <ul className="dropdown-menu p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                    {/* Botón de seleccionar todo */}
+                                    <li className="pb-2 border-bottom mb-2">
+                                        <button
+                                            className="btn btn-success w-100 py-1"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                if (selectedZafras.length === zafras.length) {
+                                                    // desmarcar todo
+                                                    setSelectedZafras([]);
+                                                } else {
+                                                    // seleccionar todos
+                                                    setSelectedZafras(zafras.map(z => z.id));
+                                                }
+                                            }}
+                                            type="button"
+                                        >
+                                            {selectedZafras.length === zafras.length
+                                                ? "Desmarcar todos"
+                                                : "Seleccionar todos"
+                                            }
+                                        </button>
+                                    </li>
 
-                                            {/* VENDEDOR */}
-                                            <div className="text-end pe-2 pb-1">
-                                                <small className="badge bg-success text-dark fw-bold">
-                                                    Total Vendedor: $ {totalVendedor.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
-                                                </small>
+                                    {/* Lista de zafras */}
+                                    {zafras.map(z => (
+                                        <li key={z.id}>
+                                            <div className="form-check">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    value={z.id}
+                                                    id={`zaf-${z.id}`}
+                                                    checked={selectedZafras.includes(z.id)}
+                                                    onChange={() => handleSelectZafra(z.id)}
+                                                    disabled={!modoEdicion}
+                                                />
+                                                <label className="form-check-label text-black" htmlFor={`func-${z.id}`}>
+                                                    {z.descripcion}
+                                                </label>
                                             </div>
-                                            <button type='button' className="btn rounded-0 rounded-top-3 btn-success w-100 fw-bold text-dark d-flex align-items-center"
-                                                onClick={() => toggle(vd.uid)}>
-                                                {modoEdicion && (
-                                                    <div
-                                                        role='button'
-                                                        className="btn btn-sm btn-danger rounded-0 me-2"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            eliminarVendedor(vd.uid);
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                        {modoEdicion && (
+                            <div className='modern-input-group'>
+                                <label className="modern-label">
+                                    <i className="bi bi-people me-2"></i>Seleccionar Vendedores
+                                </label>
+                                <AutocompleteSelect
+                                    options={vendedores}
+                                    value={vendedorSeleccionado}
+                                    getLabel={(v) => v.nomape}
+                                    searchFields={[
+                                        v => v.nomape,
+                                        v => v.nrodoc
+                                    ]}
+                                    size={3}
+                                    onChange={(v) => {
+                                        setVendedorSeleccionado(v);
+                                        if (!v) return;
+                                        agregarVendedor(v);
+                                    }}
+                                    className="modern-input"
+                                    disabled={data.vendedores.length >= 2}
+                                />
+                            </div>
+                        )}
+
+                        {data.vendedores && data.vendedores.map(vd => {
+                            const totalVendedor = calcularTotalVendedor(vd);
+
+                            return (
+                                <div key={vd.uid} className="mb-2">
+
+                                    {/* VENDEDOR */}
+                                    <div className="text-end pe-2 pb-1">
+                                        <small className="badge bg-success text-dark fw-bold">
+                                            Total Vendedor: $ {totalVendedor.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
+                                        </small>
+                                    </div>
+                                    <button type='button' className="btn rounded-0 rounded-top-3 btn-success w-100 fw-bold text-dark d-flex align-items-center"
+                                        onClick={() => toggle(vd.uid)}>
+                                        {modoEdicion && (
+                                            <div
+                                                role='button'
+                                                className="btn btn-sm btn-danger rounded-0 me-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    eliminarVendedor(vd.uid);
+                                                }}
+                                                title="Eliminar vendedor"
+                                            >
+                                                <i className="bi bi-trash-fill"></i>
+                                            </div>
+                                        )}
+                                        <span className="flex-grow-1 text-center">{vd.nomape}</span>
+                                        <i className={`bi ${open[vd.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                    </button>
+
+                                    {open[vd.uid] && (
+                                        <div className="bg-success-subtle">
+                                            {modoEdicion && (
+                                                <div className="p-2 bg-success-subtle">
+                                                    <label className="modern-label text-start">
+                                                        <i className="bi bi-brightness-alt-high me-2"></i>Seleccionar Zafras
+                                                    </label>
+                                                    <AutocompleteSelect
+                                                        options={zafras.filter(z => !vd.zafras.some(vz => vz.zafraid === z.id))}
+                                                        value={zafraSeleccionadaPorVendedor[vd.uid] || null}
+                                                        getLabel={(z) => z.descripcion}
+                                                        searchFields={[z => z.descripcion]}
+                                                        size={3}
+                                                        onChange={(z) => {
+                                                            if (!z) return;
+                                                            agregarZafraAVendedor(vd.uid, vd.erpid, z);
                                                         }}
-                                                        title="Eliminar vendedor"
-                                                    >
-                                                        <i className="bi bi-trash-fill"></i>
-                                                    </div>
-                                                )}
-                                                <span className="flex-grow-1 text-center">{vd.nomape}</span>
-                                                <i className={`bi ${open[vd.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
-                                            </button>
-
-                                            {open[vd.uid] && (
-                                                <div className="bg-success-subtle">
-                                                    {vd.zafras && vd.zafras.map(zf => {
-                                                        const totalZafra = calcularTotalZafra(zf);
-
-                                                        return (
-                                                            <div key={zf.uid} className="p-2 mb-2">
-
-                                                                {/* ZAFRA */}
-                                                                <div className="text-end pe-2 pb-1">
-                                                                    <small className="badge bg-warning text-black fw-bold">
-                                                                        Total Zafra: $ {totalZafra.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
-                                                                    </small>
-                                                                </div>
-                                                                <button type='button' className="btn rounded-0 rounded-top-3 btn-warning w-100 fw-medium d-flex align-items-center"
-                                                                    onClick={() => toggle(zf.uid)}>
-                                                                    {modoEdicion && (
-                                                                        <div
-                                                                            role='button'
-                                                                            className="btn btn-sm btn-danger rounded-0 me-2"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                eliminarZafra(vd.uid, zf.uid);
-                                                                            }}
-                                                                            title="Eliminar zafra"
-                                                                        >
-                                                                            <i className="bi bi-trash-fill"></i>
-                                                                        </div>
-                                                                    )}
-                                                                    <span className="flex-grow-1 text-center">{zf.zafra}</span>
-                                                                    <i className={`bi ${open[zf.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
-                                                                </button>
-
-                                                                {open[zf.uid] && (
-                                                                    <div className="bg-warning-subtle p-2">
-                                                                        {zf.clientes && zf.clientes.map(ct => {
-                                                                            const totalCliente = calcularTotalCliente(ct);
-
-                                                                            return (
-                                                                                <div key={ct.uid} className="mb-2">
-
-                                                                                    {/* CLIENTE */}
-                                                                                    <div className="text-end pe-2 pb-1">
-                                                                                        <small className="badge bg-info text-black fw-bold">
-                                                                                            Total Cliente: $ {totalCliente.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
-                                                                                        </small>
-                                                                                    </div>
-                                                                                    <button
-                                                                                        type='button'
-                                                                                        className="btn rounded-0 rounded-top-3 btn-info w-100 fw-medium d-flex align-items-center"
-                                                                                        onClick={() => toggle(ct.uid)}
-                                                                                    >
-                                                                                        {modoEdicion && (
-                                                                                            <div
-                                                                                                role='button'
-                                                                                                className="btn btn-sm btn-danger rounded-0 me-2"
-                                                                                                onClick={(e) => {
-                                                                                                    e.stopPropagation();
-                                                                                                    eliminarCliente(vd.uid, zf.uid, ct.uid);
-                                                                                                }}
-                                                                                                title="Eliminar cliente"
-                                                                                            >
-                                                                                                <i className="bi bi-trash-fill"></i>
-                                                                                            </div>
-                                                                                        )}
-                                                                                        <span className="flex-grow-1 text-center">{ct.nomape}</span>
-                                                                                        <div className="d-flex align-items-center gap-2">
-                                                                                            <input
-                                                                                                type="number"
-                                                                                                min={0}
-                                                                                                className="form-control form-control-sm"
-                                                                                                placeholder="Área de Cultivo"
-                                                                                                value={ct.areacultivo ?? ''}
-                                                                                                onChange={e => {
-                                                                                                    e.stopPropagation();
-                                                                                                    const value = e.target.value;
-                                                                                                    actualizarAreaCliente(
-                                                                                                        vd.uid,
-                                                                                                        zf.uid,
-                                                                                                        ct.uid,
-                                                                                                        value === '' ? '' : Math.max(0, Number(value))
-                                                                                                    );
-                                                                                                }}
-                                                                                                onClick={e => e.stopPropagation()}
-                                                                                                disabled={!modoEdicion}
-                                                                                                style={{ width: '120px' }}
-                                                                                            />
-                                                                                            <i className={`bi ${open[ct.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
-                                                                                        </div>
-                                                                                    </button>
-
-                                                                                    {open[ct.uid] && (
-                                                                                        <div className="bg-info-subtle p-2">
-
-                                                                                            <div key={ct.uid} className="mb-2">
-                                                                                                <table className="table table-sm table-bordered table-hover m-0">
-                                                                                                    <thead className="table-dark text-center align-middle">
-                                                                                                        <tr>
-                                                                                                            <th>-</th>
-                                                                                                            <th>Subgrupo</th>
-                                                                                                            <th>Producto</th>
-                                                                                                            <th>Principio Activo</th>
-                                                                                                            <th>Dosis Ajustada</th>
-                                                                                                            <th>Vol. Potencial</th>
-                                                                                                            <th>Vol. Planeado</th>
-                                                                                                            <th>% Participación de Producto</th>
-                                                                                                            <th>Precio Medio</th>
-                                                                                                            <th>Área Planeada</th>
-                                                                                                            <th>Precio Planeado</th>
-                                                                                                            <th>Precio Comisión</th>
-                                                                                                        </tr>
-                                                                                                    </thead>
-                                                                                                    <tbody>
-                                                                                                        {ct.subgrupos && ct.subgrupos.flatMap(sg =>
-                                                                                                            sg.productos && sg.productos.map(pr => {
-                                                                                                                return (
-                                                                                                                    <tr key={pr.uid}>
-                                                                                                                        <td>
-                                                                                                                            {modoEdicion && (
-                                                                                                                                <button
-                                                                                                                                    type='button'
-                                                                                                                                    className="btn btn-sm btn-danger rounded-0"
-                                                                                                                                    onClick={() => eliminarProducto(vd.uid, zf.uid, ct.uid, sg.uid, pr.uid)}
-                                                                                                                                    title="Eliminar producto"
-                                                                                                                                >
-                                                                                                                                    <i className="bi bi-trash-fill"></i>
-                                                                                                                                </button>
-                                                                                                                            )}
-                                                                                                                        </td>
-                                                                                                                        <td>{sg.subgrupo}</td>
-                                                                                                                        <td>{pr.nombre}</td>
-                                                                                                                        <td>{pr.principioactivo}</td>
-                                                                                                                        <td>
-                                                                                                                            <input
-                                                                                                                                type="number"
-                                                                                                                                min={0}
-                                                                                                                                className="form-control form-control-sm"
-                                                                                                                                placeholder='Dosis'
-                                                                                                                                value={pr.dosis ?? ''}
-                                                                                                                                onChange={e => {
-                                                                                                                                    e.stopPropagation();
-                                                                                                                                    const value = e.target.value;
-                                                                                                                                    actualizarProducto(
-                                                                                                                                        vd.uid,
-                                                                                                                                        zf.uid,
-                                                                                                                                        ct.uid,
-                                                                                                                                        sg.uid,
-                                                                                                                                        pr.uid,
-                                                                                                                                        'dosis',
-                                                                                                                                        value === '' ? '' : Math.max(0, Number(value))
-                                                                                                                                    )
-                                                                                                                                }}
-                                                                                                                                disabled={!modoEdicion}
-                                                                                                                            />
-                                                                                                                        </td>
-                                                                                                                        <td className="text-end">{pr.volpotencial?.toFixed(2) ?? '0.00'}</td>
-                                                                                                                        <td>
-                                                                                                                            <input
-                                                                                                                                type="number"
-                                                                                                                                min={0}
-                                                                                                                                className="form-control form-control-sm"
-                                                                                                                                placeholder='Volumen'
-                                                                                                                                value={pr.volplaneado ?? ''}
-                                                                                                                                onChange={e => {
-                                                                                                                                    e.stopPropagation();
-                                                                                                                                    const value = e.target.value;
-                                                                                                                                    actualizarProducto(
-                                                                                                                                        vd.uid,
-                                                                                                                                        zf.uid,
-                                                                                                                                        ct.uid,
-                                                                                                                                        sg.uid,
-                                                                                                                                        pr.uid,
-                                                                                                                                        'volplaneado',
-                                                                                                                                        value === '' ? '' : Math.max(0, Number(value))
-                                                                                                                                    )
-                                                                                                                                }}
-                                                                                                                                disabled={!modoEdicion}
-                                                                                                                            />
-                                                                                                                        </td>
-                                                                                                                        <td className="text-end">{(pr.porcenparti * 100)?.toFixed(2) ?? '0.00'}%</td>
-                                                                                                                        <td>
-                                                                                                                            <NumericFormat
-                                                                                                                                allowNegative={false}
-                                                                                                                                displayType="input"
-                                                                                                                                thousandSeparator="."
-                                                                                                                                decimalSeparator=","
-                                                                                                                                decimalScale={2}
-                                                                                                                                fixedDecimalScale={true}
-                                                                                                                                className="form-control form-control-sm"
-                                                                                                                                placeholder='Precio'
-                                                                                                                                value={pr.precio ?? 0}
-                                                                                                                                onValueChange={({ floatValue }) => {
-                                                                                                                                    actualizarProducto(
-                                                                                                                                        vd.uid,
-                                                                                                                                        zf.uid,
-                                                                                                                                        ct.uid,
-                                                                                                                                        sg.uid,
-                                                                                                                                        pr.uid,
-                                                                                                                                        'preciomedio',
-                                                                                                                                        floatValue ?? 0
-                                                                                                                                    )
-                                                                                                                                }}
-                                                                                                                                disabled={!modoEdicion}
-                                                                                                                            />
-                                                                                                                        </td>
-                                                                                                                        <td className='text-end'>{pr.areaplaneada?.toFixed(2) ?? '0.00'}</td>
-                                                                                                                        <td className='text-end'>{pr.precioplan?.toFixed(2) ?? '0.00'}</td>
-                                                                                                                        <td className='text-end'>{pr.preciocomi?.toFixed(2) ?? '0.00'}</td>
-                                                                                                                    </tr>
-                                                                                                                );
-                                                                                                            })
-                                                                                                        )}
-                                                                                                    </tbody>
-                                                                                                </table>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
-                                                                            )
-                                                                        })}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )
-                                                    })}
+                                                        className="modern-input input-group w-25"
+                                                        placeholder="Agregar zafra a este vendedor..."
+                                                    />
                                                 </div>
                                             )}
+                                            {vd.zafras && vd.zafras.map(zf => {
+                                                const totalZafra = calcularTotalZafra(zf);
+
+                                                return (
+                                                    <div key={zf.uid} className="p-2 mb-2">
+
+                                                        {/* ZAFRA */}
+                                                        <div className="text-end pe-2 pb-1">
+                                                            <small className="badge bg-warning text-black fw-bold">
+                                                                Total Zafra: $ {totalZafra.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
+                                                            </small>
+                                                        </div>
+                                                        <button type='button' className="btn rounded-0 rounded-top-3 btn-warning w-100 fw-medium d-flex align-items-center"
+                                                            onClick={() => toggle(zf.uid)}>
+                                                            {modoEdicion && (
+                                                                <div
+                                                                    role='button'
+                                                                    className="btn btn-sm btn-danger rounded-0 me-2"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        eliminarZafra(vd.uid, zf.uid);
+                                                                    }}
+                                                                    title="Eliminar zafra"
+                                                                >
+                                                                    <i className="bi bi-trash-fill"></i>
+                                                                </div>
+                                                            )}
+                                                            <span className="flex-grow-1 text-center">{zf.zafra}</span>
+                                                            <i className={`bi ${open[zf.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                                        </button>
+
+                                                        {open[zf.uid] && (
+                                                            <div className="bg-warning-subtle p-2">
+                                                                {modoEdicion && (
+                                                                    <div className="p-2 bg-warning-subtle">
+                                                                        <label className="modern-label text-start">
+                                                                            <i className="bi bi-people me-2"></i>Seleccionar Clientes
+                                                                        </label>
+                                                                        <AutocompleteSelect
+                                                                            options={clientes.filter(c =>
+                                                                                c.cartera?.entidadid == vd.erpid &&
+                                                                                !zf.clientes.some(zc => zc.clienteid === c.id)
+                                                                            )}
+                                                                            value={clienteSeleccionadoPorZafra[zf.uid] || null}
+                                                                            getLabel={(c) => c.nomape}
+                                                                            searchFields={[c => c.nomape, c => c.nrodoc]}
+                                                                            size={3}
+                                                                            onChange={(c) => {
+                                                                                if (!c) return;
+                                                                                agregarClienteAZafra(vd.uid, zf.uid, c);
+                                                                            }}
+                                                                            className="modern-input input-group w-25"
+                                                                            placeholder="Agregar cliente a esta zafra..."
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                                {zf.clientes && zf.clientes.map(ct => {
+                                                                    const totalCliente = calcularTotalCliente(ct);
+
+                                                                    return (
+                                                                        <div key={ct.uid} className="mb-2">
+
+                                                                            {/* CLIENTE */}
+                                                                            <div className="text-end pe-2 pb-1">
+                                                                                <small className="badge bg-info text-black fw-bold">
+                                                                                    Total Cliente: $ {totalCliente.toLocaleString('es-PY', { minimumFractionDigits: 2 })}
+                                                                                </small>
+                                                                            </div>
+                                                                            <button
+                                                                                type='button'
+                                                                                className="btn rounded-0 rounded-top-3 btn-info w-100 fw-medium d-flex align-items-center"
+                                                                                onClick={() => toggle(ct.uid)}
+                                                                            >
+                                                                                {modoEdicion && (
+                                                                                    <div
+                                                                                        role='button'
+                                                                                        className="btn btn-sm btn-danger rounded-0 me-2"
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            eliminarCliente(vd.uid, zf.uid, ct.uid);
+                                                                                        }}
+                                                                                        title="Eliminar cliente"
+                                                                                    >
+                                                                                        <i className="bi bi-trash-fill"></i>
+                                                                                    </div>
+                                                                                )}
+                                                                                <span className="flex-grow-1 text-center">{ct.nomape}</span>
+                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        min={0}
+                                                                                        className="form-control form-control-sm"
+                                                                                        placeholder="Área de Cultivo"
+                                                                                        value={ct.areacultivo ?? ''}
+                                                                                        onChange={e => {
+                                                                                            e.stopPropagation();
+                                                                                            const value = e.target.value;
+                                                                                            actualizarAreaCliente(
+                                                                                                vd.uid,
+                                                                                                zf.uid,
+                                                                                                ct.uid,
+                                                                                                value === '' ? '' : Math.max(0, Number(value))
+                                                                                            );
+                                                                                        }}
+                                                                                        onClick={e => e.stopPropagation()}
+                                                                                        disabled={!modoEdicion}
+                                                                                        style={{ width: '120px' }}
+                                                                                    />
+                                                                                    <i className={`bi ${open[ct.uid] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} fs-5`} />
+                                                                                </div>
+                                                                            </button>
+
+                                                                            {open[ct.uid] && (
+                                                                                <div className="bg-info-subtle p-2">
+                                                                                    {modoEdicion && (
+                                                                                        <div className="p-2">
+                                                                                            <label className="modern-label text-start">
+                                                                                                <i className="bi bi-box me-2"></i>Seleccionar Productos
+                                                                                            </label>
+                                                                                            <AutocompleteSelect
+                                                                                                options={productos.filter(p =>
+                                                                                                    !ct.subgrupos.flatMap(sg => sg.productos).some(pr => pr.productoid === p.id)
+                                                                                                )}
+                                                                                                value={productoSeleccionadoPorCliente[ct.uid] || null}
+                                                                                                getLabel={(p) => p.nombrecomercial?.nombrecomercial}
+                                                                                                searchFields={[
+                                                                                                    p => p.nombrecomercial?.nombrecomercial,
+                                                                                                    p => p.principioactivo?.principioactivo
+                                                                                                ]}
+                                                                                                size={3}
+                                                                                                onChange={(p) => {
+                                                                                                    if (!p) return;
+                                                                                                    agregarProductoACliente(vd.uid, zf.uid, ct.uid, p);
+                                                                                                }}
+                                                                                                className="modern-input input-group w-25"
+                                                                                                placeholder="Agregar producto..."
+                                                                                            />
+                                                                                        </div>
+                                                                                    )}
+                                                                                    <div key={ct.uid} className="mb-2">
+                                                                                        <table className="table table-sm table-bordered table-hover m-0">
+                                                                                            <thead className="table-dark text-center align-middle">
+                                                                                                <tr>
+                                                                                                    <th>-</th>
+                                                                                                    <th>Subgrupo</th>
+                                                                                                    <th>Producto</th>
+                                                                                                    <th>Principio Activo</th>
+                                                                                                    <th>Dosis Ajustada</th>
+                                                                                                    <th>Vol. Potencial</th>
+                                                                                                    <th>Vol. Planeado</th>
+                                                                                                    <th>% Participación de Producto</th>
+                                                                                                    <th>Precio Medio</th>
+                                                                                                    <th>Área Planeada</th>
+                                                                                                    <th>Precio Planeado</th>
+                                                                                                    <th>Precio Comisión</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {ct.subgrupos && ct.subgrupos.flatMap(sg =>
+                                                                                                    sg.productos && sg.productos.map(pr => {
+                                                                                                        return (
+                                                                                                            <tr key={pr.uid}>
+                                                                                                                <td>
+                                                                                                                    {modoEdicion && (
+                                                                                                                        <button
+                                                                                                                            type='button'
+                                                                                                                            className="btn btn-sm btn-danger rounded-0"
+                                                                                                                            onClick={() => eliminarProducto(vd.uid, zf.uid, ct.uid, sg.uid, pr.uid)}
+                                                                                                                            title="Eliminar producto"
+                                                                                                                        >
+                                                                                                                            <i className="bi bi-trash-fill"></i>
+                                                                                                                        </button>
+                                                                                                                    )}
+                                                                                                                </td>
+                                                                                                                <td>{sg.subgrupo}</td>
+                                                                                                                <td>{pr.nombre}</td>
+                                                                                                                <td>{pr.principioactivo}</td>
+                                                                                                                <td>
+                                                                                                                    <input
+                                                                                                                        type="number"
+                                                                                                                        min={0}
+                                                                                                                        className="form-control form-control-sm"
+                                                                                                                        placeholder='Dosis'
+                                                                                                                        value={pr.dosis ?? ''}
+                                                                                                                        onChange={e => {
+                                                                                                                            e.stopPropagation();
+                                                                                                                            const value = e.target.value;
+                                                                                                                            actualizarProducto(
+                                                                                                                                vd.uid,
+                                                                                                                                zf.uid,
+                                                                                                                                ct.uid,
+                                                                                                                                sg.uid,
+                                                                                                                                pr.uid,
+                                                                                                                                'dosis',
+                                                                                                                                value === '' ? '' : Math.max(0, Number(value))
+                                                                                                                            )
+                                                                                                                        }}
+                                                                                                                        disabled={!modoEdicion}
+                                                                                                                    />
+                                                                                                                </td>
+                                                                                                                <td className="text-end">{pr.volpotencial?.toFixed(2) ?? '0.00'}</td>
+                                                                                                                <td>
+                                                                                                                    <input
+                                                                                                                        type="number"
+                                                                                                                        min={0}
+                                                                                                                        className="form-control form-control-sm"
+                                                                                                                        placeholder='Volumen'
+                                                                                                                        value={pr.volplaneado ?? ''}
+                                                                                                                        onChange={e => {
+                                                                                                                            e.stopPropagation();
+                                                                                                                            const value = e.target.value;
+                                                                                                                            actualizarProducto(
+                                                                                                                                vd.uid,
+                                                                                                                                zf.uid,
+                                                                                                                                ct.uid,
+                                                                                                                                sg.uid,
+                                                                                                                                pr.uid,
+                                                                                                                                'volplaneado',
+                                                                                                                                value === '' ? '' : Math.max(0, Number(value))
+                                                                                                                            )
+                                                                                                                        }}
+                                                                                                                        disabled={!modoEdicion}
+                                                                                                                    />
+                                                                                                                </td>
+                                                                                                                <td className="text-end">{(pr.porcenparti * 100)?.toFixed(2) ?? '0.00'}%</td>
+                                                                                                                <td>
+                                                                                                                    <NumericFormat
+                                                                                                                        allowNegative={false}
+                                                                                                                        displayType="input"
+                                                                                                                        thousandSeparator="."
+                                                                                                                        decimalSeparator=","
+                                                                                                                        decimalScale={2}
+                                                                                                                        fixedDecimalScale={true}
+                                                                                                                        className="form-control form-control-sm"
+                                                                                                                        placeholder='Precio'
+                                                                                                                        value={pr.precio ?? 0}
+                                                                                                                        onValueChange={({ floatValue }) => {
+                                                                                                                            actualizarProducto(
+                                                                                                                                vd.uid,
+                                                                                                                                zf.uid,
+                                                                                                                                ct.uid,
+                                                                                                                                sg.uid,
+                                                                                                                                pr.uid,
+                                                                                                                                'preciomedio',
+                                                                                                                                floatValue ?? 0
+                                                                                                                            )
+                                                                                                                        }}
+                                                                                                                        disabled={!modoEdicion}
+                                                                                                                    />
+                                                                                                                </td>
+                                                                                                                <td className='text-end'>{pr.areaplaneada?.toFixed(2) ?? '0.00'}</td>
+                                                                                                                <td className='text-end'>{pr.precioplan?.toFixed(2) ?? '0.00'}</td>
+                                                                                                                <td className='text-end'>{pr.preciocomi?.toFixed(2) ?? '0.00'}</td>
+                                                                                                            </tr>
+                                                                                                        );
+                                                                                                    })
+                                                                                                )}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
                                         </div>
-                                    )
-                                })}
-                            </div>
-                            <div className='div-report-button'>
-                                <button type='submit' className="btn btn-secondary bg-success modern-button" disabled={!modoEdicion}>
-                                    <i className="bi bi-check-lg"></i>Guardar
-                                </button>
-                            </div>
-                        </form>
+                                    )}
+                                </div>
+                            )
+                        })}
                     </div>
-                </div>
+                    <div className='div-report-button'>
+                        <button type='submit' className="btn btn-secondary bg-success modern-button" disabled={!modoEdicion}>
+                            <i className="bi bi-check-lg"></i>Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
         </>
     );

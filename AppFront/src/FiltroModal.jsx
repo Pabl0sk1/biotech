@@ -90,7 +90,7 @@ export const FiltroModal = ({
                     <div className="d-flex align-items-center gap-2">
                         <i
                             className="bi bi-eraser-fill text-danger"
-                            style={{ cursor: 'pointer', fontSize: '1rem' }}
+                            style={{ cursor: 'pointer', fontSize: '1rem', marginInline: '10px' }}
                             onClick={limpiarFiltro}
                             title="Borrar filtro"
                         />

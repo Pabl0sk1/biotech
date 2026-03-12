@@ -68,7 +68,7 @@ const formatCellValue = (col, row) => {
     switch (col.type) {
         case "date":
             return DateHourFormat(rawValue, 2);
-        case "datetime":
+        case "datetime-local":
             return DateHourFormat(rawValue, 1);
         case "time":
             return HourFormat(rawValue);
@@ -258,7 +258,6 @@ export const SmartTable = ({
     const toggleColumn = (key) => {
         setVisibleColumns(prev => {
             if (prev.includes(key)) {
-                // Always keep at least one column visible
                 if (prev.length <= 1) return prev;
                 return prev.filter(k => k !== key);
             }
@@ -272,7 +271,7 @@ export const SmartTable = ({
         onRefresh?.();
     };
 
-    const handleReg = (op, can) => {
+    const handleReg = (op, can, on) => {
         let custom = true;
         if (op === 'edit') {
             if (customReg === 'report') {
@@ -283,7 +282,7 @@ export const SmartTable = ({
                 if (data[0]?.estado === 'Aprobado' && userLog?.id !== 1) custom = false;
             }
         }
-        return can && custom;
+        return can && custom && on;
     };
 
     return (
@@ -388,28 +387,28 @@ export const SmartTable = ({
                                     <tr
                                         key={row.id || `row-${index}`}
                                         className={`text-center align-middle ${rowClassName || ""}`}
-                                        onClick={() => { if (handleReg('edit', canEdit)) onEdit(row) }}
-                                        style={{ cursor: handleReg('edit', canEdit) ? "pointer" : "default" }}
+                                        onClick={() => { if (handleReg('edit', canEdit, onEdit)) onEdit(row) }}
+                                        style={{ cursor: handleReg('edit', canEdit, onEdit) ? "pointer" : "default" }}
                                     >
                                         <td onClick={e => e.stopPropagation()} className="bg-light" style={{ cursor: 'default' }}>
                                             <div className="d-flex justify-content-evenly">
                                                 <button
-                                                    onClick={() => { if (handleReg('delete', canDelete)) onDelete(row) }}
+                                                    onClick={() => { if (handleReg('delete', canDelete, onDelete)) onDelete(row) }}
                                                     className="icon-action"
                                                     title="Eliminar"
-                                                    style={{ cursor: handleReg('delete', canDelete) ? 'pointer' : 'default' }}
-                                                    disabled={!handleReg('delete', canDelete)}
+                                                    style={{ cursor: handleReg('delete', canDelete, onDelete) ? 'pointer' : 'default' }}
+                                                    disabled={!handleReg('delete', canDelete, onDelete)}
                                                 >
-                                                    <i className={`bi bi-trash-fill ${handleReg('delete', canDelete) ? 'text-danger' : 'text-danger-emphasis'}`}></i>
+                                                    <i className={`bi bi-trash-fill ${handleReg('delete', canDelete, onDelete) ? 'text-danger' : 'text-danger-emphasis'}`}></i>
                                                 </button>
                                                 <button
-                                                    onClick={() => { if (handleReg('view', canView)) onView(row) }}
+                                                    onClick={() => { if (handleReg('view', canView, onView)) onView(row) }}
                                                     className="icon-action"
                                                     title="Ver"
-                                                    style={{ cursor: handleReg('view', canView) ? 'pointer' : 'default' }}
-                                                    disabled={!handleReg('view', canView)}
+                                                    style={{ cursor: handleReg('view', canView, onView) ? 'pointer' : 'default' }}
+                                                    disabled={!handleReg('view', canView, onView)}
                                                 >
-                                                    <i className={`bi bi-eye-fill ${handleReg('view', canView) ? 'text-primary' : 'text-primary-emphasis'}`}></i>
+                                                    <i className={`bi bi-eye-fill ${handleReg('view', canView, onView) ? 'text-primary' : 'text-primary-emphasis'}`}></i>
                                                 </button>
                                             </div>
                                         </td>

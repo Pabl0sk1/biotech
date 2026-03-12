@@ -113,10 +113,10 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
     const guardarFn = async (datos, modoEdicion) => {
         setPlaneamientoAGuardar(null);
         if (datos?.id) navigate(`/home/main/commercial/planning/${datos.id}`, {
-            state: { userLog, datos, modoEdicion }
+            state: { datos, modoEdicion }
         });
         else navigate(`/home/main/commercial/planning/${selected.id}`, {
-            state: { userLog, datos: selected, modoEdicion: true }
+            state: { datos: selected, modoEdicion: true }
         });
         recuperarPlaneamientos();
     };

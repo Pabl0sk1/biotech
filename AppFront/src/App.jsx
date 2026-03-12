@@ -126,7 +126,7 @@ function App() {
         } />
         <Route path={UrlLocal + "/main/commercial/planning/:id"} element={
           <ProtectedRoute moduloVar="cm03" permisos={permisos}>
-            <Planeamiento />
+            <Planeamiento userLog={userLog} setUserLog={setUserLog} />
           </ProtectedRoute>
         } />
         {/* Principal - RRHH */}
@@ -137,7 +137,7 @@ function App() {
         } />
         <Route path={UrlLocal + "/main/rrhh/calcext/:id"} element={
           <ProtectedRoute moduloVar="rh04" permisos={permisos}>
-            <HoraExtra />
+            <HoraExtra userLog={userLog} setUserLog={setUserLog} />
           </ProtectedRoute>
         } />
 
