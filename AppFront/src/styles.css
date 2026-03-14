@@ -936,6 +936,12 @@ input[type="number"] {
   background-color: #bebebe;
 }
 
+.dropdown-item:active,
+.dropdown-item:focus {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
 .login-left {
   flex: 1;
   display: flex;
@@ -1903,7 +1909,7 @@ input[type="number"] {
   display: flex;
   justify-content: center;
   background: #f9fafb;
-  padding: 24px 32px;
+  padding: 34px 32px;
   border-top: 1px solid #e5e7eb;
   gap: 30px;
 }

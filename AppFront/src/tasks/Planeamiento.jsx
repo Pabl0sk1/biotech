@@ -109,7 +109,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
 
     useEffect(() => {
         const loadAll = async () => {
-            setLoading(true);
+            if (datos?.id) setLoading(true);
             try {
                 const [ven, cli, pro, sub, com] = await Promise.all([
                     getEntity('', '', '', 'categorias:contains:Vendedor;activo:eq:true'),
@@ -816,7 +816,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                     id="descripcion"
                                     name="descripcion"
                                     placeholder="Ingresa una descripcion"
-                                    className={`modern-input-edit`}
+                                    className="modern-input-edit"
                                     value={datos.descripcion}
                                     onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
                                     maxLength={150}
@@ -849,9 +849,6 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                             <option key={1} value={'Aprobado'}>Aprobado</option>
                                             <option key={2} value={'Borrador'}>Borrador</option>
                                         </select>
-                                        <div className="invalid-feedback text-danger text-start">
-                                            <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
-                                        </div>
                                     </div>
                                 </div>
                                 <div className="col-md-6">
@@ -891,7 +888,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                         ? `${selectedZafras.length} Seleccionados`
                                         : "Lista de Zafras"}
                                 </button>
-                                <ul className="dropdown-menu modal-body p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                <ul className="dropdown-menu modal-body p-2 w-100 border-2 border-secondary" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
                                     {/* Botón de seleccionar todo */}
                                     <li className="pb-2 border-bottom mb-2">
                                         <button

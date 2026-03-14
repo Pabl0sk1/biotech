@@ -7,11 +7,12 @@ import { getShift } from '../services/turno.service';
 import { AddAccess } from '../utils/AddAccess.js';
 import { generarExcel } from './ArchivoExcel';
 import Header from '../Header';
+import Sidebar from '../Sidebar.jsx';
 import Loading from "../layouts/Loading";
 import Close from "../layouts/Close";
 import SaveAlert from '../layouts/SaveAlert.jsx';
 
-export const HoraExtra = () => {
+export const HoraExtra = ({ userLog, setUserLog }) => {
 
     const initial = {
         fechadesde: "",
@@ -24,7 +25,6 @@ export const HoraExtra = () => {
 
     const navigate = useNavigate();
     const { state } = useLocation();
-    const userLog = state?.userLog;
     const modoEdicion = state?.modoEdicion;
     const [datos, setDatos] = useState(state?.datos);
     const [datosOriginal] = useState(state?.datos);
@@ -45,6 +45,31 @@ export const HoraExtra = () => {
     const [saveAlert, setSaveAlert] = useState(false);
     const [descError, setDescError] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+    // Función para comparar si hay cambios reales
+    const hasChanges = () => {
+        const datosComparable = {
+            descripcion: datos?.descripcion,
+            estado: datos?.estado
+        };
+
+        const datosOriginalComparable = {
+            descripcion: datosOriginal?.descripcion,
+            estado: datosOriginal?.estado
+        };
+
+        const datosChanged = JSON.stringify(datosComparable) !== JSON.stringify(datosOriginalComparable);
+        const dataChanged = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
+
+        const sucursalChanged = selectedSucursal?.id !== initialDataRef.current?.sucursal?.id;
+
+        return datosChanged || dataChanged || sucursalChanged;
+    };
+
+    const confirmarEscape = () => {
+        setClose(false);
+        if (!descError) navigate(-1);
+    };
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -74,29 +99,68 @@ export const HoraExtra = () => {
         });
     }, []);
 
-    // Función para comparar si hay cambios reales
-    const hasChanges = () => {
-        // Comparar datos (solo campos editables, no fechas)
-        const datosComparable = {
-            descripcion: datos?.descripcion,
-            estado: datos?.estado
+    useEffect(() => {
+        const loadAll = async () => {
+            if (datos?.id) setLoading(true);
+            try {
+                const [suc, tur] = await Promise.all([
+                    getBranch(),
+                    getShift()
+                ]);
+
+                setSucursales(suc.items);
+                setTurnos(tur.items);
+
+                let sucursalGuardada = null;
+
+                if (datos?.id) {
+                    const response = await getReportData(datos.id);
+                    if (response.dataJson) {
+                        try {
+                            const dataParsed = JSON.parse(response.dataJson);
+                            setData(dataParsed);
+                            initialDataRef.current = dataParsed;
+
+                            if (dataParsed.sucursal) {
+                                sucursalGuardada = dataParsed.sucursal;
+                                setSelectedSucursal(dataParsed.sucursal);
+                            }
+
+                            if (dataParsed.listafuncionarios?.length > 0) {
+                                setSelectedFuncionarios(dataParsed.listafuncionarios.map(f => f.id));
+                            }
+                        } catch (error) {
+                            console.error('Error al parsear datos del informe:', error);
+                        }
+                    }
+                }
+
+                // Cargar funcionarios ya con la sucursal correcta
+                const suc_filter = sucursalGuardada ? `;sucursal.id:eq:${sucursalGuardada.id}` : '';
+                const fun = await getEntity('', '', '', `categorias:contains:Funcionario;estado:eq:Activo;horaextra:eq:true${suc_filter}`);
+                setFuncionarios(fun.items);
+
+            } finally {
+                setLoading(false);
+            }
         };
+        loadAll();
+    }, [datos?.id]);
 
-        const datosOriginalComparable = {
-            descripcion: datosOriginal?.descripcion,
-            estado: datosOriginal?.estado
-        };
+    useEffect(() => {
+        const load = async () => {
+            if (!data || sucursalCambiadaPorUsuario) {
+                await recuperarFuncionarios();
+                if (sucursalCambiadaPorUsuario) setSucursalCambiadaPorUsuario(false);
+            }
+        }
+        load();
+    }, [selectedSucursal]);
 
-        const datosChanged = JSON.stringify(datosComparable) !== JSON.stringify(datosOriginalComparable);
-        const dataChanged = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
-
-        return datosChanged || dataChanged;
-    };
-
-    const confirmarEscape = () => {
-        setClose(false);
-        if (!descError) navigate(-1);
-    };
+    // Marcar cambios sin guardar cuando se modifica datos o data
+    useEffect(() => {
+        setHasUnsavedChanges(hasChanges());
+    }, [datos, data, selectedSucursal]);
 
     const obtenerFechasDelMes = () => {
         const ahora = new Date();
@@ -385,24 +449,6 @@ export const HoraExtra = () => {
         if (minutos >= 840 && minutos < 1380) return '23:30'; // 14:00 - 23:30
         return '00:00';
     };
-
-    // Función para fijar hora de entrada automáticamente según turno
-    const fijarHoraEntrada = (id, idx, trn, sal, dia) => {
-        if (!trn) return;
-        let he = '00:00';
-        if (trn == 'A') he = '06:00';
-        else if (trn == 'B') he = '14:00';
-        else if (trn == 'C') he = '23:00';
-        else if (trn == 'D') he = '07:00';
-
-        actualizarDetalleFuncionario(id, idx, 'horaent', he);
-        const htot = restarHoras(he, sal);
-        const des = asignarDescanso(trn, dia);
-        const tot = Number(calcularHorasTrabajadasDecimal(he, sal, des).toFixed(2));
-        actualizarDetalleFuncionario(id, idx, 'htotal', htot);
-        actualizarDetalleFuncionario(id, idx, 'total', tot);
-        actualizarDetalleFuncionario(id, idx, 'horades', des);
-    }
 
     const limpiarHoras = (id, idx) => {
         let regHora = ['hn', 'hnn', 'hnmd', 'hnmn', 'hen', 'hent', 'hextras'];
@@ -766,16 +812,6 @@ export const HoraExtra = () => {
         }));
     };
 
-    const recuperarSucursales = async () => {
-        const response = await getBranch();
-        setSucursales(response.items);
-    }
-
-    const recuperarTurnos = async () => {
-        const response = await getShift();
-        setTurnos(response.items);
-    }
-
     const recuperarFuncionarios = async () => {
         const suc = selectedSucursal ? `;sucursal.id:eq:${selectedSucursal.id}` : '';
         const response = await getEntity('', '', '', `categorias:contains:Funcionario;estado:eq:Activo;horaextra:eq:true${suc}`);
@@ -802,59 +838,6 @@ export const HoraExtra = () => {
             }));
         }
     }
-
-    useEffect(() => {
-        const cargarDatosInforme = async () => {
-            if (datos?.id) {
-                const response = await getReportData(datos?.id);
-                if (response.dataJson) {
-                    try {
-                        const dataParsed = JSON.parse(response.dataJson);
-                        setData(dataParsed);
-                        initialDataRef.current = dataParsed;
-
-                        if (dataParsed.sucursal) setSelectedSucursal(dataParsed.sucursal);
-
-                        // Establecer los funcionarios seleccionados
-                        if (dataParsed.listafuncionarios && dataParsed.listafuncionarios.length > 0) {
-                            const idsSeleccionados = dataParsed.listafuncionarios.map(f => f.id);
-                            setSelectedFuncionarios(idsSeleccionados);
-                            await recuperarFuncionarios();
-                        }
-                    } catch (error) {
-                        console.error('Error al parsear datos del informe:', error);
-                        setData(initial);
-                        initialDataRef.current = initial;
-                    }
-                }
-            }
-        };
-        cargarDatosInforme();
-    }, [datos, sucursales]);
-
-    useEffect(() => {
-        const load = async () => {
-            if (!data || sucursalCambiadaPorUsuario) {
-                await recuperarFuncionarios();
-                if (sucursalCambiadaPorUsuario) setSucursalCambiadaPorUsuario(false);
-            }
-        }
-        load();
-    }, [selectedSucursal]);
-
-    useEffect(() => {
-        const inicializar = async () => {
-            await recuperarSucursales();
-            await recuperarTurnos();
-            await recuperarFuncionarios();
-        };
-        inicializar();
-    }, []);
-
-    // Marcar cambios sin guardar cuando se modifica datos o data
-    useEffect(() => {
-        setHasUnsavedChanges(hasChanges());
-    }, [datos, data]);
 
     // Función para actualizar un detalle específico de un funcionario
     const actualizarDetalleFuncionario = (funcionarioId, fechaIndex, campo, valor) => {
@@ -895,6 +878,10 @@ export const HoraExtra = () => {
     const generarArchivo = () => {
         if (selectedFuncionarios.length > 0) generarExcel(data);
     }
+
+    const handleNumericInput = (fc_id, fechaIndex, campo, valor) => {
+        actualizarDetalleFuncionario(fc_id, fechaIndex, campo, valor === '' ? '' : Number(valor));
+    };
 
     const handleSubmit = async (event) => {
         event?.preventDefault();
@@ -961,27 +948,28 @@ export const HoraExtra = () => {
             let nuevoSeleccionado = prev;
             if (prev.includes(id)) {
                 nuevoSeleccionado = prev.filter(f => f !== id);
-                // Remover del listafuncionarios si se desmarca
                 setData(prevData => ({
                     ...prevData,
                     listafuncionarios: prevData.listafuncionarios.filter(f => f.id !== id)
                 }));
             } else {
                 nuevoSeleccionado = [...prev, id];
-                // Agregar al listafuncionarios con detalles si se marca
                 const funcionarioAMarcar = funcionarios.find(f => f.id === id);
                 if (funcionarioAMarcar) {
-                    const funcionarioConDetalles = actualizarDetallesFuncionarios(
-                        data.fechadesde,
-                        data.fechahasta,
-                        [funcionarioAMarcar]
-                    );
-                    const funcionarioConFeriados = aplicarFeriados(funcionarioConDetalles, data.listaferiados);
-
-                    setData(prevData => ({
-                        ...prevData,
-                        listafuncionarios: [...prevData.listafuncionarios, ...funcionarioConFeriados]
-                    }));
+                    // ✅ Verificar que no exista ya antes de agregar
+                    const yaExiste = data.listafuncionarios.some(f => f.id === id);
+                    if (!yaExiste) {
+                        const funcionarioConDetalles = actualizarDetallesFuncionarios(
+                            data.fechadesde,
+                            data.fechahasta,
+                            [funcionarioAMarcar]
+                        );
+                        const funcionarioConFeriados = aplicarFeriados(funcionarioConDetalles, data.listaferiados);
+                        setData(prevData => ({
+                            ...prevData,
+                            listafuncionarios: [...prevData.listafuncionarios, ...funcionarioConFeriados]
+                        }));
+                    }
                 }
             }
             return nuevoSeleccionado;
@@ -1005,632 +993,625 @@ export const HoraExtra = () => {
                 <SaveAlert setClose={setSaveAlert} />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='hora extra' />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        {/* Header del perfil */}
-                        <div className="extend-header">
-                            <div className="security-icon">
-                                <i className="bi bi-clipboard-data"></i>
+            <Header userLog={userLog} title={!modoEdicion ? 'VER HORA EXTRA' : datosOriginal.id ? 'EDITAR HORA EXTRA' : 'CREAR HORA EXTRA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt='hora extra' />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <div className="form-card">
+                {/* Header del perfil */}
+                <div className="extend-header">
+                    <div className="security-icon">
+                        <i className="bi bi-clipboard-data"></i>
+                    </div>
+                    <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
+                        {datos.descripcion || 'Hora Extra'}
+                    </h2>
+                    <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
+                        Realizar el registro de la hora extra
+                    </p>
+                </div>
+                <form
+                    action="url.ph"
+                    onSubmit={handleSubmit}
+                    className="needs-validation"
+                    noValidate
+                >
+                    <div className="form-body">
+                        {/* Sección de Información de Cuenta */}
+                        <h3 className="section-title">
+                            <i className="bi bi-shield-check input-icon"></i>
+                            Datos del Registro
+                        </h3>
+                        <div className="form-section">
+                            <div className="modern-input-group">
+                                <label htmlFor="descripcion" className="modern-label">
+                                    <i className="bi bi-card-text me-2"></i>Descripción
+                                    {modoEdicion ? <i className="text-danger ms-1">*</i> : ''}
+                                </label>
+                                <input
+                                    type="text"
+                                    id="descripcion"
+                                    name="descripcion"
+                                    placeholder="Ingresa una descripcion"
+                                    className="modern-input-edit"
+                                    value={datos.descripcion}
+                                    onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
+                                    maxLength={150}
+                                    disabled={!modoEdicion}
+                                    autoFocus={modoEdicion}
+                                />
+                                {descError && (
+                                    <small className="text-danger d-block mt-1 text-start">
+                                        <i className="bi bi-exclamation-triangle me-1"></i>
+                                        Este campo es obligatorio.
+                                    </small>
+                                )}
                             </div>
-                            <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Horas Extras
-                            </h2>
-                            <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
-                                Realizar el registro de la hora extra
-                            </p>
-                        </div>
-                        <form
-                            action="url.ph"
-                            onSubmit={handleSubmit}
-                            className="needs-validation"
-                            noValidate
-                        >
-                            <div className="form-body">
-                                {/* Sección de Información de Cuenta */}
-                                <h3 className="section-title">
-                                    <i className="bi bi-shield-check input-icon"></i>
-                                    Datos del Registro
-                                </h3>
-                                <div className="form-section">
+
+                            <div className="row">
+                                <div className="col-md-6">
                                     <div className="modern-input-group">
-                                        <label htmlFor="descripcion" className="modern-label">
-                                            <i className="bi bi-card-text me-2"></i>Descripción *
+                                        <label htmlFor="estado" className="modern-label">
+                                            <i className="bi bi-check2-square me-2"></i>Estado
+                                        </label>
+                                        <select
+                                            className="modern-input-edit"
+                                            id="estado"
+                                            name="estado"
+                                            value={datos.estado ? datos.estado : ''}
+                                            onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
+                                            disabled={!datos.id || !modoEdicion}
+                                            required
+                                        >
+                                            <option key={1} value={'Aprobado'}>Aprobado</option>
+                                            <option key={2} value={'Borrador'}>Borrador</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="fechacreacion" className="modern-label">
+                                            <i className="bi bi-calendar me-2"></i>Fecha de Creación
                                         </label>
                                         <input
-                                            type="text"
-                                            id="descripcion"
-                                            name="descripcion"
-                                            placeholder="Ingresa una descripcion"
-                                            className={`modern-input ${descError ? 'error' : ''}`}
-                                            value={datos.descripcion}
-                                            onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
-                                            maxLength={150}
-                                            disabled={!modoEdicion}
-                                            autoFocus={modoEdicion}
-                                        />
-                                        {descError && (
-                                            <div className="error-message">
-                                                <i className="bi bi-exclamation-triangle-fill"></i>
-                                                La descripción es obligatoria (máx. 150 caracteres)
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="row">
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="estado" className="modern-label">
-                                                    <i className="bi bi-check2-square me-2"></i>Estado
-                                                </label>
-                                                <select
-                                                    className="modern-input"
-                                                    id="estado"
-                                                    name="estado"
-                                                    value={datos.estado ? datos.estado : ''}
-                                                    onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
-                                                    disabled={!datos.id || !modoEdicion}
-                                                    required
-                                                >
-                                                    <option key={1} value={'Aprobado'}>Aprobado</option>
-                                                    <option key={2} value={'Borrador'}>Borrador</option>
-                                                </select>
-                                                <div className="invalid-feedback text-danger text-start">
-                                                    <i className="bi bi-exclamation-triangle-fill m-2"></i>El estado es obligatorio.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="fechacreacion" className="modern-label">
-                                                    <i className="bi bi-calendar me-2"></i>Fecha de Creación
-                                                </label>
-                                                <input
-                                                    type="date"
-                                                    id="fechacreacion"
-                                                    name="fechacreacion"
-                                                    className="modern-input"
-                                                    value={formatearFechaParaInput(datos.fechacreacion)}
-                                                    disabled
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <h3 className="section-title">
-                                    <i className="bi bi-shield-check input-icon"></i>
-                                    Generación de Datos
-                                </h3>
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-calendar me-2"></i>Fecha desde-hasta
-                                    </label>
-                                    <input
-                                        type="date"
-                                        id="fechadesde"
-                                        name="fechadesde"
-                                        className="modern-input mb-3"
-                                        value={data.fechadesde}
-                                        onChange={handleFechaChange}
-                                        disabled={!modoEdicion}
-                                    />
-                                    <input
-                                        type="date"
-                                        id="fechahasta"
-                                        name="fechahasta"
-                                        className="modern-input"
-                                        value={data.fechahasta}
-                                        onChange={handleFechaChange}
-                                        disabled={!modoEdicion}
-                                    />
-                                </div>
-
-                                {/* Sección de gestión de feriados */}
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-calendar-day me-2"></i>Gestión de Feriados
-                                    </label>
-                                    {/* Campo para agregar nuevos feriados */}
-                                    <div className="input-group mb-3 z-0">
-                                        <input
                                             type="date"
-                                            className="modern-input form-control mw-100 bg-white"
-                                            value={nuevaFechaFeriado}
-                                            onChange={(e) => setNuevaFechaFeriado(e.target.value)}
-                                            style={{ maxWidth: '200px' }}
-                                            disabled={!modoEdicion}
+                                            id="fechacreacion"
+                                            name="fechacreacion"
+                                            className="modern-input-edit"
+                                            value={formatearFechaParaInput(datos.fechacreacion)}
+                                            disabled
                                         />
-                                        <button
-                                            type="button"
-                                            className="modern-button btn-primary"
-                                            onClick={agregarFeriado}
-                                            disabled={!nuevaFechaFeriado || !modoEdicion}
-                                        >
-                                            <i className="bi bi-plus-circle me-2"></i>
-                                        </button>
                                     </div>
-                                    {/* Lista de feriados */}
-                                    {data.listaferiados.length > 0 && (
-                                        <div className='alert alert-danger p-2 m-0 rounded-2 d-flex align-items-center justify-content-center text-center'>
-                                            <div className="d-flex flex-wrap gap-2 justify-content-center">
-                                                {data.listaferiados.map((fechaFeriado, index) => (
-                                                    <div key={index} className="badge bg-danger fs-6 d-flex align-items-center">
-                                                        <span className="me-2">{formatearFecha(fechaFeriado)}</span>
-                                                        <button
-                                                            type="button"
-                                                            className="btn-close btn-close-white"
-                                                            aria-label="Eliminar feriado"
-                                                            onClick={() => eliminarFeriado(fechaFeriado)}
-                                                            style={{ fontSize: '0.7em' }}
-                                                            disabled={!modoEdicion}
-                                                        ></button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
+                            </div>
+                        </div>
 
-                                {/* Sección de selección de sucursal */}
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-building me-2"></i>Seleccionar Sucursal
-                                    </label>
-                                    <div className="dropdown mb-3">
+                        <h3 className="section-title">
+                            <i className="bi bi-shield-check input-icon"></i>
+                            Generación de Datos
+                        </h3>
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-calendar me-2"></i>Fecha desde-hasta
+                            </label>
+                            <input
+                                type="date"
+                                id="fechadesde"
+                                name="fechadesde"
+                                className="modern-input-edit mb-2"
+                                value={data.fechadesde}
+                                onChange={handleFechaChange}
+                                disabled={!modoEdicion}
+                            />
+                            <input
+                                type="date"
+                                id="fechahasta"
+                                name="fechahasta"
+                                className="modern-input-edit mt-2"
+                                value={data.fechahasta}
+                                onChange={handleFechaChange}
+                                disabled={!modoEdicion}
+                            />
+                        </div>
+
+                        {/* Sección de gestión de feriados */}
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-calendar-day me-2"></i>Gestión de Feriados
+                            </label>
+                            {/* Campo para agregar nuevos feriados */}
+                            <div style={{ display: 'flex', width: '100%' }}>
+                                <input
+                                    type="date"
+                                    className="modern-input-edit rounded-end-0 rounded-bottom-0"
+                                    value={nuevaFechaFeriado}
+                                    onChange={(e) => setNuevaFechaFeriado(e.target.value)}
+                                    disabled={!modoEdicion}
+                                />
+                                <button
+                                    type="button"
+                                    className="modern-button btn-primary rounded-start-0 rounded-bottom-0"
+                                    onClick={agregarFeriado}
+                                    disabled={!nuevaFechaFeriado || !modoEdicion}
+                                >
+                                    <i className="bi bi-plus-circle me-2"></i>
+                                </button>
+                            </div>
+                            {/* Lista de feriados */}
+                            {data.listaferiados.length > 0 && (
+                                <div className='alert alert-danger p-2 m-0 rounded-0 rounded-bottom-4 d-flex align-items-center justify-content-center text-center'>
+                                    <div className="d-flex flex-wrap gap-2 justify-content-center">
+                                        {data.listaferiados.map((fechaFeriado, index) => (
+                                            <div key={index} className="badge bg-danger fs-6 d-flex align-items-center">
+                                                <span className="me-2">{formatearFecha(fechaFeriado)}</span>
+                                                <button
+                                                    type="button"
+                                                    className="btn-close btn-close-white"
+                                                    aria-label="Eliminar feriado"
+                                                    onClick={() => eliminarFeriado(fechaFeriado)}
+                                                    style={{ fontSize: '0.7em' }}
+                                                    disabled={!modoEdicion}
+                                                ></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Sección de selección de sucursal */}
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-building me-2"></i>Seleccionar Sucursal
+                            </label>
+                            <div className="dropdown mb-3">
+                                <button
+                                    className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    disabled={!modoEdicion}
+                                >
+                                    {selectedSucursal
+                                        ? selectedSucursal.sucursal
+                                        : "Todas las sucursales"
+                                    }
+                                </button>
+                                <ul className="dropdown-menu modal-body p-2 w-100 border-2 border-secondary" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+
+                                    {/* Opción para todas las sucursales */}
+                                    <li>
                                         <button
-                                            className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
                                             type="button"
-                                            data-bs-toggle="dropdown"
-                                            disabled={!modoEdicion || datos?.id}
+                                            className={`dropdown-item ${!selectedSucursal ? 'fw-bold text-success' : ''}`}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setSelectedSucursal(null);
+                                                setSelectedFuncionarios([]);
+                                                setSucursalCambiadaPorUsuario(true);
+                                            }}
                                         >
-                                            {selectedSucursal
-                                                ? selectedSucursal.sucursal
-                                                : "Todas las sucursales"
+                                            <i className="bi bi-buildings me-2"></i>
+                                            Todas las sucursales
+                                            {!selectedSucursal && <i className="bi bi-check-circle-fill float-end"></i>}
+                                        </button>
+                                    </li>
+                                    <li><hr className="dropdown-divider" /></li>
+
+                                    {/* Lista de sucursales */}
+                                    {sucursales
+                                        .filter(s => !['000-GENERAL', '009-LOTEAMIENTO MBARACAYU'].includes(s.sucursal))
+                                        .map((sucursal) => {
+                                            const isSelected = selectedSucursal?.id === sucursal.id;
+                                            return (
+                                                <li key={sucursal.id}>
+                                                    <button
+                                                        type="button"
+                                                        className={`dropdown-item ${isSelected ? 'fw-bold text-success' : ''}`}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setSelectedSucursal(sucursal);
+                                                            setSelectedFuncionarios([]);
+                                                            setSucursalCambiadaPorUsuario(true);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-building me-2"></i>
+                                                        {sucursal.sucursal}
+                                                        {isSelected && <i className="bi bi-check-circle-fill float-end"></i>}
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Sección de selección de funcionarios */}
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-people me-2"></i>Seleccionar Funcionarios
+                            </label>
+                            <div className="dropdown mb-3">
+                                <button
+                                    className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                >
+                                    {selectedFuncionarios.length > 0
+                                        ? `${selectedFuncionarios.length} Seleccionados`
+                                        : "Lista de Funcionarios"}
+                                </button>
+                                <ul className="dropdown-menu modal-body p-2 w-100 border-2 border-secondary" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                    {/* Botón de seleccionar todo */}
+                                    <li className="pb-2 border-bottom mb-2">
+                                        <button
+                                            className="btn btn-success w-100 py-1"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                if (selectedFuncionarios.length === funcionarios.length) {
+                                                    // desmarcar todo
+                                                    setSelectedFuncionarios([]);
+                                                    setData(prevData => ({
+                                                        ...prevData,
+                                                        listafuncionarios: []
+                                                    }));
+                                                } else {
+                                                    // seleccionar todos
+                                                    setSelectedFuncionarios(funcionarios.map(f => f.id));
+                                                    const funcionariosConDetalles = actualizarDetallesFuncionarios(
+                                                        data.fechadesde,
+                                                        data.fechahasta,
+                                                        funcionarios
+                                                    );
+                                                    const funcionariosConFeriados = aplicarFeriados(funcionariosConDetalles, data.listaferiados);
+                                                    setData(prevData => ({
+                                                        ...prevData,
+                                                        // ✅ Reemplazar completamente en lugar de mezclar
+                                                        listafuncionarios: funcionariosConFeriados
+                                                    }));
+                                                }
+                                            }}
+                                            disabled={!modoEdicion}
+                                            type="button"
+                                        >
+                                            {selectedFuncionarios.length === funcionarios.length
+                                                ? "Desmarcar todos"
+                                                : "Seleccionar todos"
                                             }
                                         </button>
-                                        <ul className="dropdown-menu p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
-                                            {/* Opción para todas las sucursales */}
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    className={`dropdown-item ${!selectedSucursal ? 'active' : ''}`}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        setSelectedSucursal(null);
-                                                        setSelectedFuncionarios([]);
-                                                        setSucursalCambiadaPorUsuario(true);
-                                                    }}
-                                                >
-                                                    <i className="bi bi-buildings me-2"></i>
-                                                    Todas las sucursales
-                                                </button>
-                                            </li>
-                                            <li><hr className="dropdown-divider" /></li>
+                                    </li>
 
-                                            {/* Lista de sucursales */}
-                                            {sucursales
-                                                .filter(sucursal => !['000-GENERAL', '009-LOTEAMIENTO MBARACAYU'].includes(sucursal.sucursal))
-                                                .map(sucursal => (
-                                                    <li key={sucursal.id}>
-                                                        <button
-                                                            type="button"
-                                                            className={`dropdown-item ${selectedSucursal?.id === sucursal.id ? 'active' : ''}`}
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                setSelectedSucursal(sucursal);
-                                                                setSelectedFuncionarios([]);
-                                                                setSucursalCambiadaPorUsuario(true);
-                                                            }}
-                                                        >
-                                                            <i className="bi bi-building me-2"></i>
-                                                            {sucursal.sucursal}
-                                                        </button>
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                {/* Sección de selección de funcionarios */}
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-people me-2"></i>Seleccionar Funcionarios
-                                    </label>
-                                    <div className="dropdown mb-3">
-                                        <button
-                                            className="modern-button btn-primary dropdown-toggle w-100 justify-content-center"
-                                            type="button"
-                                            data-bs-toggle="dropdown"
-                                        >
-                                            {selectedFuncionarios.length > 0
-                                                ? `${selectedFuncionarios.length} Seleccionados`
-                                                : "Lista de Funcionarios"}
-                                        </button>
-                                        <ul className="dropdown-menu p-2 w-100 border-2 border-black" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
-                                            {/* Botón de seleccionar todo */}
-                                            <li className="pb-2 border-bottom mb-2">
-                                                <button
-                                                    className="btn btn-success w-100 py-1"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        if (selectedFuncionarios.length === funcionarios.length) {
-                                                            // desmarcar todo
-                                                            setSelectedFuncionarios([]);
-                                                            setData(prevData => ({
-                                                                ...prevData,
-                                                                listafuncionarios: []
-                                                            }));
-                                                        } else {
-                                                            // seleccionar todos
-                                                            setSelectedFuncionarios(funcionarios.map(f => f.id));
-                                                            // Agregar todos los funcionarios con detalles
-                                                            const funcionariosConDetalles = actualizarDetallesFuncionarios(
-                                                                data.fechadesde,
-                                                                data.fechahasta,
-                                                                funcionarios
-                                                            );
-                                                            const funcionariosConFeriados = aplicarFeriados(funcionariosConDetalles, data.listaferiados);
-                                                            setData(prevData => ({
-                                                                ...prevData,
-                                                                listafuncionarios: funcionariosConFeriados
-                                                            }));
-                                                        }
-                                                    }}
+                                    {/* Lista de funcionarios */}
+                                    {funcionarios.map(f => (
+                                        <li key={f.id}>
+                                            <div className="form-check">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    value={f.id}
+                                                    id={`func-${f.id}`}
+                                                    checked={selectedFuncionarios.includes(f.id)}
+                                                    onChange={() => handleSelectFuncionario(f.id)}
                                                     disabled={!modoEdicion}
-                                                    type="button"
-                                                >
-                                                    {selectedFuncionarios.length === funcionarios.length
-                                                        ? "Desmarcar todos"
-                                                        : "Seleccionar todos"
-                                                    }
-                                                </button>
-                                            </li>
+                                                />
+                                                <label className="form-check-label text-black" htmlFor={`func-${f.id}`}>
+                                                    {f.nomape}
+                                                </label>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
 
-                                            {/* Lista de funcionarios */}
-                                            {funcionarios.map(f => (
-                                                <li key={f.id}>
-                                                    <div className="form-check">
+                        {/* Sección de carga de CSV */}
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Asistencias desde CSV
+                            </label>
+                            <div style={{ display: 'flex', width: '100%' }}>
+                                <input
+                                    type="file"
+                                    className="modern-input-edit rounded-0 rounded-top-3"
+                                    style={{ cursor: "pointer" }}
+                                    accept=".csv"
+                                    onChange={handleCSVUpload}
+                                    onClick={limpiarCSV}
+                                    id="csvFile"
+                                    disabled={!modoEdicion}
+                                />
+                            </div>
+                            {csvStatus && (
+                                <div className={`alert ${csvStatus.includes('✅') ? 'alert-success' : 'alert-danger'} p-2 m-0 text-black rounded-0 rounded-bottom-3`}>
+                                    <small>{csvStatus}</small>
+                                </div>
+                            )}
+                        </div>
+
+                        {selectedFuncionarios.length > 0 && data.listafuncionarios
+                            .filter(fc => selectedFuncionarios.includes(fc.id))
+                            .sort((a, b) => a.id - b.id)
+                            .map((fc) => (
+                                <div key={fc.id}>
+                                    <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-warning' : 'btn-success'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
+                                        <p className={`float-start text-start m-0 fw-bold`}>{fc.nombre} {fc.apellido}</p>
+                                        <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
+                                    </button>
+                                    <table className="collapse table table-striped table-bordered table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
+                                        <thead className='table-dark border-black'>
+                                            <tr className='text-center align-middle'>
+                                                <th rowSpan="2">Día</th>
+                                                <th rowSpan="2">Fecha</th>
+                                                <th colSpan="4">Horarios</th>
+                                                <th colSpan="8">Horas Extras</th>
+                                                <th rowSpan="2">Frd.</th>
+                                                <th rowSpan="2" hidden={![1].includes(userLog?.tipousuario?.id)}>Trn.</th>
+                                            </tr>
+                                            <tr className='text-center align-middle'>
+                                                {/* Subheaders para Horarios */}
+                                                <th>Ent.</th>
+                                                <th>Sal.</th>
+                                                <th>Tot.</th>
+                                                <th>Des.</th>
+                                                {/* Subheaders para Horas Extras */}
+                                                <th>T.</th>
+                                                <th>1</th>
+                                                <th>2</th>
+                                                <th>3</th>
+                                                <th>4</th>
+                                                <th>5</th>
+                                                <th>6</th>
+                                                <th>7</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {fc.detalles && fc.detalles.map((detalle, fechaIndex) => (
+                                                <tr key={`${fc.id}-${fechaIndex}`} className={`text-center align-middle fw-normal`} style={{ fontSize: '14px' }}>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        {detalle.dia}
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        {formatearFecha(detalle.fecha)}
+                                                    </td>
+
+                                                    {/* Sección de Horarios */}
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
                                                         <input
-                                                            className="form-check-input"
-                                                            type="checkbox"
-                                                            value={f.id}
-                                                            id={`func-${f.id}`}
-                                                            checked={selectedFuncionarios.includes(f.id)}
-                                                            onChange={() => handleSelectFuncionario(f.id)}
+                                                            type="time"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            value={detalle.horaent || '00:00'}
+                                                            onChange={(e) => {
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
+                                                                const trn = determinarTurno(e.target.value, detalle.horasal);
+                                                                const htot = restarHoras(e.target.value, detalle.horasal);
+                                                                let des = '00:00';
+                                                                if (htot == '00:00') {
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
+                                                                    limpiarHoras(fc.id, fechaIndex);
+                                                                } else {
+                                                                    des = asignarDescanso(trn, detalle.dia);
+                                                                    const tot = Number(calcularHorasTrabajadasDecimal(e.target.value, detalle.horasal, des).toFixed(2));
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                    determinarHoras(trn, fc.id, fechaIndex, tot);
+                                                                }
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
+                                                            }}
+                                                            ref={el => {
+                                                                if (!sigLinea.current[fc.id]) sigLinea.current[fc.id] = [];
+                                                                sigLinea.current[fc.id][fechaIndex] = el;
+                                                            }}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
                                                             disabled={!modoEdicion}
                                                         />
-                                                        <label className="form-check-label text-black" htmlFor={`func-${f.id}`}>
-                                                            {f.nomape}
-                                                        </label>
-                                                    </div>
-                                                </li>
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="time"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            value={detalle.horasal || '00:00'}
+                                                            onChange={(e) => {
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
+                                                                const trn = determinarTurno(detalle.horaent, e.target.value);
+                                                                const htot = restarHoras(detalle.horaent, e.target.value);
+                                                                let des = '00:00';
+                                                                if (htot == '00:00') {
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
+                                                                    limpiarHoras(fc.id, fechaIndex);
+                                                                } else {
+                                                                    des = asignarDescanso(trn, detalle.dia);
+                                                                    const tot = Number(calcularHorasTrabajadasDecimal(detalle.horaent, e.target.value, des).toFixed(2));
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
+                                                                    determinarHoras(trn, fc.id, fechaIndex, tot);
+                                                                }
+                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
+                                                            }}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="time"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            value={detalle.htotal || '00:00'}
+                                                            onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="time"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            value={detalle.horades || '00:00'}
+                                                            onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+
+                                                    {/* Sección de Horas Extras */}
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Total'
+                                                            value={detalle.total ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'total', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Hn'
+                                                            value={detalle.hn ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'hn', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Hnn'
+                                                            value={detalle.hnn ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'hnn', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Hnmd'
+                                                            value={detalle.hnmd ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'hnmd', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Hnmn'
+                                                            value={detalle.hnmn ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'hnmn', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Hen'
+                                                            value={detalle.hen ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'hen', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Hent'
+                                                            value={detalle.hent ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'hent', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            placeholder='Hextras'
+                                                            value={detalle.hextras ?? 0}
+                                                            onChange={(e) => handleNumericInput(fc.id, fechaIndex, 'hextras', e.target.value)}
+                                                            onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                            disabled={!modoEdicion}
+                                                        />
+                                                    </td>
+
+                                                    {/* Sección de Estado */}
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`}>
+                                                        <div className="d-flex justify-content-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                className='form-check-input'
+                                                                style={{ transform: 'scale(1.2)' }}
+                                                                checked={detalle.feriado}
+                                                                onChange={(e) => {
+                                                                    const checked = e.target.checked;
+                                                                    actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
+                                                                    if (checked) {
+                                                                        limpiarHoras(fc.id, fechaIndex);
+                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', detalle.total);
+                                                                    } else determinarHoras(detalle.turno, fc.id, fechaIndex, detalle.total);
+                                                                }}
+                                                                onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
+                                                                disabled={!modoEdicion}
+                                                            />
+                                                        </div>
+                                                    </td>
+
+                                                    <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={userLog?.id !== 1}>
+                                                        <input
+                                                            type="text"
+                                                            className='form-control text-center'
+                                                            style={{ fontSize: '0.8rem' }}
+                                                            value={detalle.turno}
+                                                            disabled
+                                                        />
+                                                    </td>
+                                                </tr>
                                             ))}
-                                        </ul>
-                                    </div>
+                                        </tbody>
+                                    </table>
                                 </div>
-
-                                {/* Sección de carga de CSV */}
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Asistencias desde CSV
-                                    </label>
-                                    <div className="input-group mb-3 z-0">
-                                        <input
-                                            type="file"
-                                            className="modern-input form-control mw-100 bg-white"
-                                            accept=".csv"
-                                            onChange={handleCSVUpload}
-                                            onClick={limpiarCSV}
-                                            id="csvFile"
-                                            disabled={!modoEdicion}
-                                        />
-                                    </div>
-                                    {csvStatus && (
-                                        <div className={`alert ${csvStatus.includes('✅') ? 'alert-success' : 'alert-danger'} p-2 m-0 text-black`}>
-                                            <small>{csvStatus}</small>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {selectedFuncionarios.length > 0 && data.listafuncionarios
-                                    .filter(fc => selectedFuncionarios.includes(fc.id))
-                                    .sort((a, b) => a.id - b.id)
-                                    .map((fc) => (
-                                        <div key={fc.id} className='w-100 border border-1 border-black'>
-                                            <button onClick={() => toggleContent(fc.id)} className={`btn ${isOpen[fc.id] ? 'btn-warning' : 'btn-success'} z-0 rounded-0 w-100 text-black`} type="button" data-bs-toggle="collapse" data-bs-target={`#collapse-${fc.id}`} aria-expanded="false" aria-controls={`collapse-${fc.id}`}>
-                                                <p className={`float-start text-start m-0 fw-bold`}>{fc.nombre} {fc.apellido}</p>
-                                                <i className={`bi ${isOpen[fc.id] ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'} float-end fs-5`} ></i>
-                                            </button>
-                                            <table className="collapse table table-striped table-bordered table-sm table-hover m-0 border-black" id={`collapse-${fc.id}`}>
-                                                <thead className='table-dark border-black'>
-                                                    <tr className='text-center align-middle'>
-                                                        <th rowSpan="2">Día</th>
-                                                        <th rowSpan="2">Fecha</th>
-                                                        <th colSpan="4">Horarios</th>
-                                                        <th colSpan="8">Horas Extras</th>
-                                                        <th colSpan="2">Estado</th>
-                                                        <th rowSpan="2" hidden={![1].includes(userLog?.tipousuario?.id)}>Tr.</th>
-                                                    </tr>
-                                                    <tr className='text-center align-middle'>
-                                                        {/* Subheaders para Horarios */}
-                                                        <th>Ent.</th>
-                                                        <th>Sal.</th>
-                                                        <th>Tot.</th>
-                                                        <th>Des.</th>
-                                                        {/* Subheaders para Horas Extras */}
-                                                        <th>T.</th>
-                                                        <th>1</th>
-                                                        <th>2</th>
-                                                        <th>3</th>
-                                                        <th>4</th>
-                                                        <th>5</th>
-                                                        <th>6</th>
-                                                        <th>7</th>
-                                                        {/* Subheaders para Estado */}
-                                                        <th>Frd.</th>
-                                                        <th>S.Ex.</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {fc.detalles && fc.detalles.map((detalle, fechaIndex) => (
-                                                        <tr key={`${fc.id}-${fechaIndex}`} className={`text-center align-middle fw-normal`}>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '80px', fontSize: '0.85rem' }}>
-                                                                {detalle.dia}
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '90px', fontSize: '0.85rem' }}>
-                                                                {formatearFecha(detalle.fecha)}
-                                                            </td>
-
-                                                            {/* Sección de Horarios */}
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                                <input
-                                                                    type="time"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.horaent || '00:00'}
-                                                                    onChange={(e) => {
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horaent', e.target.value);
-                                                                        const trn = determinarTurno(e.target.value, detalle.horasal);
-                                                                        const htot = restarHoras(e.target.value, detalle.horasal);
-                                                                        let des = '00:00';
-                                                                        if (htot == '00:00') {
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
-                                                                            limpiarHoras(fc.id, fechaIndex);
-                                                                        } else {
-                                                                            des = asignarDescanso(trn, detalle.dia);
-                                                                            const tot = Number(calcularHorasTrabajadasDecimal(e.target.value, detalle.horasal, des).toFixed(2));
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
-                                                                            determinarHoras(trn, fc.id, fechaIndex, tot);
-                                                                        }
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
-                                                                    }}
-                                                                    ref={el => {
-                                                                        if (!sigLinea.current[fc.id]) sigLinea.current[fc.id] = [];
-                                                                        sigLinea.current[fc.id][fechaIndex] = el;
-                                                                    }}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                                <input
-                                                                    type="time"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.horasal || '00:00'}
-                                                                    onChange={(e) => {
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', false);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', false);
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horasal', e.target.value);
-                                                                        const trn = determinarTurno(detalle.horaent, e.target.value);
-                                                                        const htot = restarHoras(detalle.horaent, e.target.value);
-                                                                        let des = '00:00';
-                                                                        if (htot == '00:00') {
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', 0);
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', '00:00');
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', '');
-                                                                            limpiarHoras(fc.id, fechaIndex);
-                                                                        } else {
-                                                                            des = asignarDescanso(trn, detalle.dia);
-                                                                            const tot = Number(calcularHorasTrabajadasDecimal(detalle.horaent, e.target.value, des).toFixed(2));
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', tot);
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', htot);
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'turno', trn);
-                                                                            determinarHoras(trn, fc.id, fechaIndex, tot);
-                                                                        }
-                                                                        actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', des);
-                                                                    }}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                                <input
-                                                                    type="time"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.htotal || '00:00'}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'htotal', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '50px' }}>
-                                                                <input
-                                                                    type="time"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.horades || '00:00'}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'horades', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-
-                                                            {/* Sección de Horas Extras */}
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.total || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'total', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.hn || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hn', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.hnn || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnn', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.hnmd || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmd', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.hnmn || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hnmn', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.hen || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hen', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.hent || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hent', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '70px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    className="form-control modern-input w-100"
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.hextras || 0}
-                                                                    onChange={(e) => actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', e.target.value)}
-                                                                    onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                    disabled={!modoEdicion}
-                                                                />
-                                                            </td>
-
-                                                            {/* Sección de Estado */}
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
-                                                                <div className="d-flex justify-content-center">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        className='form-check-input border-black'
-                                                                        style={{ transform: 'scale(1.2)' }}
-                                                                        checked={detalle.feriado}
-                                                                        onChange={(e) => {
-                                                                            const checked = e.target.checked;
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'feriado', checked);
-                                                                            if (checked) {
-                                                                                limpiarHoras(fc.id, fechaIndex);
-                                                                                actualizarDetalleFuncionario(fc.id, fechaIndex, 'hextras', detalle.total);
-                                                                            } else determinarHoras(detalle.turno, fc.id, fechaIndex, detalle.total);
-                                                                        }}
-                                                                        onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                        disabled={!modoEdicion}
-                                                                    />
-                                                                </div>
-                                                            </td>
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} style={{ width: '60px' }}>
-                                                                <div className="d-flex justify-content-center">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        className='form-check-input border-black'
-                                                                        style={{ transform: 'scale(1.2)' }}
-                                                                        checked={detalle.extra}
-                                                                        onChange={(e) => {
-                                                                            const checked = e.target.checked;
-                                                                            actualizarDetalleFuncionario(fc.id, fechaIndex, 'extra', checked);
-                                                                            fijarHoraEntrada(fc.id, fechaIndex, detalle.turno, detalle.horasal, detalle.dia);
-                                                                        }}
-                                                                        onKeyDown={e => handleSiguienteReg(e, fc.id, fechaIndex)}
-                                                                        disabled={!modoEdicion}
-                                                                    />
-                                                                </div>
-                                                            </td>
-
-                                                            <td className={`${asignarDiaFondo(detalle.fecha)}`} hidden={userLog?.id !== 1} style={{ width: '60px' }}>
-                                                                <input
-                                                                    type="text"
-                                                                    className='form-control border-black text-center'
-                                                                    style={{ fontSize: '0.8rem' }}
-                                                                    value={detalle.turno}
-                                                                    readOnly
-                                                                />
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ))}
-                            </div>
-                            <div className='div-report-button'>
-                                <button type='button' onClick={() => generarArchivo()} className="btn btn-secondary modern-button" disabled={!modoEdicion}>
-                                    <i className="bi bi-printer-fill"></i>Generar
-                                </button>
-                                <button type='submit' className="btn btn-primary bg-success modern-button" disabled={!modoEdicion}>
-                                    <i className="bi bi-check-lg"></i>Guardar
-                                </button>
-                            </div>
-                        </form>
+                            ))}
                     </div>
-                </div>
+                    <div className='div-report-button'>
+                        <button type='button' onClick={() => generarArchivo()} className="btn btn-secondary modern-button" disabled={!modoEdicion || data.listafuncionarios <= 0}>
+                            <i className="bi bi-printer-fill"></i>Generar
+                        </button>
+                        <button type='submit' className="btn btn-primary bg-success modern-button" disabled={!modoEdicion}>
+                            <i className="bi bi-check-lg"></i>Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
         </>
     );
