@@ -322,7 +322,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                     id="nombreusuario"
                                     name="nombreusuario"
                                     placeholder="Ingresa tu nombre de usuario"
-                                    className="modern-input-edit"
+                                    className={`modern-input-edit ${nombreUsuarioError ? 'error' : ''}`}
                                     value={data.nombreusuario}
                                     onChange={(event) => setData({ ...data, [event.target.name]: event.target.value.toUpperCase() })}
                                     maxLength={50}
@@ -357,7 +357,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             id="nombre"
                                             name="nombre"
                                             placeholder="Ingresa tu nombre"
-                                            className="modern-input-edit"
+                                            className={`modern-input-edit ${nombreError ? 'error' : ''}`}
                                             value={data.nombre || ''}
                                             onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                             maxLength={150}

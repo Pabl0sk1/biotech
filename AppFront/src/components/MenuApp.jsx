@@ -57,10 +57,10 @@ export const MenuApp = ({ userLog, setUserLog }) => {
         activo: true,
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        menu: { label: "Descripción", notnull: true, order: 1, autofocus: true },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        menu: { label: "Descripción", notnull: true, order: 1, autofocus: true, size: 50 },
         orden: { type: "number", order: 4 },
-        icono: { order: 3 },
+        icono: { order: 3, size: 30 },
         recursos: {
             type: "object.multiple",
             options: modulos,
@@ -74,8 +74,6 @@ export const MenuApp = ({ userLog, setUserLog }) => {
         },
         unico: { label: "¿Es menú único?", type: "checkbox" },
         activo: { label: "¿Está activo?", type: "checkbox" },
-        submenus: { hidden: true },
-        programas: { hidden: true }
     };
 
     const recuperarMenus = () => {

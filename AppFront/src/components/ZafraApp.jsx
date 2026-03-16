@@ -58,9 +58,9 @@ export const ZafraApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        descripcion: { label: "Descripción", notnull: true, autofocus: true },
-        cultura: { label: "Cultura" },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        descripcion: { label: "Descripción", notnull: true, autofocus: true, size: 150 },
+        cultura: { label: "Cultura", size: 150 },
         fechainicio: { label: "Fecha de inicio", type: "date" },
         fechafin: { label: "Fecha de fin", type: "date" },
         erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }

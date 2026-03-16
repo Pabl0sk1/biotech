@@ -18,6 +18,41 @@ const getColClass = (columns) => {
     }
 };
 
+const getTypeIcon = (type) => {
+    switch (type) {
+        case 'text':
+        case 'textarea': return 'bi-fonts';
+        case 'number': return 'bi-123';
+        case 'date': return 'bi-calendar-date';
+        case 'datetime-local': return 'bi-calendar-event';
+        case 'time': return 'bi-clock';
+        case 'password': return 'bi-lock';
+        case 'checkbox': return 'bi-toggle-on';
+        case 'select': return 'bi-menu-button-wide';
+        case 'object': return 'bi-link-45deg';
+        case 'object.multiple': return 'bi-collection';
+        default: return 'bi-input-cursor-text';
+    }
+};
+
+const Capitalize = (texto) => {
+    if (!texto) return '';
+    return texto
+        .toLowerCase()
+        .split(' ')
+        .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+        .join(' ');
+};
+
+const transformText = (val, typ) => {
+    if (!typ || val === null || val === undefined) return val;
+    const str = String(val);
+    if (typ === 'capital') return Capitalize(str);
+    if (typ === 'upper') return str.toUpperCase();
+    if (typ === 'lower') return str.toLowerCase();
+    return val;
+};
+
 const labelize = (key) =>
     key
         .replace(/_/g, " ")
@@ -36,10 +71,12 @@ const getMultipleOpts = (stringValue, opts, idfield) => {
 /* =======================
     Campo automático
 ======================= */
-const AutoField = ({ name, value, onChange, disabled, settings }) => {
+const AutoField = ({ name, value, onChange, disabled, settings, errors }) => {
     const type = settings?.type ?? "text";
     const required = settings?.notnull || false;
     const optMul = settings?.options || [];
+    const size = settings?.size;
+    const lettercase = settings?.lettercase;
 
     const common = {
         id: name,
@@ -47,8 +84,9 @@ const AutoField = ({ name, value, onChange, disabled, settings }) => {
         disabled: disabled,
         required: required,
         autoFocus: settings?.autofocus,
-        className: `${type === "checkbox" ? "form-check-input p-3" : "modern-input-edit"}`,
-        value: value ?? "",
+        maxLength: size,
+        className: `${type === "checkbox" ? "form-check-input p-3" : "modern-input-edit"} ${errors ? 'error' : ''}`,
+        value: transformText(value ?? "", lettercase) ?? "",
         checked: type === "checkbox" ? !!value : undefined,
         placeholder: !disabled ? "Escribe..." : "",
         onChange: e =>
@@ -78,8 +116,8 @@ const AutoField = ({ name, value, onChange, disabled, settings }) => {
         );
     }
 
-    const [showPasswordNueva, setShowPasswordNueva] = useState(false);
     if (type === "password") {
+        const [showPasswordNueva, setShowPasswordNueva] = useState(false);
         return (
             <div className="d-flex align-items-center position-relative">
                 <input type={showPasswordNueva ? "text" : "password"} {...common} />
@@ -110,6 +148,7 @@ const AutoField = ({ name, value, onChange, disabled, settings }) => {
                 disabled={disabled}
                 multiple={false}
                 autofocus={settings?.autofocus}
+                errors={errors}
             />
         );
     }
@@ -128,6 +167,7 @@ const AutoField = ({ name, value, onChange, disabled, settings }) => {
                 disabled={disabled}
                 multiple={true}
                 autofocus={settings?.autofocus}
+                errors={errors}
             />
         );
     }
@@ -148,7 +188,7 @@ export const SmartModal = ({
     onSave,
     mode = "view",
     columns: columnsProp = 2,
-    fieldSettings = {}, // key: { label, description, type, options, searches, hidden, disabled, notnull, order, autofocus, idfield, module, listPath, popupTitle }
+    fieldSettings = {}, // key: { label, description, type, lettercase, size, options, searches, hidden, disabled, disabledifvalues, disabledonlyedit, notnull, order, autofocus, idfield, module, listPath, popupTitle }
     userLog
 }) => {
     const navigate = useNavigate();
@@ -219,8 +259,12 @@ export const SmartModal = ({
     };
 
     // Use fieldSettings keys for deterministic ordering and presence
-    const orderedKeys = Object.keys(formData)
-        .filter(key => !fieldSettings[key]?.hidden)
+    const orderedKeys = Object.keys(fieldSettings)
+        .filter(key => {
+            if (fieldSettings[key]?.hidden) return false;
+            if (fieldSettings[key]?.disabledonlyedit && mode === "create") return false;
+            return true;
+        })
         .sort((a, b) => {
             const orderA = fieldSettings[a]?.order ?? 999;
             const orderB = fieldSettings[b]?.order ?? 999;
@@ -262,10 +306,14 @@ export const SmartModal = ({
                             <div className="row g-3">
                                 {orderedKeys.map(key => {
                                     const settings = fieldSettings[key] || {};
-
+                                    if (settings?.type === 'password' && mode === 'view') return null;
                                     return (
                                         <div key={key} className={colClass}>
                                             <label className="form-label fw-semibold">
+                                                <i
+                                                    className={`bi ${getTypeIcon(settings?.type)} text-secondary me-2`}
+                                                    title={settings?.type ?? 'text'}
+                                                ></i>
                                                 {settings?.label ?? labelize(key)}
                                                 {settings?.notnull && mode !== "view" && <i className="text-danger ms-1">*</i>}
                                             </label>
@@ -302,10 +350,10 @@ export const SmartModal = ({
                                             {
                                                 (() => {
                                                     let dynamicDisabled = settings?.disabled || false;
+                                                    if (settings?.disabledonlyedit && mode === "edit") dynamicDisabled = true;
                                                     if (!dynamicDisabled && settings?.disabledifvalues && Array.isArray(settings.disabledifvalues)) {
                                                         dynamicDisabled = settings.disabledifvalues.some(fld => {
                                                             const val = formData[fld];
-                                                            // treat null/undefined/empty string as empty
                                                             return val !== null && val !== undefined && val !== "" && !(Array.isArray(val) && val.length === 0);
                                                         });
                                                     }
@@ -316,14 +364,20 @@ export const SmartModal = ({
                                                             onChange={handleChange}
                                                             disabled={disabledAll || dynamicDisabled}
                                                             settings={settings}
+                                                            errors={errors[key]}
                                                         />
                                                     );
                                                 })()
                                             }
-                                            {settings.description && (
+                                            {settings?.size && mode !== 'view' && (
+                                                <div className="textSizeDesc">
+                                                    {String(formData[key] ?? '').length}/{settings?.size}
+                                                </div>
+                                            )}
+                                            {settings?.description && (
                                                 <small className="text-muted d-block mt-1">
                                                     <i className="bi bi-info-circle me-1"></i>
-                                                    {settings.description}
+                                                    {settings?.description}
                                                 </small>
                                             )}
                                             {errors[key] && (

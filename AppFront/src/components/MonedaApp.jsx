@@ -57,10 +57,10 @@ export const MonedaApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        moneda: { label: "Descripción", notnull: true, autofocus: true },
-        simbolo: { label: "Símbolo" },
-        codiso: { label: "Código ISO" },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        moneda: { label: "Descripción", notnull: true, autofocus: true, size: 50 },
+        simbolo: { label: "Símbolo", size: 20 },
+        codiso: { label: "Código ISO", size: 20 },
         erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };
 

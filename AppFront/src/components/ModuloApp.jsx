@@ -52,10 +52,10 @@ export const ModuloApp = ({ userLog, setUserLog }) => {
         var: ""
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        moduloes: { label: "Módulo Español", notnull: true, autofocus: true },
-        moduloen: { label: "Módulo Inglés", notnull: true },
-        var: { label: "Variable", notnull: true }
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        moduloes: { label: "Módulo Español", notnull: true, autofocus: true, size: 50 },
+        moduloen: { label: "Módulo Inglés", notnull: true, size: 50 },
+        var: { label: "Variable", notnull: true, size: 10 }
     };
 
     const recuperarModulos = () => {

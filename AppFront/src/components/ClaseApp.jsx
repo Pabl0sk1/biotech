@@ -52,9 +52,9 @@ export const ClaseApp = ({ userLog, setUserLog }) => {
         recurso: ""
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        tipoproducto: { label: "Descripción", notnull: true, autofocus: true },
-        recurso: { label: "Recurso" }
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        tipoproducto: { label: "Descripción", notnull: true, autofocus: true, size: 150 },
+        recurso: { label: "Recurso", size: 20 }
     };
 
     const recuperarClases = () => {

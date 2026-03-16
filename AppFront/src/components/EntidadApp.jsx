@@ -78,7 +78,7 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
         cargo: {
             type: "object",
             options: cargos,
@@ -122,17 +122,18 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
             listPath: "/home/config/general/categories",
             popupTitle: "Categorías"
         },
-        nomape: { hidden: true },
-        nombre: { notnull: true },
-        nrodoc: { label: "Nro. de documento" },
-        nrotelefono: { type: "tel", label: "Nro. de teléfono" },
-        correo: { type: "email" },
+        nomape: { size: 150, hidden: true },
+        nombre: { size: 150, notnull: true },
+        apellido: { size: 150 },
+        nrodoc: { label: "Nro. de documento", size: 30 },
+        nrotelefono: { type: "tel", label: "Nro. de teléfono", size: 30 },
+        correo: { type: "email", size: 30 },
         fechanacimiento: { type: "date", label: "Fecha de nacimiento" },
         fechainicio: { type: "date", label: "Fecha de inicio" },
         fechafin: { type: "date", label: "Fecha de fin" },
         salario: { type: "number" },
         codzktime: { type: "number", label: "Código ZKTime" },
-        estado: { type: "select", options: ["Activo", "Inactivo"], notnull: true },
+        estado: { type: "select", options: ["Activo", "Inactivo"] },
         activo: { hidden: true },
         horaextra: { type: "checkbox", label: "¿Realiza horas extras?" },
         erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }

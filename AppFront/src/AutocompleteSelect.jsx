@@ -10,7 +10,8 @@ export default function AutocompleteSelect({
     multiple = false,
     disabled = false,
     autofocus = false,
-    className = ""
+    className = "",
+    errors = false
 }) {
     const [inputValue, setInputValue] = useState('');
     const [open, setOpen] = useState(false);
@@ -85,7 +86,7 @@ export default function AutocompleteSelect({
         <div className="position-relative" onMouseEnter={() => multiple && selected.length > 0 && setShowTooltip(true)} onMouseLeave={() => setShowTooltip(false)}>
             <input
                 type="text"
-                className={`${className ? className : 'modern-input-edit w-100'}`}
+                className={`${className ? className : 'modern-input-edit w-100'} ${errors ? 'error' : ''}`}
                 placeholder={!disabled ? "Buscar..." : ""}
                 disabled={disabled}
                 value={displayValue()}

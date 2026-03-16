@@ -816,7 +816,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                     id="descripcion"
                                     name="descripcion"
                                     placeholder="Ingresa una descripcion"
-                                    className="modern-input-edit"
+                                    className={`modern-input-edit ${descError ? 'error' : ''}`}
                                     value={datos.descripcion}
                                     onChange={(event) => setDatos({ ...datos, [event.target.name]: event.target.value })}
                                     maxLength={150}

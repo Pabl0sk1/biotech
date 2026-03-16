@@ -51,8 +51,8 @@ export const ModalidadApp = ({ userLog, setUserLog }) => {
         tipo: ""
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        tipo: { label: "Descripción", notnull: true, autofocus: true }
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        tipo: { label: "Descripción", notnull: true, autofocus: true, size: 150 }
     };
 
     const recuperarModalidades = () => {

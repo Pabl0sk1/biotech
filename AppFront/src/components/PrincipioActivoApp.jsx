@@ -55,8 +55,8 @@ export const PrincipioActivoApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        principioactivo: { label: "Descripción", notnull: true, autofocus: true },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        principioactivo: { label: "Descripción", notnull: true, autofocus: true, size: 150 },
         erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };
 

@@ -51,8 +51,8 @@ export const CategoriaApp = ({ userLog, setUserLog }) => {
         tipoentidad: ""
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        tipoentidad: { label: "Descripción", notnull: true, autofocus: true }
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        tipoentidad: { label: "Descripción", notnull: true, autofocus: true, size: 150 }
     };
 
     const recuperarCategorias = () => {

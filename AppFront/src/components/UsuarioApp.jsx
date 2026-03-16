@@ -79,7 +79,7 @@ export const UsuarioApp = ({ userLog, setUserLog }) => {
         imagenurl: ""
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
         tipousuario: {
             type: "object",
             options: roles,
@@ -105,17 +105,17 @@ export const UsuarioApp = ({ userLog, setUserLog }) => {
             notnull: true,
             order: 2
         },
-        nombreusuario: { notnull: true, label: "Nombre de Usuario", order: 5 },
-        contrasena: { type: "password", label: "Contraseña", notnull: true, order: 6 },
-        nomape: { hidden: true },
-        nombre: { notnull: true, order: 3 },
-        apellido: { order: 4 },
-        nrodoc: { label: "Nro. de documento", order: 7 },
-        nrotelefono: { type: "tel", label: "Nro. de teléfono", order: 8 },
-        correo: { type: "email", order: 9 },
-        direccion: { type: "textarea", label: "Dirección", order: 13 },
+        nombreusuario: { notnull: true, label: "Nombre de Usuario", order: 5, lettercase: "upper", size: 50 },
+        contrasena: { type: "password", label: "Contraseña", notnull: true, order: 6, size: 30 },
+        nomape: { size: 150, hidden: true },
+        nombre: { size: 150, notnull: true, order: 3 },
+        apellido: { size: 150, order: 4 },
+        nrodoc: { label: "Nro. de documento", order: 7, size: 30 },
+        nrotelefono: { type: "tel", label: "Nro. de teléfono", order: 8, size: 30 },
+        correo: { type: "email", order: 9, size: 30 },
+        direccion: { type: "textarea", label: "Dirección", order: 13, size: 150 },
         fechanacimiento: { type: "date", label: "Fecha de nacimiento", order: 10 },
-        estado: { type: "select", options: ["Activo", "Inactivo"], notnull: true, order: 11 },
+        estado: { type: "select", options: ["Activo", "Inactivo"], order: 11 },
         vermapa: { type: "checkbox", label: "¿Puede ver informe Power-Bi?", order: 12 },
         activo: { hidden: true },
         online: { hidden: true },

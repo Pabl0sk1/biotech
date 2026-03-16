@@ -61,8 +61,8 @@ export const NombreComercialApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        nombrecomercial: { label: "Nombre Comercial", order: 1, notnull: true },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        nombrecomercial: { label: "Nombre Comercial", order: 1, notnull: true, size: 150 },
         medida: {
             type: "object",
             options: medidas,
@@ -70,8 +70,7 @@ export const NombreComercialApp = ({ userLog, setUserLog }) => {
             getLabel: (item) => item?.medida || "",
             module: ['pr02'],
             listPath: "/home/config/product/measures",
-            popupTitle: "Medidas",
-            notnull: true
+            popupTitle: "Medidas"
         },
         subgrupoproducto: {
             type: "object",
@@ -81,8 +80,7 @@ export const NombreComercialApp = ({ userLog, setUserLog }) => {
             getLabel: (item) => item?.subgrupoproducto || "",
             module: ['pr01'],
             listPath: "/home/config/product/productgroups",
-            popupTitle: "Grupos de Productos",
-            notnull: true
+            popupTitle: "Grupos de Productos"
         },
         erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };

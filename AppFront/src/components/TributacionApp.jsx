@@ -56,8 +56,8 @@ export const TributacionApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        tributacion: { label: "Descripción", notnull: true, autofocus: true },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        tributacion: { label: "Descripción", notnull: true, autofocus: true, size: 150 },
         iva: { label: "IVA", type: "number" },
         erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };

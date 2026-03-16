@@ -38,15 +38,18 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
     }, []);
 
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
         usuario: {
             type: "object",
             getLabel: (item) => item?.nombreusuario || "",
         },
         fecha: { hidden: true },
         fechahora: { type: "datetime-local", label: "Fecha y Hora" },
+        programa: { size: 20 },
+        operacion: { size: 20 },
         codregistro: { type: "number", label: "Cód. Registro" },
-        ip: { label: "IP" }
+        ip: { label: "IP", size: 20 },
+        equipo: { size: 30 }
     };
     const columnSettings = {
         id: { label: "#", type: "number", default: true },

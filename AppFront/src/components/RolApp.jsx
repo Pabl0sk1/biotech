@@ -51,8 +51,8 @@ export const RolApp = ({ userLog, setUserLog }) => {
         tipousuario: ""
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        tipousuario: { label: "Descripción", notnull: true, autofocus: true }
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        tipousuario: { label: "Descripción", notnull: true, autofocus: true, size: 150 }
     };
 
     const recuperarRoles = () => {

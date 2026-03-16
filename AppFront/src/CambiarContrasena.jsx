@@ -148,6 +148,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                         contrasenaRepetida: ""
                     });
                     form.classList.remove('was-validated');
+                    setClose(true);
                 } else {
                     setError("Contraseña incorrecta.");
                 }
@@ -158,9 +159,8 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
             }
         } else {
             form.classList.add('was-validated');
+            setLoading(false);
         }
-        setLoading(false);
-        setClose(true);
     };
 
     return (
@@ -205,7 +205,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                                     type={showPasswordActual ? "text" : "password"}
                                     id="contrasenaActual"
                                     name="contrasenaActual"
-                                    className="modern-input-edit"
+                                    className={`modern-input-edit ${error ? 'error' : ''}`}
                                     placeholder="Ingresa tu contraseña actual"
                                     maxLength={30}
                                     value={formData.contrasenaActual}
@@ -256,7 +256,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                                     type={showPasswordNueva ? "text" : "password"}
                                     id="contrasenaNueva"
                                     name="contrasenaNueva"
-                                    className="modern-input-edit"
+                                    className={`modern-input-edit ${newPass ? 'error' : ''}`}
                                     placeholder="Crea una contraseña segura"
                                     value={formData.contrasenaNueva}
                                     onChange={handleInputChange}
@@ -291,7 +291,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                                     type={showPasswordRepetir ? "text" : "password"}
                                     id="contrasenaRepetida"
                                     name="contrasenaRepetida"
-                                    className="modern-input-edit"
+                                    className={`modern-input-edit ${repeatPass ? 'error' : ''}`}
                                     placeholder="Repite tu nueva contraseña"
                                     value={formData.contrasenaRepetida}
                                     onChange={handleInputChange}

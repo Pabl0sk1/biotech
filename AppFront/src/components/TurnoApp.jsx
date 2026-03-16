@@ -61,7 +61,7 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
         extporcen: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
         tipoturno: {
             type: "object",
             options: modalidades,
@@ -74,13 +74,12 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
             popupTitle: 'Modalidades',
             notnull: true
         },
-        descripcion: { label: "Descripción", notnull: true },
+        descripcion: { label: "Descripción", notnull: true, size: 150 },
         horaent: { type: "time", label: "Horarío de entrada" },
         horasal: { type: "time", label: "Horarío de salida" },
         horades: { type: "time", label: "Tiempo de descanso" },
         thoras: { type: "number", label: "Total de horas semanales" },
         extporcen: { type: "number", label: "Porcentaje" },
-        turnodia: { hidden: true }
     };
 
     const recuperarTurnos = () => {

@@ -288,7 +288,7 @@ export const Configuracion = ({ userLog, setUserLog }) => {
                                         id="entidad"
                                         name="entidad"
                                         placeholder="Nombre de la entidad"
-                                        className="modern-input-edit"
+                                        className={`modern-input-edit ${entidadError ? 'error' : ''}`}
                                         value={config.entidad || ''}
                                         onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
                                         maxLength={150}

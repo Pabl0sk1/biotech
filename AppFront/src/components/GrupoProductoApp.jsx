@@ -61,8 +61,8 @@ export const GrupoProductoApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        grupoproducto: { label: "Descripción", notnull: true },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        grupoproducto: { label: "Descripción", notnull: true, size: 150 },
         tributacion: {
             type: "object",
             options: tributaciones,
@@ -88,7 +88,6 @@ export const GrupoProductoApp = ({ userLog, setUserLog }) => {
             order: 2
         },
         erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" },
-        subgrupoproducto: { hidden: true }
     };
 
     const recuperarGrupoProductos = () => {

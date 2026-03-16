@@ -55,8 +55,8 @@ export const FaseCultivoApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        fasecultivo: { label: "Descripción", notnull: true, autofocus: true },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        fasecultivo: { label: "Descripción", notnull: true, autofocus: true, size: 150 },
         erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
 

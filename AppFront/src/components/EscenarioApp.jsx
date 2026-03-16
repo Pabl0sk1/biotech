@@ -51,8 +51,8 @@ export const EscenarioApp = ({ userLog, setUserLog }) => {
         tipoinforme: ""
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
-        tipoinforme: { notnull: true, label: "Descripción", autofocus: true },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
+        tipoinforme: { notnull: true, label: "Descripción", autofocus: true, size: 150 },
     };
 
     const recuperarEscenarios = () => {

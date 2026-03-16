@@ -75,7 +75,7 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
         entidad: {
             type: "object",
             options: entidades,
@@ -134,10 +134,10 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
         dosisporhec: { type: "number", label: "Dosis p/h" },
         costogerencial: { type: "number", label: "Costo Gerencial" },
         precio: { type: "number", label: "Precio" },
-        estado: { type: "select", options: ["Activo", "Inactivo"], notnull: true },
+        estado: { type: "select", options: ["Activo", "Inactivo"] },
         activo: { hidden: true },
         incluirplan: { type: "checkbox", label: "¿Incluir planeamiento?" },
-        obs: { type: "textarea", label: "Observación" },
+        obs: { type: "textarea", label: "Observación", size: 150 },
         erpid: { label: "ERPID", type: "number", hidden: userLog?.id !== 1 }
     };
     const columnSettings = {

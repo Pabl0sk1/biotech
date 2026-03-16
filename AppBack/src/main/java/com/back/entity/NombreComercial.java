@@ -30,12 +30,10 @@ public class NombreComercial {
 	@SequenceGenerator(name = "nombrecomercial_sec", sequenceName = "nombrecomerciales_id_seq", allocationSize = 1)
 	private Integer id;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "subgrupoproducto_id")
 	private SubgrupoProducto subgrupoproducto;
 	
-	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "medida_id")
 	private Medida medida;

@@ -66,7 +66,7 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
         erpid: 0
     };
     const fieldSettings = {
-        id: { disabled: true, order: 0 },
+        id: { type: "number", disabledonlyedit: true, order: 0 },
         entidad: {
             type: "object",
             notnull: true,
@@ -112,10 +112,9 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
             popupTitle: "Productos",
             disabledifvalues: ['grupoproducto', 'subgrupoproducto']
         },
-        basecalculo: { type: "select", label: "Base de Cálculo", options: ["Precio", "Rentabilidad"], notnull: true },
-        porcentaje: { notnull: true, type: "number", min: 0, max: 100 },
-        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" },
-        zafras: { hidden: true }
+        basecalculo: { type: "select", label: "Base de Cálculo", options: ["Precio", "Rentabilidad"] },
+        porcentaje: { type: "number", notnull: true },
+        erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
 
     const recuperarComisiones = () => {
