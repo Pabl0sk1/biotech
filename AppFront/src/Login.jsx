@@ -29,8 +29,9 @@ export const Login = ({ setUserLog }) => {
             if (response.ok) {
                 const usuarioEncontrado = response.user;
 
-                if (usuarioEncontrado.activo == false) {
+                if (usuarioEncontrado.activo === false) {
                     setError("El usuario está inactivo.");
+                    setLoading(false);
                     return;
                 }
 
@@ -56,26 +57,13 @@ export const Login = ({ setUserLog }) => {
             } else {
                 setError("Nombre de usuario o contraseña incorrectos.");
             }
-        } catch (error) {
-            console.error("Error de login:", error);
+        } catch (err) {
+            console.error("Error de login:", err);
             setError("Error al intentar iniciar sesión.");
         } finally {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
 
     return (
         <>
@@ -96,21 +84,27 @@ export const Login = ({ setUserLog }) => {
                                     <div className="d-flex align-items-center">
                                         <input
                                             type="text"
-                                            className="modern-input"
+                                            className="modern-input-edit"
                                             placeholder="Usuario"
                                             value={nombreusuario}
-                                            onChange={(e) => setNombreUsuario(e.target.value.toUpperCase())}
-                                            maxLength={20}
+                                            onChange={(e) => {
+                                                setNombreUsuario(e.target.value.toUpperCase());
+                                                setError("");
+                                            }}
+                                            maxLength={50}
                                             autoFocus
                                         />
                                     </div>
                                     <div className="mt-4 pb-3 d-flex align-items-center position-relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
-                                            className="modern-input pe-5"
+                                            className="modern-input-edit pe-5"
                                             placeholder="Contraseña"
                                             value={contrasena}
-                                            onChange={(e) => setContrasena(e.target.value)}
+                                            onChange={(e) => {
+                                                setContrasena(e.target.value);
+                                                setError("");
+                                            }}
                                             maxLength={30}
                                         />
                                         <button
