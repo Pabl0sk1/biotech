@@ -294,7 +294,7 @@ export const Configuracion = ({ userLog, setUserLog }) => {
                                         maxLength={150}
                                     />
                                     <div className="textSizeDesc">
-                                        {config.entidad?.length || 0}/150 caracteres
+                                        {config.entidad?.length || 0}/150
                                     </div>
                                     {entidadError && (
                                         <small className="text-danger d-block mt-1 text-start">
@@ -321,7 +321,7 @@ export const Configuracion = ({ userLog, setUserLog }) => {
                                         maxLength={30}
                                     />
                                     <div className="textSizeDesc">
-                                        {config.nrodoc?.length || 0}/30 caracteres
+                                        {config.nrodoc?.length || 0}/30
                                     </div>
                                 </div>
                             </div>
@@ -341,7 +341,7 @@ export const Configuracion = ({ userLog, setUserLog }) => {
                                         maxLength={30}
                                     />
                                     <div className="textSizeDesc">
-                                        {config.nrotelefono?.length || 0}/30 caracteres
+                                        {config.nrotelefono?.length || 0}/30
                                     </div>
                                 </div>
                             </div>
@@ -361,7 +361,7 @@ export const Configuracion = ({ userLog, setUserLog }) => {
                                         maxLength={30}
                                     />
                                     <div className="textSizeDesc">
-                                        {config.correo?.length || 0}/30 caracteres
+                                        {config.correo?.length || 0}/30
                                     </div>
                                 </div>
                             </div>

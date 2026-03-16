@@ -220,7 +220,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                                 </button>
                             </div>
                             <div className="textSizeDesc">
-                                {formData.contrasenaActual?.length || 0}/30 caracteres
+                                {formData.contrasenaActual?.length || 0}/30
                             </div>
                             {error && (
                                 <div className="error-message">
@@ -271,7 +271,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                                 </button>
                             </div>
                             <div className="textSizeDesc">
-                                {formData.contrasenaNueva?.length || 0}/30 caracteres
+                                {formData.contrasenaNueva?.length || 0}/30
                             </div>
                             {newPass && (
                                 <div className="error-message">
@@ -306,7 +306,7 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                                 </button>
                             </div>
                             <div className="textSizeDesc">
-                                {formData.contrasenaRepetida?.length || 0}/30 caracteres
+                                {formData.contrasenaRepetida?.length || 0}/30
                             </div>
                             {repeatPass && (
                                 <div className="error-message">

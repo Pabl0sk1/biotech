@@ -824,7 +824,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                     autoFocus={modoEdicion}
                                 />
                                 <div className="textSizeDesc">
-                                    {datos.descripcion?.length || 0}/150 caracteres
+                                    {datos.descripcion?.length || 0}/150
                                 </div>
                                 {descError && (
                                     <small className="text-danger d-block mt-1 text-start">

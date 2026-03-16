@@ -328,7 +328,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                     maxLength={50}
                                 />
                                 <div className="textSizeDesc">
-                                    {data.nombreusuario?.length || 0}/50 caracteres
+                                    {data.nombreusuario?.length || 0}/50
                                 </div>
                                 {nombreUsuarioError && (
                                     <small className="text-danger d-block mt-1 text-start">
@@ -363,7 +363,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             maxLength={150}
                                         />
                                         <div className="textSizeDesc">
-                                            {data.nombre?.length || 0}/150 caracteres
+                                            {data.nombre?.length || 0}/150
                                         </div>
                                         {nombreError && (
                                             <small className="text-danger d-block mt-1 text-start">
@@ -390,7 +390,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             maxLength={150}
                                         />
                                         <div className="textSizeDesc">
-                                            {data.apellido?.length || 0}/150 caracteres
+                                            {data.apellido?.length || 0}/150
                                         </div>
                                     </div>
                                 </div>
@@ -411,7 +411,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             maxLength={30}
                                         />
                                         <div className="textSizeDesc">
-                                            {data.nrodoc?.length || 0}/30 caracteres
+                                            {data.nrodoc?.length || 0}/30
                                         </div>
                                     </div>
                                 </div>
@@ -457,7 +457,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             maxLength={30}
                                         />
                                         <div className="textSizeDesc">
-                                            {data.correo?.length || 0}/30 caracteres
+                                            {data.correo?.length || 0}/30
                                         </div>
                                     </div>
                                 </div>
@@ -477,9 +477,9 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                             onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                             maxLength={30}
                                         />
-                                    </div>
-                                    <div className="textSizeDesc">
-                                        {data.nrotelefono?.length || 0}/30 caracteres
+                                        <div className="textSizeDesc">
+                                            {data.nrotelefono?.length || 0}/30
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -499,7 +499,7 @@ export const Perfil = ({ userLog, setUserLog }) => {
                                     maxLength={150}
                                 />
                                 <div className="textSizeDesc">
-                                    {data.direccion?.length || 0}/150 caracteres
+                                    {data.direccion?.length || 0}/150
                                 </div>
                             </div>
                         </div>
