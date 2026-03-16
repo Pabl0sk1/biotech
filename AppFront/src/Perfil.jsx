@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { getUser, updateUser, updateUserImage, deleteUserImage } from "./services/usuario.service";
 import { useNavigate } from "react-router-dom";
-import Header from "./Header";
+import { getUser, updateUser, updateUserImage, deleteUserImage } from "./services/usuario.service";
 import { HostLocation } from './utils/HostLocation';
+import Header from "./Header";
+import Sidebar from "./Sidebar";
 import Loading from "./layouts/Loading";
 import Close from "./layouts/Close";
 
@@ -22,50 +23,6 @@ export const Perfil = ({ userLog, setUserLog }) => {
     const [imagenFile, setImagenFile] = useState(null);
     const [eliminarImagen, setEliminarImagen] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-    useEffect(() => {
-        const handleEsc = (event) => {
-            if (event.key === 'Escape') {
-                if (close) {
-                    confirmarEscape();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleEsc);
-        return () => {
-            window.removeEventListener('keydown', handleEsc);
-        };
-    }, [close]);
-
-    useEffect(() => {
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, []);
-
-    const confirmarEscape = () => {
-        setClose(false);
-        if (!nombreUsuarioError && !nombreError) navigate(-1);
-    };
-
-    const recuperarUsuarios = async () => {
-        const response = await getUser();
-        setUsuarios(response.items);
-
-        const BACKEND_URL = HostLocation(1);
-        if (userLog?.imagenurl) setImagenSeleccionada(BACKEND_URL + "/biotech" + userLog?.imagenurl);
-    }
-
-    useEffect(() => {
-        recuperarUsuarios();
-    }, []);
 
     // Función para comparar si hay cambios reales
     const hasChanges = () => {
@@ -101,10 +58,54 @@ export const Perfil = ({ userLog, setUserLog }) => {
         return JSON.stringify(dataComparable) !== JSON.stringify(dataOriginalComparable);
     };
 
+    const confirmarEscape = () => {
+        setClose(false);
+        if (!nombreUsuarioError && !nombreError) navigate(-1);
+    };
+
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                if (close) {
+                    confirmarEscape();
+                }
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, [close]);
+
+    useEffect(() => {
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, []);
+
+    useEffect(() => {
+        recuperarUsuarios();
+    }, []);
+
     // Marcar cambios sin guardar cuando se modifica data
     useEffect(() => {
         setHasUnsavedChanges(hasChanges());
     }, [data]);
+
+    const recuperarUsuarios = async () => {
+        const response = await getUser();
+        setUsuarios(response.items);
+
+        const BACKEND_URL = HostLocation(1);
+        if (userLog?.imagenurl) setImagenSeleccionada(BACKEND_URL + "/biotech" + userLog?.imagenurl);
+    }
 
     const actualizaruserLog = async () => {
         const response = await getUser();
@@ -232,264 +233,285 @@ export const Perfil = ({ userLog, setUserLog }) => {
                 <Close confirmar={confirmarEscape} title={'Perfil'} gen={true} />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt="perfil" />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        {/* Header del perfil */}
-                        <div className="extend-header">
-                            <div className="profile-avatar">
-                                <i className="bi bi-person-fill"></i>
+            <Header userLog={userLog} title={'PERFIL'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt="perfil" />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <div className="form-card">
+                {/* Header del perfil */}
+                <div className="extend-header">
+                    <div className="profile-avatar">
+                        <i className="bi bi-person-fill"></i>
+                    </div>
+                    <h2 className="profile-name">
+                        {data.nombre || data.apellido ? data.nombre + " " + data.apellido : 'Perfil'}
+                    </h2>
+                    <p className="profile-role">
+                        @{data.nombreusuario || 'USER'}
+                    </p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+                    <div className="form-body">
+                        {/* Profile picture Section */}
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-image me-2"></i>Foto
+                            </label>
+                            <div
+                                className={`image-upload ${imagenSeleccionada ? 'has-image' : ''}`}
+                                onClick={() => document.getElementById('fileInput').click()}
+                            >
+                                {imagenSeleccionada ? (
+                                    <>
+                                        <img
+                                            src={imagenSeleccionada}
+                                            alt="Vista previa"
+                                            className="image-preview"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="remove-image"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImagenFile(null);
+                                                setImagenSeleccionada(null);
+                                                setEliminarImagen(true);
+                                                setData({ ...data, imagennombre: "", imagentipo: "", imagenurl: "" });
+                                            }}
+                                        >
+                                            <i className="bi bi-x-lg"></i>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div>
+                                        <div className="upload-icon">
+                                            <i className="bi bi-cloud-upload"></i>
+                                        </div>
+                                        <div className="upload-text">
+                                            <strong>Hacer clic para subir</strong>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <h2 className="profile-name">
-                                {data.nombre + " " + data.apellido}
-                            </h2>
-                            <p className="profile-role">
-                                @{data.nombreusuario}
-                            </p>
+                            <input
+                                type="file"
+                                id="fileInput"
+                                name="imagen"
+                                accept="image/*"
+                                className="d-none"
+                                onChange={handleImageChange}
+                            />
                         </div>
 
-                        <form onSubmit={handleSubmit} className="needs-validation" noValidate>
-                            <div className="form-body">
-                                {/* Profile picture Section */}
-                                <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-image me-2"></i>Foto
-                                    </label>
-                                    <div
-                                        className={`image-upload ${imagenSeleccionada ? 'has-image' : ''}`}
-                                        onClick={() => document.getElementById('fileInput').click()}
-                                    >
-                                        {imagenSeleccionada ? (
-                                            <>
-                                                <img
-                                                    src={imagenSeleccionada}
-                                                    alt="Vista previa"
-                                                    className="image-preview"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="remove-image"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setImagenFile(null);
-                                                        setImagenSeleccionada(null);
-                                                        setEliminarImagen(true);
-                                                        setData({ ...data, imagennombre: "", imagentipo: "", imagenurl: "" });
-                                                    }}
-                                                >
-                                                    <i className="bi bi-x-lg"></i>
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <div>
-                                                <div className="upload-icon">
-                                                    <i className="bi bi-cloud-upload"></i>
-                                                </div>
-                                                <div className="upload-text">
-                                                    <strong>Hacer clic para subir</strong>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <input
-                                        type="file"
-                                        id="fileInput"
-                                        name="imagen"
-                                        accept="image/*"
-                                        className="d-none"
-                                        onChange={handleImageChange}
-                                    />
+                        <h3 className="section-title">
+                            <i className="bi bi-shield-check input-icon"></i>
+                            Información de Cuenta
+                        </h3>
+                        {/* Sección de Información de Cuenta */}
+                        <div className="form-section">
+                            <div className="modern-input-group">
+                                <label htmlFor="nombreusuario" className="modern-label">
+                                    <i className="bi bi-person-badge me-2"></i>Nombre de Usuario
+                                    <i className="text-danger ms-1">*</i>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="nombreusuario"
+                                    name="nombreusuario"
+                                    placeholder="Ingresa tu nombre de usuario"
+                                    className="modern-input-edit"
+                                    value={data.nombreusuario}
+                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value.toUpperCase() })}
+                                    maxLength={50}
+                                />
+                                <div className="textSizeDesc">
+                                    {data.nombreusuario?.length || 0}/50 caracteres
                                 </div>
+                                {nombreUsuarioError && (
+                                    <small className="text-danger d-block mt-1 text-start">
+                                        <i className="bi bi-exclamation-triangle me-1"></i>
+                                        {nombreUsuarioMsj}
+                                    </small>
+                                )}
+                            </div>
+                        </div>
 
-                                <h3 className="section-title">
-                                    <i className="bi bi-shield-check input-icon"></i>
-                                    Información de Cuenta
-                                </h3>
-                                {/* Sección de Información de Cuenta */}
-                                <div className="form-section">
+                        <h3 className="section-title">
+                            <i className="bi bi-person input-icon"></i>
+                            Información Personal
+                        </h3>
+                        {/* Sección de Información Personal */}
+                        <div className="form-section">
+                            <div className="row">
+                                <div className="col-md-6">
                                     <div className="modern-input-group">
-                                        <label htmlFor="nombreusuario" className="modern-label">
-                                            <i className="bi bi-person-badge me-2"></i>Nombre de Usuario *
+                                        <label htmlFor="nombre" className="modern-label">
+                                            <i className="bi bi-card-text me-2"></i>Nombre
+                                            <i className="text-danger ms-1">*</i>
                                         </label>
                                         <input
                                             type="text"
-                                            id="nombreusuario"
-                                            name="nombreusuario"
-                                            placeholder="Ingresa tu nombre de usuario"
-                                            className={`modern-input ${nombreUsuarioError ? 'error' : ''}`}
-                                            value={data.nombreusuario}
-                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value.toUpperCase() })}
-                                            maxLength={50}
+                                            id="nombre"
+                                            name="nombre"
+                                            placeholder="Ingresa tu nombre"
+                                            className="modern-input-edit"
+                                            value={data.nombre || ''}
+                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                            maxLength={150}
                                         />
-                                        {nombreUsuarioError && (
-                                            <div className="error-message">
-                                                <i className="bi bi-exclamation-triangle-fill"></i>
-                                                {nombreUsuarioMsj}
-                                            </div>
+                                        <div className="textSizeDesc">
+                                            {data.nombre?.length || 0}/150 caracteres
+                                        </div>
+                                        {nombreError && (
+                                            <small className="text-danger d-block mt-1 text-start">
+                                                <i className="bi bi-exclamation-triangle me-1"></i>
+                                                Este campo es obligatorio.
+                                            </small>
                                         )}
                                     </div>
                                 </div>
 
-                                <h3 className="section-title">
-                                    <i className="bi bi-person input-icon"></i>
-                                    Información Personal
-                                </h3>
-                                {/* Sección de Información Personal */}
-                                <div className="form-section">
-                                    <div className="row">
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="nombre" className="modern-label">
-                                                    <i className="bi bi-card-text me-2"></i>Nombre *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="nombre"
-                                                    name="nombre"
-                                                    placeholder="Ingresa tu nombre"
-                                                    className={`modern-input ${nombreError ? 'error' : ''}`}
-                                                    value={data.nombre || ''}
-                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={150}
-                                                />
-                                                {nombreError && (
-                                                    <div className="error-message">
-                                                        <i className="bi bi-exclamation-triangle-fill"></i>
-                                                        El nombre es obligatorio (máx. 150 caracteres)
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="apellido" className="modern-label">
-                                                    <i className="bi bi-card-text me-2"></i>Apellido
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="apellido"
-                                                    name="apellido"
-                                                    placeholder="Ingresa tu apellido"
-                                                    className="modern-input"
-                                                    value={data.apellido || ''}
-                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={150}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="nrodoc" className="modern-label">
-                                                    <i className="bi bi-credit-card me-2"></i>Número de Documento
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="nrodoc"
-                                                    name="nrodoc"
-                                                    placeholder="Ej: 12345678"
-                                                    className="modern-input"
-                                                    value={data.nrodoc}
-                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="fechanacimiento" className="modern-label">
-                                                    <i className="bi bi-calendar me-2"></i>Fecha de Nacimiento
-                                                </label>
-                                                <input
-                                                    type="date"
-                                                    id="fechanacimiento"
-                                                    name="fechanacimiento"
-                                                    className="modern-input"
-                                                    value={data.fechanacimiento || ''}
-                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <h3 className="section-title">
-                                    <i className="bi bi-telephone input-icon"></i>
-                                    Información de Contacto
-                                </h3>
-                                {/* Sección de Contacto */}
-                                <div className="form-section">
-                                    <div className="row">
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="correo" className="modern-label">
-                                                    <i className="bi bi-envelope me-2"></i>Correo Electrónico
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    id="correo"
-                                                    name="correo"
-                                                    placeholder="usuario@ejemplo.com"
-                                                    className="modern-input"
-                                                    value={data.correo}
-                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="col-md-6">
-                                            <div className="modern-input-group">
-                                                <label htmlFor="nrotelefono" className="modern-label">
-                                                    <i className="bi bi-phone me-2"></i>Número de Teléfono
-                                                </label>
-                                                <input
-                                                    type="tel"
-                                                    id="nrotelefono"
-                                                    name="nrotelefono"
-                                                    placeholder="+595 21 123 456"
-                                                    className="modern-input"
-                                                    value={data.nrotelefono}
-                                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
-                                                    maxLength={30}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
+                                <div className="col-md-6">
                                     <div className="modern-input-group">
-                                        <label htmlFor="direccion" className="modern-label">
-                                            <i className="bi bi-geo-alt me-2"></i>Dirección
+                                        <label htmlFor="apellido" className="modern-label">
+                                            <i className="bi bi-card-text me-2"></i>Apellido
                                         </label>
-                                        <textarea
-                                            id="direccion"
-                                            name="direccion"
-                                            placeholder="Ingresa tu dirección completa..."
-                                            className="modern-textarea text-black"
-                                            style={{ height: '90px' }}
-                                            value={data.direccion}
+                                        <input
+                                            type="text"
+                                            id="apellido"
+                                            name="apellido"
+                                            placeholder="Ingresa tu apellido"
+                                            className="modern-input-edit"
+                                            value={data.apellido || ''}
                                             onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
                                             maxLength={150}
                                         />
-                                        <div style={{ fontSize: '12px', color: '#6b7280', textAlign: 'right', marginTop: '4px' }}>
-                                            {data.direccion?.length || 0}/150 caracteres
+                                        <div className="textSizeDesc">
+                                            {data.apellido?.length || 0}/150 caracteres
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-6">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="nrodoc" className="modern-label">
+                                            <i className="bi bi-credit-card me-2"></i>Número de Documento
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="nrodoc"
+                                            name="nrodoc"
+                                            placeholder="Ej: 12345678"
+                                            className="modern-input-edit"
+                                            value={data.nrodoc}
+                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                            maxLength={30}
+                                        />
+                                        <div className="textSizeDesc">
+                                            {data.nrodoc?.length || 0}/30 caracteres
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-6">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="fechanacimiento" className="modern-label">
+                                            <i className="bi bi-calendar me-2"></i>Fecha de Nacimiento
+                                        </label>
+                                        <input
+                                            type="date"
+                                            id="fechanacimiento"
+                                            name="fechanacimiento"
+                                            className="modern-input-edit"
+                                            value={data.fechanacimiento || ''}
+                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 className="section-title">
+                            <i className="bi bi-telephone input-icon"></i>
+                            Información de Contacto
+                        </h3>
+                        {/* Sección de Contacto */}
+                        <div className="form-section">
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="correo" className="modern-label">
+                                            <i className="bi bi-envelope me-2"></i>Correo Electrónico
+                                        </label>
+                                        <input
+                                            type="email"
+                                            id="correo"
+                                            name="correo"
+                                            placeholder="usuario@ejemplo.com"
+                                            className="modern-input-edit"
+                                            value={data.correo}
+                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                            maxLength={30}
+                                        />
+                                        <div className="textSizeDesc">
+                                            {data.correo?.length || 0}/30 caracteres
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-6">
+                                    <div className="modern-input-group">
+                                        <label htmlFor="nrotelefono" className="modern-label">
+                                            <i className="bi bi-phone me-2"></i>Número de Teléfono
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            id="nrotelefono"
+                                            name="nrotelefono"
+                                            placeholder="+595 21 123 456"
+                                            className="modern-input-edit"
+                                            value={data.nrotelefono}
+                                            onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                            maxLength={30}
+                                        />
+                                    </div>
+                                    <div className="textSizeDesc">
+                                        {data.nrotelefono?.length || 0}/30 caracteres
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Botones de acción */}
-                            <div className="div-report-button">
-                                <button type="submit" className="modern-button btn-primary">
-                                    <i className="bi bi-check-lg"></i>Guardar
-                                </button>
+                            <div className="modern-input-group">
+                                <label htmlFor="direccion" className="modern-label">
+                                    <i className="bi bi-geo-alt me-2"></i>Dirección
+                                </label>
+                                <textarea
+                                    id="direccion"
+                                    name="direccion"
+                                    placeholder="Ingresa tu dirección completa..."
+                                    className="modern-input-edit"
+                                    style={{ height: '90px' }}
+                                    value={data.direccion}
+                                    onChange={(event) => setData({ ...data, [event.target.name]: event.target.value })}
+                                    maxLength={150}
+                                />
+                                <div className="textSizeDesc">
+                                    {data.direccion?.length || 0}/150 caracteres
+                                </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+
+                    {/* Botones de acción */}
+                    <div className="div-report-button">
+                        <button type="submit" className="modern-button btn-primary">
+                            <i className="bi bi-check-lg"></i>Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
         </>
     );

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { getConfig, updateConfig, deleteImage } from "./services/config.service";
 import { useNavigate } from "react-router-dom";
-import Header from "./Header";
+import { getConfig, updateConfig, deleteImage } from "./services/config.service";
 import { HostLocation } from './utils/HostLocation';
+import Header from "./Header";
+import Sidebar from "./Sidebar";
 import Loading from "./layouts/Loading";
 import Close from "./layouts/Close";
 
-export const Configuracion = ({ userLog }) => {
+export const Configuracion = ({ userLog, setUserLog }) => {
 
     const navigate = useNavigate();
     const [entidadError, setEntidadError] = useState(false);
@@ -17,6 +18,43 @@ export const Configuracion = ({ userLog }) => {
     const [loading, setLoading] = useState(false);
     const configOriginalRef = useRef({});
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+    // Función para comparar si hay cambios reales
+    const hasChanges = () => {
+        // Comparar config (solo campos editables)
+        const configComparable = {
+            entidad: config?.entidad,
+            nrodoc: config?.nrodoc,
+            nrotelefono: config?.nrotelefono,
+            correo: config?.correo,
+            colorpri: config?.colorpri,
+            colorsec: config?.colorsec,
+            colorter: config?.colorter,
+            imagennombre: config?.imagennombre,
+            imagentipo: config?.imagentipo,
+            imagenurl: config?.imagenurl
+        };
+
+        const configOriginalComparable = {
+            entidad: configOriginalRef.current?.entidad,
+            nrodoc: configOriginalRef.current?.nrodoc,
+            nrotelefono: configOriginalRef.current?.nrotelefono,
+            correo: configOriginalRef.current?.correo,
+            colorpri: configOriginalRef.current?.colorpri,
+            colorsec: configOriginalRef.current?.colorsec,
+            colorter: configOriginalRef.current?.colorter,
+            imagennombre: configOriginalRef.current?.imagennombre,
+            imagentipo: configOriginalRef.current?.imagentipo,
+            imagenurl: configOriginalRef.current?.imagenurl
+        };
+
+        return JSON.stringify(configComparable) !== JSON.stringify(configOriginalComparable);
+    };
+
+    const confirmarEscape = () => {
+        setClose(false);
+        if (!entidadError) navigate(-1);
+    };
 
     const [config, setConfig] = useState({
         id: 0,
@@ -61,10 +99,14 @@ export const Configuracion = ({ userLog }) => {
         });
     }, []);
 
-    const confirmarEscape = () => {
-        setClose(false);
-        if (!entidadError) navigate(-1);
-    };
+    useEffect(() => {
+        recuperarConfig();
+    }, []);
+
+    // Marcar cambios sin guardar cuando se modifica config
+    useEffect(() => {
+        setHasUnsavedChanges(hasChanges());
+    }, [config]);
 
     const recuperarConfig = async () => {
         const response = await getConfig();
@@ -74,47 +116,6 @@ export const Configuracion = ({ userLog }) => {
         const BACKEND_URL = HostLocation(1);
         if (response.items[0].imagenurl) setImagenSeleccionada(BACKEND_URL + "/biotech" + response.items[0].imagenurl);
     }
-
-    useEffect(() => {
-        recuperarConfig();
-    }, []);
-
-    // Función para comparar si hay cambios reales
-    const hasChanges = () => {
-        // Comparar config (solo campos editables)
-        const configComparable = {
-            entidad: config?.entidad,
-            nrodoc: config?.nrodoc,
-            nrotelefono: config?.nrotelefono,
-            correo: config?.correo,
-            colorpri: config?.colorpri,
-            colorsec: config?.colorsec,
-            colorter: config?.colorter,
-            imagennombre: config?.imagennombre,
-            imagentipo: config?.imagentipo,
-            imagenurl: config?.imagenurl
-        };
-
-        const configOriginalComparable = {
-            entidad: configOriginalRef.current?.entidad,
-            nrodoc: configOriginalRef.current?.nrodoc,
-            nrotelefono: configOriginalRef.current?.nrotelefono,
-            correo: configOriginalRef.current?.correo,
-            colorpri: configOriginalRef.current?.colorpri,
-            colorsec: configOriginalRef.current?.colorsec,
-            colorter: configOriginalRef.current?.colorter,
-            imagennombre: configOriginalRef.current?.imagennombre,
-            imagentipo: configOriginalRef.current?.imagentipo,
-            imagenurl: configOriginalRef.current?.imagenurl
-        };
-
-        return JSON.stringify(configComparable) !== JSON.stringify(configOriginalComparable);
-    };
-
-    // Marcar cambios sin guardar cuando se modifica config
-    useEffect(() => {
-        setHasUnsavedChanges(hasChanges());
-    }, [config]);
 
     const handleSubmit = async (event) => {
         event?.preventDefault();
@@ -201,256 +202,270 @@ export const Configuracion = ({ userLog }) => {
                 <Close confirmar={confirmarEscape} title={'Empresa'} gen={false} />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'EMPRESA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt="configuración" />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        {/* Header del perfil */}
-                        <div className="extend-header">
-                            <div className="security-icon">
-                                <i className="bi bi-building-fill"></i>
+            <Header userLog={userLog} title={'EMPRESA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} Close={false} hasUnsavedChanges={hasUnsavedChanges} onSave={handleSaveFromHeader} modulotxt="configuración" />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <div className="form-card">
+                {/* Header del perfil */}
+                <div className="extend-header">
+                    <div className="security-icon">
+                        <i className="bi bi-building-fill"></i>
+                    </div>
+                    <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
+                        {config.entidad || 'Empresa'}
+                    </h2>
+                    <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
+                        Ajusta tu empresa a tu manera
+                    </p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+                    <div className="form-body">
+                        {/* Logo Section */}
+                        <div className="modern-input-group">
+                            <label className="modern-label">
+                                <i className="bi bi-image me-2"></i>Logotipo
+                            </label>
+                            <div
+                                className={`image-upload ${imagenSeleccionada ? 'has-image' : ''}`}
+                                onClick={() => document.getElementById('fileInput').click()}
+                            >
+                                {imagenSeleccionada ? (
+                                    <>
+                                        <img
+                                            src={imagenSeleccionada}
+                                            alt="Vista previa"
+                                            className="image-preview"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="remove-image"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImagenFile(null);
+                                                setImagenSeleccionada(null);
+                                                setEliminarImagen(true);
+                                                setConfig({ ...config, imagennombre: "", imagentipo: "", imagenurl: "" });
+                                            }}
+                                        >
+                                            <i className="bi bi-x-lg"></i>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div>
+                                        <div className="upload-icon">
+                                            <i className="bi bi-cloud-upload"></i>
+                                        </div>
+                                        <div className="upload-text">
+                                            <strong>Hacer clic para subir</strong>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Empresa
-                            </h2>
-                            <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
-                                Ajusta tu empresa a tu manera
-                            </p>
+                            <input
+                                type="file"
+                                id="fileInput"
+                                name="imagen"
+                                accept="image/*"
+                                className="d-none"
+                                onChange={handleImageChange}
+                            />
                         </div>
 
-                        <form onSubmit={handleSubmit} className="needs-validation" noValidate>
-                            <div className="form-body">
-                                {/* Logo Section */}
+                        {/* Form Fields */}
+                        <div className="row">
+                            <div className="col-md-6">
                                 <div className="modern-input-group">
-                                    <label className="modern-label">
-                                        <i className="bi bi-image me-2"></i>Logotipo
+                                    <label htmlFor="entidad" className="modern-label">
+                                        <i className="bi bi-building me-2"></i>Entidad
+                                        <i className="text-danger ms-1">*</i>
                                     </label>
-                                    <div
-                                        className={`image-upload ${imagenSeleccionada ? 'has-image' : ''}`}
-                                        onClick={() => document.getElementById('fileInput').click()}
-                                    >
-                                        {imagenSeleccionada ? (
-                                            <>
-                                                <img
-                                                    src={imagenSeleccionada}
-                                                    alt="Vista previa"
-                                                    className="image-preview"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="remove-image"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setImagenFile(null);
-                                                        setImagenSeleccionada(null);
-                                                        setEliminarImagen(true);
-                                                        setConfig({ ...config, imagennombre: "", imagentipo: "", imagenurl: "" });
-                                                    }}
-                                                >
-                                                    <i className="bi bi-x-lg"></i>
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <div>
-                                                <div className="upload-icon">
-                                                    <i className="bi bi-cloud-upload"></i>
-                                                </div>
-                                                <div className="upload-text">
-                                                    <strong>Hacer clic para subir</strong>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
                                     <input
-                                        type="file"
-                                        id="fileInput"
-                                        name="imagen"
-                                        accept="image/*"
-                                        className="d-none"
-                                        onChange={handleImageChange}
+                                        type="text"
+                                        id="entidad"
+                                        name="entidad"
+                                        placeholder="Nombre de la entidad"
+                                        className="modern-input-edit"
+                                        value={config.entidad || ''}
+                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                        maxLength={150}
                                     />
+                                    <div className="textSizeDesc">
+                                        {config.entidad?.length || 0}/150 caracteres
+                                    </div>
+                                    {entidadError && (
+                                        <small className="text-danger d-block mt-1 text-start">
+                                            <i className="bi bi-exclamation-triangle me-1"></i>
+                                            Este campo es obligatorio.
+                                        </small>
+                                    )}
                                 </div>
+                            </div>
 
-                                {/* Form Fields */}
-                                <div className="row">
-                                    <div className="col-md-6">
-                                        <div className="modern-input-group">
-                                            <label htmlFor="entidad" className="modern-label">
-                                                <i className="bi bi-building me-2"></i>Entidad *
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id="entidad"
-                                                name="entidad"
-                                                placeholder="Nombre de la entidad"
-                                                className={`modern-input ${entidadError ? 'error' : ''}`}
-                                                value={config.entidad || ''}
-                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                maxLength={150}
-                                            />
-                                            {entidadError && (
-                                                <div className="error-message">
-                                                    <i className="bi bi-exclamation-triangle-fill"></i>
-                                                    La entidad es obligatoria (máx. 150 caracteres)
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <div className="modern-input-group">
-                                            <label htmlFor="nrodoc" className="modern-label">
-                                                <i className="bi bi-credit-card me-2"></i>Número de Documento
-                                            </label>
-                                            <input
-                                                type="email"
-                                                id="nrodoc"
-                                                name="nrodoc"
-                                                placeholder="Ej: 12345678"
-                                                className="modern-input"
-                                                value={config.nrodoc || ''}
-                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                maxLength={30}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <div className="modern-input-group">
-                                            <label htmlFor="nrotelefono" className="modern-label">
-                                                <i className="bi bi-phone me-2"></i>Número de Teléfono
-                                            </label>
-                                            <input
-                                                type="tel"
-                                                id="nrotelefono"
-                                                name="nrotelefono"
-                                                placeholder="+595 21 123 456"
-                                                className="modern-input"
-                                                value={config.nrotelefono || ''}
-                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                maxLength={30}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <div className="modern-input-group">
-                                            <label htmlFor="correo" className="modern-label">
-                                                <i className="bi bi-envelope me-2"></i>Correo Electrónico
-                                            </label>
-                                            <input
-                                                type="email"
-                                                id="correo"
-                                                name="correo"
-                                                placeholder="correo@empresa.com"
-                                                className="modern-input"
-                                                value={config.correo || ''}
-                                                onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                maxLength={30}
-                                            />
-                                        </div>
+                            <div className="col-md-6">
+                                <div className="modern-input-group">
+                                    <label htmlFor="nrodoc" className="modern-label">
+                                        <i className="bi bi-credit-card me-2"></i>Número de Documento
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="nrodoc"
+                                        name="nrodoc"
+                                        placeholder="Ej: 12345678"
+                                        className="modern-input-edit"
+                                        value={config.nrodoc || ''}
+                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                        maxLength={30}
+                                    />
+                                    <div className="textSizeDesc">
+                                        {config.nrodoc?.length || 0}/30 caracteres
                                     </div>
                                 </div>
-
-                                {/* Color Section */}
-                                <h4 className="mt-4 mb-3" style={{ color: '#374151', fontWeight: '600' }}>
-                                    <i className="bi bi-palette me-2"></i>Colores del Sistema
-                                </h4>
-
-                                <div className="row">
-                                    <div className="col-md-4">
-                                        <div className="modern-input-group">
-                                            <label htmlFor="colorpri" className="modern-label">Color Primario</label>
-                                            <div className="color-input-group">
-                                                <div
-                                                    className="color-preview"
-                                                    style={{ backgroundColor: config.colorpri }}
-                                                    onClick={() => document.getElementById('colorpri').click()}
-                                                ></div>
-                                                <input
-                                                    type="color"
-                                                    id="colorpri"
-                                                    name="colorpri"
-                                                    className="d-none"
-                                                    value={config.colorpri}
-                                                    onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    className="modern-input"
-                                                    value={config.colorpri}
-                                                    onChange={(event) => setConfig({ ...config, colorpri: event.target.value })}
-                                                    placeholder="#ffffff"
-                                                />
-                                            </div>
-                                        </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="modern-input-group">
+                                    <label htmlFor="nrotelefono" className="modern-label">
+                                        <i className="bi bi-phone me-2"></i>Número de Teléfono
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        id="nrotelefono"
+                                        name="nrotelefono"
+                                        placeholder="+595 21 123 456"
+                                        className="modern-input-edit"
+                                        value={config.nrotelefono || ''}
+                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                        maxLength={30}
+                                    />
+                                    <div className="textSizeDesc">
+                                        {config.nrotelefono?.length || 0}/30 caracteres
                                     </div>
-
-                                    <div className="col-md-4">
-                                        <div className="modern-input-group">
-                                            <label htmlFor="colorsec" className="modern-label">Color Secundario</label>
-                                            <div className="color-input-group">
-                                                <div
-                                                    className="color-preview"
-                                                    style={{ backgroundColor: config.colorsec }}
-                                                    onClick={() => document.getElementById('colorsec').click()}
-                                                ></div>
-                                                <input
-                                                    type="color"
-                                                    id="colorsec"
-                                                    name="colorsec"
-                                                    className="d-none"
-                                                    value={config.colorsec}
-                                                    onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    className="modern-input"
-                                                    value={config.colorsec}
-                                                    onChange={(event) => setConfig({ ...config, colorsec: event.target.value })}
-                                                    placeholder="#ffffff"
-                                                />
-                                            </div>
-                                        </div>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="modern-input-group">
+                                    <label htmlFor="correo" className="modern-label">
+                                        <i className="bi bi-envelope me-2"></i>Correo Electrónico
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="correo"
+                                        name="correo"
+                                        placeholder="correo@empresa.com"
+                                        className="modern-input-edit"
+                                        value={config.correo || ''}
+                                        onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                        maxLength={30}
+                                    />
+                                    <div className="textSizeDesc">
+                                        {config.correo?.length || 0}/30 caracteres
                                     </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <div className="col-md-4">
-                                        <div className="modern-input-group">
-                                            <label htmlFor="colorter" className="modern-label">Color Terciario</label>
-                                            <div className="color-input-group">
-                                                <div
-                                                    className="color-preview"
-                                                    style={{ backgroundColor: config.colorter }}
-                                                    onClick={() => document.getElementById('colorter').click()}
-                                                ></div>
-                                                <input
-                                                    type="color"
-                                                    id="colorter"
-                                                    name="colorter"
-                                                    className="d-none"
-                                                    value={config.colorter}
-                                                    onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    className="modern-input"
-                                                    value={config.colorter}
-                                                    onChange={(event) => setConfig({ ...config, colorter: event.target.value })}
-                                                    placeholder="#ffffff"
-                                                />
-                                            </div>
-                                        </div>
+                        {/* Color Section */}
+                        <h4 className="mt-4 mb-3" style={{ color: '#374151', fontWeight: '600' }}>
+                            <i className="bi bi-palette me-2"></i>Colores del Sistema
+                        </h4>
+
+                        <div className="row">
+                            <div className="col-md-4">
+                                <div className="modern-input-group">
+                                    <label htmlFor="colorpri" className="modern-label">Color Primario</label>
+                                    <div className="color-input-group">
+                                        <div
+                                            className="color-preview"
+                                            style={{ backgroundColor: config.colorpri }}
+                                            onClick={() => document.getElementById('colorpri').click()}
+                                        ></div>
+                                        <input
+                                            type="color"
+                                            id="colorpri"
+                                            name="colorpri"
+                                            className="d-none"
+                                            value={config.colorpri}
+                                            onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                        />
+                                        <input
+                                            type="text"
+                                            className="modern-input-edit"
+                                            value={config.colorpri}
+                                            onChange={(event) => setConfig({ ...config, colorpri: event.target.value })}
+                                            placeholder="#ffffff"
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Form Actions */}
-                            <div className="div-report-button">
-                                <button type="submit" className="modern-button btn-primary">
-                                    <i className="bi bi-check-lg"></i>Guardar
-                                </button>
+                            <div className="col-md-4">
+                                <div className="modern-input-group">
+                                    <label htmlFor="colorsec" className="modern-label">Color Secundario</label>
+                                    <div className="color-input-group">
+                                        <div
+                                            className="color-preview"
+                                            style={{ backgroundColor: config.colorsec }}
+                                            onClick={() => document.getElementById('colorsec').click()}
+                                        ></div>
+                                        <input
+                                            type="color"
+                                            id="colorsec"
+                                            name="colorsec"
+                                            className="d-none"
+                                            value={config.colorsec}
+                                            onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                        />
+                                        <input
+                                            type="text"
+                                            className="modern-input-edit"
+                                            value={config.colorsec}
+                                            onChange={(event) => setConfig({ ...config, colorsec: event.target.value })}
+                                            placeholder="#ffffff"
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                        </form>
+
+                            <div className="col-md-4">
+                                <div className="modern-input-group">
+                                    <label htmlFor="colorter" className="modern-label">Color Terciario</label>
+                                    <div className="color-input-group">
+                                        <div
+                                            className="color-preview"
+                                            style={{ backgroundColor: config.colorter }}
+                                            onClick={() => document.getElementById('colorter').click()}
+                                        ></div>
+                                        <input
+                                            type="color"
+                                            id="colorter"
+                                            name="colorter"
+                                            className="d-none"
+                                            value={config.colorter}
+                                            onChange={(event) => setConfig({ ...config, [event.target.name]: event.target.value })}
+                                        />
+                                        <input
+                                            type="text"
+                                            className="modern-input-edit"
+                                            value={config.colorter}
+                                            onChange={(event) => setConfig({ ...config, colorter: event.target.value })}
+                                            placeholder="#ffffff"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+
+                    {/* Form Actions */}
+                    <div className="div-report-button">
+                        <button type="submit" className="modern-button btn-primary">
+                            <i className="bi bi-check-lg"></i>Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
         </>
     )

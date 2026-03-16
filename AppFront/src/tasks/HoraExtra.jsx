@@ -1042,6 +1042,9 @@ export const HoraExtra = ({ userLog, setUserLog }) => {
                                     disabled={!modoEdicion}
                                     autoFocus={modoEdicion}
                                 />
+                                <div className="textSizeDesc">
+                                    {datos.descripcion?.length || 0}/150 caracteres
+                                </div>
                                 {descError && (
                                     <small className="text-danger d-block mt-1 text-start">
                                         <i className="bi bi-exclamation-triangle me-1"></i>

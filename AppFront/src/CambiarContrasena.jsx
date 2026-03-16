@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getUser, changePassword } from "./services/usuario.service";
 import { GeneratePass } from './utils/GeneratePass';
 import Header from "./Header";
+import Sidebar from "./Sidebar";
 import Close from "./layouts/Close";
 import Loading from "./layouts/Loading";
 
@@ -22,6 +23,11 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
         contrasenaNueva: "",
         contrasenaRepetida: ""
     });
+
+    const confirmarEscape = () => {
+        setClose(false);
+        if (!error && !newPass && !repeatPass) navigate(-1);
+    };
 
     //Cancelar con tecla de escape
     useEffect(() => {
@@ -51,11 +57,6 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
             }, false);
         });
     }, []);
-
-    const confirmarEscape = () => {
-        setClose(false);
-        if (!error && !newPass && !repeatPass) navigate(-1);
-    };
 
     const generarContrasena = () => {
         const pass = GeneratePass();
@@ -172,166 +173,176 @@ export const CambiarContrasena = ({ userLog, setUserLog }) => {
                 <Close confirmar={confirmarEscape} title={'Contraseña'} gen={false} />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'CONTRASEÑA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        {/* Header de seguridad */}
-                        <div className="extend-header">
-                            <div className="security-icon">
-                                <i className="bi bi-key-fill"></i>
-                            </div>
-                            <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
-                                Contraseña
-                            </h2>
-                            <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
-                                Mantén tu cuenta segura con una contraseña fuerte
-                            </p>
-                        </div>
+            <Header userLog={userLog} title={'CONTRASEÑA'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <div className="form-card">
+                {/* Header de seguridad */}
+                <div className="extend-header">
+                    <div className="security-icon">
+                        <i className="bi bi-key-fill"></i>
+                    </div>
+                    <h2 className="m-0" style={{ fontSize: '24px', fontWeight: '700' }}>
+                        Contraseña
+                    </h2>
+                    <p className="m-0 mt-2 opacity-90" style={{ fontSize: '16px' }}>
+                        Mantén tu cuenta segura con una contraseña fuerte
+                    </p>
+                </div>
 
-                        <form onSubmit={handleSubmit} className="needs-validation" autoComplete="off" noValidate>
-                            <div className="form-body">
-                                {/* Contraseña actual */}
-                                <div className="modern-input-group">
-                                    <label htmlFor="contrasenaActual" className="modern-label text-start">
-                                        <i className="bi bi-lock me-2"></i>Contraseña Actual
-                                    </label>
-                                    <div className="password-input-container">
-                                        <input
-                                            type={showPasswordActual ? "text" : "password"}
-                                            id="contrasenaActual"
-                                            name="contrasenaActual"
-                                            className={`modern-input ${error ? 'error' : ''}`}
-                                            placeholder="Ingresa tu contraseña actual"
-                                            maxLength={30}
-                                            value={formData.contrasenaActual}
-                                            onChange={handleInputChange}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="password-toggle"
-                                            onClick={() => setShowPasswordActual(!showPasswordActual)}
-                                        >
-                                            {showPasswordActual ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                                        </button>
-                                    </div>
-                                    {error && (
-                                        <div className="error-message">
-                                            <i className="bi bi-exclamation-triangle-fill"></i>
-                                            {error}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Nueva contraseña */}
-                                <div className="modern-input-group">
-                                    <div className="d-flex align-items-center justify-content-between mb-2">
-                                        <label htmlFor="contrasenaNueva" className="modern-label m-0">
-                                            <i className="bi bi-key me-2"></i>Nueva Contraseña
-                                        </label>
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-success"
-                                            onClick={generarContrasena}
-                                            title="Generar contraseña segura"
-                                            style={{
-                                                borderRadius: '8px',
-                                                fontSize: '13px',
-                                                padding: '4px 12px',
-                                                fontWeight: '600'
-                                            }}
-                                        >
-                                            <i className="bi bi-key-fill me-1"></i>Generar
-                                        </button>
-                                    </div>
-                                    <div className="password-input-container">
-                                        <input
-                                            type={showPasswordNueva ? "text" : "password"}
-                                            id="contrasenaNueva"
-                                            name="contrasenaNueva"
-                                            className={`modern-input ${newPass ? 'error' : ''}`}
-                                            placeholder="Crea una contraseña segura"
-                                            value={formData.contrasenaNueva}
-                                            onChange={handleInputChange}
-                                            maxLength={30}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="password-toggle"
-                                            onClick={() => setShowPasswordNueva(!showPasswordNueva)}
-                                        >
-                                            {showPasswordNueva ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                                        </button>
-                                    </div>
-                                    {newPass && (
-                                        <div className="error-message">
-                                            <i className="bi bi-exclamation-triangle-fill"></i>
-                                            {newPass}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Confirmar contraseña */}
-                                <div className="modern-input-group">
-                                    <label htmlFor="contrasenaRepetida" className="modern-label text-start">
-                                        <i className="bi bi-check-circle me-2"></i>Confirmar Contraseña
-                                    </label>
-                                    <div className="password-input-container">
-                                        <input
-                                            type={showPasswordRepetir ? "text" : "password"}
-                                            id="contrasenaRepetida"
-                                            name="contrasenaRepetida"
-                                            className={`modern-input ${repeatPass ? 'error' : ''}`}
-                                            placeholder="Repite tu nueva contraseña"
-                                            value={formData.contrasenaRepetida}
-                                            onChange={handleInputChange}
-                                            maxLength={30}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="password-toggle"
-                                            onClick={() => setShowPasswordRepetir(!showPasswordRepetir)}
-                                        >
-                                            {showPasswordRepetir ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                                        </button>
-                                    </div>
-                                    {repeatPass && (
-                                        <div className="error-message">
-                                            <i className="bi bi-exclamation-triangle-fill"></i>
-                                            {repeatPass}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Requisitos de contraseña */}
-                                <div className="password-requirements">
-                                    <h4 style={{ color: '#92400e', fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
-                                        <i className="bi bi-info-circle-fill me-2"></i>Requisitos de Contraseña
-                                    </h4>
-                                    <div className="requirement-item">
-                                        <i className="bi bi-check-circle-fill" style={{ color: '#10b981' }}></i>
-                                        Mínimo 8 caracteres
-                                    </div>
-                                    <div className="requirement-item">
-                                        <i className="bi bi-check-circle-fill" style={{ color: '#10b981' }}></i>
-                                        Usa una combinación única de letras, números y símbolos
-                                    </div>
-                                    <div className="requirement-item">
-                                        <i className="bi bi-check-circle-fill" style={{ color: '#10b981' }}></i>
-                                        Evita información personal fácil de adivinar
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Form Actions */}
-                            <div className="div-report-button">
-                                <button type="submit" className="modern-button btn-primary">
-                                    <i className="bi bi-check-lg"></i>Guardar
+                <form onSubmit={handleSubmit} className="needs-validation" autoComplete="off" noValidate>
+                    <div className="form-body">
+                        {/* Contraseña actual */}
+                        <div className="modern-input-group">
+                            <label htmlFor="contrasenaActual" className="modern-label text-start">
+                                <i className="bi bi-lock me-2"></i>Contraseña Actual
+                            </label>
+                            <div className="password-input-container">
+                                <input
+                                    type={showPasswordActual ? "text" : "password"}
+                                    id="contrasenaActual"
+                                    name="contrasenaActual"
+                                    className="modern-input-edit"
+                                    placeholder="Ingresa tu contraseña actual"
+                                    maxLength={30}
+                                    value={formData.contrasenaActual}
+                                    onChange={handleInputChange}
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowPasswordActual(!showPasswordActual)}
+                                >
+                                    {showPasswordActual ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
                                 </button>
                             </div>
-                        </form>
+                            <div className="textSizeDesc">
+                                {formData.contrasenaActual?.length || 0}/30 caracteres
+                            </div>
+                            {error && (
+                                <div className="error-message">
+                                    <i className="bi bi-exclamation-triangle-fill"></i>
+                                    {error}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Nueva contraseña */}
+                        <div className="modern-input-group">
+                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                <label htmlFor="contrasenaNueva" className="modern-label m-0">
+                                    <i className="bi bi-key me-2"></i>Nueva Contraseña
+                                </label>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-success"
+                                    onClick={generarContrasena}
+                                    title="Generar contraseña segura"
+                                    style={{
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        padding: '4px 12px',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    <i className="bi bi-key-fill me-1"></i>Generar
+                                </button>
+                            </div>
+                            <div className="password-input-container">
+                                <input
+                                    type={showPasswordNueva ? "text" : "password"}
+                                    id="contrasenaNueva"
+                                    name="contrasenaNueva"
+                                    className="modern-input-edit"
+                                    placeholder="Crea una contraseña segura"
+                                    value={formData.contrasenaNueva}
+                                    onChange={handleInputChange}
+                                    maxLength={30}
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowPasswordNueva(!showPasswordNueva)}
+                                >
+                                    {showPasswordNueva ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
+                                </button>
+                            </div>
+                            <div className="textSizeDesc">
+                                {formData.contrasenaNueva?.length || 0}/30 caracteres
+                            </div>
+                            {newPass && (
+                                <div className="error-message">
+                                    <i className="bi bi-exclamation-triangle-fill"></i>
+                                    {newPass}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Confirmar contraseña */}
+                        <div className="modern-input-group">
+                            <label htmlFor="contrasenaRepetida" className="modern-label text-start">
+                                <i className="bi bi-check-circle me-2"></i>Confirmar Contraseña
+                            </label>
+                            <div className="password-input-container">
+                                <input
+                                    type={showPasswordRepetir ? "text" : "password"}
+                                    id="contrasenaRepetida"
+                                    name="contrasenaRepetida"
+                                    className="modern-input-edit"
+                                    placeholder="Repite tu nueva contraseña"
+                                    value={formData.contrasenaRepetida}
+                                    onChange={handleInputChange}
+                                    maxLength={30}
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowPasswordRepetir(!showPasswordRepetir)}
+                                >
+                                    {showPasswordRepetir ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
+                                </button>
+                            </div>
+                            <div className="textSizeDesc">
+                                {formData.contrasenaRepetida?.length || 0}/30 caracteres
+                            </div>
+                            {repeatPass && (
+                                <div className="error-message">
+                                    <i className="bi bi-exclamation-triangle-fill"></i>
+                                    {repeatPass}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Requisitos de contraseña */}
+                        <div className="password-requirements">
+                            <h4 style={{ color: '#92400e', fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
+                                <i className="bi bi-info-circle-fill me-2"></i>Requisitos de Contraseña
+                            </h4>
+                            <div className="requirement-item">
+                                <i className="bi bi-check-circle-fill" style={{ color: '#10b981' }}></i>
+                                Mínimo 8 caracteres
+                            </div>
+                            <div className="requirement-item">
+                                <i className="bi bi-check-circle-fill" style={{ color: '#10b981' }}></i>
+                                Usa una combinación única de letras, números y símbolos
+                            </div>
+                            <div className="requirement-item">
+                                <i className="bi bi-check-circle-fill" style={{ color: '#10b981' }}></i>
+                                Evita información personal fácil de adivinar
+                            </div>
+                        </div>
                     </div>
-                </div>
+
+                    {/* Form Actions */}
+                    <div className="div-report-button">
+                        <button type="submit" className="modern-button btn-primary">
+                            <i className="bi bi-check-lg"></i>Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
         </>
     );
