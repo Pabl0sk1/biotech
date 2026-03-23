@@ -3,11 +3,10 @@ import { getShift, saveShift, updateShift, deleteShift } from '../services/turno
 import { getSchedule } from '../services/tipoturno.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from "../FiltroModal.jsx";
-import { HourFormat } from '../utils/DateHourFormat.js';
-import { ListControls } from '../ListControls.jsx';
 import Header from '../Header.jsx';
 import SmartModal from '../ModernModal.jsx';
+import SmartTable from '../ModernTable.jsx';
+import Sidebar from '../Sidebar.jsx';
 import Loading from '../layouts/Loading.jsx';
 import Delete from '../layouts/Delete.jsx';
 
@@ -18,13 +17,11 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [turnoAGuardar, setTurnoAGuardar] = useState(null);
-    const [turnoAEliminar, setTurnoAEliminar] = useState(null);
-    const [turnoAVisualizar, setTurnoAVisualizar] = useState(null);
+    const [rowAGuardar, setRowAGuardar] = useState(null);
+    const [rowAEliminar, setRowAEliminar] = useState(null);
+    const [rowAVisualizar, setRowAVisualizar] = useState(null);
     const [detalleNoEliminar, setDetalleNoEliminar] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
-    const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
         page: 0,
         size: 10,
@@ -38,9 +35,9 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
                 if (detalleNoEliminar) {
                     setDetalleNoEliminar(false);
                 } else {
-                    setTurnoAEliminar(null);
-                    setTurnoAVisualizar(null);
-                    setTurnoAGuardar(null);
+                    setRowAEliminar(null);
+                    setRowAVisualizar(null);
+                    setRowAGuardar(null);
                 }
             }
         };
@@ -81,6 +78,16 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
         thoras: { type: "number", label: "Total de horas semanales" },
         extporcen: { type: "number", label: "Porcentaje" },
     };
+    const columnSettings = {
+        id: { label: "#", type: "number", default: true },
+        descripcion: { label: "Descripción", type: "string", classname: "text-start", default: true },
+        tipoturno: { label: "Modalidad", type: "string", field: "tipoturno.tipo", classname: "text-start", default: true },
+        horaent: { label: "Horarío de entrada", type: "time", default: true },
+        horasal: { label: "Horarío de salida", type: "time", default: true },
+        horades: { label: "Tiempo de descanso", type: "time" },
+        thoras: { label: "Total de horas semanales", type: "number" },
+        extporcen: { label: "Porcentaje", type: "number" }
+    };
 
     const recuperarTurnos = () => {
         setQuery(q => ({ ...q }));
@@ -112,7 +119,7 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
         recuperarModalidades();
     }, []);
 
-    const eliminarTurnoFn = async (id) => {
+    const eliminarFn = async (id) => {
         setLoading(true);
         await deleteShift(id);
         await AddAccess('Eliminar', id, userLog, "Turnos");
@@ -121,67 +128,25 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarTurnoFn(id);
-        setTurnoAEliminar(null);
+        eliminarFn(id);
+        setRowAEliminar(null);
     }
-
-    const handleEliminarTurno = async (turno) => {
-        setTurnoAEliminar(turno);
-    };
 
     const guardarFn = async (formData) => {
         setLoading(true);
 
-        const turnoAGuardar = { ...formData };
+        const rowAGuardar = { ...formData };
 
-        if (turnoAGuardar.id) {
-            await updateShift(turnoAGuardar.id, turnoAGuardar);
-            await AddAccess('Modificar', turnoAGuardar.id, userLog, "Turnos");
+        if (rowAGuardar.id) {
+            await updateShift(rowAGuardar.id, rowAGuardar);
+            await AddAccess('Modificar', rowAGuardar.id, userLog, "Turnos");
         } else {
-            const nuevaTurno = await saveShift(turnoAGuardar);
+            const nuevaTurno = await saveShift(rowAGuardar);
             await AddAccess('Insertar', nuevaTurno.saved.id, userLog, "Turnos");
         }
         recuperarTurnos();
         setLoading(false);
-        setTurnoAGuardar(null);
-    };
-
-    const toggleOrder = (field) => {
-        const [currentField, dir] = query.order.split(",");
-        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
-
-        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
-    };
-
-    const getSortIcon = (field) => {
-        const [currentField, direction] = query.order.split(",");
-
-        if (currentField !== field) return "bi-chevron-expand";
-
-        return direction === "asc"
-            ? "bi-chevron-up"
-            : "bi-chevron-down";
-    };
-
-    const generarFiltro = (f) => {
-        if (!f.op) {
-            setFiltroActivo({ ...filtroActivo, op: "eq" })
-            f = ({ ...f, op: "eq" })
-        }
-
-        const field = f.field.trim();
-        const op = f.op.trim();
-        let filtro = "";
-
-        if (op === "between") {
-            if (!f.value1 || !f.value2) return null;
-            filtro = `${field}:between:${f.value1}..${f.value2}`;
-        } else {
-            if (!f.value) return null;
-            filtro = `${field}:${op}:${f.value}`;
-        }
-
-        return filtro;
+        setRowAGuardar(null);
     };
 
     const handleSubmit = (formData) => {
@@ -190,11 +155,20 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
 
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
-        setFiltrosAplicados({});
-    }
+    };
 
-    const rows = [...turnos];
-    while (rows.length < query.size) rows.push(null);
+    const handleView = async (row) => {
+        await AddAccess('Visualizar', row.id, userLog, "Turnos");
+        setRowAVisualizar(row);
+    };
+
+    const handleEdit = (row) => {
+        setRowAGuardar(row);
+    };
+
+    const handleDelete = async (row) => {
+        setRowAEliminar(row);
+    };
 
     return (
         <>
@@ -202,210 +176,60 @@ export const TurnoApp = ({ userLog, setUserLog }) => {
             {loading && (
                 <Loading />
             )}
-            {turnoAEliminar && (
-                <Delete setEliminar={setTurnoAEliminar} title={'turno'} gen={true} confirmar={confirmarEliminacion} id={turnoAEliminar.id} />
+            {rowAEliminar && (
+                <Delete setEliminar={setRowAEliminar} title={'turno'} gen={true} confirmar={confirmarEliminacion} id={rowAEliminar.id} />
             )}
-
-            {turnoAVisualizar && (
+            {rowAVisualizar && (
                 <SmartModal
-                    open={!!turnoAVisualizar}
-                    onClose={() => setTurnoAVisualizar(null)}
+                    open={!!rowAVisualizar}
+                    onClose={() => setRowAVisualizar(null)}
                     title="Turno"
-                    data={turnoAVisualizar}
+                    data={rowAVisualizar}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
             )}
-
-            {turnoAGuardar && (
+            {rowAGuardar && (
                 <SmartModal
-                    open={!!turnoAGuardar}
-                    onClose={() => setTurnoAGuardar(null)}
+                    open={!!rowAGuardar}
+                    onClose={() => setRowAGuardar(null)}
                     title="Turno"
-                    data={turnoAGuardar}
+                    data={rowAGuardar}
                     onSave={handleSubmit}
-                    mode={turnoAGuardar.id ? 'edit' : 'create'}
+                    mode={rowAGuardar.id ? 'edit' : 'create'}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'TURNOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Turnos
-                        </p>
-                        <div className="p-3">
-                            <FiltroModal
-                                filtroActivo={filtroActivo}
-                                setFiltroActivo={setFiltroActivo}
-                                setQuery={setQuery}
-                                setFiltrosAplicados={setFiltrosAplicados}
-                                generarFiltro={generarFiltro}
-                            />
-                            <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-success'>
-                                    <tr>
-                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
-                                            #
-                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["id"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "id",
-                                                        type: "number",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("descripcion")} className="sortable-header">
-                                            Descripción
-                                            <i className={`bi ${getSortIcon("descripcion")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["descripcion"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "descripcion",
-                                                        type: "string",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("tipoturno.tipo")} className="sortable-header">
-                                            Modalidad
-                                            <i className={`bi ${getSortIcon("tipoturno.tipo")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["tipoturno.tipo"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "tipoturno.tipo",
-                                                        type: "string",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th>Horarío de Entrada</th>
-                                        <th>Horarío de Salida</th>
-                                        <th>Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {turnos.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="5" className="text-center py-3 text-muted fs-3 fw-bold">
-                                                No hay registros
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        rows.filter(v => v).map((v, index) => {
-                                            const puedeEditar = permiso?.puedeeditar;
-                                            const puedeEliminar = permiso?.puedeeliminar;
-                                            const puedeVer = permiso?.puedever;
-                                            return (
-                                                <tr
-                                                    className="text-center align-middle"
-                                                    key={v ? v.id : `empty-${index}`}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (puedeEditar) setTurnoAGuardar(v);
-                                                    }}
-                                                    style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
-                                                >
-                                                    <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.descripcion}</td>
-                                                    <td className='text-start'>{v.tipoturno.tipo}</td>
-                                                    <td>{HourFormat(v.horaent)}</td>
-                                                    <td>{HourFormat(v.horasal)}</td>
-                                                    <td style={{ width: '100px' }}>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarTurno(v);
-                                                            }}
-                                                            className="btn border-0 me-2 p-0"
-                                                            style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
-                                                        >
-                                                            <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
-                                                        </button>
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Turnos");
-                                                                    setTurnoAVisualizar(v);
-                                                                }
-                                                            }}
-                                                            className="btn border-0 ms-2 p-0"
-                                                            style={{ cursor: puedeVer ? 'pointer' : 'default' }}
-                                                        >
-                                                            <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        <ListControls
-                            query={query}
-                            setQuery={setQuery}
-                            totalPages={totalPages}
-                            totalItems={totalItems}
-                            onAdd={() => setTurnoAGuardar(selected)}
-                            onRefresh={refrescar}
-                            canAdd={permiso?.puedeagregar}
-                            canImport={permiso?.puedeimportar}
-                            showErpButton={false}
-                            showAddButton={true}
-                            addData={selected}
-                        />
-                    </div>
-                </div>
-            </div>
+            <Header userLog={userLog} title={'TURNOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <SmartTable
+                data={turnos}
+                userLog={userLog}
+                query={query}
+                setQuery={setQuery}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                onAdd={() => setRowAGuardar(selected)}
+                onRefresh={refrescar}
+                onErpImport={() => null}
+                canAdd={permiso?.puedeagregar}
+                canImport={permiso?.puedeimportar}
+                showErpButton={false}
+                showAddButton={true}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                canEdit={permiso?.puedeeditar}
+                canDelete={permiso?.puedeeliminar}
+                canView={permiso?.puedever}
+                columnSettings={columnSettings}
+            />
         </>
     );
 }

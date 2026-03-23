@@ -5,12 +5,11 @@ import { getProductGroup } from '../services/grupoproducto.service.js';
 import { getProduct } from '../services/producto.service.js';
 import { getPermission } from '../services/permiso.service.js';
 import { AddAccess } from "../utils/AddAccess.js";
-import { FiltroModal } from '../FiltroModal.jsx';
-import { ListControls } from '../ListControls.jsx';
 import Header from '../Header.jsx';
 import SmartModal from '../ModernModal.jsx';
+import SmartTable from '../ModernTable.jsx';
+import Sidebar from '../Sidebar.jsx';
 import Loading from '../layouts/Loading.jsx';
-import NotDelete from '../layouts/NotDelete.jsx';
 import Delete from '../layouts/Delete.jsx';
 import ImportErp from '../layouts/ImportErp.jsx';
 
@@ -24,14 +23,11 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [comisionAGuardar, setComisionAGuardar] = useState(null);
-    const [comisionAEliminar, setComisionAEliminar] = useState(null);
-    const [comisionNoEliminar, setComisionNoEliminar] = useState(null);
-    const [comisionAVisualizar, setComisionAVisualizar] = useState(null);
-    const [comisionErp, setComisionErp] = useState(null);
+    const [rowAGuardar, setRowAGuardar] = useState(null);
+    const [rowAEliminar, setRowAEliminar] = useState(null);
+    const [rowAVisualizar, setRowAVisualizar] = useState(null);
+    const [rowErp, setRowErp] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [filtroActivo, setFiltroActivo] = useState({ visible: false });
-    const [filtrosAplicados, setFiltrosAplicados] = useState({});
     const [query, setQuery] = useState({
         page: 0,
         size: 10,
@@ -42,11 +38,10 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setComisionAEliminar(null);
-                setComisionNoEliminar(null);
-                setComisionAVisualizar(null);
-                setComisionAGuardar(null);
-                setComisionErp(null);
+                setRowAEliminar(null);
+                setRowAVisualizar(null);
+                setRowAGuardar(null);
+                setRowErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -116,6 +111,16 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
         porcentaje: { type: "number", notnull: true },
         erpid: { hidden: userLog?.id !== 1, type: "number", label: "ERPID" }
     };
+    const columnSettings = {
+        id: { label: "#", type: "number", default: true },
+        entidad: { label: "Entidad", type: "string", field: "entidad.nomape", classname: "text-start", default: true },
+        grupoproducto: { label: "Grupo de Producto", type: "string", field: "grupoproducto.grupoproducto", classname: "text-start" },
+        subgrupoproducto: { label: "Subgrupo de Producto", type: "string", field: "subgrupoproducto.subgrupoproducto", classname: "text-start" },
+        producto: { label: "Producto", type: "string", field: "producto.nombrecomercial.nombrecomercial", classname: "text-start" },
+        basecalculo: { label: "Base de Cálculo", type: "string", classname: "text-start", default: true },
+        porcentaje: { label: "Porcentaje", type: "number" },
+        erpid: { label: "ERPID", type: "number", classname: "text-end", hidden: userLog?.id !== 1 }
+    };
 
     const recuperarComisiones = () => {
         setQuery(q => ({ ...q }));
@@ -165,7 +170,7 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
         recuperarProductos();
     }, []);
 
-    const eliminarComisionFn = async (id) => {
+    const eliminarFn = async (id) => {
         setLoading(true);
         await deleteCommission(id);
         await AddAccess('Eliminar', id, userLog, "Comisiones");
@@ -174,20 +179,15 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarComisionFn(id);
-        setComisionAEliminar(null);
+        eliminarFn(id);
+        setRowAEliminar(null);
     }
-
-    const handleEliminarComision = async (comision) => {
-        // const rel = await getCommission('', '', '', `:eq:${comision.id}`);
-        // if (rel.items.length > 0) setComisionNoEliminar(comision);
-        setComisionAEliminar(comision);
-    };
 
     const importarDatosERP = async () => {
         setLoading(true);
-        setComisionErp(null);
+        setRowErp(null);
         await updateErpCommission();
+        await AddAccess('Importar', 0, userLog, "Comisiones");
         recuperarComisiones();
         setLoading(false);
     }
@@ -195,56 +195,18 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
     const guardarFn = async (formData) => {
         setLoading(true);
 
-        const comisionAGuardar = { ...formData };
+        const rowAGuardar = { ...formData };
 
-        if (comisionAGuardar.id) {
-            await updateCommission(comisionAGuardar.id, comisionAGuardar);
-            await AddAccess('Modificar', comisionAGuardar.id, userLog, "Comisiones");
+        if (rowAGuardar.id) {
+            await updateCommission(rowAGuardar.id, rowAGuardar);
+            await AddAccess('Modificar', rowAGuardar.id, userLog, "Comisiones");
         } else {
-            const nuevoComision = await saveCommission(comisionAGuardar);
+            const nuevoComision = await saveCommission(rowAGuardar);
             await AddAccess('Insertar', nuevoComision.saved.id, userLog, "Comisiones");
         }
         recuperarComisiones();
         setLoading(false);
-        setComisionAGuardar(null);
-    };
-
-    const toggleOrder = (field) => {
-        const [currentField, dir] = query.order.split(",");
-        const newDir = (currentField === field && dir === "asc") ? "desc" : "asc";
-
-        setQuery(q => ({ ...q, order: `${field},${newDir}` }));
-    };
-
-    const getSortIcon = (field) => {
-        const [currentField, direction] = query.order.split(",");
-
-        if (currentField !== field) return "bi-chevron-expand";
-
-        return direction === "asc"
-            ? "bi-chevron-up"
-            : "bi-chevron-down";
-    };
-
-    const generarFiltro = (f) => {
-        if (!f.op) {
-            setFiltroActivo({ ...filtroActivo, op: "eq" })
-            f = ({ ...f, op: "eq" })
-        }
-
-        const field = f.field.trim();
-        const op = f.op.trim();
-        let filtro = "";
-
-        if (op === "between") {
-            if (!f.value1 || !f.value2) return null;
-            filtro = `${field}:between:${f.value1}..${f.value2}`;
-        } else {
-            if (!f.value) return null;
-            filtro = `${field}:${op}:${f.value}`;
-        }
-
-        return filtro;
+        setRowAGuardar(null);
     };
 
     const handleSubmit = (formData) => {
@@ -253,11 +215,20 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
 
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
-        setFiltrosAplicados({});
     };
 
-    const rows = [...comisiones];
-    while (rows.length < query.size) rows.push(null);
+    const handleView = async (row) => {
+        await AddAccess('Visualizar', row.id, userLog, "Comisiones");
+        setRowAVisualizar(row);
+    };
+
+    const handleEdit = (row) => {
+        setRowAGuardar(row);
+    };
+
+    const handleDelete = async (row) => {
+        setRowAEliminar(row);
+    };
 
     return (
         <>
@@ -265,240 +236,63 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
             {loading && (
                 <Loading />
             )}
-            {comisionErp && (
-                <ImportErp setErp={setComisionErp} title={'comisiones'} fun={importarDatosERP} />
+            {rowErp && (
+                <ImportErp setErp={setRowErp} title={'comisiones'} fun={importarDatosERP} />
             )}
-            {comisionAEliminar && (
-                <Delete setEliminar={setComisionAEliminar} title={'comision'} gen={true} confirmar={confirmarEliminacion} id={comisionAEliminar.id} />
+            {rowAEliminar && (
+                <Delete setEliminar={setRowAEliminar} title={'comision'} gen={true} confirmar={confirmarEliminacion} id={rowAEliminar.id} />
             )}
-            {comisionNoEliminar && (
-                <NotDelete setNoEliminar={setComisionNoEliminar} title={'comision'} gen={true} />
-            )}
-
-            {comisionAVisualizar && (
+            {rowAVisualizar && (
                 <SmartModal
-                    open={!!comisionAVisualizar}
-                    onClose={() => setComisionAVisualizar(null)}
+                    open={!!rowAVisualizar}
+                    onClose={() => setRowAVisualizar(null)}
                     title="Comisión"
-                    data={comisionAVisualizar}
+                    data={rowAVisualizar}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
             )}
-
-            {comisionAGuardar && (
+            {rowAGuardar && (
                 <SmartModal
-                    open={!!comisionAGuardar}
-                    onClose={() => setComisionAGuardar(null)}
+                    open={!!rowAGuardar}
+                    onClose={() => setRowAGuardar(null)}
                     title="Comisión"
-                    data={comisionAGuardar}
+                    data={rowAGuardar}
                     onSave={handleSubmit}
-                    mode={comisionAGuardar.id ? 'edit' : 'create'}
+                    mode={rowAGuardar.id ? 'edit' : 'create'}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
             )}
 
-            <div className="modern-container colorPrimario">
-                <Header userLog={userLog} title={'COMISIONES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
-                <div className="container-fluid p-4 mt-2">
-                    <div className="form-card mt-5">
-                        <p className="extend-header text-black border-bottom border-2 border-black pb-2 pt-2 m-0 ps-3 text-start user-select-none h5">
-                            <i className="bi bi-search me-2 fs-5"></i>Listado de Comisiones
-                        </p>
-                        <div className="p-3">
-                            <FiltroModal
-                                filtroActivo={filtroActivo}
-                                setFiltroActivo={setFiltroActivo}
-                                setQuery={setQuery}
-                                setFiltrosAplicados={setFiltrosAplicados}
-                                generarFiltro={generarFiltro}
-                            />
-                            <table className='table table-bordered table-sm table-hover m-0 border-secondary-subtle'>
-                                <thead className='table-success'>
-                                    <tr>
-                                        <th onClick={() => toggleOrder("id")} className="sortable-header">
-                                            #
-                                            <i className={`bi ${getSortIcon("id")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["id"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "id",
-                                                        type: "number",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("entidad.nomape")} className="sortable-header">
-                                            Entidad
-                                            <i className={`bi ${getSortIcon("entidad.nomape")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["entidad.nomape"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "entidad.nomape",
-                                                        type: "string",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("basecalculo")} className="sortable-header">
-                                            Base
-                                            <i className={`bi ${getSortIcon("basecalculo")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["basecalculo"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "basecalculo",
-                                                        type: "string",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th onClick={() => toggleOrder("porcentaje")} className="sortable-header">
-                                            Porcentaje
-                                            <i className={`bi ${getSortIcon("porcentaje")} ms-2`}></i>
-                                            <i
-                                                className="bi bi-funnel-fill btn btn-primary p-0 px-2 border-0 ms-2"
-                                                style={{ cursor: "pointer" }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const previo = filtrosAplicados["porcentaje"] ?? {};
-                                                    setFiltroActivo({
-                                                        field: "porcentaje",
-                                                        type: "number",
-                                                        visible: true,
-                                                        op: previo.op,
-                                                        value: previo.value,
-                                                        value1: previo.value1,
-                                                        value2: previo.value2,
-                                                        coords: {
-                                                            top: rect.bottom + 5,
-                                                            left: rect.left
-                                                        }
-                                                    });
-                                                }}
-                                            ></i>
-                                        </th>
-                                        <th>Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {comisiones.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="5" className="text-center py-3 text-muted fs-3 fw-bold">
-                                                No hay registros
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        rows.filter(v => v).map((v, index) => {
-                                            const puedeEditar = permiso?.puedeeditar;
-                                            const puedeEliminar = permiso?.puedeeliminar;
-                                            const puedeVer = permiso?.puedever;
-                                            return (
-                                                <tr
-                                                    className="text-center align-middle"
-                                                    key={v ? v.id : `empty-${index}`}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (puedeEditar) setComisionAGuardar(v);
-                                                    }}
-                                                    style={{ cursor: puedeEditar ? 'pointer' : 'default' }}
-                                                >
-                                                    <td style={{ width: '120px' }}>{v.id}</td>
-                                                    <td className='text-start'>{v.entidad.nomape}</td>
-                                                    <td className='text-start'>{v.basecalculo}</td>
-                                                    <td className='text-start'>{v.porcentaje}</td>
-                                                    <td style={{ width: '100px' }}>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (puedeEliminar) handleEliminarComision(v);
-                                                            }}
-                                                            className="btn border-0 me-2 p-0"
-                                                            style={{ cursor: puedeEliminar ? 'pointer' : 'default' }}
-                                                        >
-                                                            <i className={`bi bi-trash-fill ${puedeEliminar ? 'text-danger' : 'text-danger-emphasis'}`}></i>
-                                                        </button>
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                if (puedeVer) {
-                                                                    await AddAccess('Visualizar', v.id, userLog, "Comisiones");
-                                                                    setComisionAVisualizar(v);
-                                                                }
-                                                            }}
-                                                            className="btn border-0 ms-2 p-0"
-                                                            style={{ cursor: puedeVer ? 'pointer' : 'default' }}
-                                                        >
-                                                            <i className={`bi bi-eye-fill ${puedeVer ? 'text-primary' : 'text-primary-emphasis'}`}></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        <ListControls
-                            query={query}
-                            setQuery={setQuery}
-                            totalPages={totalPages}
-                            totalItems={totalItems}
-                            onAdd={() => setComisionAGuardar(selected)}
-                            onRefresh={refrescar}
-                            onErpImport={() => setComisionErp(true)}
-                            canAdd={permiso?.puedeagregar}
-                            canImport={permiso?.puedeimportar}
-                            showErpButton={true}
-                            showAddButton={true}
-                            addData={selected}
-                        />
-                    </div>
-                </div>
-            </div>
+            <Header userLog={userLog} title={'COMISIONES'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
+            <Sidebar
+                userLog={userLog}
+                setUserLog={setUserLog}
+                isSidebarVisible={true}
+            />
+            <SmartTable
+                data={comisiones}
+                userLog={userLog}
+                query={query}
+                setQuery={setQuery}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                onAdd={() => setRowAGuardar(selected)}
+                onRefresh={refrescar}
+                onErpImport={() => setRowErp(true)}
+                canAdd={permiso?.puedeagregar}
+                canImport={permiso?.puedeimportar}
+                showErpButton={true}
+                showAddButton={true}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                canEdit={permiso?.puedeeditar}
+                canDelete={permiso?.puedeeliminar}
+                canView={permiso?.puedever}
+                columnSettings={columnSettings}
+            />
         </>
     );
 };
