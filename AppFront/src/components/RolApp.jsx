@@ -61,19 +61,28 @@ export const RolApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc03`);
-        setPermiso(response.items[0]);
-    }
-
     useEffect(() => {
         const load = async () => {
-            const filtrosFinal = query.filter.join(";");
-            const response = await getRole(query.page, query.size, query.order, filtrosFinal);
-            setRoles(response.items);
-            setTotalPages(response.totalPages);
-            setTotalItems(response.totalItems);
-            permisoUsuario();
+            setLoading(true);
+
+            try {
+                const filtrosFinal = query.filter.join(";");
+
+                const [response, permission] = await Promise.all([
+                    getRole(query.page, query.size, query.order, filtrosFinal),
+                    getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:sc03`)
+                ]);
+
+                setRoles(response.items);
+                setTotalPages(response.totalPages);
+                setTotalItems(response.totalItems);
+                setPermiso(permission.items[0]);
+
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
         };
         load();
     }, [query]);

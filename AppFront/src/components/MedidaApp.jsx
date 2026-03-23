@@ -70,19 +70,28 @@ export const MedidaApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:pr02`);
-        setPermiso(response.items[0]);
-    }
-
     useEffect(() => {
         const load = async () => {
-            const filtrosFinal = query.filter.join(";");
-            const response = await getMeasure(query.page, query.size, query.order, filtrosFinal);
-            setMedidas(response.items);
-            setTotalPages(response.totalPages);
-            setTotalItems(response.totalItems);
-            permisoUsuario();
+            setLoading(true);
+
+            try {
+                const filtrosFinal = query.filter.join(";");
+
+                const [response, permission] = await Promise.all([
+                    getMeasure(query.page, query.size, query.order, filtrosFinal),
+                    getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:pr02`)
+                ]);
+
+                setMedidas(response.items);
+                setTotalPages(response.totalPages);
+                setTotalItems(response.totalItems);
+                setPermiso(permission.items[0]);
+
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
         };
         load();
     }, [query]);

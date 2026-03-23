@@ -146,19 +146,28 @@ export const ComisionApp = ({ userLog, setUserLog }) => {
         setProductos(response.items);
     }
 
-    const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:cm04`);
-        setPermiso(response.items[0]);
-    }
-
     useEffect(() => {
         const load = async () => {
-            const filtrosFinal = query.filter.join(";");
-            const response = await getCommission(query.page, query.size, query.order, filtrosFinal);
-            setComisiones(response.items);
-            setTotalPages(response.totalPages);
-            setTotalItems(response.totalItems);
-            permisoUsuario();
+            setLoading(true);
+
+            try {
+                const filtrosFinal = query.filter.join(";");
+
+                const [response, permission] = await Promise.all([
+                    getCommission(query.page, query.size, query.order, filtrosFinal),
+                    getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:cm04`)
+                ]);
+
+                setComisiones(response.items);
+                setTotalPages(response.totalPages);
+                setTotalItems(response.totalItems);
+                setPermiso(permission.items[0]);
+
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
         };
         load();
     }, [query]);

@@ -67,19 +67,28 @@ export const CargoApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q }));
     }
 
-    const permisoUsuario = async () => {
-        const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh01`);
-        setPermiso(response.items[0]);
-    }
-
     useEffect(() => {
         const load = async () => {
-            const filtrosFinal = query.filter.join(";");
-            const response = await getPosition(query.page, query.size, query.order, filtrosFinal);
-            setCargos(response.items);
-            setTotalPages(response.totalPages);
-            setTotalItems(response.totalItems);
-            permisoUsuario();
+            setLoading(true);
+
+            try {
+                const filtrosFinal = query.filter.join(";");
+
+                const [response, permission] = await Promise.all([
+                    getPosition(query.page, query.size, query.order, filtrosFinal),
+                    getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:rh01`)
+                ]);
+
+                setCargos(response.items);
+                setTotalPages(response.totalPages);
+                setTotalItems(response.totalItems);
+                setPermiso(permission.items[0]);
+
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
         };
         load();
     }, [query]);
