@@ -19,8 +19,8 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [horaextraAGuardar, setHoraExtraAGuardar] = useState(null);
-    const [horaextraAEliminar, setHoraExtraAEliminar] = useState(null);
+    const [rowAGuardar, setRowAGuardar] = useState(null);
+    const [rowAEliminar, setRowAEliminar] = useState(null);
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState({
         page: 0,
@@ -32,8 +32,8 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setHoraExtraAEliminar(null);
-                setHoraExtraAGuardar(null);
+                setRowAEliminar(null);
+                setRowAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -96,7 +96,7 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
         cargarTipo();
     }, []);
 
-    const eliminarHoraExtraFn = async (id) => {
+    const eliminarFn = async (id) => {
         setLoading(true);
         await deleteReportData(id);
         await deleteReport(id);
@@ -106,12 +106,12 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarHoraExtraFn(id);
-        setHoraExtraAEliminar(null);
+        eliminarFn(id);
+        setRowAEliminar(null);
     }
 
     const guardarFn = async (datos, modoEdicion) => {
-        setHoraExtraAGuardar(null);
+        setRowAGuardar(null);
         if (datos?.id) navigate(`/home/main/rrhh/calcext/${datos.id}`, {
             state: { datos, modoEdicion }
         });
@@ -125,17 +125,17 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleViewHoraExtra = async (horaextra) => {
-        await AddAccess('Visualizar', horaextra.id, userLog, "Horas Extras");
-        guardarFn(horaextra);
+    const handleView = async (row) => {
+        await AddAccess('Visualizar', row.id, userLog, "Horas Extras");
+        guardarFn(row);
     };
 
-    const handleEditHoraExtra = (horaextra) => {
-        guardarFn(horaextra, true);
+    const handleEdit = (row) => {
+        guardarFn(row, true);
     };
 
-    const handleDeleteHoraExtra = (horaextra) => {
-        setHoraExtraAEliminar(horaextra);
+    const handleDelete = (row) => {
+        setRowAEliminar(row);
     };
 
     return (
@@ -144,11 +144,11 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
             {loading && (
                 <Loading />
             )}
-            {horaextraAEliminar && (
-                <Delete setEliminar={setHoraExtraAEliminar} title={'hora extra'} gen={false} confirmar={confirmarEliminacion} id={horaextraAEliminar.id} />
+            {rowAEliminar && (
+                <Delete setEliminar={setRowAEliminar} title={'hora extra'} gen={false} confirmar={confirmarEliminacion} id={rowAEliminar.id} />
             )}
-            {horaextraAGuardar && (
-                <SaveModal setGuardar={setHoraExtraAGuardar} title={'hora extra'} gen={false} fun={guardarFn} />
+            {rowAGuardar && (
+                <SaveModal setGuardar={setRowAGuardar} title={'hora extra'} gen={false} fun={guardarFn} />
             )}
 
             <Header userLog={userLog} title={'HORAS EXTRAS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
@@ -165,16 +165,16 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
                 setQuery={setQuery}
                 totalPages={totalPages}
                 totalItems={totalItems}
-                onAdd={() => setHoraExtraAGuardar(selected)}
+                onAdd={() => setRowAGuardar(selected)}
                 onRefresh={refrescar}
                 onErpImport={() => null}
                 canAdd={permiso?.puedeagregar}
                 canImport={null}
                 showErpButton={false}
                 showAddButton={true}
-                onEdit={handleEditHoraExtra}
-                onDelete={handleDeleteHoraExtra}
-                onView={handleViewHoraExtra}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
                 canEdit={permiso?.puedeeditar}
                 canDelete={permiso?.puedeeliminar}
                 canView={permiso?.puedever}

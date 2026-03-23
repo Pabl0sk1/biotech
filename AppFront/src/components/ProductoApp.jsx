@@ -25,15 +25,14 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
     const [principioactivos, setPrincipioActivos] = useState([]);
     const [fasecultivos, setFaseCultivos] = useState([]);
     const [clases, setClases] = useState([]);
-    const [comisiones, setComisiones] = useState([]);
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [productoAGuardar, setProductoAGuardar] = useState(null);
-    const [productoAEliminar, setProductoAEliminar] = useState(null);
-    const [productoNoEliminar, setProductoNoEliminar] = useState(null);
-    const [productoAVisualizar, setProductoAVisualizar] = useState(null);
-    const [productoErp, setProductoErp] = useState(null);
+    const [rowAGuardar, setRowAGuardar] = useState(null);
+    const [rowAEliminar, setRowAEliminar] = useState(null);
+    const [rowNoEliminar, setRowNoEliminar] = useState(null);
+    const [rowAVisualizar, setRowAVisualizar] = useState(null);
+    const [rowErp, setRowErp] = useState(null);
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState({
         page: 0,
@@ -45,11 +44,11 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setProductoAEliminar(null);
-                setProductoNoEliminar(null);
-                setProductoAVisualizar(null);
-                setProductoAGuardar(null);
-                setProductoErp(null);
+                setRowAEliminar(null);
+                setRowNoEliminar(null);
+                setRowAVisualizar(null);
+                setRowAGuardar(null);
+                setRowErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -198,11 +197,6 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
         setClases(response.items);
     }
 
-    const recuperarComisiones = async () => {
-        const response = await getCommission();
-        setComisiones(response.items);
-    }
-
     const permisoUsuario = async () => {
         const response = await getPermission('', '', '', `tipousuario.id:eq:${userLog?.tipousuario?.id};modulo.var:eq:ca02`);
         setPermiso(response.items[0]);
@@ -226,10 +220,9 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
         recuperarPrincipioActivos();
         recuperarFaseCultivos();
         recuperarClases();
-        recuperarComisiones();
     }, []);
 
-    const eliminarProductoFn = async (id) => {
+    const eliminarFn = async (id) => {
         setLoading(true);
         await deleteProduct(id);
         await AddAccess('Eliminar', id, userLog, "Productos");
@@ -238,13 +231,13 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarProductoFn(id);
-        setProductoAEliminar(null);
+        eliminarFn(id);
+        setRowAEliminar(null);
     }
 
     const importarDatosERP = async () => {
         setLoading(true);
-        setProductoErp(null);
+        setRowErp(null);
         await updateErpProduct();
         await AddAccess('Importar', 0, userLog, "Productos");
         recuperarProductos();
@@ -252,7 +245,7 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
     }
 
     const guardarFn = async (formData) => {
-        setProductoAGuardar(null);
+        setRowAGuardar(null);
         setLoading(true);
 
         let activo = true;
@@ -272,7 +265,7 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
         }
         recuperarProductos();
         setLoading(false);
-        setProductoAGuardar(null);
+        setRowAGuardar(null);
     };
 
     const handleSubmit = (formData) => {
@@ -285,19 +278,19 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
 
     const handleViewProducto = async (producto) => {
         await AddAccess('Visualizar', producto.id, userLog, "Productos");
-        setProductoAVisualizar(producto);
+        setRowAVisualizar(producto);
     };
 
     const handleEditProducto = (producto) => {
-        setProductoAGuardar(producto);
+        setRowAGuardar(producto);
     };
 
     const handleDeleteProducto = async (producto) => {
         const rel = await getCommission('', '', '', `producto.id:eq:${producto.id}`);
         if (rel.items.length > 0) {
-            setProductoNoEliminar(producto);
+            setRowNoEliminar(producto);
         } else {
-            setProductoAEliminar(producto);
+            setRowAEliminar(producto);
         }
     };
 
@@ -307,33 +300,33 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
             {loading && (
                 <Loading />
             )}
-            {productoErp && (
-                <ImportErp setErp={setProductoErp} title={'productos'} fun={importarDatosERP} />
+            {rowErp && (
+                <ImportErp setErp={setRowErp} title={'productos'} fun={importarDatosERP} />
             )}
-            {productoAEliminar && (
-                <Delete setEliminar={setProductoAEliminar} title={'producto'} gen={true} confirmar={confirmarEliminacion} id={productoAEliminar.id} />
+            {rowAEliminar && (
+                <Delete setEliminar={setRowAEliminar} title={'producto'} gen={true} confirmar={confirmarEliminacion} id={rowAEliminar.id} />
             )}
-            {productoNoEliminar && (
-                <NotDelete setNoEliminar={setProductoNoEliminar} title={'producto'} gen={true} />
+            {rowNoEliminar && (
+                <NotDelete setNoEliminar={setRowNoEliminar} title={'producto'} gen={true} />
             )}
-            {productoAVisualizar && (
+            {rowAVisualizar && (
                 <SmartModal
-                    open={!!productoAVisualizar}
-                    onClose={() => setProductoAVisualizar(null)}
+                    open={!!rowAVisualizar}
+                    onClose={() => setRowAVisualizar(null)}
                     title="Producto"
-                    data={productoAVisualizar}
+                    data={rowAVisualizar}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
             )}
-            {productoAGuardar && (
+            {rowAGuardar && (
                 <SmartModal
-                    open={!!productoAGuardar}
-                    onClose={() => setProductoAGuardar(null)}
+                    open={!!rowAGuardar}
+                    onClose={() => setRowAGuardar(null)}
                     title="Producto"
-                    data={productoAGuardar}
+                    data={rowAGuardar}
                     onSave={handleSubmit}
-                    mode={productoAGuardar.id ? 'edit' : 'create'}
+                    mode={rowAGuardar.id ? 'edit' : 'create'}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
@@ -352,9 +345,9 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
                 setQuery={setQuery}
                 totalPages={totalPages}
                 totalItems={totalItems}
-                onAdd={() => setProductoAGuardar(selected)}
+                onAdd={() => setRowAGuardar(selected)}
                 onRefresh={refrescar}
-                onErpImport={() => setProductoErp(true)}
+                onErpImport={() => setRowErp(true)}
                 canAdd={permiso?.puedeagregar}
                 canImport={permiso?.puedeimportar}
                 showErpButton={true}

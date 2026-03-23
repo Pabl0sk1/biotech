@@ -14,8 +14,8 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [auditoriaAEliminar, setAuditoriaAEliminar] = useState(null);
-    const [auditoriaAVisualizar, setAuditoriaAVisualizar] = useState(null);
+    const [rowAEliminar, setRowAEliminar] = useState(null);
+    const [rowAVisualizar, setRowAVisualizar] = useState(null);
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState({
         page: 0,
@@ -27,8 +27,8 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setAuditoriaAEliminar(null);
-                setAuditoriaAVisualizar(null);
+                setRowAEliminar(null);
+                setRowAVisualizar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -84,7 +84,7 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
         load();
     }, [query]);
 
-    const eliminarAuditoriaFn = async (id) => {
+    const eliminarFn = async (id) => {
         setLoading(true);
         await deleteAccess(id);
         recuperarAuditorias();
@@ -92,20 +92,20 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarAuditoriaFn(id);
-        setAuditoriaAEliminar(null);
+        eliminarFn(id);
+        setRowAEliminar(null);
     }
 
     const refrescar = () => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     }
 
-    const handleViewAcceso = async (acceso) => {
-        setAuditoriaAVisualizar(acceso);
+    const handleView = async (row) => {
+        setRowAVisualizar(row);
     };
 
-    const handleDeleteAcceso = async (acceso) => {
-        setAuditoriaAEliminar(acceso);
+    const handleDelete = async (row) => {
+        setRowAEliminar(row);
     };
 
     return (
@@ -114,15 +114,15 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
             {loading && (
                 <Loading />
             )}
-            {auditoriaAEliminar && (
-                <Delete setEliminar={setAuditoriaAEliminar} title={'acceso'} gen={true} confirmar={confirmarEliminacion} id={auditoriaAEliminar.id} />
+            {rowAEliminar && (
+                <Delete setEliminar={setRowAEliminar} title={'acceso'} gen={true} confirmar={confirmarEliminacion} id={rowAEliminar.id} />
             )}
-            {auditoriaAVisualizar && (
+            {rowAVisualizar && (
                 <SmartModal
-                    open={!!auditoriaAVisualizar}
-                    onClose={() => setAuditoriaAVisualizar(null)}
+                    open={!!rowAVisualizar}
+                    onClose={() => setRowAVisualizar(null)}
                     title="Acceso"
-                    data={auditoriaAVisualizar}
+                    data={rowAVisualizar}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
@@ -149,8 +149,8 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
                 showErpButton={false}
                 showAddButton={false}
                 onEdit={null}
-                onDelete={handleDeleteAcceso}
-                onView={handleViewAcceso}
+                onDelete={handleDelete}
+                onView={handleView}
                 canEdit={permiso?.puedeeditar}
                 canDelete={permiso?.puedeeliminar}
                 canView={permiso?.puedever}

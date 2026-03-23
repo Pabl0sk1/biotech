@@ -26,11 +26,11 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [entidadAGuardar, setEntidadAGuardar] = useState(null);
-    const [entidadAEliminar, setEntidadAEliminar] = useState(null);
-    const [entidadNoEliminar, setEntidadNoEliminar] = useState(null);
-    const [entidadAVisualizar, setEntidadAVisualizar] = useState(null);
-    const [entidadErp, setEntidadErp] = useState(null);
+    const [rowAGuardar, setRowAGuardar] = useState(null);
+    const [rowAEliminar, setRowAEliminar] = useState(null);
+    const [rowNoEliminar, setRowNoEliminar] = useState(null);
+    const [rowAVisualizar, setRowAVisualizar] = useState(null);
+    const [rowErp, setRowErp] = useState(null);
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState({
         page: 0,
@@ -42,11 +42,11 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setEntidadAEliminar(null);
-                setEntidadNoEliminar(null);
-                setEntidadAVisualizar(null);
-                setEntidadAGuardar(null);
-                setEntidadErp(null);
+                setRowAEliminar(null);
+                setRowNoEliminar(null);
+                setRowAVisualizar(null);
+                setRowAGuardar(null);
+                setRowErp(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -231,7 +231,7 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
         recuperarCategorias();
     }, []);
 
-    const eliminarEntidadFn = async (id) => {
+    const eliminarFn = async (id) => {
         setLoading(true);
         await deleteEntity(id);
         await AddAccess('Eliminar', id, userLog, "Entidades");
@@ -240,13 +240,13 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarEntidadFn(id);
-        setEntidadAEliminar(null);
+        eliminarFn(id);
+        setRowAEliminar(null);
     }
 
     const importarDatosERP = async () => {
         setLoading(true);
-        setEntidadErp(null);
+        setRowErp(null);
         await updateErpEntity();
         await AddAccess('Importar', 0, userLog, "Entidades");
         recuperarEntidades();
@@ -277,7 +277,7 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
         }
         recuperarEntidades();
         setLoading(false);
-        setEntidadAGuardar(null);
+        setRowAGuardar(null);
     };
 
     const handleSubmit = (formData) => {
@@ -288,22 +288,22 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleViewEntidad = async (entidad) => {
-        await AddAccess('Visualizar', entidad.id, userLog, "Entidades");
-        setEntidadAVisualizar(entidad);
+    const handleView = async (row) => {
+        await AddAccess('Visualizar', row.id, userLog, "Entidades");
+        setRowAVisualizar(row);
     };
 
-    const handleEditEntidad = (entidad) => {
-        setEntidadAGuardar(entidad);
+    const handleEdit = (row) => {
+        setRowAGuardar(row);
     };
 
-    const handleDeleteEntidad = async (entidad) => {
-        const rel = await getWallet('', '', '', `entidadid:eq:${entidad.id}`);
-        const rel2 = await getProduct('', '', '', `entidad.id:eq:${entidad.id}`);
+    const handleDelete = async (row) => {
+        const rel = await getWallet('', '', '', `entidadid:eq:${row.id}`);
+        const rel2 = await getProduct('', '', '', `entidad.id:eq:${row.id}`);
         if (rel.items.length > 0 || rel2.items.length > 0) {
-            setEntidadNoEliminar(entidad);
+            setRowNoEliminar(row);
         } else {
-            setEntidadAEliminar(entidad);
+            setRowAEliminar(row);
         }
     };
 
@@ -312,33 +312,33 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
             {loading && (
                 <Loading />
             )}
-            {entidadErp && (
-                <ImportErp setErp={setEntidadErp} title={'entidades'} fun={importarDatosERP} />
+            {rowErp && (
+                <ImportErp setErp={setRowErp} title={'entidades'} fun={importarDatosERP} />
             )}
-            {entidadAEliminar && (
-                <Delete setEliminar={setEntidadAEliminar} title={'entidad'} gen={false} confirmar={confirmarEliminacion} id={entidadAEliminar.id} />
+            {rowAEliminar && (
+                <Delete setEliminar={setRowAEliminar} title={'entidad'} gen={false} confirmar={confirmarEliminacion} id={rowAEliminar.id} />
             )}
-            {entidadNoEliminar && (
-                <NotDelete setNoEliminar={setEntidadNoEliminar} title={'entidad'} gen={false} />
+            {rowNoEliminar && (
+                <NotDelete setNoEliminar={setRowNoEliminar} title={'entidad'} gen={false} />
             )}
-            {entidadAVisualizar && (
+            {rowAVisualizar && (
                 <SmartModal
-                    open={!!entidadAVisualizar}
-                    onClose={() => setEntidadAVisualizar(null)}
+                    open={!!rowAVisualizar}
+                    onClose={() => setRowAVisualizar(null)}
                     title="Entidad"
-                    data={entidadAVisualizar}
+                    data={rowAVisualizar}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
             )}
-            {entidadAGuardar && (
+            {rowAGuardar && (
                 <SmartModal
-                    open={!!entidadAGuardar}
-                    onClose={() => setEntidadAGuardar(null)}
+                    open={!!rowAGuardar}
+                    onClose={() => setRowAGuardar(null)}
                     title="Entidad"
-                    data={entidadAGuardar}
+                    data={rowAGuardar}
                     onSave={handleSubmit}
-                    mode={entidadAGuardar.id ? 'edit' : 'create'}
+                    mode={rowAGuardar.id ? 'edit' : 'create'}
                     fieldSettings={fieldSettings}
                     userLog={userLog}
                 />
@@ -357,16 +357,16 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
                 setQuery={setQuery}
                 totalPages={totalPages}
                 totalItems={totalItems}
-                onAdd={() => setEntidadAGuardar(selected)}
+                onAdd={() => setRowAGuardar(selected)}
                 onRefresh={refrescar}
-                onErpImport={() => setEntidadErp(true)}
+                onErpImport={() => setRowErp(true)}
                 canAdd={permiso?.puedeagregar}
                 canImport={permiso?.puedeimportar}
                 showErpButton={true}
                 showAddButton={true}
-                onEdit={handleEditEntidad}
-                onDelete={handleDeleteEntidad}
-                onView={handleViewEntidad}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
                 canEdit={permiso?.puedeeditar}
                 canDelete={permiso?.puedeeliminar}
                 canView={permiso?.puedever}

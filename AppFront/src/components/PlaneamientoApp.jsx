@@ -19,8 +19,8 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
     const [permiso, setPermiso] = useState({});
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [planeamientoAGuardar, setPlaneamientoAGuardar] = useState(null);
-    const [planeamientoAEliminar, setPlaneamientoAEliminar] = useState(null);
+    const [rowAGuardar, setRowAGuardar] = useState(null);
+    const [rowAEliminar, setRowAEliminar] = useState(null);
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState({
         page: 0,
@@ -32,8 +32,8 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
     useEffect(() => {
         const handleEsc = (event) => {
             if (event.key === 'Escape') {
-                setPlaneamientoAEliminar(null);
-                setPlaneamientoAGuardar(null);
+                setRowAEliminar(null);
+                setRowAGuardar(null);
             }
         };
         window.addEventListener('keydown', handleEsc);
@@ -96,7 +96,7 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
         cargarTipo();
     }, []);
 
-    const eliminarPlaneamientoFn = async (id) => {
+    const eliminarFn = async (id) => {
         setLoading(true);
         await deleteReportData(id);
         await deleteReport(id);
@@ -106,12 +106,12 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
     };
 
     const confirmarEliminacion = (id) => {
-        eliminarPlaneamientoFn(id);
-        setPlaneamientoAEliminar(null);
+        eliminarFn(id);
+        setRowAEliminar(null);
     }
 
     const guardarFn = async (datos, modoEdicion) => {
-        setPlaneamientoAGuardar(null);
+        setRowAGuardar(null);
         if (datos?.id) navigate(`/home/main/commercial/planning/${datos.id}`, {
             state: { datos, modoEdicion }
         });
@@ -125,17 +125,17 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleViewPlaneamiento = async (planeamiento) => {
-        await AddAccess('Visualizar', planeamiento.id, userLog, "Planeamientos");
-        guardarFn(planeamiento);
+    const handleView = async (row) => {
+        await AddAccess('Visualizar', row.id, userLog, "Planeamientos");
+        guardarFn(row);
     };
 
-    const handleEditPlaneamiento = (planeamiento) => {
-        guardarFn(planeamiento, true);
+    const handleEdit = (row) => {
+        guardarFn(row, true);
     };
 
-    const handleDeletePlaneamiento = (planeamiento) => {
-        setPlaneamientoAEliminar(planeamiento);
+    const handleDelete = (row) => {
+        setRowAEliminar(row);
     };
 
     return (
@@ -144,11 +144,11 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
             {loading && (
                 <Loading />
             )}
-            {planeamientoAEliminar && (
-                <Delete setEliminar={setPlaneamientoAEliminar} title={'planeamiento'} gen={true} confirmar={confirmarEliminacion} id={planeamientoAEliminar.id} />
+            {rowAEliminar && (
+                <Delete setEliminar={setRowAEliminar} title={'planeamiento'} gen={true} confirmar={confirmarEliminacion} id={rowAEliminar.id} />
             )}
-            {planeamientoAGuardar && (
-                <SaveModal setGuardar={setPlaneamientoAGuardar} title={'planeamiento'} gen={true} fun={guardarFn} />
+            {rowAGuardar && (
+                <SaveModal setGuardar={setRowAGuardar} title={'planeamiento'} gen={true} fun={guardarFn} />
             )}
 
             <Header userLog={userLog} title={'PLANEAMIENTOS'} onToggleSidebar={null} on={0} icon={'chevron-double-left'} />
@@ -165,16 +165,16 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
                 setQuery={setQuery}
                 totalPages={totalPages}
                 totalItems={totalItems}
-                onAdd={() => setPlaneamientoAGuardar(selected)}
+                onAdd={() => setRowAGuardar(selected)}
                 onRefresh={refrescar}
                 onErpImport={() => null}
                 canAdd={permiso?.puedeagregar}
                 canImport={null}
                 showErpButton={false}
                 showAddButton={true}
-                onEdit={handleEditPlaneamiento}
-                onDelete={handleDeletePlaneamiento}
-                onView={handleViewPlaneamiento}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
                 canEdit={permiso?.puedeeditar}
                 canDelete={permiso?.puedeeliminar}
                 canView={permiso?.puedever}

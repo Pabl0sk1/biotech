@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AddAccess } from "./utils/AddAccess.js";
 import { tienePermisoRuta } from './utils/RouteAccess.js';
@@ -68,6 +68,24 @@ const getMultipleOpts = (stringValue, opts, idfield) => {
     );
 };
 
+const PasswordField = ({ common }) => {
+    const [show, setShow] = useState(false);
+
+    return (
+        <div className="d-flex align-items-center position-relative">
+            <input type={show ? "text" : "password"} {...common} />
+            <button
+                type="button"
+                className="btn btn-light btn-eye"
+                style={{ marginTop: '7px' }}
+                onClick={() => setShow(!show)}
+            >
+                {show ? <i className="bi bi-eye-slash-fill" /> : <i className="bi bi-eye-fill" />}
+            </button>
+        </div>
+    );
+};
+
 /* =======================
     Campo automático
 ======================= */
@@ -117,20 +135,7 @@ const AutoField = ({ name, value, onChange, disabled, settings, errors }) => {
     }
 
     if (type === "password") {
-        const [showPasswordNueva, setShowPasswordNueva] = useState(false);
-        return (
-            <div className="d-flex align-items-center position-relative">
-                <input type={showPasswordNueva ? "text" : "password"} {...common} />
-                <button
-                    type="button"
-                    className="btn btn-light btn-eye"
-                    style={{ marginTop: '7px' }}
-                    onClick={() => setShowPasswordNueva(!showPasswordNueva)}
-                >
-                    {showPasswordNueva ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}
-                </button>
-            </div>
-        );
+        return <PasswordField common={common} />;
     }
 
     const searchFields = settings?.searches ? settings?.searches.map(field => v => {
@@ -258,18 +263,19 @@ export const SmartModal = ({
         return Object.keys(newErrors).length === 0;
     };
 
-    // Use fieldSettings keys for deterministic ordering and presence
-    const orderedKeys = Object.keys(fieldSettings)
-        .filter(key => {
-            if (fieldSettings[key]?.hidden) return false;
-            if (fieldSettings[key]?.disabledonlyedit && mode === "create") return false;
-            return true;
-        })
-        .sort((a, b) => {
-            const orderA = fieldSettings[a]?.order ?? 999;
-            const orderB = fieldSettings[b]?.order ?? 999;
-            return orderA - orderB;
-        });
+    const orderedKeys = useMemo(() => {
+        return Object.keys(fieldSettings)
+            .filter(key => {
+                if (fieldSettings[key]?.hidden) return false;
+                if (fieldSettings[key]?.disabledonlyedit && mode === "create") return false;
+                return true;
+            })
+            .sort((a, b) => {
+                const orderA = fieldSettings[a]?.order ?? 999;
+                const orderB = fieldSettings[b]?.order ?? 999;
+                return orderA - orderB;
+            });
+    }, [fieldSettings, mode]);
 
     return (
         <>

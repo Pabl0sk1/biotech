@@ -32,39 +32,60 @@ const renderReportBadged = (estado) => (
     </span>
 );
 
-const formatCellValue = (col, row) => {
+const formatCellValue = (col, row, userLog) => {
+    const renderers = {
+        statusreg: (col, row) => {
+            const activo = evalValue(col.render.renval1, row, false);
+            const label = evalValue(col.render.renval2, row, "");
+            return renderStatusBadge(activo, label);
+        },
+
+        statusinf: (col, row) => {
+            const label = evalValue(col.render.renval1, row, "");
+            return renderReportBadged(label);
+        },
+
+        truncate: (col, row) => {
+            const text = evalValue(col.render.renval1, row);
+            return TruncDots(text, col.render.renval2 ?? 30);
+        },
+
+        token: (col, row) => {
+            const cadena = row.token ?? "";
+            const usuarioId = row.usuario?.id;
+            const activo = row.activo;
+
+            if (userLog?.id === 1 || userLog?.id === usuarioId) {
+                return (
+                    <p className={`${activo ? '' : 'text-decoration-line-through'} m-0`}>
+                        {cadena}
+                    </p>
+                );
+            }
+
+            return (
+                <>
+                    {Array.from({ length: cadena.length }).map((_, i) => (
+                        <i key={i} className="bi bi-asterisk text-muted ms-1" style={{ fontSize: '7px' }}></i>
+                    ))}
+                </>
+            );
+        },
+    };
+
     // If a custom render function is provided, use it directly
     if (typeof col.render === "function") {
         return col.render(row);
     }
 
-    const rawValue = getNestedValue(row, col.field);
-
     // Special render config (object-based): { rentype, ... }
     if (col.render && typeof col.render === "object") {
-        const type = col.render.rentype;
-
-        switch (type) {
-            case "statusreg": {
-                const activo = evalValue(col.render.renval1, row, false);
-                const label = evalValue(col.render.renval2, row, "");
-                return renderStatusBadge(activo, label);
-            }
-            case "statusinf": {
-                const label = evalValue(col.render.renval1, row, "");
-                return renderReportBadged(label);
-            }
-            case "truncate": {
-                const text = evalValue(col.render.renval1, row, rawValue);
-                const maxLength = col.render.renval2 ?? 30;
-                return TruncDots(text, maxLength);
-            }
-            default:
-                return rawValue;
-        }
+        const renderer = renderers[col.render.rentype];
+        if (renderer) return renderer(col, row);
     }
 
     // Fallback formatting based on column type
+    const rawValue = getNestedValue(row, col.field);
     switch (col.type) {
         case "date":
             return DateHourFormat(rawValue, 2);
@@ -271,17 +292,23 @@ export const SmartTable = ({
         onRefresh?.();
     };
 
-    const handleReg = (op, can, on) => {
+    const handleReg = (op, row, can, on) => {
         let custom = true;
-        if (op === 'edit') {
-            if (customReg === 'report') {
-                if (data[0]?.estado === 'Aprobado' && userLog?.id !== 1) custom = false;
+
+        if (customReg === 'report' && ['edit', 'delete'].includes(op)) {
+            if (row?.estado === 'Aprobado' && userLog?.id !== 1) {
+                custom = false;
             }
-        } else if (op === 'delete') {
-            if (customReg === 'report') {
-                if (data[0]?.estado === 'Aprobado' && userLog?.id !== 1) custom = false;
+        } else if (customReg === 'token' && ['delete'].includes(op)) {
+            if (row?.usuario?.id !== userLog?.id && userLog?.id !== 1) {
+                custom = false;
+            }
+        } else if (customReg === 'user' && ['edit', 'delete'].includes(op)) {
+            if (row?.id === userLog?.id || row?.id === 1) {
+                custom = false;
             }
         }
+
         return can && custom && on;
     };
 
@@ -387,35 +414,39 @@ export const SmartTable = ({
                                     <tr
                                         key={row.id || `row-${index}`}
                                         className={`text-center align-middle ${rowClassName || ""}`}
-                                        onClick={() => { if (handleReg('edit', canEdit, onEdit)) onEdit(row) }}
-                                        style={{ cursor: handleReg('edit', canEdit, onEdit) ? "pointer" : "default" }}
+                                        onClick={() => { if (handleReg('edit', row, canEdit, onEdit)) onEdit(row) }}
+                                        style={{ cursor: handleReg('edit', row, canEdit, onEdit) ? "pointer" : "default" }}
                                     >
                                         <td onClick={e => e.stopPropagation()} className="bg-light" style={{ cursor: 'default' }}>
                                             <div className="d-flex justify-content-evenly">
-                                                <button
-                                                    onClick={() => { if (handleReg('delete', canDelete, onDelete)) onDelete(row) }}
-                                                    className="icon-action"
-                                                    title="Eliminar"
-                                                    style={{ cursor: handleReg('delete', canDelete, onDelete) ? 'pointer' : 'default' }}
-                                                    disabled={!handleReg('delete', canDelete, onDelete)}
-                                                >
-                                                    <i className={`bi bi-trash-fill ${handleReg('delete', canDelete, onDelete) ? 'text-danger' : 'text-danger-emphasis'}`}></i>
-                                                </button>
-                                                <button
-                                                    onClick={() => { if (handleReg('view', canView, onView)) onView(row) }}
-                                                    className="icon-action"
-                                                    title="Ver"
-                                                    style={{ cursor: handleReg('view', canView, onView) ? 'pointer' : 'default' }}
-                                                    disabled={!handleReg('view', canView, onView)}
-                                                >
-                                                    <i className={`bi bi-eye-fill ${handleReg('view', canView, onView) ? 'text-primary' : 'text-primary-emphasis'}`}></i>
-                                                </button>
+                                                {onDelete && (
+                                                    <button
+                                                        onClick={() => { if (handleReg('delete', row, canDelete, onDelete)) onDelete(row) }}
+                                                        className="icon-action"
+                                                        title="Eliminar"
+                                                        style={{ cursor: handleReg('delete', row, canDelete, onDelete) ? 'pointer' : 'default' }}
+                                                        disabled={!handleReg('delete', row, canDelete, onDelete)}
+                                                    >
+                                                        <i className={`bi bi-trash-fill ${handleReg('delete', row, canDelete, onDelete) ? 'text-danger' : 'text-danger-emphasis'}`}></i>
+                                                    </button>
+                                                )}
+                                                {onView && (
+                                                    <button
+                                                        onClick={() => { if (handleReg('view', row, canView, onView)) onView(row) }}
+                                                        className="icon-action"
+                                                        title="Ver"
+                                                        style={{ cursor: handleReg('view', row, canView, onView) ? 'pointer' : 'default' }}
+                                                        disabled={!handleReg('view', row, canView, onView)}
+                                                    >
+                                                        <i className={`bi bi-eye-fill ${handleReg('view', row, canView, onView) ? 'text-primary' : 'text-primary-emphasis'}`}></i>
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
 
                                         {displayedColumns.map(col => (
                                             <td key={col?.key} className={col?.classname}>
-                                                {formatCellValue(col, row)}
+                                                {formatCellValue(col, row, userLog)}
                                             </td>
                                         ))}
                                     </tr>
