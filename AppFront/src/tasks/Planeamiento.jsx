@@ -1155,7 +1155,7 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                                                                         <table className="table table-sm table-bordered table-hover m-0">
                                                                                             <thead className="table-dark text-center align-middle">
                                                                                                 <tr>
-                                                                                                    <th>-</th>
+                                                                                                    <th hidden={!modoEdicion}>#</th>
                                                                                                     <th>Subgrupo</th>
                                                                                                     <th>Producto</th>
                                                                                                     <th>Principio Activo</th>
@@ -1174,17 +1174,15 @@ export const Planeamiento = ({ userLog, setUserLog }) => {
                                                                                                     sg.productos && sg.productos.map(pr => {
                                                                                                         return (
                                                                                                             <tr key={pr.uid}>
-                                                                                                                <td>
-                                                                                                                    {modoEdicion && (
-                                                                                                                        <button
-                                                                                                                            type='button'
-                                                                                                                            className="btn btn-sm btn-danger rounded-0"
-                                                                                                                            onClick={() => eliminarProducto(vd.uid, zf.uid, ct.uid, sg.uid, pr.uid)}
-                                                                                                                            title="Eliminar producto"
-                                                                                                                        >
-                                                                                                                            <i className="bi bi-trash-fill"></i>
-                                                                                                                        </button>
-                                                                                                                    )}
+                                                                                                                <td hidden={!modoEdicion}>
+                                                                                                                    <button
+                                                                                                                        type='button'
+                                                                                                                        className="btn btn-sm btn-danger rounded-0"
+                                                                                                                        onClick={() => eliminarProducto(vd.uid, zf.uid, ct.uid, sg.uid, pr.uid)}
+                                                                                                                        title="Eliminar producto"
+                                                                                                                    >
+                                                                                                                        <i className="bi bi-trash-fill"></i>
+                                                                                                                    </button>
                                                                                                                 </td>
                                                                                                                 <td>{sg.subgrupo}</td>
                                                                                                                 <td>{pr.nombre}</td>
