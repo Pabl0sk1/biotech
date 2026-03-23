@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AddAccess } from './utils/AddAccess.js';
 import { getMenu } from './services/menu.service.js';
@@ -7,16 +7,19 @@ import { tieneAccesoModulo } from './utils/RouteAccess.js';
 import { getPermission } from './services/permiso.service.js';
 import { updateUser } from './services/usuario.service.js';
 import LogoutModal from './layouts/LogoutModal.jsx';
+import Loading from './layouts/Loading.jsx';
 
 const Sidebar = ({ userLog, setUserLog, isSidebarVisible }) => {
     const UrlLocal = '/home';
 
+    const navigate = useNavigate();
     const [avatar, setAvatar] = useState(null);
     const [menus, setMenus] = useState([]);
     const [permisos, setPermisos] = useState([]);
     const [menuPerfil, setMenuPerfil] = useState({});
     const [permisoPerfil, setPermisoPerfil] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const handleEsc = (event) => {
@@ -32,44 +35,67 @@ const Sidebar = ({ userLog, setUserLog, isSidebarVisible }) => {
 
     useEffect(() => {
         if (!userLog?.tipousuario?.id) return;
-        const idRol = userLog?.tipousuario?.id;
 
-        const load = async () => {
-            const response = await getMenu('', '', 'orden,asc', 'activo:eq:true');
-            setMenus(response.items);
-            const response2 = await getMenu('', '', '', 'id:eq:4');
-            setMenuPerfil(response2.items[0].programas[0]);
-        }
-        load();
+        const loadAll = async () => {
+            setLoading(true);
 
-        const loadPermisos = async () => {
-            const response = await getPermission('', '', '', `tipousuario.id:eq:${idRol};puedeconsultar:eq:true`);
-            setPermisos(response.items);
-            const response2 = await getPermission('', '', '', `tipousuario.id:eq:${idRol};puedeconsultar:eq:true;modulo.var:eq:sc08`);
-            setPermisoPerfil(response2.items[0] ? true : false);
-        }
-        loadPermisos();
+            try {
+                const idRol = userLog?.tipousuario?.id;
 
-        const BACKEND_URL = HostLocation(1);
-        if (userLog?.imagenurl) setAvatar(BACKEND_URL + "/biotech" + userLog?.imagenurl);
-    }, []);
+                const [
+                    menuRes,
+                    menuPerfilRes,
+                    permisosRes,
+                    permisoPerfilRes
+                ] = await Promise.all([
+                    getMenu('', '', 'orden,asc', 'activo:eq:true'),
+                    getMenu('', '', '', 'id:eq:4'),
+                    getPermission('', '', '', `tipousuario.id:eq:${idRol};puedeconsultar:eq:true`),
+                    getPermission('', '', '', `tipousuario.id:eq:${idRol};puedeconsultar:eq:true;modulo.var:eq:sc08`)
+                ]);
+
+                setMenus(menuRes.items);
+                setMenuPerfil(menuPerfilRes.items[0].programas[0]);
+
+                setPermisos(permisosRes.items);
+                setPermisoPerfil(permisoPerfilRes.items[0] ? true : false);
+
+                const BACKEND_URL = HostLocation(1);
+                if (userLog?.imagenurl) setAvatar(BACKEND_URL + "/biotech" + userLog?.imagenurl);
+
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadAll();
+    }, [userLog]);
 
     const confirmLogout = async () => {
         setShowLogoutModal(false);
+        setLoading(true);
 
-        localStorage.removeItem('session');
-        sessionStorage.removeItem('usuario');
+        try {
+            localStorage.removeItem('session');
+            sessionStorage.removeItem('usuario');
 
-        const usuario = {
-            ...userLog,
-            online: false
+            const usuario = {
+                ...userLog,
+                online: false
+            };
+
+            await AddAccess('Cerrar Sesión', 0, userLog, 'Login');
+            await updateUser(usuario.id, usuario);
+
+            setUserLog(null);
+            navigate('/biotech/login');
+
+        } catch (error) {
+            console.error(error);
+            setLoading(false);
         }
-
-        await AddAccess('Cerrar Sesión', 0, userLog, 'Login');
-        await updateUser(usuario.id, usuario);
-
-        setUserLog(null);
-        window.location.href = '/biotech/login';
     };
 
     const parseRecursos = (r) => r?.split(',').map(x => x.trim().toLowerCase()) ?? [];
@@ -77,6 +103,9 @@ const Sidebar = ({ userLog, setUserLog, isSidebarVisible }) => {
     return (
         <>
 
+            {loading && (
+                <Loading />
+            )}
             {showLogoutModal && (
                 <LogoutModal confirm={confirmLogout} setClose={setShowLogoutModal} />
             )}

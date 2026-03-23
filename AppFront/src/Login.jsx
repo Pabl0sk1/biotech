@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "./services/usuario.service";
 import { AddAccess } from "./utils/AddAccess.js";
 import { updateUser } from "./services/usuario.service";
+import Loading from './layouts/Loading.jsx';
 
 export const Login = ({ setUserLog }) => {
 
@@ -49,24 +50,30 @@ export const Login = ({ setUserLog }) => {
                 localStorage.setItem('session', JSON.stringify(sessionData));
                 sessionStorage.setItem('usuario', JSON.stringify(usuario));
 
+                navigate("/biotech/home");
+
                 await AddAccess('Iniciar Sesión', 0, response.user, "Login");
                 await updateUser(usuario.id, usuario);
 
                 setUserLog(usuario);
-                navigate("biotech/home");
+                return;
             } else {
                 setError("Nombre de usuario o contraseña incorrectos.");
             }
         } catch (err) {
             console.error("Error de login:", err);
             setError("Error al intentar iniciar sesión.");
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
     return (
         <>
+
+            {loading && (
+                <Loading />
+            )}
+
             <div className="login-container">
                 <div className="login-wrapper">
                     {/* Lado izquierdo - Formulario de login */}
