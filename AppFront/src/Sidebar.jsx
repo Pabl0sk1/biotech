@@ -90,7 +90,7 @@ const Sidebar = ({ userLog, setUserLog, isSidebarVisible }) => {
             await updateUser(usuario.id, usuario);
 
             setUserLog(null);
-            navigate('/biotech/login');
+            navigate('/login');
 
         } catch (error) {
             console.error(error);

@@ -50,7 +50,7 @@ export const Login = ({ setUserLog }) => {
                 localStorage.setItem('session', JSON.stringify(sessionData));
                 sessionStorage.setItem('usuario', JSON.stringify(usuario));
 
-                navigate("/biotech/home");
+                navigate("/home");
 
                 await AddAccess('Iniciar Sesión', 0, response.user, "Login");
                 await updateUser(usuario.id, usuario);
