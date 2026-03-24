@@ -2315,14 +2315,23 @@ html::-webkit-scrollbar-button:hover {
   position: absolute;
   inset: 0;
   border-radius: 14px;
+  border: 1px solid gray;
   transition: background 0.25s;
+}
+
+.form-check-edit-l1:hover {
+  border-color: green;
+  .form-check-edit-l2 {
+    border-color: green;
+  }
 }
 
 .form-check-edit-l2 {
   position: absolute;
-  top: 3px;
-  width: 22px;
-  height: 22px;
+  top: 0;
+  width: 25px;
+  height: 26px;
+  border: 1px solid gray;
   border-radius: 50%;
   background: white;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
@@ -2330,9 +2339,9 @@ html::-webkit-scrollbar-button:hover {
 }
 
 .form-check-edit-l2-left27 {
-  left: 27px;
+  left: 24px;
 }
 
 .form-check-edit-l2-left3 {
-  left: 3px;
+  left: 0px;
 }
