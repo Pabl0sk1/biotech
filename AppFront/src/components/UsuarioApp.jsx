@@ -250,16 +250,16 @@ export const UsuarioApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Usuarios");
+    const handleView = (row) => {
         setRowAVisualizar(row);
+        AddAccess('Visualizar', row.id, userLog, "Usuarios");
     };
 
     const handleEdit = (row) => {
         setRowAGuardar(row);
     };
 
-    const handleDelete = async (row) => {
+    const handleDelete = (row) => {
         setRowAEliminar(row);
     };
 

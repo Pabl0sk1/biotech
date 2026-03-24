@@ -134,9 +134,9 @@ export const HoraExtraApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Horas Extras");
+    const handleView = (row) => {
         guardarFn(row);
+        AddAccess('Visualizar', row.id, userLog, "Horas Extras");
     };
 
     const handleEdit = (row) => {

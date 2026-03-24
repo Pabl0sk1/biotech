@@ -182,9 +182,9 @@ export const NombreComercialApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Nombres Comerciales");
+    const handleView = (row) => {
         setRowAVisualizar(row);
+        AddAccess('Visualizar', row.id, userLog, "Nombres Comerciales");
     };
 
     const handleEdit = (row) => {

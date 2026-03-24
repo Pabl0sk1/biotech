@@ -297,9 +297,9 @@ export const EntidadApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Entidades");
+    const handleView = (row) => {
         setRowAVisualizar(row);
+        AddAccess('Visualizar', row.id, userLog, "Entidades");
     };
 
     const handleEdit = (row) => {

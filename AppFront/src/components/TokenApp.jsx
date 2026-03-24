@@ -125,7 +125,7 @@ export const TokenApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     }
 
-    const handleDelete = async (row) => {
+    const handleDelete = (row) => {
         setRowAEliminar(row);
     };
 

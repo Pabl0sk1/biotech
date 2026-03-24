@@ -140,9 +140,9 @@ export const FaseCultivoApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Fases de Cultivos");
+    const handleView = (row) => {
         setRowAVisualizar(row);
+        AddAccess('Visualizar', row.id, userLog, "Fases de Cultivos");
     };
 
     const handleEdit = (row) => {

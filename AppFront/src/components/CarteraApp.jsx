@@ -146,9 +146,9 @@ export const CarteraApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Carteras");
+    const handleView = (row) => {
         setRowAVisualizar(row);
+        AddAccess('Visualizar', row.id, userLog, "Carteras");
     };
 
     const handleEdit = (row) => {

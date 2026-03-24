@@ -134,9 +134,9 @@ export const PlaneamientoApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Planeamientos");
+    const handleView = (row) => {
         guardarFn(row);
+        AddAccess('Visualizar', row.id, userLog, "Planeamientos");
     };
 
     const handleEdit = (row) => {

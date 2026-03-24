@@ -160,16 +160,16 @@ export const MenuApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     }
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Menús");
+    const handleView = (row) => {
         setRowAVisualizar(row);
+        AddAccess('Visualizar', row.id, userLog, "Menús");
     };
 
     const handleEdit = (row) => {
         setRowAGuardar(row);
     };
 
-    const handleDelete = async (row) => {
+    const handleDelete = (row) => {
         setRowAEliminar(row);
     };
 

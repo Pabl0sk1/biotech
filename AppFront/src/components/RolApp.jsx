@@ -125,9 +125,9 @@ export const RolApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     }
 
-    const handleView = async (row) => {
-        await AddAccess('Visualizar', row.id, userLog, "Roles");
+    const handleView = (row) => {
         setRowAVisualizar(row);
+        AddAccess('Visualizar', row.id, userLog, "Roles");
     };
 
     const handleEdit = (row) => {

@@ -109,11 +109,11 @@ export const AuditoriaApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     }
 
-    const handleView = async (row) => {
+    const handleView = (row) => {
         setRowAVisualizar(row);
     };
 
-    const handleDelete = async (row) => {
+    const handleDelete = (row) => {
         setRowAEliminar(row);
     };
 

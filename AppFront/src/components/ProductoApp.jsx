@@ -285,9 +285,9 @@ export const ProductoApp = ({ userLog, setUserLog }) => {
         setQuery(q => ({ ...q, order: "", filter: [] }));
     };
 
-    const handleViewProducto = async (producto) => {
-        await AddAccess('Visualizar', producto.id, userLog, "Productos");
+    const handleViewProducto = (producto) => {
         setRowAVisualizar(producto);
+        AddAccess('Visualizar', producto.id, userLog, "Productos");
     };
 
     const handleEditProducto = (producto) => {
