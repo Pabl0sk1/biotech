@@ -94,7 +94,9 @@ const formatCellValue = (col, row, userLog) => {
         case "time":
             return HourFormat(rawValue);
         case "boolean":
-            return rawValue ? 'Si' : 'No';
+            return rawValue
+                ? <i className="bi bi-toggle-on text-success fs-5"></i>
+                : <i className="bi bi-toggle-off text-secondary fs-5"></i>;
         default:
             return rawValue;
     }

@@ -103,7 +103,7 @@ const AutoField = ({ name, value, onChange, disabled, settings, errors }) => {
         required: required,
         autoFocus: settings?.autofocus,
         maxLength: size,
-        className: `${type === "checkbox" ? "form-check-input p-3" : "modern-input-edit"} ${errors ? 'error' : ''}`,
+        className: `${type === "checkbox" ? "opacity-0 position-absolute" : "modern-input-edit"} ${errors ? 'error' : ''}`,
         value: transformText(value ?? "", lettercase) ?? "",
         checked: type === "checkbox" ? !!value : undefined,
         placeholder: !disabled ? "Escribe..." : "",
@@ -116,8 +116,13 @@ const AutoField = ({ name, value, onChange, disabled, settings, errors }) => {
 
     if (type === "checkbox") {
         return (
-            <div className="form-check d-flex justify-content-center">
-                <input type="checkbox" {...common} />
+            <div className="d-flex justify-content-center align-items-center py-1">
+                <label style={{ cursor: common.disabled ? 'not-allowed' : 'pointer', position: 'relative', display: 'inline-block', width: '52px', height: '28px' }}>
+                    <input type="checkbox" {...common} />
+                    <span className={`form-check-edit-l1 ${value ? 'bg-success' : 'bg-secondary'} ${common.disabled ? 'opacity-50' : 'opacity-100'}`}>
+                        <span className={`form-check-edit-l2 ${value ? 'form-check-edit-l2-left27' : 'form-check-edit-l2-left3'}`} />
+                    </span>
+                </label>
             </div>
         );
     }
